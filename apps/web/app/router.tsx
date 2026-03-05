@@ -13,6 +13,10 @@ export function createRouter() {
   });
 }
 
+// Ensure hydrateStart can find getRouter if needed in the latest RC builds
+export const getRouter = createRouter;
+
+
 declare module "@tanstack/react-router" {
   interface Register {
     router: ReturnType<typeof createRouter>;

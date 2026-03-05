@@ -2,8 +2,7 @@
 // MaatWork CRM — Root Route (__root.tsx)
 // ============================================================
 
-import { createRootRoute, Outlet, ScrollRestoration } from "@tanstack/react-router";
-import { Meta, Scripts } from "@tanstack/react-start";
+import { createRootRoute, Outlet, ScrollRestoration, HeadContent, Scripts } from "@tanstack/react-router";
 
 import "../styles/globals.css";
 
@@ -27,7 +26,8 @@ function RootLayout() {
   return (
     <html lang="es">
       <head>
-        <Meta />
+        <HeadContent />
+
       </head>
       <body>
         <Outlet />
