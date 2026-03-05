@@ -4,19 +4,82 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Check, Clock, AlertTriangle, Filter, Calendar } from "lucide-react";
+import { Plus, Check, Clock, AlertTriangle, Calendar, X } from "lucide-react";
 
 export const Route = createFileRoute("/_app/tasks")({
   component: TasksPage,
 });
 
-const DEMO_TASKS = [
+type Task = { id: string; title: string; status: string; priority: string; dueDate: string; assignee: string; contact: string; isRecurrent: boolean };
+
+const INITIAL_TASKS: Task[] = [
   { id: "1", title: "Llamar a María López – seguimiento mensual", status: "pending", priority: "high", dueDate: "2026-03-04", assignee: "Ana García", contact: "María López", isRecurrent: true },
   { id: "2", title: "Preparar propuesta para Juan Martínez", status: "in_progress", priority: "medium", dueDate: "2026-03-11", assignee: "Ana García", contact: "Juan Martínez", isRecurrent: false },
   { id: "3", title: "Enviar material informativo a Lucía", status: "pending", priority: "low", dueDate: "2026-03-03", assignee: "Pedro Ruiz", contact: "Lucía Fernández", isRecurrent: false },
   { id: "4", title: "Reunión equipo semanal", status: "pending", priority: "medium", dueDate: "2026-03-11", assignee: "Carlos Admin", contact: "", isRecurrent: true },
   { id: "5", title: "Revisar documentación Roberto Sánchez", status: "completed", priority: "high", dueDate: "2026-03-01", assignee: "Pedro Ruiz", contact: "Roberto Sánchez", isRecurrent: false },
 ];
+
+// ── New Task Modal ────────────────────────────────────────────
+function NewTaskModal({ open, onClose, onSave }: { open: boolean; onClose: () => void; onSave: (t: Task) => void }) {
+  const [form, setForm] = useState({ title: "", priority: "medium", dueDate: "", assignee: "", contact: "" });
+  const [error, setError] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.title.trim()) { setError("El título es obligatorio"); return; }
+    onSave({ id: `t${Date.now()}`, ...form, status: "pending", isRecurrent: false });
+    setForm({ title: "", priority: "medium", dueDate: "", assignee: "", contact: "" });
+    setError("");
+    onClose();
+  };
+
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}>
+      <div className="glass-card w-full max-w-md mx-4 p-6 animate-fade-in" style={{ borderRadius: "1rem" }}>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-white">Nueva Tarea</h2>
+          <button onClick={onClose} className="p-2 hover:bg-surface-700 rounded-lg text-surface-400 hover:text-white transition-colors" type="button"><X className="w-5 h-5" /></button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-sm">{error}</div>}
+          <div>
+            <label className="block text-sm font-medium text-surface-300 mb-1.5">Título *</label>
+            <input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Descripción de la tarea" className="w-full px-3 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-surface-200 placeholder:text-surface-500 focus:outline-none focus:border-brand-500 transition-colors" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-surface-300 mb-1.5">Prioridad</label>
+              <select value={form.priority} onChange={e => setForm(f => ({ ...f, priority: e.target.value }))} className="w-full px-3 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-surface-200 focus:outline-none focus:border-brand-500 transition-colors">
+                <option value="urgent">Urgente</option>
+                <option value="high">Alta</option>
+                <option value="medium">Media</option>
+                <option value="low">Baja</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-surface-300 mb-1.5">Fecha límite</label>
+              <input type="date" value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} className="w-full px-3 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-surface-200 focus:outline-none focus:border-brand-500 transition-colors" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-surface-300 mb-1.5">Asignado a</label>
+            <input type="text" value={form.assignee} onChange={e => setForm(f => ({ ...f, assignee: e.target.value }))} placeholder="Nombre del responsable" className="w-full px-3 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-surface-200 placeholder:text-surface-500 focus:outline-none focus:border-brand-500 transition-colors" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-surface-300 mb-1.5">Contacto asociado</label>
+            <input type="text" value={form.contact} onChange={e => setForm(f => ({ ...f, contact: e.target.value }))} placeholder="Ej: María López" className="w-full px-3 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-surface-200 placeholder:text-surface-500 focus:outline-none focus:border-brand-500 transition-colors" />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded-lg font-medium transition-colors border border-surface-700">Cancelar</button>
+            <button type="submit" className="flex-1 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium transition-colors">Guardar Tarea</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 const priorityConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
   urgent: { label: "Urgente", color: "text-red-400 bg-red-500/15 border-red-500/30", icon: AlertTriangle },
@@ -33,20 +96,23 @@ const statusConfig: Record<string, { label: string; color: string }> = {
 };
 
 function TasksPage() {
+  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
   const [filter, setFilter] = useState<string>("");
+  const [showModal, setShowModal] = useState(false);
 
-  const filtered = DEMO_TASKS.filter((t) => !filter || t.status === filter);
-  const isOverdue = (date: string) => new Date(date) < new Date() && date;
+  const filtered = tasks.filter((t) => !filter || t.status === filter);
+  const isOverdue = (date: string) => date && new Date(date) < new Date();
 
   return (
     <div className="space-y-6">
+      <NewTaskModal open={showModal} onClose={() => setShowModal(false)} onSave={t => setTasks(prev => [t, ...prev])} />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white">Tareas</h1>
-          <p className="text-surface-400 mt-1">{DEMO_TASKS.length} tareas — {DEMO_TASKS.filter((t) => t.status === "pending").length} pendientes</p>
+          <p className="text-surface-400 mt-1">{tasks.length} tareas — {tasks.filter((t) => t.status === "pending").length} pendientes</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium transition-colors">
+        <button onClick={() => setShowModal(true)} className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium transition-colors">
           <Plus className="w-4 h-4" />
           Nueva Tarea
         </button>

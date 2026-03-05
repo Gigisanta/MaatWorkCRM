@@ -11,12 +11,10 @@ export const Route = createFileRoute("/_app")({
 
 function AppLayout() {
   return (
-    <div className="min-h-screen bg-surface-950">
+    <div className="app-layout">
       <Sidebar />
-      <main className="lg:ml-64 min-h-screen">
-        <div className="p-6 lg:p-8 max-w-7xl mx-auto">
-          <Outlet />
-        </div>
+      <main className="app-main">
+        <Outlet />
       </main>
     </div>
   );
