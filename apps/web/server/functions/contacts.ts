@@ -8,7 +8,7 @@ import { contacts } from "../db/schema";
 import { eq, and, like, desc } from "drizzle-orm";
 
 export const getContacts = createServerFn({ method: "GET" })
-  .validator((input: { orgId: string; search?: string; status?: string }) => input)
+  .inputValidator((input: { orgId: string; search?: string; status?: string }) => input)
   .handler(async ({ data }) => {
     const conditions = [eq(contacts.organizationId, data.orgId)];
     if (data.status) {
@@ -25,14 +25,14 @@ export const getContacts = createServerFn({ method: "GET" })
   });
 
 export const getContact = createServerFn({ method: "GET" })
-  .validator((input: { id: string }) => input)
+  .inputValidator((input: { id: string }) => input)
   .handler(async ({ data }) => {
     const result = await db.select().from(contacts).where(eq(contacts.id, data.id));
     return result[0] ?? null;
   });
 
 export const createContact = createServerFn({ method: "POST" })
-  .validator((input: { orgId: string; data: Record<string, unknown> }) => input)
+  .inputValidator((input: { orgId: string; data: Record<string, unknown> }) => input)
   .handler(async ({ data }) => {
     const id = crypto.randomUUID();
     const newContact = { id, organizationId: data.orgId, ...data.data };
@@ -41,7 +41,7 @@ export const createContact = createServerFn({ method: "POST" })
   });
 
 export const updateContact = createServerFn({ method: "POST" })
-  .validator((input: { id: string; data: Record<string, unknown> }) => input)
+  .inputValidator((input: { id: string; data: Record<string, unknown> }) => input)
   .handler(async ({ data }) => {
     await db
       .update(contacts)
@@ -51,7 +51,7 @@ export const updateContact = createServerFn({ method: "POST" })
   });
 
 export const deleteContact = createServerFn({ method: "POST" })
-  .validator((input: { id: string }) => input)
+  .inputValidator((input: { id: string }) => input)
   .handler(async ({ data }) => {
     await db.delete(contacts).where(eq(contacts.id, data.id));
     return { success: true };

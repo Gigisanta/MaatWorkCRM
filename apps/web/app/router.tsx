@@ -4,18 +4,21 @@
 
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
+import { queryClient } from "~/lib/query-client";
 
 export function createRouter() {
   return createTanStackRouter({
     routeTree,
     defaultPreload: "intent",
     scrollRestoration: true,
+    context: {
+      queryClient,
+    },
   });
 }
 
 // Ensure hydrateStart can find getRouter if needed in the latest RC builds
 export const getRouter = createRouter;
-
 
 declare module "@tanstack/react-router" {
   interface Register {

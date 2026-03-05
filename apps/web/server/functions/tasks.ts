@@ -8,7 +8,7 @@ import { tasks } from "../db/schema";
 import { eq, and, desc, lte } from "drizzle-orm";
 
 export const getTasks = createServerFn({ method: "GET" })
-  .validator((input: { orgId: string; status?: string; assignedTo?: string }) => input)
+  .inputValidator((input: { orgId: string; status?: string; assignedTo?: string }) => input)
   .handler(async ({ data }) => {
     const conditions = [eq(tasks.organizationId, data.orgId)];
     if (data.status) conditions.push(eq(tasks.status, data.status as any));
@@ -17,7 +17,7 @@ export const getTasks = createServerFn({ method: "GET" })
   });
 
 export const createTask = createServerFn({ method: "POST" })
-  .validator((input: { orgId: string; data: Record<string, unknown> }) => input)
+  .inputValidator((input: { orgId: string; data: Record<string, unknown> }) => input)
   .handler(async ({ data }) => {
     const id = crypto.randomUUID();
     await db.insert(tasks).values({
@@ -29,7 +29,7 @@ export const createTask = createServerFn({ method: "POST" })
   });
 
 export const updateTask = createServerFn({ method: "POST" })
-  .validator((input: { id: string; data: Record<string, unknown> }) => input)
+  .inputValidator((input: { id: string; data: Record<string, unknown> }) => input)
   .handler(async ({ data }) => {
     const updateData: Record<string, unknown> = { ...data.data, updatedAt: new Date() };
     if (data.data.status === "completed") updateData.completedAt = new Date();
@@ -38,14 +38,14 @@ export const updateTask = createServerFn({ method: "POST" })
   });
 
 export const deleteTask = createServerFn({ method: "POST" })
-  .validator((input: { id: string }) => input)
+  .inputValidator((input: { id: string }) => input)
   .handler(async ({ data }) => {
     await db.delete(tasks).where(eq(tasks.id, data.id));
     return { success: true };
   });
 
 export const getOverdueTasks = createServerFn({ method: "GET" })
-  .validator((input: { orgId: string }) => input)
+  .inputValidator((input: { orgId: string }) => input)
   .handler(async ({ data }) => {
     return db
       .select()

@@ -1,192 +1,282 @@
-// ============================================================
-// MaatWork CRM — Tasks Page
-// ============================================================
-
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { Plus, Check, Clock, AlertTriangle, Calendar, X } from "lucide-react";
+import React, { useState } from "react";
+import { 
+  useTasks, 
+  useCreateTaskMutation, 
+  useUpdateTaskMutation, 
+  useDeleteTaskMutation,
+  useContacts 
+} from "~/lib/hooks/use-crm";
+import { Container, Stack, Grid } from "~/components/ui/Layout";
+import { Card, CardHeader, CardTitle, CardContent } from "~/components/ui/Card";
+import { Button } from "~/components/ui/Button";
+import { Badge } from "~/components/ui/Badge";
+import { Icon } from "~/components/ui/Icon";
+import { Input } from "~/components/ui/Input";
+import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from "~/components/ui/Modal";
+import { EmptyState } from "~/components/ui/EmptyState";
+import { ConfirmDialog } from "~/components/ui/ConfirmDialog";
+import { cn } from "~/lib/utils";
 
 export const Route = createFileRoute("/_app/tasks")({
   component: TasksPage,
 });
 
-type Task = { id: string; title: string; status: string; priority: string; dueDate: string; assignee: string; contact: string; isRecurrent: boolean };
-
-const INITIAL_TASKS: Task[] = [
-  { id: "1", title: "Llamar a María López – seguimiento mensual", status: "pending", priority: "high", dueDate: "2026-03-04", assignee: "Ana García", contact: "María López", isRecurrent: true },
-  { id: "2", title: "Preparar propuesta para Juan Martínez", status: "in_progress", priority: "medium", dueDate: "2026-03-11", assignee: "Ana García", contact: "Juan Martínez", isRecurrent: false },
-  { id: "3", title: "Enviar material informativo a Lucía", status: "pending", priority: "low", dueDate: "2026-03-03", assignee: "Pedro Ruiz", contact: "Lucía Fernández", isRecurrent: false },
-  { id: "4", title: "Reunión equipo semanal", status: "pending", priority: "medium", dueDate: "2026-03-11", assignee: "Carlos Admin", contact: "", isRecurrent: true },
-  { id: "5", title: "Revisar documentación Roberto Sánchez", status: "completed", priority: "high", dueDate: "2026-03-01", assignee: "Pedro Ruiz", contact: "Roberto Sánchez", isRecurrent: false },
-];
-
-// ── New Task Modal ────────────────────────────────────────────
-function NewTaskModal({ open, onClose, onSave }: { open: boolean; onClose: () => void; onSave: (t: Task) => void }) {
-  const [form, setForm] = useState({ title: "", priority: "medium", dueDate: "", assignee: "", contact: "" });
-  const [error, setError] = useState("");
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.title.trim()) { setError("El título es obligatorio"); return; }
-    onSave({ id: `t${Date.now()}`, ...form, status: "pending", isRecurrent: false });
-    setForm({ title: "", priority: "medium", dueDate: "", assignee: "", contact: "" });
-    setError("");
-    onClose();
-  };
-
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}>
-      <div className="glass-card w-full max-w-md mx-4 p-6 animate-fade-in" style={{ borderRadius: "1rem" }}>
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-white">Nueva Tarea</h2>
-          <button onClick={onClose} className="p-2 hover:bg-surface-700 rounded-lg text-surface-400 hover:text-white transition-colors" type="button"><X className="w-5 h-5" /></button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-sm">{error}</div>}
-          <div>
-            <label className="block text-sm font-medium text-surface-300 mb-1.5">Título *</label>
-            <input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Descripción de la tarea" className="w-full px-3 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-surface-200 placeholder:text-surface-500 focus:outline-none focus:border-brand-500 transition-colors" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-surface-300 mb-1.5">Prioridad</label>
-              <select value={form.priority} onChange={e => setForm(f => ({ ...f, priority: e.target.value }))} className="w-full px-3 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-surface-200 focus:outline-none focus:border-brand-500 transition-colors">
-                <option value="urgent">Urgente</option>
-                <option value="high">Alta</option>
-                <option value="medium">Media</option>
-                <option value="low">Baja</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-surface-300 mb-1.5">Fecha límite</label>
-              <input type="date" value={form.dueDate} onChange={e => setForm(f => ({ ...f, dueDate: e.target.value }))} className="w-full px-3 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-surface-200 focus:outline-none focus:border-brand-500 transition-colors" />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-surface-300 mb-1.5">Asignado a</label>
-            <input type="text" value={form.assignee} onChange={e => setForm(f => ({ ...f, assignee: e.target.value }))} placeholder="Nombre del responsable" className="w-full px-3 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-surface-200 placeholder:text-surface-500 focus:outline-none focus:border-brand-500 transition-colors" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-surface-300 mb-1.5">Contacto asociado</label>
-            <input type="text" value={form.contact} onChange={e => setForm(f => ({ ...f, contact: e.target.value }))} placeholder="Ej: María López" className="w-full px-3 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-surface-200 placeholder:text-surface-500 focus:outline-none focus:border-brand-500 transition-colors" />
-          </div>
-          <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded-lg font-medium transition-colors border border-surface-700">Cancelar</button>
-            <button type="submit" className="flex-1 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium transition-colors">Guardar Tarea</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-const priorityConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
-  urgent: { label: "Urgente", color: "text-red-400 bg-red-500/15 border-red-500/30", icon: AlertTriangle },
-  high: { label: "Alta", color: "text-amber-400 bg-amber-500/15 border-amber-500/30", icon: AlertTriangle },
-  medium: { label: "Media", color: "text-blue-400 bg-blue-500/15 border-blue-500/30", icon: Clock },
-  low: { label: "Baja", color: "text-surface-400 bg-surface-500/15 border-surface-500/30", icon: Clock },
+const priorityConfig: Record<string, { label: string; color: string; icon: "AlertTriangle" | "Clock" }> = {
+  urgent: { label: "Urgente", color: "text-red-400 bg-red-400/10 border-red-400/20", icon: "AlertTriangle" },
+  high: { label: "Alta", color: "text-amber-400 bg-amber-400/10 border-amber-400/20", icon: "AlertTriangle" },
+  medium: { label: "Media", color: "text-blue-400 bg-blue-400/10 border-blue-400/20", icon: "Clock" },
+  low: { label: "Baja", color: "text-text-muted bg-secondary/10 border-border/20", icon: "Clock" },
 };
 
 const statusConfig: Record<string, { label: string; color: string }> = {
   pending: { label: "Pendiente", color: "bg-amber-500" },
   in_progress: { label: "En Progreso", color: "bg-blue-500" },
   completed: { label: "Completada", color: "bg-emerald-500" },
-  cancelled: { label: "Cancelada", color: "bg-surface-500" },
+  cancelled: { label: "Cancelada", color: "bg-text-muted" },
 };
 
 function TasksPage() {
-  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
-  const [filter, setFilter] = useState<string>("");
-  const [showModal, setShowModal] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const { data: tasks, isLoading, error } = useTasks(statusFilter ? { status: statusFilter } : {});
+  const { data: contacts } = useContacts();
+  
+  const createTaskMutation = useCreateTaskMutation();
+  const updateTaskMutation = useUpdateTaskMutation();
+  const deleteTaskMutation = useDeleteTaskMutation();
 
-  const filtered = tasks.filter((t) => !filter || t.status === filter);
-  const isOverdue = (date: string) => date && new Date(date) < new Date();
+  const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const [newTaskForm, setNewTaskForm] = useState({ 
+    title: "", 
+    priority: "medium", 
+    dueDate: "", 
+    contactId: "" 
+  });
+
+  const handleCreateTask = async () => {
+    if (!newTaskForm.title) return;
+    try {
+      await createTaskMutation.mutateAsync({
+        ...newTaskForm,
+        dueDate: newTaskForm.dueDate ? new Date(newTaskForm.dueDate) : undefined,
+        status: "pending"
+      });
+      setShowNewTaskModal(false);
+      setNewTaskForm({ title: "", priority: "medium", dueDate: "", contactId: "" });
+    } catch (err) {
+      console.error("Failed to create task:", err);
+    }
+  };
+
+  const handleToggleTaskStatus = async (task: any) => {
+    const newStatus = task.status === "completed" ? "pending" : "completed";
+    try {
+      await updateTaskMutation.mutateAsync({
+        id: task.id,
+        data: { status: newStatus }
+      });
+    } catch (err) {
+      console.error("Failed to update task status:", err);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <Container className="py-12 flex justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container className="py-12">
+        <EmptyState 
+          title="Error al cargar tareas" 
+          description={(error as Error).message}
+          icon={<Icon name="AlertTriangle" className="text-error" />}
+        />
+      </Container>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <NewTaskModal open={showModal} onClose={() => setShowModal(false)} onSave={t => setTasks(prev => [t, ...prev])} />
+    <Container className="py-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Tareas</h1>
-          <p className="text-surface-400 mt-1">{tasks.length} tareas — {tasks.filter((t) => t.status === "pending").length} pendientes</p>
-        </div>
-        <button onClick={() => setShowModal(true)} className="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium transition-colors">
-          <Plus className="w-4 h-4" />
+      <Stack direction="row" align="center" justify="between">
+        <Stack direction="column" gap="xs">
+          <h1 className="text-3xl font-bold text-text font-display">Tareas</h1>
+          <p className="text-text-secondary">
+            {tasks?.length || 0} tareas en total • {tasks?.filter((t: any) => t.status === "pending").length || 0} pendientes
+          </p>
+        </Stack>
+        <Button variant="primary" onClick={() => setShowNewTaskModal(true)}>
+          <Icon name="Plus" className="mr-2" size={16} />
           Nueva Tarea
-        </button>
-      </div>
+        </Button>
+      </Stack>
 
       {/* Filters */}
-      <div className="flex gap-2 flex-wrap">
-        {["", "pending", "in_progress", "completed"].map((status) => (
-          <button
-            key={status}
-            onClick={() => setFilter(status)}
-            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-              filter === status
-                ? "bg-brand-600 text-white"
-                : "bg-surface-800 text-surface-400 hover:text-surface-200 border border-surface-700"
-            }`}
+      <Stack direction="row" gap="sm" className="bg-secondary/5 p-1 rounded-xl w-fit">
+        {[
+          { id: undefined, label: "Todas" },
+          { id: "pending", label: "Pendientes" },
+          { id: "in_progress", label: "En Proceso" },
+          { id: "completed", label: "Completadas" }
+        ].map((f) => (
+          <Button
+            key={f.id || "all"}
+            variant={statusFilter === f.id ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setStatusFilter(f.id)}
+            className={cn(
+              "rounded-lg px-4",
+              statusFilter === f.id && "bg-background shadow-sm text-primary"
+            )}
           >
-            {status ? statusConfig[status].label : "Todas"}
-          </button>
+            {f.label}
+          </Button>
         ))}
-      </div>
+      </Stack>
 
       {/* Task List */}
-      <div className="space-y-2">
-        {filtered.map((task) => {
-          const priority = priorityConfig[task.priority];
-          const status = statusConfig[task.status];
-          const overdue = task.status !== "completed" && isOverdue(task.dueDate);
+      <div className="grid gap-3">
+        {tasks?.length === 0 ? (
+          <EmptyState 
+            title="Sin tareas" 
+            description="No hay tareas que coincidan con el filtro seleccionado."
+            icon={<Icon name="Calendar" className="text-text-muted" />}
+          />
+        ) : (
+          tasks?.map((task: any, index: number) => {
+            const priority = priorityConfig[task.priority] || priorityConfig.medium;
+            const isOverdue = task.status !== "completed" && task.dueDate && new Date(task.dueDate) < new Date();
 
-          return (
-            <div key={task.id} className="glass-card p-4 flex items-center gap-4 animate-fade-in hover:border-brand-600/30 transition-all">
-              {/* Checkbox */}
-              <button className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all ${
-                task.status === "completed"
-                  ? "bg-emerald-500 border-emerald-500"
-                  : "border-surface-600 hover:border-brand-500"
-              }`}>
-                {task.status === "completed" && <Check className="w-3 h-3 text-white" />}
-              </button>
+            return (
+              <Card 
+                key={task.id} 
+                variant="glass" 
+                className={cn(
+                  "hover-lift animate-enter",
+                  task.status === "completed" && "opacity-75"
+                )}
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <CardContent className="p-4 flex items-center gap-4">
+                  <button 
+                    onClick={() => handleToggleTaskStatus(task)}
+                    className={cn(
+                      "w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all",
+                      task.status === "completed" 
+                        ? "bg-primary border-primary text-white" 
+                        : "border-border hover:border-primary/50"
+                    )}
+                  >
+                    {task.status === "completed" && <Icon name="Check" size={14} />}
+                  </button>
 
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <p className={`font-medium text-sm ${task.status === "completed" ? "text-surface-500 line-through" : "text-white"}`}>
-                  {task.title}
-                </p>
-                <div className="flex items-center gap-3 mt-1.5">
-                  {task.contact && (
-                    <span className="text-xs text-surface-400">👤 {task.contact}</span>
-                  )}
-                  <span className="text-xs text-surface-400">→ {task.assignee}</span>
-                  {task.isRecurrent && (
-                    <span className="text-xs text-brand-400">🔄 Recurrente</span>
-                  )}
-                </div>
-              </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={cn(
+                      "font-medium transition-all truncate",
+                      task.status === "completed" ? "text-text-muted line-through" : "text-text"
+                    )}>
+                      {task.title}
+                    </p>
+                    <Stack direction="row" gap="md" align="center" className="mt-1">
+                      {task.contactId && (
+                        <div className="flex items-center gap-1.5 text-xs text-text-secondary">
+                          <Icon name="User" size={12} />
+                          {contacts?.find((c: any) => c.id === task.contactId)?.name || "Contacto"}
+                        </div>
+                      )}
+                      {task.dueDate && (
+                        <div className={cn(
+                          "flex items-center gap-1.5 text-xs",
+                          isOverdue ? "text-error font-medium" : "text-text-muted"
+                        )}>
+                          <Icon name="Calendar" size={12} />
+                          {new Date(task.dueDate).toLocaleDateString()}
+                          {isOverdue && <span className="ml-1 uppercase text-[10px] tracking-wider">Vencido</span>}
+                        </div>
+                      )}
+                    </Stack>
+                  </div>
 
-              {/* Priority */}
-              <span className={`px-2 py-0.5 rounded text-xs font-medium border ${priority.color}`}>
-                {priority.label}
-              </span>
+                  <Badge 
+                    className={cn("px-2.5 py-1 flex items-center gap-1.5 border", priority.color)}
+                  >
+                    <Icon name={priority.icon} size={12} />
+                    {priority.label}
+                  </Badge>
 
-              {/* Due date */}
-              <div className={`flex items-center gap-1 text-xs shrink-0 ${overdue ? "text-red-400" : "text-surface-400"}`}>
-                <Calendar className="w-3 h-3" />
-                {new Date(task.dueDate).toLocaleDateString("es-AR", { day: "numeric", month: "short" })}
-                {overdue && <span className="text-red-400 font-medium ml-1">Vencida</span>}
-              </div>
-
-              {/* Status dot */}
-              <div className={`w-2 h-2 rounded-full ${status.color} shrink-0`} title={status.label} />
-            </div>
-          );
-        })}
+                  <div className={cn("w-2 h-2 rounded-full", statusConfig[task.status]?.color || "bg-border")} />
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
       </div>
-    </div>
+
+      {/* New Task Modal */}
+      <Modal open={showNewTaskModal} onClose={() => setShowNewTaskModal(false)}>
+        <ModalHeader>
+          <ModalTitle>Nueva Tarea</ModalTitle>
+        </ModalHeader>
+        <ModalContent className="space-y-4">
+          <Input 
+            label="Título de la Tarea"
+            placeholder="¿Qué hace falta hacer?"
+            value={newTaskForm.title}
+            onChange={(e) => setNewTaskForm(prev => ({ ...prev, title: e.target.value }))}
+          />
+          <Grid cols={2} gap="md">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-text-secondary">Prioridad</label>
+              <select 
+                className="w-full h-10 px-3 rounded-lg border border-border bg-secondary/5 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+                value={newTaskForm.priority}
+                onChange={(e) => setNewTaskForm(prev => ({ ...prev, priority: e.target.value }))}
+              >
+                <option value="low">Baja</option>
+                <option value="medium">Media</option>
+                <option value="high">Alta</option>
+                <option value="urgent">Urgente</option>
+              </select>
+            </div>
+            <Input 
+              label="Fecha Límite"
+              type="date"
+              value={newTaskForm.dueDate}
+              onChange={(e) => setNewTaskForm(prev => ({ ...prev, dueDate: e.target.value }))}
+            />
+          </Grid>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-text-secondary">Contacto Asociado</label>
+            <select 
+              className="w-full h-10 px-3 rounded-lg border border-border bg-secondary/5 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+              value={newTaskForm.contactId}
+              onChange={(e) => setNewTaskForm(prev => ({ ...prev, contactId: e.target.value }))}
+            >
+              <option value="">Ninguno</option>
+              {contacts?.map((c: any) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+        </ModalContent>
+        <ModalFooter>
+          <Button variant="ghost" onClick={() => setShowNewTaskModal(false)}>
+            Cancelar
+          </Button>
+          <Button 
+            variant="primary" 
+            onClick={handleCreateTask}
+            disabled={createTaskMutation.isPending || !newTaskForm.title}
+          >
+            {createTaskMutation.isPending ? "Creando..." : "Crear Tarea"}
+          </Button>
+        </ModalFooter>
+      </Modal>
+    </Container>
   );
 }

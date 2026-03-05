@@ -8,7 +8,7 @@ import { contacts, deals, tasks, teamGoals, pipelineStages, auditLogs } from "..
 import { eq, and, count, sql, desc } from "drizzle-orm";
 
 export const getDashboardMetrics = createServerFn({ method: "GET" })
-  .validator((input: { orgId: string }) => input)
+  .inputValidator((input: { orgId: string }) => input)
   .handler(async ({ data }) => {
     const [contactCount] = await db
       .select({ count: count() })
@@ -51,7 +51,7 @@ export const getDashboardMetrics = createServerFn({ method: "GET" })
   });
 
 export const getPipelineByStage = createServerFn({ method: "GET" })
-  .validator((input: { orgId: string }) => input)
+  .inputValidator((input: { orgId: string }) => input)
   .handler(async ({ data }) => {
     return db
       .select({
@@ -68,7 +68,7 @@ export const getPipelineByStage = createServerFn({ method: "GET" })
   });
 
 export const getRecentActivity = createServerFn({ method: "GET" })
-  .validator((input: { orgId: string; limit?: number }) => input)
+  .inputValidator((input: { orgId: string; limit?: number }) => input)
   .handler(async ({ data }) => {
     return db
       .select()

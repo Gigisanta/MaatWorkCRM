@@ -8,13 +8,13 @@ import { teams, teamMembers, teamGoals, users } from "../db/schema";
 import { eq, desc } from "drizzle-orm";
 
 export const getTeams = createServerFn({ method: "GET" })
-  .validator((input: { orgId: string }) => input)
+  .inputValidator((input: { orgId: string }) => input)
   .handler(async ({ data }) => {
     return db.select().from(teams).where(eq(teams.organizationId, data.orgId));
   });
 
 export const getTeamWithMembers = createServerFn({ method: "GET" })
-  .validator((input: { teamId: string }) => input)
+  .inputValidator((input: { teamId: string }) => input)
   .handler(async ({ data }) => {
     const team = await db.select().from(teams).where(eq(teams.id, data.teamId));
     const members = await db
@@ -26,7 +26,7 @@ export const getTeamWithMembers = createServerFn({ method: "GET" })
   });
 
 export const getTeamGoals = createServerFn({ method: "GET" })
-  .validator((input: { teamId: string }) => input)
+  .inputValidator((input: { teamId: string }) => input)
   .handler(async ({ data }) => {
     return db
       .select()
@@ -36,7 +36,7 @@ export const getTeamGoals = createServerFn({ method: "GET" })
   });
 
 export const updateGoalProgress = createServerFn({ method: "POST" })
-  .validator((input: { goalId: string; currentValue: number }) => input)
+  .inputValidator((input: { goalId: string; currentValue: number }) => input)
   .handler(async ({ data }) => {
     const [goal] = await db.select().from(teamGoals).where(eq(teamGoals.id, data.goalId));
     const newStatus = data.currentValue >= (goal?.targetValue ?? 0) ? "completed" : "active";
@@ -48,7 +48,7 @@ export const updateGoalProgress = createServerFn({ method: "POST" })
   });
 
 export const createTeam = createServerFn({ method: "POST" })
-  .validator((input: { orgId: string; name: string; description?: string; leaderId?: string }) => input)
+  .inputValidator((input: { orgId: string; name: string; description?: string; leaderId?: string }) => input)
   .handler(async ({ data }) => {
     const id = crypto.randomUUID();
     await db.insert(teams).values({

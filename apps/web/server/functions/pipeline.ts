@@ -8,7 +8,7 @@ import { pipelineStages, deals, contacts } from "../db/schema";
 import { eq, asc } from "drizzle-orm";
 
 export const getStages = createServerFn({ method: "GET" })
-  .validator((input: { orgId: string }) => input)
+  .inputValidator((input: { orgId: string }) => input)
   .handler(async ({ data }) => {
     return db
       .select()
@@ -18,7 +18,7 @@ export const getStages = createServerFn({ method: "GET" })
   });
 
 export const getDealsWithContacts = createServerFn({ method: "GET" })
-  .validator((input: { orgId: string }) => input)
+  .inputValidator((input: { orgId: string }) => input)
   .handler(async ({ data }) => {
     return db
       .select({
@@ -31,7 +31,7 @@ export const getDealsWithContacts = createServerFn({ method: "GET" })
   });
 
 export const moveDeal = createServerFn({ method: "POST" })
-  .validator((input: { dealId: string; stageId: string }) => input)
+  .inputValidator((input: { dealId: string; stageId: string }) => input)
   .handler(async ({ data }) => {
     await db
       .update(deals)
@@ -41,7 +41,7 @@ export const moveDeal = createServerFn({ method: "POST" })
   });
 
 export const createDeal = createServerFn({ method: "POST" })
-  .validator((input: { orgId: string; data: Record<string, unknown> }) => input)
+  .inputValidator((input: { orgId: string; data: Record<string, unknown> }) => input)
   .handler(async ({ data }) => {
     const id = crypto.randomUUID();
     await db.insert(deals).values({
@@ -53,7 +53,7 @@ export const createDeal = createServerFn({ method: "POST" })
   });
 
 export const createStage = createServerFn({ method: "POST" })
-  .validator((input: { orgId: string; name: string; color: string; order: number }) => input)
+  .inputValidator((input: { orgId: string; name: string; color: string; order: number }) => input)
   .handler(async ({ data }) => {
     const id = crypto.randomUUID();
     await db.insert(pipelineStages).values({

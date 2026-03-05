@@ -1,12 +1,13 @@
-// ============================================================
-// MaatWork CRM — Root Route (__root.tsx)
-// ============================================================
-
 import { createRootRoute, Outlet, ScrollRestoration, HeadContent, Scripts } from "@tanstack/react-router";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "~/lib/query-client";
 
 import "../styles/globals.css";
 
 export const Route = createRootRoute({
+  context: () => ({
+    queryClient,
+  }),
   component: RootLayout,
   head: () => ({
     meta: [
@@ -17,23 +18,25 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" },
     ],
   }),
 });
 
 function RootLayout() {
   return (
-    <html lang="es">
-      <head>
-        <HeadContent />
-
-      </head>
-      <body>
-        <Outlet />
-        <ScrollRestoration />
-        <Scripts />
-      </body>
-    </html>
+    <QueryClientProvider client={queryClient}>
+      <html lang="es" className="dark antialiased bg-background text-foreground">
+        <head>
+          <HeadContent />
+        </head>
+        <body className="font-sans min-h-screen">
+          <Outlet />
+          <ScrollRestoration />
+          <Scripts />
+        </body>
+      </html>
+    </QueryClientProvider>
   );
 }

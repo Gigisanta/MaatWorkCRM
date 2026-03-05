@@ -31,7 +31,7 @@ function ReportsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Reportes</h1>
+          <h1 className="text-3xl font-bold text-white font-display tracking-tight">Reportes</h1>
           <p className="text-surface-400 mt-1">Métricas y análisis — Marzo 2026</p>
         </div>
         <div className="flex gap-2">
@@ -59,7 +59,7 @@ function ReportsPage() {
 
       {/* Pipeline Chart - Bar */}
       <div className="glass-card p-6 animate-fade-in">
-        <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+        <h2 className="text-lg font-semibold text-white font-display tracking-tight mb-6 flex items-center gap-2">
           <BarChart3 className="w-5 h-5 text-brand-400" /> Pipeline por Etapa (Valor)
         </h2>
         <div className="space-y-4">
@@ -90,7 +90,7 @@ function ReportsPage() {
 
       {/* Monthly Trends */}
       <div className="glass-card p-6 animate-fade-in">
-        <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+        <h2 className="text-lg font-semibold text-white font-display tracking-tight mb-4 flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-emerald-400" /> Tendencia Mensual
         </h2>
         <div className="grid grid-cols-3 gap-4">
