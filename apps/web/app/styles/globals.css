@@ -5,110 +5,94 @@
    ============================================================================= */
 
 @theme {
-  /* Brand Colors */
-  --color-primary: hsl(266 96% 76%); /* Soft Purple */
-  --color-primary-hover: hsl(266 96% 70%);
-  --color-primary-active: hsl(266 96% 65%);
-  --color-primary-light: hsl(266 96% 85%);
-  --color-primary-subtle: hsl(266 96% 95%);
+  /* Enterprise-grade Professional Palette */
+  --color-primary: hsl(255 85% 60%); /* Refined Deep Indigo */
+  --color-primary-hover: hsl(255 85% 55%);
+  --color-primary-active: hsl(255 85% 50%);
+  --color-primary-light: hsl(255 85% 92%);
+  --color-primary-subtle: hsl(255 85% 97%);
   
-  --color-secondary: hsl(0 0% 0%); /* Black base */
-  --color-secondary-hover: hsl(0 0% 10%);
-  --color-secondary-light: hsl(0 0% 20%);
-  --color-secondary-subtle: hsl(0 0% 98%);
+  --color-secondary: hsl(220 20% 10%); /* Deep Charcoal */
+  --color-secondary-hover: hsl(220 20% 15%);
+  --color-secondary-light: hsl(220 20% 25%);
+  --color-secondary-subtle: hsl(220 20% 98%);
   
-  --color-accent: hsl(160 84% 39%); /* Soft Green */
-  --color-accent-hover: hsl(160 84% 34%);
-  --color-accent-light: hsl(160 84% 45%);
-  --color-accent-subtle: hsl(160 84% 95%);
+  --color-accent: hsl(175 75% 35%); /* Sophisticated Teal */
+  --color-accent-hover: hsl(175 75% 30%);
+  --color-accent-light: hsl(175 75% 45%);
+  --color-accent-subtle: hsl(175 75% 96%);
 
-  /* Status Colors */
-  --color-success: hsl(142 71% 45%);
-  --color-success-hover: hsl(142 71% 40%);
-  --color-success-subtle: hsl(142 71% 95%);
+  /* Balanced Status Colors */
+  --color-success: hsl(150 70% 40%);
+  --color-success-hover: hsl(150 70% 35%);
+  --color-success-subtle: hsl(150 70% 96%);
   
-  --color-error: hsl(0 84% 60%);
-  --color-error-hover: hsl(0 84% 55%);
-  --color-error-subtle: hsl(0 84% 95%);
+  --color-error: hsl(0 75% 55%);
+  --color-error-hover: hsl(0 75% 50%);
+  --color-error-subtle: hsl(0 75% 97%);
   
-  --color-warning: hsl(45 93% 47%);
-  --color-warning-hover: hsl(45 93% 42%);
-  --color-warning-subtle: hsl(45 93% 95%);
+  --color-warning: hsl(35 90% 45%);
+  --color-warning-hover: hsl(35 90% 40%);
+  --color-warning-subtle: hsl(35 90% 96%);
   
-  --color-info: hsl(217 91% 60%);
-  --color-info-hover: hsl(217 91% 55%);
-  --color-info-subtle: hsl(217 91% 95%);
+  --color-info: hsl(210 85% 50%);
+  --color-info-hover: hsl(210 85% 45%);
+  --color-info-subtle: hsl(210 85% 97%);
 
-  /* Surface Colors */
-  --color-background: hsl(0 0% 100%);
-  --color-surface: #fafaf9;
-  --color-surface-hover: #f5f5f4;
+  /* Clean Surface Colors - Light Mode focus on readability */
+  --color-background: #ffffff;
+  --color-surface: #fcfcfc;
+  --color-surface-hover: #f5f5f5;
   --color-surface-50: #f8fafc;
   --color-surface-100: #f1f5f9;
   --color-surface-200: #e2e8f0;
+  --color-surface-300: #cbd5e1;
+  --color-surface-400: #94a3b8;
+  --color-surface-500: #64748b;
+  --color-surface-600: #475569;
   --color-surface-700: #334155;
   --color-surface-800: #1e293b;
   --color-surface-900: #0f172a;
-  --color-surface-950: #020617;
 
-  /* Border & Text */
-  --color-border: hsl(0 0% 88%);
-  --color-border-hover: hsl(0 0% 80%);
-  --color-text: hsl(0 0% 0%);
-  --color-text-secondary: hsl(0 0% 26%);
-  --color-text-muted: hsl(0 0% 40%);
-  --color-text-inverse: hsl(0 0% 100%);
-
-  /* Typography */
-  --font-display: "Outfit", system-ui, -apple-system, sans-serif;
-  --font-body: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  /* Typography: Precision Weighted */
+  --font-display: "Inter", "Outfit", system-ui, -apple-system, sans-serif;
+  --font-body: "Inter", "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
   --font-sans: var(--font-body);
-  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --font-mono: "JetBrains Mono", monospace;
 
-  /* Spacing / Radius */
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
-  --radius-full: 9999px;
+  /* Elevation & Borders */
+  --color-border: hsl(220 15% 92%);
+  --color-border-hover: hsl(220 15% 85%);
+  --color-border-strong: hsl(220 15% 80%);
+  --color-text: hsl(220 40% 15%);
+  --color-text-secondary: hsl(220 15% 45%);
+  --color-text-muted: hsl(220 10% 60%);
+  --color-text-inverse: #ffffff;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  --shadow-primary: 0 4px 14px 0 rgba(139, 92, 246, 0.39);
-  --shadow-primary-lg: 0 6px 20px rgba(139, 92, 246, 0.4);
+  /* Refined Shadows */
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-primary: 0 4px 14px 0 rgba(79, 70, 229, 0.15);
+  --shadow-primary-lg: 0 12px 24px 0 rgba(79, 70, 229, 0.25);
 }
 
-/* Dark Mode Overrides (used primarily by the current CRM) */
+/* Professional Dark Mode */
 .dark, [data-theme='dark'] {
-  --color-primary: hsl(261 92% 82%);
-  --color-primary-hover: hsl(261 92% 77%);
-  --color-primary-active: hsl(261 92% 72%);
-  --color-primary-light: hsl(261 92% 90%);
+  --color-background: #09090b;
+  --color-surface: #121215;
+  --color-surface-hover: #18181c;
   
-  --color-secondary: hsl(0 0% 100%);
-  --color-secondary-hover: hsl(0 0% 90%);
-  --color-secondary-subtle: hsl(0 0% 12%);
+  --color-primary: hsl(255 85% 70%);
+  --color-primary-hover: hsl(255 85% 65%);
   
-  --color-accent: hsl(158 64% 52%);
-  --color-accent-hover: hsl(158 64% 47%);
-  
-  --color-success: hsl(142 60% 35%);
-  --color-warning: hsl(45 80% 45%);
-  --color-info: hsl(217 80% 55%);
-  
-  --color-background: hsl(0 0% 4%);
-  --color-surface: #1c1917;
-  --color-surface-hover: #292524;
-  
-  --color-border: hsl(0 0% 18%);
-  --color-border-hover: hsl(0 0% 25%);
-  --color-text: hsl(0 0% 100%);
-  --color-text-secondary: hsl(0 0% 69%);
-  --color-text-inverse: hsl(0 0% 0%);
+  --color-border: hsl(220 15% 18%);
+  --color-border-hover: hsl(220 15% 25%);
+  --color-border-strong: hsl(220 15% 30%);
+  --color-text: hsl(220 10% 95%);
+  --color-text-secondary: hsl(220 10% 70%);
+  --color-text-muted: hsl(220 10% 50%);
 }
 
 /* ============================================================
@@ -166,13 +150,21 @@ body {
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: var(--shadow-sm);
-  border-radius: var(--radius-lg);
+  border-radius: 1.25rem;
 }
 
 .dark .glass-card, [data-theme='dark'] .glass-card {
-  background: rgba(28, 25, 23, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(18, 18, 21, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: var(--shadow-md);
+}
+
+.enterprise-glass {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
 .glass-landing {
@@ -180,6 +172,11 @@ body {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.dark .glass-landing {
+  background: rgba(15, 15, 15, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .dark .glass-landing {

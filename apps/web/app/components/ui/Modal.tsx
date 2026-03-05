@@ -32,22 +32,22 @@ export const Modal = React.forwardRef<React.ElementRef<typeof DialogPrimitive.Co
         <DialogPrimitive.Portal>
           <DialogPrimitive.Overlay
             className={cn(
-              'fixed inset-0 z-50 bg-secondary/40 backdrop-blur-sm',
+              'fixed inset-0 z-50 bg-secondary/20 backdrop-blur-md',
               'data-[state=open]:animate-in data-[state=closed]:animate-out',
               'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-              'duration-300'
+              'duration-500'
             )}
           />
           <DialogPrimitive.Content
             ref={ref}
             className={cn(
               'fixed left-[50%] top-[50%] z-50 flex w-full translate-x-[-50%] translate-y-[-50%] flex-col',
-              'border border-border bg-background p-6 shadow-2xl',
-              'duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out',
+              'enterprise-glass border border-border/40 p-0 shadow-2xl overflow-hidden',
+              'duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out',
               'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
               'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
               'data-[state=open]:animate-pop',
-              'sm:rounded-xl font-body',
+              'sm:rounded-[2rem] font-body',
               sizeClasses[size],
               className
             )}

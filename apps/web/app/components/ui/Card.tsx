@@ -19,33 +19,33 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
     ref
   ) => {
     const variantClasses = {
-      outlined: 'border border-surface-800 bg-surface-950',
-      elevated: 'shadow-lg bg-surface-950 border border-surface-800',
+      outlined: 'border border-border/60 bg-surface shadow-sm hover:border-border-strong transition-all duration-300',
+      elevated: 'shadow-lg bg-surface border border-border/40',
       interactive:
-        'border border-surface-800 bg-surface-950 hover:shadow-xl hover:border-brand-600/30 transition-all duration-300 cursor-pointer hover:-translate-y-1',
-      highlight: 'border-l-4 border-l-brand-600 border border-surface-800 bg-surface-950',
+        'border border-border/60 bg-surface hover:shadow-xl hover:border-primary/30 transition-all duration-300 cursor-pointer hover:-translate-y-1 hover:bg-surface-hover',
+      highlight: 'border-l-4 border-l-primary border border-border/40 bg-surface shadow-sm',
       animated:
-        'border border-surface-800 bg-surface-950 hover:shadow-xl hover:border-brand-600/30 hover:-translate-y-1 transition-all duration-300 cursor-pointer',
-      glass: 'glass-card',
-      cyber: 'glass-card relative overflow-hidden group hover:border-brand-600/50 transition-colors duration-300',
+        'border border-border/60 bg-surface hover:shadow-xl hover:border-primary/30 hover:-translate-y-1 transition-all duration-300 cursor-pointer',
+      glass: 'glass-card border border-white/40 shadow-sm hover:border-white/60 transition-all duration-500',
+      cyber: 'glass-card relative overflow-hidden group hover:border-primary/50 transition-all duration-500 hover:shadow-primary-lg active:scale-[0.99]',
     };
 
     const paddingClasses = {
       none: '',
       sm: 'p-3',
-      md: 'p-4',
-      lg: 'p-6',
+      md: 'p-5',
+      lg: 'p-8',
     };
 
     const animatedClasses = animated
-      ? 'hover:shadow-xl hover:-translate-y-1 hover:border-brand-600/30 transition-all duration-300'
+      ? 'hover:shadow-xl hover:-translate-y-1.5 hover:border-primary/40 transition-all duration-500'
       : '';
 
     return (
       <div
         ref={ref}
         className={cn(
-          'rounded-xl font-body',
+          'rounded-2xl font-body transition-all duration-300',
           variantClasses[variant],
           paddingClasses[padding],
           animatedClasses,
@@ -56,7 +56,8 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
         {children}
         {variant === 'cyber' && (
           <>
-            <div className="absolute inset-0 bg-gradient-to-br from-brand-600/5 via-transparent to-brand-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+            <div className="absolute -inset-px bg-gradient-to-r from-primary/20 via-transparent to-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none rounded-[inherit]" />
           </>
         )}
       </div>

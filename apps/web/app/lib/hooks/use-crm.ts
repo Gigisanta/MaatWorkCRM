@@ -149,23 +149,28 @@ export function useDeleteContactMutation() {
  * Pipeline & Deals
  */
 export function usePipelineBoard() {
-  const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const { data: session, isLoading: sessionLoading } = useSession();
+  const orgId = (!sessionLoading && session?.session?.activeOrganizationId) || "org_maatwork_demo";
 
   return useQuery({
     queryKey: ["pipeline-board", orgId],
     queryFn: async () => {
-      const [stages, deals] = await Promise.all([
-        getStages({ data: { orgId: orgId! } }),
-        getDealsWithContacts({ data: { orgId: orgId! } }),
-      ]);
+      try {
+        const [stages, deals] = await Promise.all([
+          getStages({ data: { orgId: orgId! } }),
+          getDealsWithContacts({ data: { orgId: orgId! } }),
+        ]);
 
-      return stages.map((stage) => ({
-        ...stage,
-        deals: deals.filter((d) => d.deal.stageId === stage.id),
-      }));
+        return stages.map((stage) => ({
+          ...stage,
+          deals: deals.filter((d) => d.deal.stageId === stage.id),
+        }));
+      } catch (error) {
+        console.error("Pipeline Board Fetch Error:", error);
+        throw error;
+      }
     },
-    enabled: !!orgId,
+    enabled: true, // Always enabled, fallback to orgId logic
   });
 }
 
