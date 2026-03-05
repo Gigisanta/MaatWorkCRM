@@ -1,0 +1,11 @@
+// ============================================================
+// MaatWork CRM — Index Route (redirect to dashboard)
+// ============================================================
+
+import { createFileRoute, redirect } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/")({
+  beforeLoad: () => {
+    throw redirect({ to: "/dashboard" });
+  },
+});
