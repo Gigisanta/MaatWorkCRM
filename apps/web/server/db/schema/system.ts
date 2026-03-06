@@ -5,17 +5,21 @@
 // Database: PostgreSQL (Neon)
 // ============================================================
 
-import { pgTable, text, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
-import { users, organizations } from "./auth";
+import { boolean, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { organizations, users } from "./auth";
 
 // ── Notifications ────────────────────────────────────────────
 export const notifications = pgTable("notifications", {
   id: text("id").primaryKey(),
-  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
   organizationId: text("organization_id").references(() => organizations.id, { onDelete: "cascade" }),
   type: text("type", {
     enum: ["info", "success", "warning", "error", "task", "goal", "contact"],
-  }).notNull().default("info"),
+  })
+    .notNull()
+    .default("info"),
   title: text("title").notNull(),
   message: text("message").notNull(),
   isRead: boolean("is_read").notNull().default(false),
@@ -26,15 +30,21 @@ export const notifications = pgTable("notifications", {
 // ── Training Materials (Capacitaciones) ──────────────────────
 export const trainingMaterials = pgTable("training_materials", {
   id: text("id").primaryKey(),
-  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  organizationId: text("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   description: text("description"),
   url: text("url"),
   content: text("content"),
   category: text("category", {
     enum: ["course", "video", "document", "guide", "other"],
-  }).notNull().default("document"),
-  createdBy: text("created_by").notNull().references(() => users.id),
+  })
+    .notNull()
+    .default("document"),
+  createdBy: text("created_by")
+    .notNull()
+    .references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

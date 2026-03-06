@@ -1,138 +1,138 @@
-'use client';
+"use client";
 
-import React from 'react';
 import {
-  Home,
-  Users,
-  BarChart3,
+  Activity,
+  AlertCircle,
+  AlertTriangle,
   BarChart2,
-  Settings,
-  LogOut,
-  Menu,
-  X,
-  ChevronUp,
+  BarChart3,
+  Bell,
+  Book,
+  Briefcase,
+  Calendar,
+  Check,
+  CheckCircle,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  User,
-  Info,
-  CheckCircle,
-  AlertCircle,
-  AlertTriangle,
-  XCircle,
-  WifiOff,
-  Loader,
-  RefreshCw,
-  Edit,
-  MoreVertical,
-  Trash2,
-  Plus,
-  Check,
-  Search,
-  List,
-  Grid,
-  Download,
-  Book,
-  ExternalLink,
-  Contact,
-  Users as Team,
-  GraduationCap,
-  TrendingUp,
-  Briefcase,
-  Shield,
-  UserPlus,
-  FileText,
-  Activity,
+  ChevronUp,
   Clock,
+  Command,
+  Compass,
+  Contact,
+  Cpu,
+  DollarSign,
+  Download,
+  Edit,
+  ExternalLink,
   Eye,
   EyeOff,
-  Compass,
-  Zap,
-  Command,
-  Calendar,
-  PauseCircle,
-  UserX,
+  FileText,
+  GraduationCap,
+  Grid,
+  Home,
+  Info,
   Layout,
-  DollarSign,
-  PieChart,
-  Target,
-  Bell,
-  Cpu,
+  List,
+  Loader,
+  LogOut,
   type LucideIcon,
-} from 'lucide-react';
-import { cn } from '~/lib/utils';
+  Menu,
+  MoreVertical,
+  PauseCircle,
+  PieChart,
+  Plus,
+  RefreshCw,
+  Search,
+  Settings,
+  Shield,
+  Target,
+  Users as Team,
+  Trash2,
+  TrendingUp,
+  User,
+  UserPlus,
+  UserX,
+  Users,
+  WifiOff,
+  X,
+  XCircle,
+  Zap,
+} from "lucide-react";
+import React from "react";
+import { cn } from "~/lib/utils";
 
 export type IconName =
-  | 'Home'
-  | 'Users'
-  | 'BarChart3'
-  | 'BarChart2'
-  | 'Settings'
-  | 'LogOut'
-  | 'Menu'
-  | 'X'
-  | 'ChevronUp'
-  | 'ChevronDown'
-  | 'ChevronLeft'
-  | 'ChevronRight'
-  | 'User'
-  | 'Info'
-  | 'CheckCircle'
-  | 'AlertCircle'
-  | 'AlertTriangle'
-  | 'XCircle'
-  | 'WifiOff'
-  | 'Loader'
-  | 'chevron-up'
-  | 'chevron-down'
-  | 'x'
-  | 'info'
-  | 'check-circle'
-  | 'alert-circle'
-  | 'alert-triangle'
-  | 'x-circle'
-  | 'wifi-off'
-  | 'loader'
-  | 'refresh-cw'
-  | 'edit'
-  | 'more-vertical'
-  | 'trash-2'
-  | 'plus'
-  | 'check'
-  | 'search'
-  | 'list'
-  | 'grid'
-  | 'download'
-  | 'Book'
-  | 'ExternalLink'
-  | 'Contact'
-  | 'Team'
-  | 'GraduationCap'
-  | 'TrendingUp'
-  | 'Briefcase'
-  | 'Shield'
-  | 'UserPlus'
-  | 'FileText'
-  | 'Activity'
-  | 'RefreshCw'
-  | 'Clock'
-  | 'eye'
-  | 'eye-off'
-  | 'Eye'
-  | 'EyeOff'
-  | 'Navigation'
-  | 'Zap'
-  | 'command'
-  | 'Command'
-  | 'calendar'
-  | 'pause-circle'
-  | 'user-x'
-  | 'Layout'
-  | 'DollarSign'
-  | 'PieChart'
-  | 'Target'
-  | 'Bell'
-  | 'Cpu';
+  | "Home"
+  | "Users"
+  | "BarChart3"
+  | "BarChart2"
+  | "Settings"
+  | "LogOut"
+  | "Menu"
+  | "X"
+  | "ChevronUp"
+  | "ChevronDown"
+  | "ChevronLeft"
+  | "ChevronRight"
+  | "User"
+  | "Info"
+  | "CheckCircle"
+  | "AlertCircle"
+  | "AlertTriangle"
+  | "XCircle"
+  | "WifiOff"
+  | "Loader"
+  | "chevron-up"
+  | "chevron-down"
+  | "x"
+  | "info"
+  | "check-circle"
+  | "alert-circle"
+  | "alert-triangle"
+  | "x-circle"
+  | "wifi-off"
+  | "loader"
+  | "refresh-cw"
+  | "edit"
+  | "more-vertical"
+  | "trash-2"
+  | "plus"
+  | "check"
+  | "search"
+  | "list"
+  | "grid"
+  | "download"
+  | "Book"
+  | "ExternalLink"
+  | "Contact"
+  | "Team"
+  | "GraduationCap"
+  | "TrendingUp"
+  | "Briefcase"
+  | "Shield"
+  | "UserPlus"
+  | "FileText"
+  | "Activity"
+  | "RefreshCw"
+  | "Clock"
+  | "eye"
+  | "eye-off"
+  | "Eye"
+  | "EyeOff"
+  | "Navigation"
+  | "Zap"
+  | "command"
+  | "Command"
+  | "calendar"
+  | "pause-circle"
+  | "user-x"
+  | "Layout"
+  | "DollarSign"
+  | "PieChart"
+  | "Target"
+  | "Bell"
+  | "Cpu";
 
 export interface IconProps {
   name: IconName;
@@ -140,7 +140,7 @@ export interface IconProps {
   className?: string;
 }
 
-export function Icon({ name, size = 16, className = '' }: IconProps) {
+export function Icon({ name, size = 16, className = "" }: IconProps) {
   const iconMap: Record<string, LucideIcon> = {
     Home,
     Users,
@@ -162,20 +162,20 @@ export function Icon({ name, size = 16, className = '' }: IconProps) {
     XCircle,
     WifiOff,
     Loader,
-    'chevron-up': ChevronUp,
-    'chevron-down': ChevronDown,
+    "chevron-up": ChevronUp,
+    "chevron-down": ChevronDown,
     x: X,
     info: Info,
-    'check-circle': CheckCircle,
-    'alert-circle': AlertCircle,
-    'alert-triangle': AlertTriangle,
-    'x-circle': XCircle,
-    'wifi-off': WifiOff,
+    "check-circle": CheckCircle,
+    "alert-circle": AlertCircle,
+    "alert-triangle": AlertTriangle,
+    "x-circle": XCircle,
+    "wifi-off": WifiOff,
     loader: Loader,
-    'refresh-cw': RefreshCw,
+    "refresh-cw": RefreshCw,
     edit: Edit,
-    'more-vertical': MoreVertical,
-    'trash-2': Trash2,
+    "more-vertical": MoreVertical,
+    "trash-2": Trash2,
     plus: Plus,
     check: Check,
     search: Search,
@@ -196,7 +196,7 @@ export function Icon({ name, size = 16, className = '' }: IconProps) {
     RefreshCw,
     Clock,
     eye: Eye,
-    'eye-off': EyeOff,
+    "eye-off": EyeOff,
     Eye,
     EyeOff,
     Navigation: Compass,
@@ -204,8 +204,8 @@ export function Icon({ name, size = 16, className = '' }: IconProps) {
     command: Command,
     Command,
     calendar: Calendar,
-    'pause-circle': PauseCircle,
-    'user-x': UserX,
+    "pause-circle": PauseCircle,
+    "user-x": UserX,
     Layout,
     DollarSign,
     PieChart,
@@ -216,7 +216,5 @@ export function Icon({ name, size = 16, className = '' }: IconProps) {
 
   const IconComponent = iconMap[name] || AlertCircle;
 
-  return (
-    <IconComponent size={size} className={cn('shrink-0', className)} suppressHydrationWarning />
-  );
+  return <IconComponent size={size} className={cn("shrink-0", className)} suppressHydrationWarning />;
 }

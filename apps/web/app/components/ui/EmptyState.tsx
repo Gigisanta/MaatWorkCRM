@@ -1,7 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { cn } from '~/lib/utils';
+import type React from "react";
+import { useEffect, useState } from "react";
+import { cn } from "~/lib/utils";
 
 export interface EmptyStateProps {
   title: string;
@@ -20,7 +21,7 @@ export function EmptyState({
   description,
   icon,
   action,
-  className = '',
+  className = "",
   animated = true,
   floatingIcon = true,
 }: EmptyStateProps) {
@@ -35,43 +36,43 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center p-8 text-center',
-        animated && 'transition-all duration-500 ease-out',
-        animated && (mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'),
-        className
+        "flex flex-col items-center justify-center p-8 text-center",
+        animated && "transition-all duration-500 ease-out",
+        animated && (mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"),
+        className,
       )}
     >
       {icon && (
         <div
           className={cn(
-            'mb-4 text-4xl text-text-muted',
-            floatingIcon && 'animate-float',
-            animated && 'transition-all duration-500 ease-out',
-            animated && (mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-90')
+            "mb-4 text-4xl text-text-muted",
+            floatingIcon && "animate-float",
+            animated && "transition-all duration-500 ease-out",
+            animated && (mounted ? "opacity-100 scale-100" : "opacity-0 scale-90"),
           )}
-          style={{ transitionDelay: animated ? '100ms' : '0ms' }}
+          style={{ transitionDelay: animated ? "100ms" : "0ms" }}
         >
           {icon}
         </div>
       )}
       <h3
         className={cn(
-          'text-lg font-medium text-text mb-2 font-display',
-          animated && 'transition-all duration-500 ease-out',
-          animated && (mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2')
+          "text-lg font-medium text-text mb-2 font-display",
+          animated && "transition-all duration-500 ease-out",
+          animated && (mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"),
         )}
-        style={{ transitionDelay: animated ? '200ms' : '0ms' }}
+        style={{ transitionDelay: animated ? "200ms" : "0ms" }}
       >
         {title}
       </h3>
       {description && (
         <p
           className={cn(
-            'text-sm text-text-secondary mb-4 max-w-sm font-body',
-            animated && 'transition-all duration-500 ease-out',
-            animated && (mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2')
+            "text-sm text-text-secondary mb-4 max-w-sm font-body",
+            animated && "transition-all duration-500 ease-out",
+            animated && (mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"),
           )}
-          style={{ transitionDelay: animated ? '300ms' : '0ms' }}
+          style={{ transitionDelay: animated ? "300ms" : "0ms" }}
         >
           {description}
         </p>
@@ -79,12 +80,11 @@ export function EmptyState({
       {action && (
         <div
           className={cn(
-            'mt-4',
-            animated && 'transition-all duration-500 ease-out',
-            animated &&
-              (mounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-2 scale-95')
+            "mt-4",
+            animated && "transition-all duration-500 ease-out",
+            animated && (mounted ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-2 scale-95"),
           )}
-          style={{ transitionDelay: animated ? '400ms' : '0ms' }}
+          style={{ transitionDelay: animated ? "400ms" : "0ms" }}
         >
           {action}
         </div>

@@ -1,14 +1,14 @@
-import { neon } from '@neondatabase/serverless';
-import dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
-import * as fs from 'fs';
+import * as fs from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { neon } from "@neondatabase/serverless";
+import dotenv from "dotenv";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Navigate to the root level where .env is located
-const envPath = resolve(__dirname, '../../../../.env');
+const envPath = resolve(__dirname, "../../../../.env");
 console.log("Loading .env from", envPath);
 
 dotenv.config({ path: envPath });
@@ -16,7 +16,7 @@ dotenv.config({ path: envPath });
 async function main() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL is not set");
-  
+
   const sql = neon(url);
 
   await sql`

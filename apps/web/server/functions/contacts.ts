@@ -3,9 +3,9 @@
 // ============================================================
 
 import { createServerFn } from "@tanstack/react-start";
+import { and, desc, eq, like } from "drizzle-orm";
 import { db } from "../db";
 import { contacts } from "../db/schema";
-import { eq, and, like, desc } from "drizzle-orm";
 
 export const getContacts = createServerFn({ method: "GET" })
   .inputValidator((input: { orgId: string; search?: string; status?: string }) => input)
