@@ -35,8 +35,13 @@ export const createTask = createServerFn({ method: "POST" })
 export const updateTask = createServerFn({ method: "POST" })
   .inputValidator((input: { id: string; data: Record<string, unknown> }) => input)
   .handler(async ({ data }) => {
-    const updateData: Record<string, unknown> = { ...data.data, updatedAt: new Date() };
-    if (data.data.status === "completed") updateData.completedAt = new Date();
+    // 🛡️ Sentinel: Prevent Mass Assignment vulnerability
+    // Remove sensitive fields that should never be updated directly via input data.
+    const { id, organizationId, ...safeData } = data.data;
+
+    const updateData: Record<string, unknown> = { ...safeData, updatedAt: new Date() };
+    if (safeData.status === "completed") updateData.completedAt = new Date();
+
     await db
       .update(tasks)
       .set(updateData as any)

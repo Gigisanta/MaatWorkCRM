@@ -43,9 +43,13 @@ export const createContact = createServerFn({ method: "POST" })
 export const updateContact = createServerFn({ method: "POST" })
   .inputValidator((input: { id: string; data: Record<string, unknown> }) => input)
   .handler(async ({ data }) => {
+    // 🛡️ Sentinel: Prevent Mass Assignment vulnerability
+    // Remove sensitive fields that should never be updated directly via input data.
+    const { id, organizationId, ...safeData } = data.data;
+
     await db
       .update(contacts)
-      .set({ ...(data.data as any), updatedAt: new Date() })
+      .set({ ...(safeData as any), updatedAt: new Date() })
       .where(eq(contacts.id, data.id));
     return { id: data.id };
   });
