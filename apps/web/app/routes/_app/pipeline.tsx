@@ -27,7 +27,7 @@ import {
   User,
 } from "lucide-react";
 import type React from "react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Badge } from "~/components/ui/Badge";
 import { Button } from "~/components/ui/Button";
 import { Card, CardContent } from "~/components/ui/Card";
@@ -141,13 +141,32 @@ function PipelinePage() {
     );
   }
 
-  const totalValue =
-    board?.reduce(
-      (acc, stage) => acc + stage.deals.reduce((sAcc: number, d: any) => sAcc + (Number(d.deal.value) || 0), 0),
-      0,
-    ) || 0;
+  // ⚡ Bolt Optimization: Memoize totalValue to avoid recalculating on every render
+  const totalValue = useMemo(() => {
+    return (
+      board?.reduce(
+        (acc, stage) => acc + stage.deals.reduce((sAcc: number, d: any) => sAcc + (Number(d.deal.value) || 0), 0),
+        0,
+      ) || 0
+    );
+  }, [board]);
 
-  const totalDeals = board?.reduce((acc, stage) => acc + stage.deals.length, 0) || 0;
+  // ⚡ Bolt Optimization: Memoize totalDeals to avoid recalculating on every render
+  const totalDeals = useMemo(() => {
+    return board?.reduce((acc, stage) => acc + stage.deals.length, 0) || 0;
+  }, [board]);
+
+  // ⚡ Bolt Optimization: Memoize individual stage total values
+  const stageTotalValues = useMemo(() => {
+    if (!board) return {};
+    return board.reduce(
+      (acc, stage) => {
+        acc[stage.id] = stage.deals.reduce((sum: number, d: any) => sum + (Number(d.deal.value) || 0), 0);
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+  }, [board]);
 
   return (
     <Container size="full" className="py-8 space-y-8 animate-fade-in">
@@ -242,7 +261,7 @@ function PipelinePage() {
               </div>
 
               <div className="text-[11px] font-black text-[#A3A3A3] tracking-widest uppercase mb-2">
-                {formatCurrency(stage.deals.reduce((acc: number, d: any) => acc + (Number(d.deal.value) || 0), 0))}
+                {formatCurrency(stageTotalValues[stage.id] || 0)}
               </div>
 
               <div className="flex-1 overflow-y-auto space-y-3 min-h-[150px] pr-1 pb-4">
