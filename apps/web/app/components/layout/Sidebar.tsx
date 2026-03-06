@@ -218,7 +218,11 @@ function NavContent({
                 collapsed ? "justify-center w-14 h-14 mx-auto" : "gap-4 px-4 py-3.5 w-full",
                 isActive
                   ? "bg-primary text-white shadow-primary"
+<<<<<<< HEAD
                   : "text-text-secondary hover:text-primary hover:bg-primary/5",
+=======
+                  : "text-text-secondary hover:text-primary hover:bg-primary/5"
+>>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
               );
 
               const content = (

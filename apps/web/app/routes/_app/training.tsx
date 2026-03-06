@@ -26,7 +26,11 @@ const MATERIALS = [
     category: "guide",
     duration: "45 min",
     rating: 4.8,
+<<<<<<< HEAD
     url: "#",
+=======
+    url: "#"
+>>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
   },
   {
     id: "2",
@@ -35,7 +39,11 @@ const MATERIALS = [
     category: "video",
     duration: "1h 20m",
     rating: 5.0,
+<<<<<<< HEAD
     url: "#",
+=======
+    url: "#"
+>>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
   },
   {
     id: "3",
@@ -44,7 +52,11 @@ const MATERIALS = [
     category: "document",
     duration: "30 min",
     rating: 4.7,
+<<<<<<< HEAD
     url: "#",
+=======
+    url: "#"
+>>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
   },
   {
     id: "4",
@@ -53,7 +65,11 @@ const MATERIALS = [
     category: "course",
     duration: "12 horas",
     rating: 4.9,
+<<<<<<< HEAD
     url: "#",
+=======
+    url: "#"
+>>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
   },
 ];
 
@@ -79,7 +95,14 @@ function TrainingPage() {
           <Button
             key={cat}
             variant={i === 0 ? "secondary" : "ghost"}
+<<<<<<< HEAD
             className={cn("rounded-full px-6", i === 0 && "bg-primary text-white")}
+=======
+            className={cn(
+              "rounded-full px-6",
+              i === 0 && "bg-primary text-white"
+            )}
+>>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
           >
             {cat}
           </Button>

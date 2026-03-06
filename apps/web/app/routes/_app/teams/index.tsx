@@ -1,5 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import React, { useState } from "react";
+<<<<<<< HEAD
+=======
+import {
+  useTeams,
+  useTeamDetails,
+  useTeamGoals,
+  useUpdateGoalMutation,
+  useCreateTeamMutation
+} from "~/lib/hooks/use-crm";
+import { Container, Stack, Grid } from "~/components/ui/Layout";
+import { Card, CardHeader, CardTitle, CardContent } from "~/components/ui/Card";
+import { Button } from "~/components/ui/Button";
+>>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
 import { Badge } from "~/components/ui/Badge";
 import { Button } from "~/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/Card";
@@ -279,9 +292,13 @@ function TeamsPage() {
           </div>
         </ModalContent>
         <ModalFooter>
+<<<<<<< HEAD
           <Button variant="ghost" onClick={() => setShowNewTeamModal(false)}>
             Cancelar
           </Button>
+=======
+          <Button variant="ghost" onClick={() => setShowNewTeamModal(false)}>Cancelar</Button>
+>>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
           <Button
             variant="primary"
             onClick={handleCreateTeam}
