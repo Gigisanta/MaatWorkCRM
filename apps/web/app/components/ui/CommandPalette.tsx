@@ -1,14 +1,25 @@
-<<<<<<< HEAD
+// ============================================================
+// MaatWork CRM — Command Palette Component
+// UI/UX REFINED BY JULES v2
+// ============================================================
+
 import { useNavigate } from "@tanstack/react-router";
 import { Command } from "cmdk";
-import { Kanban, LayoutDashboard, Search, Settings, Users } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Calendar,
+  CheckSquare,
+  FileText,
+  GraduationCap,
+  Kanban,
+  LayoutDashboard,
+  Search,
+  Settings,
+  Sparkles,
+  Users,
+  UsersRound,
+} from "lucide-react";
 import React, { useEffect, useState } from "react";
-=======
-import React, { useEffect, useState } from 'react';
-import { Command } from 'cmdk';
-import { Search, LayoutDashboard, Users, Kanban, Settings } from 'lucide-react';
-import { useNavigate } from '@tanstack/react-router';
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
@@ -16,23 +27,14 @@ export function CommandPalette() {
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-<<<<<<< HEAD
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-=======
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
         e.preventDefault();
         setOpen((open) => !open);
       }
     };
 
-<<<<<<< HEAD
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
-=======
-    document.addEventListener('keydown', down);
-    return () => document.removeEventListener('keydown', down);
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
   }, []);
 
   const handleSelect = (path: string) => {
@@ -44,71 +46,134 @@ export function CommandPalette() {
     <Command.Dialog
       open={open}
       onOpenChange={setOpen}
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh] bg-black/50 backdrop-blur-sm"
+      label="Global Command Palette"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] sm:pt-[20vh] px-4"
     >
-      <div className="w-full max-w-2xl bg-[#0F0F0F] rounded-2xl border border-white/5 shadow-[0_0_40px_rgba(139,92,246,0.15)] overflow-hidden">
-        <div className="flex items-center px-4 border-b border-white/5">
-          <Search className="w-5 h-5 text-[#A3A3A3] mr-3" />
+      <div className="fixed inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setOpen(false)} />
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: -20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: -20 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        className="w-full max-w-2xl bg-surface/90 backdrop-blur-2xl rounded-2xl border border-border shadow-[0_0_40px_rgba(139,92,246,0.15)] overflow-hidden relative z-10"
+      >
+        <div className="flex items-center px-4 border-b border-border/50">
+          <Search className="w-5 h-5 text-text-muted mr-3" />
           <Command.Input
             placeholder="Search commands, contacts, or settings... (⌘K)"
-            className="w-full bg-transparent h-14 outline-none text-[#F5F5F5] placeholder:text-[#737373] text-lg font-body"
+            className="w-full bg-transparent h-14 outline-none text-text placeholder:text-text-muted text-lg font-body"
           />
+          <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded bg-surface-hover text-[10px] font-mono font-bold text-text-muted border border-border/50">
+            ESC
+          </kbd>
         </div>
 
-        <Command.List className="max-h-[60vh] overflow-y-auto p-2 overscroll-contain">
-          <Command.Empty className="p-8 text-center text-[#737373] font-body">No results found.</Command.Empty>
+        <Command.List className="max-h-[60vh] overflow-y-auto p-2 overscroll-contain scrollbar-hide">
+          <Command.Empty className="p-12 text-center text-text-muted font-body flex flex-col items-center justify-center">
+            <Search className="w-8 h-8 mb-3 opacity-20" />
+            <p>No results found.</p>
+            <p className="text-xs mt-1 opacity-60">Try searching for "contacts" or "settings"</p>
+          </Command.Empty>
 
-          <Command.Group heading="Navigation" className="text-xs font-bold uppercase tracking-wider text-[#A3A3A3] p-2">
+          <Command.Group
+            heading="Navigation"
+            className="text-xs font-bold uppercase tracking-wider text-text-muted p-2 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pb-2"
+          >
             <Command.Item
-<<<<<<< HEAD
               onSelect={() => handleSelect("/dashboard")}
-=======
-              onSelect={() => handleSelect('/dashboard')}
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
-              className="flex items-center px-4 py-3 rounded-xl cursor-pointer text-[#F5F5F5] data-[selected=true]:bg-[#8B5CF6]/10 data-[selected=true]:text-[#8B5CF6] transition-colors"
+              className="flex items-center px-4 py-3 rounded-xl cursor-pointer text-text-secondary data-[selected=true]:bg-primary/10 data-[selected=true]:text-primary transition-colors group"
             >
-              <LayoutDashboard className="w-5 h-5 mr-3" />
+              <LayoutDashboard className="w-5 h-5 mr-3 group-data-[selected=true]:scale-110 transition-transform" />
               Go to Dashboard
             </Command.Item>
             <Command.Item
-<<<<<<< HEAD
               onSelect={() => handleSelect("/contacts")}
-=======
-              onSelect={() => handleSelect('/contacts')}
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
-              className="flex items-center px-4 py-3 rounded-xl cursor-pointer text-[#F5F5F5] data-[selected=true]:bg-[#8B5CF6]/10 data-[selected=true]:text-[#8B5CF6] transition-colors"
+              className="flex items-center px-4 py-3 rounded-xl cursor-pointer text-text-secondary data-[selected=true]:bg-primary/10 data-[selected=true]:text-primary transition-colors group"
             >
-              <Users className="w-5 h-5 mr-3" />
+              <Users className="w-5 h-5 mr-3 group-data-[selected=true]:scale-110 transition-transform" />
               Go to Contacts
             </Command.Item>
             <Command.Item
-<<<<<<< HEAD
               onSelect={() => handleSelect("/pipeline")}
-=======
-              onSelect={() => handleSelect('/pipeline')}
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
-              className="flex items-center px-4 py-3 rounded-xl cursor-pointer text-[#F5F5F5] data-[selected=true]:bg-[#8B5CF6]/10 data-[selected=true]:text-[#8B5CF6] transition-colors"
+              className="flex items-center px-4 py-3 rounded-xl cursor-pointer text-text-secondary data-[selected=true]:bg-primary/10 data-[selected=true]:text-primary transition-colors group"
             >
-              <Kanban className="w-5 h-5 mr-3" />
+              <Kanban className="w-5 h-5 mr-3 group-data-[selected=true]:scale-110 transition-transform" />
               Go to Pipeline
+            </Command.Item>
+            <Command.Item
+              onSelect={() => handleSelect("/tasks")}
+              className="flex items-center px-4 py-3 rounded-xl cursor-pointer text-text-secondary data-[selected=true]:bg-primary/10 data-[selected=true]:text-primary transition-colors group"
+            >
+              <CheckSquare className="w-5 h-5 mr-3 group-data-[selected=true]:scale-110 transition-transform" />
+              Go to Tasks
+            </Command.Item>
+            <Command.Item
+              onSelect={() => handleSelect("/teams")}
+              className="flex items-center px-4 py-3 rounded-xl cursor-pointer text-text-secondary data-[selected=true]:bg-primary/10 data-[selected=true]:text-primary transition-colors group"
+            >
+              <UsersRound className="w-5 h-5 mr-3 group-data-[selected=true]:scale-110 transition-transform" />
+              Go to Teams
+            </Command.Item>
+            <Command.Item
+              onSelect={() => handleSelect("/calendar")}
+              className="flex items-center px-4 py-3 rounded-xl cursor-pointer text-text-secondary data-[selected=true]:bg-primary/10 data-[selected=true]:text-primary transition-colors group"
+            >
+              <Calendar className="w-5 h-5 mr-3 group-data-[selected=true]:scale-110 transition-transform" />
+              Go to Calendar
             </Command.Item>
           </Command.Group>
 
-          <Command.Group heading="Settings" className="text-xs font-bold uppercase tracking-wider text-[#A3A3A3] p-2">
+          <Command.Group
+            heading="Resources"
+            className="text-xs font-bold uppercase tracking-wider text-text-muted p-2 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pb-2 mt-2"
+          >
             <Command.Item
-<<<<<<< HEAD
-              onSelect={() => handleSelect("/settings")}
-=======
-              onSelect={() => handleSelect('/settings')}
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
-              className="flex items-center px-4 py-3 rounded-xl cursor-pointer text-[#F5F5F5] data-[selected=true]:bg-[#8B5CF6]/10 data-[selected=true]:text-[#8B5CF6] transition-colors"
+              onSelect={() => handleSelect("/reports")}
+              className="flex items-center px-4 py-3 rounded-xl cursor-pointer text-text-secondary data-[selected=true]:bg-primary/10 data-[selected=true]:text-primary transition-colors group"
             >
-              <Settings className="w-5 h-5 mr-3" />
+              <FileText className="w-5 h-5 mr-3 group-data-[selected=true]:scale-110 transition-transform" />
+              View Reports
+            </Command.Item>
+            <Command.Item
+              onSelect={() => handleSelect("/training")}
+              className="flex items-center px-4 py-3 rounded-xl cursor-pointer text-text-secondary data-[selected=true]:bg-primary/10 data-[selected=true]:text-primary transition-colors group"
+            >
+              <GraduationCap className="w-5 h-5 mr-3 group-data-[selected=true]:scale-110 transition-transform" />
+              Training Materials
+            </Command.Item>
+          </Command.Group>
+
+          <Command.Group
+            heading="Settings"
+            className="text-xs font-bold uppercase tracking-wider text-text-muted p-2 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pb-2 mt-2"
+          >
+            <Command.Item
+              onSelect={() => handleSelect("/settings")}
+              className="flex items-center px-4 py-3 rounded-xl cursor-pointer text-text-secondary data-[selected=true]:bg-primary/10 data-[selected=true]:text-primary transition-colors group"
+            >
+              <Settings className="w-5 h-5 mr-3 group-data-[selected=true]:scale-110 transition-transform" />
               Global Settings
             </Command.Item>
           </Command.Group>
+
+          <Command.Group
+            heading="AI Actions"
+            className="text-xs font-bold uppercase tracking-wider text-accent p-2 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pb-2 mt-2"
+          >
+            <Command.Item
+              onSelect={() => {
+                setOpen(false);
+                window.dispatchEvent(new CustomEvent("open-ai-copilot"));
+              }}
+              className="flex items-center px-4 py-3 rounded-xl cursor-pointer text-text-secondary data-[selected=true]:bg-accent/10 data-[selected=true]:text-accent transition-colors group"
+            >
+              <Sparkles className="w-5 h-5 mr-3 group-data-[selected=true]:scale-110 transition-transform" />
+              Ask AI Copilot
+            </Command.Item>
+          </Command.Group>
         </Command.List>
-      </div>
+      </motion.div>
     </Command.Dialog>
   );
 }

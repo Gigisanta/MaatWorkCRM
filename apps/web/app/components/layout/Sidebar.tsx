@@ -1,4 +1,10 @@
+// ============================================================
+// MaatWork CRM — Sidebar Component
+// UI/UX REFINED BY JULES v2
+// ============================================================
+
 import { Link, useRouterState } from "@tanstack/react-router";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   BarChart3,
   Bell,
@@ -10,8 +16,10 @@ import {
   Kanban,
   LayoutDashboard,
   Menu,
+  Search,
   Settings,
   Shield,
+  Sparkles,
   Users,
   UsersRound,
   X,
@@ -24,11 +32,11 @@ const sections = [
   {
     title: "Principal",
     items: [
-      { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-      { to: "/contacts", label: "Contactos", icon: Users },
-      { to: "/pipeline", label: "Pipeline", icon: Kanban },
-      { to: "/tasks", label: "Tareas", icon: CheckSquare },
-      { to: "/teams", label: "Equipos", icon: UsersRound },
+      { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, external: false },
+      { to: "/contacts", label: "Contactos", icon: Users, external: false },
+      { to: "/pipeline", label: "Pipeline", icon: Kanban, external: false },
+      { to: "/tasks", label: "Tareas", icon: CheckSquare, external: false },
+      { to: "/teams", label: "Equipos", icon: UsersRound, external: false },
     ],
   },
   {
@@ -47,13 +55,13 @@ const sections = [
   {
     title: "Recursos",
     items: [
-      { to: "/training", label: "Capacitaciones", icon: GraduationCap },
-      { to: "/resources", label: "Recursos", icon: FileText },
+      { to: "/training", label: "Capacitaciones", icon: GraduationCap, external: false },
+      { to: "/resources", label: "Recursos", icon: FileText, external: false },
     ],
   },
   {
     title: "Gestión",
-    items: [{ to: "/settings", label: "Configuración Global", icon: Settings }],
+    items: [{ to: "/settings", label: "Configuración Global", icon: Settings, external: false }],
   },
 ];
 
@@ -70,7 +78,7 @@ export function Sidebar({ collapsed, setCollapsed }: { collapsed: boolean; setCo
   return (
     <>
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-40 bg-surface/90 backdrop-blur-xl border-b border-border/50 safe-area-top transition-all duration-300 shadow-sm">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-surface/80 backdrop-blur-2xl border-b border-border/50 safe-area-top transition-all duration-300 shadow-sm">
         <div className="flex h-16 items-center justify-between px-4 lg:px-8">
           <div className="flex items-center gap-4 min-w-0 flex-1">
             <button
@@ -80,11 +88,11 @@ export function Sidebar({ collapsed, setCollapsed }: { collapsed: boolean; setCo
               <Menu className="w-5 h-5" />
             </button>
             <div className="flex items-center min-w-0 shrink-0">
-              <Link to="/dashboard" className="flex items-center gap-2 group">
-                <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-primary group-hover:scale-105 transition-transform duration-300">
-                  <Feather className="w-6 h-6" strokeWidth={2.5} />
+              <Link to="/dashboard" className="flex items-center gap-3 group">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] group-hover:shadow-[0_0_25px_rgba(139,92,246,0.5)] group-hover:scale-105 transition-all duration-300 border border-white/10">
+                  <Feather className="w-5 h-5" strokeWidth={2.5} />
                 </div>
-                <span className="text-xl font-black tracking-tight font-display hidden xs:inline-flex">
+                <span className="text-xl font-bold tracking-tight font-display hidden xs:inline-flex">
                   <span className="text-text">Maat</span>
                   <span className="text-primary">Work</span>
                 </span>
@@ -92,17 +100,38 @@ export function Sidebar({ collapsed, setCollapsed }: { collapsed: boolean; setCo
             </div>
           </div>
 
-          <div className="flex items-center shrink-0 gap-4">
-            <button className="relative p-2.5 rounded-xl text-text-muted hover:bg-surface-hover hover:text-primary transition-all">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-error rounded-full border-2 border-white" />
+          <div className="flex items-center shrink-0 gap-3">
+            {/* Global Search Trigger (Cmd+K) */}
+            <button className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-hover border border-border/50 text-text-muted hover:text-text hover:border-border transition-all group">
+              <Search className="w-4 h-4 group-hover:text-primary transition-colors" />
+              <span className="text-sm font-medium">Search...</span>
+              <kbd className="hidden lg:inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-surface text-[10px] font-mono font-medium text-text-muted border border-border/50">
+                <span className="text-xs">⌘</span>K
+              </kbd>
             </button>
-            <div className="flex items-center gap-3 pl-4 border-l border-border/50 ml-2">
+
+            {/* AI Copilot Trigger */}
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent("open-ai-copilot"))}
+              className="relative p-2 rounded-xl text-text-muted hover:bg-primary/10 hover:text-primary transition-all group"
+            >
+              <Sparkles className="w-5 h-5 group-hover:animate-pulse" />
+            </button>
+
+            <button className="relative p-2 rounded-xl text-text-muted hover:bg-surface-hover hover:text-primary transition-all">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-accent rounded-full shadow-[0_0_8px_rgba(192,38,211,0.8)]" />
+            </button>
+
+            <div className="flex items-center gap-3 pl-4 border-l border-border/50 ml-1">
               <div className="hidden sm:block text-right">
-                <p className="text-xs font-bold text-text uppercase tracking-widest leading-tight">Admin</p>
-                <p className="text-[10px] text-text-muted font-medium">asesor@maatwork.com</p>
+                <p className="text-sm font-semibold text-text leading-tight">Admin</p>
+                <p className="text-xs text-success flex items-center justify-end gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                  Online
+                </p>
               </div>
-              <div className="w-10 h-10 rounded-2xl bg-surface-100 flex items-center justify-center text-primary font-black border border-border shadow-sm group cursor-pointer hover:bg-primary hover:text-white transition-all duration-300">
+              <div className="w-10 h-10 rounded-xl bg-surface-hover flex items-center justify-center text-primary font-bold border border-border/50 shadow-sm cursor-pointer hover:bg-primary hover:text-white hover:shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all duration-300">
                 A
               </div>
             </div>
@@ -114,72 +143,84 @@ export function Sidebar({ collapsed, setCollapsed }: { collapsed: boolean; setCo
       <aside
         className={cn(
           "hidden lg:flex fixed left-0 top-16 h-[calc(100vh-4rem)] z-30 flex-col",
-          "bg-surface border-r border-border/40 transition-all duration-300 ease-in-out overflow-x-hidden",
+          "bg-surface/50 backdrop-blur-xl border-r border-border/40 transition-all duration-300 ease-in-out overflow-x-hidden",
           collapsed ? "w-20" : "w-64",
         )}
       >
         <NavContent collapsed={collapsed} currentPath={currentPath} />
 
         {/* Toggle Collapse */}
-        <div className="border-t border-border/40 p-4 shrink-0 bg-surface">
+        <div className="border-t border-border/40 p-4 shrink-0 bg-surface/50 backdrop-blur-md">
           <button
             onClick={() => setCollapsed(!collapsed)}
             className={cn(
-              "w-full flex items-center h-12 rounded-2xl transition-all duration-300 group active:scale-95",
-              collapsed ? "justify-center px-0 bg-surface-100" : "px-4 bg-surface-50 hover:bg-surface-100",
-              "text-text-muted hover:text-primary",
+              "w-full flex items-center h-12 rounded-xl transition-all duration-300 group active:scale-95",
+              collapsed ? "justify-center px-0 bg-surface-hover" : "px-4 bg-surface-hover/50 hover:bg-surface-hover",
+              "text-text-muted hover:text-primary border border-transparent hover:border-border/50",
             )}
           >
             <ChevronLeft className={cn("w-5 h-5 transition-transform duration-500", collapsed && "rotate-180")} />
-            {!collapsed && (
-              <span className="ml-3 text-sm font-bold font-display uppercase tracking-widest">Colapsar</span>
-            )}
+            {!collapsed && <span className="ml-3 text-sm font-semibold tracking-wide">Collapse</span>}
           </button>
         </div>
       </aside>
 
       {/* Mobile Drawer */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden flex">
-          <div
-            className="fixed inset-0 bg-secondary/60 backdrop-blur-md transition-opacity"
-            onClick={() => setMobileMenuOpen(false)}
-          />
-          <div className="relative w-[320px] max-w-[85vw] bg-surface h-full flex flex-col shadow-2xl animate-fade-in">
-            <div className="flex items-center justify-between p-6 border-b border-border/50 shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-primary">
-                  <Feather className="w-6 h-6" strokeWidth={2.5} />
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden flex">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-background/80 backdrop-blur-sm"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="relative w-[320px] max-w-[85vw] bg-surface h-full flex flex-col shadow-2xl border-r border-border/50"
+            >
+              <div className="flex items-center justify-between p-6 border-b border-border/50 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] border border-white/10">
+                    <Feather className="w-5 h-5" strokeWidth={2.5} />
+                  </div>
+                  <span className="text-xl font-bold font-display">
+                    <span className="text-text">Maat</span>
+                    <span className="text-primary">Work</span>
+                  </span>
                 </div>
-                <span className="text-xl font-black font-display font-display">
-                  <span className="text-text">Maat</span>
-                  <span className="text-primary">Work</span>
-                </span>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-10 h-10 flex items-center justify-center rounded-xl bg-surface-hover text-text-muted hover:bg-error/10 hover:text-error transition-all"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <button
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-10 h-10 flex items-center justify-center rounded-xl bg-surface-100 text-text-muted hover:bg-error/10 hover:text-error transition-all"
-                aria-label="Cerrar"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <NavContent collapsed={false} currentPath={currentPath} isMobile />
+              <NavContent collapsed={false} currentPath={currentPath} isMobile />
 
-            <div className="mt-auto p-6 border-t border-border/50 bg-surface-50/50">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-primary text-white flex items-center justify-center font-bold">
-                  A
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-text truncate">Admin User</p>
-                  <p className="text-xs text-text-muted truncate">asesor@maatwork.com</p>
+              <div className="mt-auto p-6 border-t border-border/50 bg-surface-hover/30">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center font-bold shadow-[0_0_15px_rgba(139,92,246,0.3)]">
+                    A
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-text truncate">Admin User</p>
+                    <p className="text-xs text-success flex items-center gap-1.5 mt-0.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                      Online
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </>
   );
 }
@@ -197,50 +238,60 @@ function NavContent({
       )}
     >
       {sections.map((section, idx) => (
-        <div key={idx} className="space-y-3">
+        <div key={idx} className="space-y-2">
           {section.title && !collapsed && (
             <div
               className={cn(
-                "text-text-muted uppercase tracking-[0.2em] text-[10px] font-black pl-3 mb-2",
+                "text-text-muted uppercase tracking-wider text-xs font-semibold pl-3 mb-3",
                 isMobile ? "opacity-60" : "",
               )}
             >
               {section.title}
             </div>
           )}
-          <div className="space-y-1.5 font-display">
+          <div className="space-y-1 font-display">
             {section.items.map((item) => {
               const isActive = !item.external && currentPath.startsWith(item.to);
 
               const linkClasses = cn(
-                "relative flex items-center rounded-2xl transition-all duration-300 min-w-0 font-body group active:scale-[0.98]",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
-                collapsed ? "justify-center w-14 h-14 mx-auto" : "gap-4 px-4 py-3.5 w-full",
+                "relative flex items-center rounded-xl transition-all duration-300 min-w-0 font-body group active:scale-[0.98]",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
+                collapsed ? "justify-center w-12 h-12 mx-auto" : "gap-3.5 px-3.5 py-3 w-full",
                 isActive
-                  ? "bg-primary text-white shadow-primary"
-<<<<<<< HEAD
-                  : "text-text-secondary hover:text-primary hover:bg-primary/5",
-=======
-                  : "text-text-secondary hover:text-primary hover:bg-primary/5"
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
+                  ? "bg-primary/10 text-primary font-medium"
+                  : "text-text-secondary hover:text-text hover:bg-surface-hover",
               );
 
               const content = (
                 <>
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeNavIndicator"
+                      className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full shadow-[0_0_10px_rgba(139,92,246,0.5)]"
+                      initial={false}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                  )}
                   <item.icon
                     className={cn(
-                      "shrink-0 transition-transform group-hover:scale-110",
-                      collapsed ? "w-6 h-6" : "w-5 h-5",
+                      "shrink-0 transition-all duration-300",
+                      collapsed ? "w-5 h-5" : "w-5 h-5",
+                      isActive
+                        ? "text-primary drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]"
+                        : "group-hover:scale-110 group-hover:text-primary",
                     )}
                     strokeWidth={isActive ? 2.5 : 2}
                   />
                   {!collapsed && (
-                    <span className={cn("truncate font-bold tracking-tight", isMobile ? "text-base" : "text-sm")}>
+                    <span
+                      className={cn(
+                        "truncate tracking-tight",
+                        isMobile ? "text-base" : "text-sm",
+                        isActive ? "font-semibold" : "font-medium",
+                      )}
+                    >
                       {item.label}
                     </span>
-                  )}
-                  {isActive && !collapsed && (
-                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                   )}
                 </>
               );

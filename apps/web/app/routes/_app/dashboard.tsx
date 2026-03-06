@@ -6,8 +6,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
-<<<<<<< HEAD
   Activity as ActivityIcon,
+  ArrowDownRight,
+  ArrowUpRight,
   CheckSquare,
   ChevronRight,
   Clock,
@@ -18,24 +19,14 @@ import {
   Target,
   TrendingUp,
   Users,
-=======
-  Users, TrendingUp, CheckSquare, Target, Clock, DollarSign, Plus, ChevronRight, Activity as ActivityIcon, LayoutDashboard, Sparkles
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
 } from "lucide-react";
 import { Badge } from "~/components/ui/Badge";
 import { Button } from "~/components/ui/Button";
 import { Card } from "~/components/ui/Card";
 import { Container, Grid, Stack } from "~/components/ui/Layout";
-<<<<<<< HEAD
 import { SectionHeader, StatCard } from "~/components/ui/LayoutCards";
 import { useDashboardMetrics, usePipelineSummary, useRecentActivity } from "~/lib/hooks/use-crm";
 import { cn, formatCurrency } from "~/lib/utils";
-=======
-import { Button } from "~/components/ui/Button";
-import { Badge } from "~/components/ui/Badge";
-import { formatCurrency, cn } from "~/lib/utils";
-import { motion } from "framer-motion";
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
 
 export const Route = createFileRoute("/_app/dashboard")({
   component: DashboardPage,
@@ -50,43 +41,32 @@ function QuickAction({
 }: { label: string; icon: React.ElementType; to: string; color?: string }) {
   return (
     <motion.a
-      whileHover={{ scale: 1.02 }}
+      whileHover={{ scale: 1.02, y: -2 }}
       whileTap={{ scale: 0.98 }}
       href={to}
-      className="flex items-center justify-between p-5 rounded-2xl bg-[#0F0F0F] border border-white/5 transition-all hover:shadow-[0_0_20px_rgba(139,92,246,0.1)] hover:border-[#8B5CF6]/30 group backdrop-blur-3xl"
+      className="flex items-center justify-between p-4 rounded-2xl bg-surface border border-border transition-all hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] hover:border-primary/30 group backdrop-blur-3xl"
     >
-      <div className="flex items-center gap-5">
-<<<<<<< HEAD
+      <div className="flex items-center gap-4">
         <div
           className={cn(
-            "p-3 rounded-xl transition-all duration-500 group-hover:rotate-6",
+            "p-2.5 rounded-xl transition-all duration-500 group-hover:rotate-6",
             color === "primary"
-              ? "bg-[#8B5CF6]/10 text-[#8B5CF6] group-hover:bg-[#8B5CF6] group-hover:text-white"
-              : "bg-[#18181B] text-[#A3A3A3] group-hover:bg-[#8B5CF6]/20 group-hover:text-[#8B5CF6]",
+              ? "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white group-hover:shadow-[0_0_15px_rgba(139,92,246,0.4)]"
+              : "bg-surface-hover text-text-secondary group-hover:bg-primary/20 group-hover:text-primary",
           )}
         >
           <Icon className="w-5 h-5" />
         </div>
-        <span className="font-bold text-[#F5F5F5] group-hover:text-[#8B5CF6] transition-colors tracking-tight text-base">
+        <span className="font-semibold text-text group-hover:text-primary transition-colors tracking-tight text-sm">
           {label}
         </span>
-=======
-        <div className={cn("p-3 rounded-xl transition-all duration-500 group-hover:rotate-6",
-          color === "primary" ? "bg-[#8B5CF6]/10 text-[#8B5CF6] group-hover:bg-[#8B5CF6] group-hover:text-white" :
-          "bg-[#18181B] text-[#A3A3A3] group-hover:bg-[#8B5CF6]/20 group-hover:text-[#8B5CF6]"
-        )}>
-          <Icon className="w-5 h-5" />
-        </div>
-        <span className="font-bold text-[#F5F5F5] group-hover:text-[#8B5CF6] transition-colors tracking-tight text-base">{label}</span>
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
       </div>
-      <ChevronRight className="w-4 h-4 text-[#A3A3A3] group-hover:text-[#8B5CF6] group-hover:translate-x-1.5 transition-all" />
+      <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-primary group-hover:translate-x-1 transition-all" />
     </motion.a>
   );
 }
 
 // ── Activity Item Component ──────────────────────────────────
-<<<<<<< HEAD
 function ActivityItem({
   action,
   entity,
@@ -94,37 +74,30 @@ function ActivityItem({
   time,
   idx,
 }: { action: string; entity: string; user: string; time: string; idx: number }) {
-=======
-function ActivityItem({ action, entity, user, time, idx }: { action: string; entity: string; user: string; time: string; idx: number }) {
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: idx * 0.1 }}
-      className="flex items-start gap-5 py-6 border-b border-white/5 last:border-0 hover:bg-white/5 transition-all px-5 -mx-5 rounded-2xl group"
+      className="flex items-start gap-4 py-4 border-b border-border/50 last:border-0 hover:bg-surface-hover/50 transition-all px-4 -mx-4 rounded-2xl group"
     >
-      <div className="w-12 h-12 rounded-2xl bg-[#18181B] flex items-center justify-center text-[#8B5CF6] text-sm font-black mt-0.5 border border-white/5 group-hover:bg-[#8B5CF6] group-hover:text-white group-hover:border-[#8B5CF6] group-hover:rotate-3 transition-all duration-500 shadow-sm">
+      <div className="w-10 h-10 rounded-xl bg-surface-hover flex items-center justify-center text-primary text-sm font-bold mt-0.5 border border-border/50 group-hover:bg-primary group-hover:text-white group-hover:border-primary group-hover:rotate-3 transition-all duration-500 shadow-sm">
         {user.charAt(0).toUpperCase()}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-[15px] font-medium text-[#F5F5F5] group-hover:text-[#8B5CF6] transition-colors truncate leading-tight">
-<<<<<<< HEAD
-            <span className="font-black">{user}</span> {action}{" "}
-            <span className="font-black text-[#8B5CF6]/80">{entity}</span>
-=======
-            <span className="font-black">{user}</span> {action} <span className="font-black text-[#8B5CF6]/80">{entity}</span>
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
+          <p className="text-sm font-medium text-text group-hover:text-primary-light transition-colors truncate leading-tight">
+            <span className="font-bold">{user}</span> {action}{" "}
+            <span className="font-bold text-primary/90">{entity}</span>
           </p>
-          <span className="flex items-center gap-1.5 shrink-0 text-[10px] font-black text-[#737373] uppercase tracking-[0.1em]">
+          <span className="flex items-center gap-1.5 shrink-0 text-[10px] font-bold text-text-muted uppercase tracking-wider">
             <Clock className="w-3 h-3" />
             {time}
           </span>
         </div>
-        <p className="text-[11px] text-[#A3A3A3] mt-1.5 font-bold uppercase tracking-wider flex items-center gap-1">
-          <Sparkles className="w-3 h-3 text-[#C026D3]" />
-          Analizado por MaatWork AI
+        <p className="text-[10px] text-text-secondary mt-1.5 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+          <Sparkles className="w-3 h-3 text-accent" />
+          Analyzed by MaatWork AI
         </p>
       </div>
     </motion.div>
@@ -140,16 +113,11 @@ function DashboardPage() {
     return (
       <Container className="py-24 text-center">
         <div className="animate-pulse space-y-8 max-w-md mx-auto">
-          <div className="h-12 w-56 bg-[#18181B] rounded-2xl mx-auto" />
-          <div className="h-4 w-full bg-[#0F0F0F] rounded-xl border border-white/5" />
+          <div className="h-12 w-56 bg-surface-hover rounded-2xl mx-auto" />
+          <div className="h-4 w-full bg-surface rounded-xl border border-border" />
           <div className="grid grid-cols-2 gap-6 mt-12">
-<<<<<<< HEAD
-            <div className="h-40 bg-[#18181B] rounded-[2rem] border border-white/5" />
-            <div className="h-40 bg-[#18181B] rounded-[2rem] border border-white/5" />
-=======
-             <div className="h-40 bg-[#18181B] rounded-[2rem] border border-white/5" />
-             <div className="h-40 bg-[#18181B] rounded-[2rem] border border-white/5" />
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
+            <div className="h-40 bg-surface-hover rounded-[2rem] border border-border" />
+            <div className="h-40 bg-surface-hover rounded-[2rem] border border-border" />
           </div>
         </div>
       </Container>
@@ -157,38 +125,29 @@ function DashboardPage() {
   }
 
   return (
-    <Container className="space-y-12" padding="lg">
+    <Container className="space-y-8" padding="lg">
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
         <SectionHeader
           title="Dashboard"
-<<<<<<< HEAD
-          description={`Bienvenido de nuevo. Aquí tienes un resumen de tu actividad para ${new Date().toLocaleDateString("es-AR", { month: "long", year: "numeric" })}.`}
+          description={`Welcome back. Here's your activity summary for ${new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}.`}
           icon={LayoutDashboard}
           actions={
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <Button
                 variant="outline"
                 size="md"
-                className="border-white/10 text-[#F5F5F5] font-black uppercase tracking-widest text-[10px] h-10"
+                className="border-border text-text font-semibold text-sm h-10 hover:bg-surface-hover"
               >
-                Historial
+                History
               </Button>
               <Button
                 variant="primary"
                 size="md"
-                icon={Plus}
-                className="shadow-[0_0_20px_rgba(139,92,246,0.3)] h-10 px-6 bg-[#8B5CF6] hover:bg-[#7C3AED]"
+                className="shadow-[0_0_20px_rgba(139,92,246,0.3)] h-10 px-5 bg-primary hover:bg-primary-hover font-semibold"
               >
-                Crear Deal
+                <Plus className="w-4 h-4 mr-2" />
+                New Deal
               </Button>
-=======
-          description={`Bienvenido de nuevo. Aquí tienes un resumen de tu actividad para ${new Date().toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })}.`}
-          icon={LayoutDashboard}
-          actions={
-            <div className="flex items-center gap-4">
-              <Button variant="outline" size="md" className="border-white/10 text-[#F5F5F5] font-black uppercase tracking-widest text-[10px] h-10">Historial</Button>
-              <Button variant="primary" size="md" icon={Plus} className="shadow-[0_0_20px_rgba(139,92,246,0.3)] h-10 px-6 bg-[#8B5CF6] hover:bg-[#7C3AED]">Crear Deal</Button>
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
             </div>
           }
         />
@@ -196,73 +155,57 @@ function DashboardPage() {
 
       {/* KPI Cards */}
       <Grid cols={{ sm: 1, md: 2, lg: 4 }} gap={6}>
-<<<<<<< HEAD
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1 }}
         >
-=======
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
           <StatCard
-            label="Total Contactos"
+            label="Total Contacts"
             value={metrics?.totalContacts ?? 0}
-            change="12% este mes"
+            change="12% this month"
             changeType="up"
             icon={Users}
             variant="brand"
           />
         </motion.div>
-<<<<<<< HEAD
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
         >
-=======
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}>
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
           <StatCard
-            label="Valor Pipeline"
+            label="Pipeline Value"
             value={formatCurrency(metrics?.pipelineValue ?? 0)}
-            change="5.2% vs ene"
+            change="5.2% vs Jan"
             changeType="up"
             icon={DollarSign}
             variant="emerald"
           />
         </motion.div>
-<<<<<<< HEAD
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.3 }}
         >
-=======
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }}>
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
           <StatCard
-            label="Tareas Pendientes"
+            label="Pending Tasks"
             value={metrics?.pendingTasks ?? 0}
-            change={metrics?.pendingTasks === 0 ? "¡Todo al día!" : "Atención requerida"}
+            change={metrics?.pendingTasks === 0 ? "All caught up!" : "Attention needed"}
             changeType={metrics?.pendingTasks === 0 ? "up" : "down"}
             icon={CheckSquare}
             variant="amber"
           />
         </motion.div>
-<<<<<<< HEAD
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.4 }}
         >
-=======
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 }}>
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
           <StatCard
-            label="Deals Totales"
+            label="Total Deals"
             value={metrics?.totalDeals ?? 0}
-            change="Sincronizado"
+            change="Synced"
             changeType="up"
             icon={Target}
             variant="violet"
@@ -271,89 +214,54 @@ function DashboardPage() {
       </Grid>
 
       {/* Main content grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        {/* Quick Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Quick Actions & Goal */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.5 }}
-          className="lg:col-span-4 space-y-8"
+          className="lg:col-span-4 space-y-6"
         >
-<<<<<<< HEAD
           <div className="flex items-center justify-between mb-2 px-1">
-            <div className="flex items-center gap-4">
-              <div className="w-1.5 h-6 bg-[#8B5CF6] rounded-full shadow-[0_0_10px_rgba(139,92,246,0.8)]" />
-              <h2 className="text-2xl font-black text-[#F5F5F5] font-display tracking-tight">Acciones Rápidas</h2>
+            <div className="flex items-center gap-3">
+              <div className="w-1.5 h-5 bg-primary rounded-full shadow-[0_0_10px_rgba(139,92,246,0.8)]" />
+              <h2 className="text-xl font-bold text-text font-display tracking-tight">Quick Actions</h2>
             </div>
-            <Button variant="ghost" size="sm" className="text-[#8B5CF6] hover:bg-[#8B5CF6]/10 px-2 h-8 rounded-lg">
-              <Sparkles className="w-4 h-4 mr-2" />
-              <span className="text-[10px] font-black uppercase tracking-wider">AI Copilot</span>
+            <Button variant="ghost" size="sm" className="text-primary hover:bg-primary/10 px-2 h-7 rounded-lg">
+              <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+              <span className="text-[10px] font-bold uppercase tracking-wider">AI Copilot</span>
             </Button>
           </div>
-          <Stack gap={4}>
-=======
-           <div className="flex items-center justify-between mb-2 px-1">
-             <div className="flex items-center gap-4">
-                <div className="w-1.5 h-6 bg-[#8B5CF6] rounded-full shadow-[0_0_10px_rgba(139,92,246,0.8)]" />
-                <h2 className="text-2xl font-black text-[#F5F5F5] font-display tracking-tight">Acciones Rápidas</h2>
-             </div>
-             <Button variant="ghost" size="sm" className="text-[#8B5CF6] hover:bg-[#8B5CF6]/10 px-2 h-8 rounded-lg">
-                <Sparkles className="w-4 h-4 mr-2" />
-                <span className="text-[10px] font-black uppercase tracking-wider">AI Copilot</span>
-             </Button>
-           </div>
-           <Stack gap={4}>
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
-            <QuickAction label="Nuevo Contacto" icon={Users} to="/contacts" />
-            <QuickAction label="Crear Tarea" icon={CheckSquare} to="/tasks" color="secondary" />
-            <QuickAction label="Ver Pipeline" icon={TrendingUp} to="/pipeline" />
-            <QuickAction label="Agenda" icon={Clock} to="/calendar" color="secondary" />
+          <Stack gap={3}>
+            <QuickAction label="New Contact" icon={Users} to="/contacts" />
+            <QuickAction label="Create Task" icon={CheckSquare} to="/tasks" color="secondary" />
+            <QuickAction label="View Pipeline" icon={TrendingUp} to="/pipeline" />
+            <QuickAction label="Calendar" icon={Clock} to="/calendar" color="secondary" />
           </Stack>
 
-<<<<<<< HEAD
           <Card
             variant="cyber"
-            className="p-8 bg-[#18181B] text-white border-white/5 shadow-[0_0_30px_rgba(192,38,211,0.15)] overflow-hidden relative active:scale-[0.99] transition-all"
+            className="p-6 bg-surface text-white border-border shadow-[0_0_30px_rgba(192,38,211,0.1)] overflow-hidden relative active:scale-[0.99] transition-all mt-6"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-[#8B5CF6]/20 to-[#C026D3]/20 opacity-50" />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10 opacity-50" />
             <div className="relative z-10">
-              <h3 className="text-xl font-black mb-2 font-display flex items-center gap-2">
-                Tu Meta Mensual
-                <Sparkles className="w-4 h-4 text-[#F59E0B]" />
+              <h3 className="text-lg font-bold mb-1.5 font-display flex items-center gap-2">
+                Monthly Goal
+                <Sparkles className="w-4 h-4 text-warning" />
               </h3>
-              <p className="text-[#A3A3A3] text-sm mb-6 font-medium">
-                Estás al 75% de alcanzar tu objetivo de ventas este mes. ¡Sigue así!
+              <p className="text-text-secondary text-xs mb-5 font-medium">
+                You are at 75% of your sales target this month. Keep it up!
               </p>
-              <div className="h-3 w-full bg-[#0F0F0F] rounded-full overflow-hidden shadow-inner border border-white/5">
+              <div className="h-2.5 w-full bg-background rounded-full overflow-hidden shadow-inner border border-border/50">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: "75%" }}
                   transition={{ duration: 1.5, ease: "easeOut" }}
-                  className="h-full bg-gradient-to-r from-[#8B5CF6] to-[#C026D3] rounded-full shadow-[0_0_15px_rgba(192,38,211,0.5)]"
+                  className="h-full bg-gradient-to-r from-primary to-accent rounded-full shadow-[0_0_15px_rgba(192,38,211,0.5)]"
                 />
               </div>
             </div>
-            <ActivityIcon className="absolute -right-10 -bottom-10 w-44 h-44 text-white/5 group-hover:scale-125 group-hover:rotate-12 transition-all duration-700 blur-[2px]" />
-=======
-          <Card variant="cyber" className="p-8 bg-[#18181B] text-white border-white/5 shadow-[0_0_30px_rgba(192,38,211,0.15)] overflow-hidden relative active:scale-[0.99] transition-all">
-             <div className="absolute inset-0 bg-gradient-to-br from-[#8B5CF6]/20 to-[#C026D3]/20 opacity-50"></div>
-             <div className="relative z-10">
-                <h3 className="text-xl font-black mb-2 font-display flex items-center gap-2">
-                  Tu Meta Mensual
-                  <Sparkles className="w-4 h-4 text-[#F59E0B]" />
-                </h3>
-                <p className="text-[#A3A3A3] text-sm mb-6 font-medium">Estás al 75% de alcanzar tu objetivo de ventas este mes. ¡Sigue así!</p>
-                <div className="h-3 w-full bg-[#0F0F0F] rounded-full overflow-hidden shadow-inner border border-white/5">
-                   <motion.div
-                     initial={{ width: 0 }}
-                     animate={{ width: "75%" }}
-                     transition={{ duration: 1.5, ease: "easeOut" }}
-                     className="h-full bg-gradient-to-r from-[#8B5CF6] to-[#C026D3] rounded-full shadow-[0_0_15px_rgba(192,38,211,0.5)]"
-                   />
-                </div>
-             </div>
-             <ActivityIcon className="absolute -right-10 -bottom-10 w-44 h-44 text-white/5 group-hover:scale-125 group-hover:rotate-12 transition-all duration-700 blur-[2px]" />
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
+            <ActivityIcon className="absolute -right-8 -bottom-8 w-32 h-32 text-white/5 group-hover:scale-110 group-hover:rotate-12 transition-all duration-700 blur-[1px]" />
           </Card>
         </motion.div>
 
@@ -364,67 +272,39 @@ function DashboardPage() {
           transition={{ delay: 0.6 }}
           className="lg:col-span-8"
         >
-          <Card variant="glass" className="p-10 border-white/5 backdrop-blur-3xl h-full">
-<<<<<<< HEAD
-            <div className="flex items-center justify-between mb-10">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-[#18181B] border border-white/5 text-[#8B5CF6] rounded-2xl shadow-sm">
-                  <Clock className="w-5 h-5" strokeWidth={3} />
+          <Card variant="glass" className="p-8 border-border backdrop-blur-3xl h-full">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-surface-hover border border-border text-primary rounded-xl shadow-sm">
+                  <Clock className="w-5 h-5" strokeWidth={2.5} />
                 </div>
-                <h2 className="text-2xl font-black text-[#F5F5F5] font-display tracking-tight">Actividad Reciente</h2>
+                <h2 className="text-xl font-bold text-text font-display tracking-tight">Recent Activity</h2>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-[#8B5CF6] hover:bg-[#8B5CF6]/10 font-black uppercase tracking-widest text-[10px]"
-              >
-                Ver Historial Completo
+              <Button variant="ghost" size="sm" className="text-primary hover:bg-primary/10 font-bold text-xs">
+                View All
               </Button>
             </div>
-=======
-             <div className="flex items-center justify-between mb-10">
-               <div className="flex items-center gap-4">
-                  <div className="p-3 bg-[#18181B] border border-white/5 text-[#8B5CF6] rounded-2xl shadow-sm">
-                     <Clock className="w-5 h-5" strokeWidth={3} />
-                  </div>
-                  <h2 className="text-2xl font-black text-[#F5F5F5] font-display tracking-tight">Actividad Reciente</h2>
-               </div>
-               <Button variant="ghost" size="sm" className="text-[#8B5CF6] hover:bg-[#8B5CF6]/10 font-black uppercase tracking-widest text-[10px]">Ver Historial Completo</Button>
-             </div>
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
             <Stack gap={0}>
-              {activities && activities.length > 0 ? (
-                activities.map((act, idx) => (
+              {Array.isArray(activities) && activities.length > 0 ? (
+                activities.map((act: any, idx: number) => (
                   <ActivityItem
                     key={act.id}
                     idx={idx}
-                    user={act.userId || "Sistema"}
+                    user={act.userId || "System"}
                     action={act.action}
                     entity={act.entityType}
-<<<<<<< HEAD
-                    time={new Date(act.createdAt).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}
-=======
-                    time={new Date(act.createdAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
+                    time={new Date(act.createdAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
                   />
                 ))
               ) : (
-                <div className="py-24 text-center">
-<<<<<<< HEAD
-                  <div className="w-20 h-20 bg-[#18181B] rounded-3xl flex items-center justify-center mx-auto mb-6 text-[#737373] border border-white/5">
-                    <Clock className="w-10 h-10" />
+                <div className="py-20 text-center">
+                  <div className="w-16 h-16 bg-surface-hover rounded-2xl flex items-center justify-center mx-auto mb-5 text-text-muted border border-border">
+                    <Clock className="w-8 h-8" />
                   </div>
-                  <p className="text-[#A3A3A3] font-bold italic text-lg tracking-tight">
-                    Esperando nuevas interacciones...
+                  <p className="text-text-secondary font-semibold text-base tracking-tight">
+                    Waiting for new interactions...
                   </p>
-                  <p className="text-[#737373] text-sm mt-1">Tu actividad en tiempo real aparecerá aquí.</p>
-=======
-                   <div className="w-20 h-20 bg-[#18181B] rounded-3xl flex items-center justify-center mx-auto mb-6 text-[#737373] border border-white/5">
-                      <Clock className="w-10 h-10" />
-                   </div>
-                   <p className="text-[#A3A3A3] font-bold italic text-lg tracking-tight">Esperando nuevas interacciones...</p>
-                   <p className="text-[#737373] text-sm mt-1">Tu actividad en tiempo real aparecerá aquí.</p>
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
+                  <p className="text-text-muted text-xs mt-1">Your real-time activity will appear here.</p>
                 </div>
               )}
             </Stack>
@@ -437,74 +317,51 @@ function DashboardPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8 }}
-        className="space-y-10 pt-6"
+        className="space-y-6 pt-4"
       >
         <div className="flex items-center justify-between px-1">
-<<<<<<< HEAD
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-[#22C55E]/10 rounded-2xl text-[#22C55E] border border-[#22C55E]/20 flex items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.2)]">
-              <DollarSign className="w-5 h-5" strokeWidth={3} />
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-success/10 rounded-xl text-success border border-success/20 flex items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.2)]">
+              <DollarSign className="w-4 h-4" strokeWidth={2.5} />
             </div>
-            <h2 className="text-2xl font-black text-[#F5F5F5] font-display tracking-tight">Salud del Pipeline</h2>
+            <h2 className="text-xl font-bold text-text font-display tracking-tight">Pipeline Health</h2>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-[#737373] hover:text-[#8B5CF6] font-black text-[10px] uppercase tracking-[0.2em]"
-          >
-            Personalizar Pipeline
+          <Button variant="ghost" size="sm" className="text-text-muted hover:text-primary font-semibold text-xs">
+            Customize Pipeline
           </Button>
-=======
-           <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-[#22C55E]/10 rounded-2xl text-[#22C55E] border border-[#22C55E]/20 flex items-center justify-center shadow-[0_0_15px_rgba(34,197,94,0.2)]">
-                 <DollarSign className="w-5 h-5" strokeWidth={3} />
-              </div>
-              <h2 className="text-2xl font-black text-[#F5F5F5] font-display tracking-tight">Salud del Pipeline</h2>
-           </div>
-           <Button variant="ghost" size="sm" className="text-[#737373] hover:text-[#8B5CF6] font-black text-[10px] uppercase tracking-[0.2em]">Personalizar Pipeline</Button>
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
         </div>
-        <Grid cols={{ sm: 2, md: 3, lg: 3, xl: 6 }} gap={6}>
+        <Grid cols={{ sm: 2, md: 3, lg: 3, xl: 6 }} gap={4}>
           {pipeline?.map((s, i) => (
             <motion.div
               key={s.stageName}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-<<<<<<< HEAD
               transition={{ delay: 0.8 + i * 0.1 }}
             >
               <Card
                 variant="cyber"
-                className="p-8 text-center transition-all group overflow-hidden relative border-white/5 hover:border-[#8B5CF6]/30"
+                className="p-6 text-center transition-all group overflow-hidden relative border-border hover:border-primary/30 bg-surface"
               >
                 <div
-                  className="absolute top-0 left-0 w-full h-[4px] opacity-80 shadow-[0_0_10px_currentColor]"
+                  className="absolute top-0 left-0 w-full h-[3px] opacity-80 shadow-[0_0_10px_currentColor]"
                   style={{ backgroundColor: s.stageColor, color: s.stageColor }}
                 />
-=======
-              transition={{ delay: 0.8 + (i * 0.1) }}
-            >
-              <Card variant="cyber" className="p-8 text-center transition-all group overflow-hidden relative border-white/5 hover:border-[#8B5CF6]/30">
-                <div className="absolute top-0 left-0 w-full h-[4px] opacity-80 shadow-[0_0_10px_currentColor]" style={{ backgroundColor: s.stageColor, color: s.stageColor }} />
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
-                <p className="text-[10px] font-black text-[#A3A3A3] uppercase tracking-[0.3em] mb-6 group-hover:text-white transition-colors truncate">
+                <p className="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-4 group-hover:text-text transition-colors truncate">
                   {s.stageName}
                 </p>
-                <div className="space-y-1">
-                  <p className="text-4xl font-black text-[#F5F5F5] group-hover:scale-110 transition-all duration-500 tracking-tighter">
+                <div className="space-y-0.5">
+                  <p className="text-3xl font-bold text-text group-hover:scale-110 transition-all duration-500 tracking-tight">
                     {s.dealCount}
                   </p>
-                  <div className="text-[10px] font-black text-[#737373] uppercase tracking-[0.1em]">Oportunidades</div>
+                  <div className="text-[10px] font-semibold text-text-muted uppercase tracking-wider">
+                    Opportunities
+                  </div>
                 </div>
-                <div className="mt-8 flex justify-center">
-<<<<<<< HEAD
+                <div className="mt-6 flex justify-center">
                   <Badge
                     variant="success"
-                    className="font-black text-[11px] rounded-xl tracking-tight h-9 px-4 shadow-sm bg-[#22C55E]/10 text-[#22C55E] border-[#22C55E]/20"
+                    className="font-bold text-[10px] rounded-lg tracking-tight h-7 px-3 shadow-sm bg-success/10 text-success border-success/20"
                   >
-=======
-                  <Badge variant="success" className="font-black text-[11px] rounded-xl tracking-tight h-9 px-4 shadow-sm bg-[#22C55E]/10 text-[#22C55E] border-[#22C55E]/20">
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
                     {formatCurrency(s.totalValue)}
                   </Badge>
                 </div>
