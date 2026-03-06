@@ -5,15 +5,13 @@
 // Database: PostgreSQL (Neon)
 // ============================================================
 
-import { boolean, integer, jsonb, pgTable, real, text, timestamp } from "drizzle-orm/pg-core";
-import { organizations, users } from "./auth";
+import { pgTable, text, integer, real, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { users, organizations } from "./auth";
 
 // ── Contacts ─────────────────────────────────────────────────
 export const contacts = pgTable("contacts", {
   id: text("id").primaryKey(),
-  organizationId: text("organization_id")
-    .notNull()
-    .references(() => organizations.id, { onDelete: "cascade" }),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   email: text("email"),
   phone: text("phone"),
@@ -21,9 +19,7 @@ export const contacts = pgTable("contacts", {
   position: text("position"),
   status: text("status", {
     enum: ["lead", "prospect", "active", "inactive"],
-  })
-    .notNull()
-    .default("lead"),
+  }).notNull().default("lead"),
   tags: jsonb("tags").$type<string[]>().default([]),
   segment: text("segment"),
   source: text("source"),
@@ -36,9 +32,7 @@ export const contacts = pgTable("contacts", {
 // ── Pipeline Stages ──────────────────────────────────────────
 export const pipelineStages = pgTable("pipeline_stages", {
   id: text("id").primaryKey(),
-  organizationId: text("organization_id")
-    .notNull()
-    .references(() => organizations.id, { onDelete: "cascade" }),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   order: integer("order").notNull().default(0),
   color: text("color").notNull().default("#6366f1"),
@@ -49,15 +43,9 @@ export const pipelineStages = pgTable("pipeline_stages", {
 // ── Deals (contacts in pipeline stages) ──────────────────────
 export const deals = pgTable("deals", {
   id: text("id").primaryKey(),
-  organizationId: text("organization_id")
-    .notNull()
-    .references(() => organizations.id, { onDelete: "cascade" }),
-  contactId: text("contact_id")
-    .notNull()
-    .references(() => contacts.id, { onDelete: "cascade" }),
-  stageId: text("stage_id")
-    .notNull()
-    .references(() => pipelineStages.id),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  contactId: text("contact_id").notNull().references(() => contacts.id, { onDelete: "cascade" }),
+  stageId: text("stage_id").notNull().references(() => pipelineStages.id),
   title: text("title").notNull(),
   value: real("value").default(0),
   probability: integer("probability").default(50),
@@ -70,17 +58,13 @@ export const deals = pgTable("deals", {
 // ── Notes (polymorphic: contact, deal, task) ─────────────────
 export const notes = pgTable("notes", {
   id: text("id").primaryKey(),
-  organizationId: text("organization_id")
-    .notNull()
-    .references(() => organizations.id, { onDelete: "cascade" }),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
   entityType: text("entity_type", {
     enum: ["contact", "deal", "task"],
   }).notNull(),
   entityId: text("entity_id").notNull(),
   content: text("content").notNull(),
-  authorId: text("author_id")
-    .notNull()
-    .references(() => users.id),
+  authorId: text("author_id").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -88,9 +72,7 @@ export const notes = pgTable("notes", {
 // ── Attachments (polymorphic file uploads) ────────────────────
 export const attachments = pgTable("attachments", {
   id: text("id").primaryKey(),
-  organizationId: text("organization_id")
-    .notNull()
-    .references(() => organizations.id, { onDelete: "cascade" }),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
   entityType: text("entity_type", {
     enum: ["contact", "deal", "task", "note"],
   }).notNull(),
@@ -99,30 +81,22 @@ export const attachments = pgTable("attachments", {
   fileUrl: text("file_url").notNull(),
   fileType: text("file_type").notNull(),
   fileSize: integer("file_size").notNull(),
-  uploadedBy: text("uploaded_by")
-    .notNull()
-    .references(() => users.id),
+  uploadedBy: text("uploaded_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // ── Tasks & Reminders ────────────────────────────────────────
 export const tasks = pgTable("tasks", {
   id: text("id").primaryKey(),
-  organizationId: text("organization_id")
-    .notNull()
-    .references(() => organizations.id, { onDelete: "cascade" }),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   description: text("description"),
   status: text("status", {
     enum: ["pending", "in_progress", "completed", "cancelled"],
-  })
-    .notNull()
-    .default("pending"),
+  }).notNull().default("pending"),
   priority: text("priority", {
     enum: ["low", "medium", "high", "urgent"],
-  })
-    .notNull()
-    .default("medium"),
+  }).notNull().default("medium"),
   dueDate: timestamp("due_date"),
   assignedTo: text("assigned_to").references(() => users.id),
   contactId: text("contact_id").references(() => contacts.id),

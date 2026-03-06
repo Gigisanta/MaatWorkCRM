@@ -2,17 +2,17 @@
 // MaatWork CRM — Vitest: Zod Validation Tests
 // ============================================================
 
-import { describe, expect, it } from "vitest";
+import { describe, it, expect } from "vitest";
 import {
-  calendarEventSchema,
   contactSchema,
   dealSchema,
-  teamGoalSchema as goalSchema,
-  loginSchema,
-  pipelineStageSchema,
-  registerSchema,
   taskSchema,
   teamSchema,
+  teamGoalSchema as goalSchema,
+  calendarEventSchema,
+  pipelineStageSchema,
+  loginSchema,
+  registerSchema,
 } from "~/lib/validations";
 
 describe("contactSchema", () => {

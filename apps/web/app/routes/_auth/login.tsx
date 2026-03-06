@@ -3,8 +3,8 @@
 // ============================================================
 
 import { createFileRoute } from "@tanstack/react-router";
-import { Chrome, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { useState } from "react";
+import { Mail, Lock, Eye, EyeOff, Chrome } from "lucide-react";
 
 export const Route = createFileRoute("/_auth/login")({
   component: LoginPage,

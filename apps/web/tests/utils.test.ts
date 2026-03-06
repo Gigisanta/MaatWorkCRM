@@ -2,8 +2,8 @@
 // MaatWork CRM — Vitest: Utility Function Tests
 // ============================================================
 
-import { describe, expect, it } from "vitest";
-import { cn, formatCurrency, formatDate, generateId } from "~/lib/utils";
+import { describe, it, expect } from "vitest";
+import { cn, generateId, formatDate, formatCurrency } from "~/lib/utils";
 
 describe("cn (class name merger)", () => {
   it("merges simple classes", () => {

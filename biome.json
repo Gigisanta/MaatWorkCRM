@@ -6,23 +6,13 @@
     "rules": {
       "recommended": true,
       "complexity": {
-        "noExcessiveCognitiveComplexity": "off"
+        "noExcessiveCognitiveComplexity": "warn"
       },
       "suspicious": {
-        "noExplicitAny": "off",
-        "noArrayIndexKey": "off"
+        "noExplicitAny": "warn"
       },
       "style": {
-        "noNonNullAssertion": "off"
-      },
-      "a11y": {
-        "noSvgWithoutTitle": "off",
-        "useKeyWithClickEvents": "off",
-        "useButtonType": "off",
-        "noLabelWithoutControl": "off"
-      },
-      "correctness": {
-        "useExhaustiveDependencies": "off"
+        "noNonNullAssertion": "warn"
       }
     }
   },

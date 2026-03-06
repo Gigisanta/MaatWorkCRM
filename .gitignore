@@ -18,10 +18,6 @@ dist/
 *.db-journal
 *.sqlite
 
-# DB Utilities (contain secrets)
-apps/web/fix-db-raw.mjs
-apps/web/reset-db.mjs
-
 # IDE
 .vscode/
 .idea/

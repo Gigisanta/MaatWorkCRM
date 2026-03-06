@@ -2,7 +2,7 @@
 // MaatWork CRM — E2E: Dashboard & Navigation
 // ============================================================
 
-import { expect, test } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 
 test.describe("Dashboard", () => {
   test("dashboard loads with KPI cards", async ({ page }) => {

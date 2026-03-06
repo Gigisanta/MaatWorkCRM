@@ -3,9 +3,9 @@
 // ============================================================
 
 import { createServerFn } from "@tanstack/react-start";
-import { desc, eq } from "drizzle-orm";
 import { db } from "../db";
-import { teamGoals, teamMembers, teams, users } from "../db/schema";
+import { teams, teamMembers, teamGoals, users } from "../db/schema";
+import { eq, desc } from "drizzle-orm";
 
 export const getTeams = createServerFn({ method: "GET" })
   .inputValidator((input: { orgId: string }) => input)
@@ -28,7 +28,11 @@ export const getTeamWithMembers = createServerFn({ method: "GET" })
 export const getTeamGoals = createServerFn({ method: "GET" })
   .inputValidator((input: { teamId: string }) => input)
   .handler(async ({ data }) => {
-    return db.select().from(teamGoals).where(eq(teamGoals.teamId, data.teamId)).orderBy(desc(teamGoals.createdAt));
+    return db
+      .select()
+      .from(teamGoals)
+      .where(eq(teamGoals.teamId, data.teamId))
+      .orderBy(desc(teamGoals.createdAt));
   });
 
 export const updateGoalProgress = createServerFn({ method: "POST" })

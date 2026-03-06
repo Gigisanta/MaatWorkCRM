@@ -2,7 +2,7 @@
 // MaatWork CRM — E2E: Contacts & Tasks
 // ============================================================
 
-import { expect, test } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 
 test.describe("Contacts Page", () => {
   test("contacts list renders", async ({ page }) => {

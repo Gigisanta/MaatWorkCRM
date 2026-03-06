@@ -1,11 +1,10 @@
-"use client";
+'use client';
 
-import type React from "react";
-import { forwardRef, useId, useState } from "react";
-import { cn } from "~/lib/utils";
-import { Icon, type IconName } from "./Icon";
+import React, { useState, forwardRef, useId } from 'react';
+import { cn } from '~/lib/utils';
+import { Icon, type IconName } from './Icon';
 
-export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> {
+export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   label?: string;
   error?: string | null | undefined;
   placeholder?: string;
@@ -13,7 +12,7 @@ export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElem
   rightIcon?: IconName | undefined;
   /** Callback when right icon is clicked (makes icon interactive) */
   onRightIconClick?: (() => void) | undefined;
-  size?: "sm" | "md" | "lg";
+  size?: 'sm' | 'md' | 'lg';
   showPasswordToggle?: boolean;
 }
 
@@ -24,35 +23,35 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   {
     label,
     error,
-    className = "",
+    className = '',
     leftIcon,
     rightIcon,
     onRightIconClick,
-    size = "md",
+    size = 'md',
     showPasswordToggle = false,
     type,
     ...props
   }: InputProps,
-  ref: React.ForwardedRef<HTMLInputElement>,
+  ref: React.ForwardedRef<HTMLInputElement>
 ) {
   const generatedId = useId();
   const id = props.id || generatedId;
   const [showPassword, setShowPassword] = useState(false);
 
   const errorValue = error ?? null;
-  const isPassword = type === "password";
-  const inputType = isPassword && showPasswordToggle && showPassword ? "text" : type;
+  const isPassword = type === 'password';
+  const inputType = isPassword && showPasswordToggle && showPassword ? 'text' : type;
 
   const sizeClasses = {
-    sm: "h-9 text-sm px-3",
-    md: "h-10 text-base px-3",
-    lg: "h-12 text-base px-4",
+    sm: 'h-9 text-sm px-3',
+    md: 'h-10 text-base px-3',
+    lg: 'h-12 text-base px-4',
   };
 
   const iconPadding = {
-    sm: leftIcon ? "pl-10" : rightIcon ? "pr-10" : "",
-    md: leftIcon ? "pl-10" : rightIcon ? "pr-10" : "",
-    lg: leftIcon ? "pl-12" : rightIcon ? "pr-12" : "",
+    sm: leftIcon ? 'pl-10' : rightIcon ? 'pr-10' : '',
+    md: leftIcon ? 'pl-10' : rightIcon ? 'pr-10' : '',
+    lg: leftIcon ? 'pl-12' : rightIcon ? 'pr-12' : '',
   };
 
   return (
@@ -76,18 +75,18 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           id={id}
           type={inputType}
           className={cn(
-            "w-full border rounded-xl transition-all duration-300 font-body",
-            "bg-surface-900/50 text-surface-100 placeholder:text-surface-600",
-            "focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600 focus:shadow-[0_0_20px_rgba(139,92,246,0.1)]",
+            'w-full border rounded-xl transition-all duration-300 font-body',
+            'bg-surface-900/50 text-surface-100 placeholder:text-surface-600',
+            'focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600 focus:shadow-[0_0_20px_rgba(139,92,246,0.1)]',
             sizeClasses[size],
             iconPadding[size],
-            rightIcon && !leftIcon && "pr-10",
-            isPassword && showPasswordToggle && "pr-10",
+            rightIcon && !leftIcon && 'pr-10',
+            isPassword && showPasswordToggle && 'pr-10',
             errorValue
-              ? "border-red-600 focus:border-red-600 focus:ring-red-600/30"
-              : "border-surface-800 hover:border-surface-700",
-            props.disabled && "opacity-50 cursor-not-allowed bg-surface-950",
-            className,
+              ? 'border-red-600 focus:border-red-600 focus:ring-red-600/30'
+              : 'border-surface-800 hover:border-surface-700',
+            props.disabled && 'opacity-50 cursor-not-allowed bg-surface-950',
+            className
           )}
           {...props}
         />
@@ -112,9 +111,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
             type="button"
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-500 hover:text-brand-400 transition-colors cursor-pointer"
-            aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+            aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
           >
-            <Icon name={showPassword ? "eye-off" : "eye"} size={16} />
+            <Icon name={showPassword ? 'eye-off' : 'eye'} size={16} />
           </button>
         )}
       </div>
@@ -124,4 +123,4 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     </div>
   );
 });
-Input.displayName = "Input";
+Input.displayName = 'Input';

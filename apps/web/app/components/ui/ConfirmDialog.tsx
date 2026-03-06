@@ -1,7 +1,14 @@
-"use client";
+'use client';
 
-import { Button } from "./Button";
-import { Modal, ModalContent, ModalDescription, ModalFooter, ModalHeader, ModalTitle } from "./Modal";
+import {
+  Modal,
+  ModalHeader,
+  ModalFooter,
+  ModalTitle,
+  ModalDescription,
+  ModalContent,
+} from './Modal';
+import { Button } from './Button';
 
 export interface ConfirmDialogProps {
   open: boolean;
@@ -11,7 +18,7 @@ export interface ConfirmDialogProps {
   description?: string | null | undefined;
   confirmLabel?: string;
   cancelLabel?: string;
-  variant?: "danger" | "default";
+  variant?: 'danger' | 'default';
 }
 
 export function ConfirmDialog({
@@ -20,9 +27,9 @@ export function ConfirmDialog({
   onConfirm,
   title,
   description,
-  confirmLabel = "Confirmar",
-  cancelLabel = "Cancelar",
-  variant = "default",
+  confirmLabel = 'Confirmar',
+  cancelLabel = 'Cancelar',
+  variant = 'default',
 }: ConfirmDialogProps) {
   const handleConfirm = () => {
     onConfirm();
@@ -41,9 +48,9 @@ export function ConfirmDialog({
             {cancelLabel}
           </Button>
           <Button
-            variant={variant === "danger" ? "primary" : "primary"}
+            variant={variant === 'danger' ? 'primary' : 'primary'}
             onClick={handleConfirm}
-            className={variant === "danger" ? "bg-red-600 hover:bg-red-700" : ""}
+            className={variant === 'danger' ? 'bg-red-600 hover:bg-red-700' : ''}
           >
             {confirmLabel}
           </Button>

@@ -3,7 +3,7 @@
 // ============================================================
 
 import { createFileRoute } from "@tanstack/react-router";
-import { Bell, Building2, Palette, Shield, User } from "lucide-react";
+import { User, Building2, Bell, Shield, Palette } from "lucide-react";
 
 export const Route = createFileRoute("/_app/settings/")({
   component: SettingsPage,
@@ -25,32 +25,20 @@ function SettingsPage() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm text-surface-400 mb-1">Nombre</label>
-            <input
-              type="text"
-              defaultValue="Carlos Admin"
-              className="w-full px-4 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-white focus:outline-none focus:border-brand-500"
-            />
+            <input type="text" defaultValue="Carlos Admin" className="w-full px-4 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-white focus:outline-none focus:border-brand-500" />
           </div>
           <div>
             <label className="block text-sm text-surface-400 mb-1">Email</label>
-            <input
-              type="email"
-              defaultValue="admin@maatwork.com"
-              className="w-full px-4 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-white focus:outline-none focus:border-brand-500"
-            />
+            <input type="email" defaultValue="admin@maatwork.com" className="w-full px-4 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-white focus:outline-none focus:border-brand-500" />
           </div>
           <div className="flex items-center gap-4">
             <div className="flex-1">
               <label className="block text-sm text-surface-400 mb-1">Rol</label>
-              <span className="px-3 py-1 rounded bg-brand-600/20 text-brand-400 text-sm font-medium border border-brand-600/30">
-                Administrador
-              </span>
+              <span className="px-3 py-1 rounded bg-brand-600/20 text-brand-400 text-sm font-medium border border-brand-600/30">Administrador</span>
             </div>
             <div className="flex-1">
               <label className="block text-sm text-surface-400 mb-1">Nivel</label>
-              <span className="px-3 py-1 rounded bg-emerald-500/20 text-emerald-400 text-sm font-medium border border-emerald-500/30">
-                Senior
-              </span>
+              <span className="px-3 py-1 rounded bg-emerald-500/20 text-emerald-400 text-sm font-medium border border-emerald-500/30">Senior</span>
             </div>
           </div>
         </div>
@@ -64,20 +52,11 @@ function SettingsPage() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm text-surface-400 mb-1">Nombre</label>
-            <input
-              type="text"
-              defaultValue="MaatWork Demo"
-              className="w-full px-4 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-white focus:outline-none focus:border-brand-500"
-            />
+            <input type="text" defaultValue="MaatWork Demo" className="w-full px-4 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-white focus:outline-none focus:border-brand-500" />
           </div>
           <div>
             <label className="block text-sm text-surface-400 mb-1">Slug</label>
-            <input
-              type="text"
-              defaultValue="maatwork-demo"
-              className="w-full px-4 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-surface-400 focus:outline-none"
-              readOnly
-            />
+            <input type="text" defaultValue="maatwork-demo" className="w-full px-4 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-surface-400 focus:outline-none" readOnly />
           </div>
         </div>
       </div>

@@ -2,7 +2,7 @@
 // MaatWork CRM — E2E: Auth Flow
 // ============================================================
 
-import { expect, test } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 
 test.describe("Auth Flow", () => {
   test("login page renders correctly", async ({ page }) => {
@@ -32,10 +32,7 @@ test.describe("Auth Flow", () => {
     await expect(passwordInput).toHaveAttribute("type", "password");
 
     // Click eye icon to show password
-    const toggleBtn = page
-      .locator("button")
-      .filter({ has: page.locator("svg") })
-      .last();
+    const toggleBtn = page.locator("button").filter({ has: page.locator("svg") }).last();
     await toggleBtn.click();
     await expect(passwordInput).toHaveAttribute("type", "text");
   });

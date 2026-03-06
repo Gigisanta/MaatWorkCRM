@@ -18,7 +18,7 @@ export const onContactActivated = inngest.createFunction(
       console.log(`📧 Welcome notification for contact: ${event.data.contactName}`);
       return { sent: true, contactId: event.data.contactId };
     });
-  },
+  }
 );
 
 // ── Automation: Task overdue → alert assignee ────────────────
@@ -31,7 +31,7 @@ export const onTaskOverdue = inngest.createFunction(
       // In production: query DB for overdue tasks and create notifications
       return { checked: true };
     });
-  },
+  }
 );
 
 // ── Automation: Goal near target → notify team leader ────────
@@ -54,7 +54,7 @@ export const onGoalNearTarget = inngest.createFunction(
         return { completed: true };
       });
     }
-  },
+  }
 );
 
 export const inngestFunctions = [onContactActivated, onTaskOverdue, onGoalNearTarget];

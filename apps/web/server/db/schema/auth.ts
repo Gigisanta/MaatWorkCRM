@@ -6,7 +6,7 @@
 // Database: PostgreSQL (Neon)
 // ============================================================
 
-import { boolean, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, boolean, timestamp, uuid } from "drizzle-orm/pg-core";
 
 // ── Users ────────────────────────────────────────────────────
 export const users = pgTable("users", {
@@ -15,9 +15,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false),
   image: text("image"),
-  role: text("role", { enum: ["asesor", "admin"] })
-    .notNull()
-    .default("asesor"),
+  role: text("role", { enum: ["asesor", "admin"] }).notNull().default("asesor"),
   careerLevel: text("career_level", { enum: ["junior", "senior"] }).default("junior"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -26,9 +24,7 @@ export const users = pgTable("users", {
 // ── Sessions (better-auth managed) ───────────────────────────
 export const sessions = pgTable("sessions", {
   id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   token: text("token").notNull().unique(),
   expiresAt: timestamp("expires_at").notNull(),
   ipAddress: text("ip_address"),
@@ -40,9 +36,7 @@ export const sessions = pgTable("sessions", {
 // ── Accounts (OAuth providers — better-auth managed) ─────────
 export const accounts = pgTable("accounts", {
   id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   accountId: text("account_id").notNull(),
   providerId: text("provider_id").notNull(),
   accessToken: text("access_token"),
@@ -79,14 +73,8 @@ export const organizations = pgTable("organizations", {
 // ── Members (org memberships) ────────────────────────────────
 export const members = pgTable("members", {
   id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  organizationId: text("organization_id")
-    .notNull()
-    .references(() => organizations.id, { onDelete: "cascade" }),
-  role: text("role", { enum: ["member", "admin", "owner"] })
-    .notNull()
-    .default("member"),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  role: text("role", { enum: ["member", "admin", "owner"] }).notNull().default("member"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

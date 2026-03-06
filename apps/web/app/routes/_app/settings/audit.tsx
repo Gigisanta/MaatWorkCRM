@@ -3,77 +3,21 @@
 // ============================================================
 
 import { createFileRoute } from "@tanstack/react-router";
-import { Filter, Search, Shield } from "lucide-react";
+import { Shield, Search, Filter } from "lucide-react";
 
 export const Route = createFileRoute("/_app/settings/audit")({
   component: AuditLogsPage,
 });
 
 const DEMO_LOGS = [
-  {
-    id: "1",
-    user: "Carlos Admin",
-    action: "create",
-    entity: "organization",
-    description: "Organización creada: MaatWork Demo",
-    time: "2026-03-01 09:00",
-  },
-  {
-    id: "2",
-    user: "Ana García",
-    action: "create",
-    entity: "contact",
-    description: "Contacto creado: María López",
-    time: "2026-03-01 10:30",
-  },
-  {
-    id: "3",
-    user: "Pedro Ruiz",
-    action: "create",
-    entity: "contact",
-    description: "Contacto creado: Lucía Fernández",
-    time: "2026-03-02 11:15",
-  },
-  {
-    id: "4",
-    user: "Ana García",
-    action: "update",
-    entity: "deal",
-    description: "Deal movido a etapa: Reunión",
-    time: "2026-03-03 14:00",
-  },
-  {
-    id: "5",
-    user: "Carlos Admin",
-    action: "update",
-    entity: "team_goal",
-    description: "Meta actualizada: $50k nuevos clientes (60%)",
-    time: "2026-03-03 16:30",
-  },
-  {
-    id: "6",
-    user: "Pedro Ruiz",
-    action: "create",
-    entity: "task",
-    description: "Tarea creada: Enviar material a Lucía",
-    time: "2026-03-04 09:00",
-  },
-  {
-    id: "7",
-    user: "Ana García",
-    action: "update",
-    entity: "contact",
-    description: "Contacto actualizado: María López (status → active)",
-    time: "2026-03-04 10:45",
-  },
-  {
-    id: "8",
-    user: "Carlos Admin",
-    action: "export",
-    entity: "report",
-    description: "Reporte exportado: Pipeline Marzo 2026",
-    time: "2026-03-04 15:00",
-  },
+  { id: "1", user: "Carlos Admin", action: "create", entity: "organization", description: "Organización creada: MaatWork Demo", time: "2026-03-01 09:00" },
+  { id: "2", user: "Ana García", action: "create", entity: "contact", description: "Contacto creado: María López", time: "2026-03-01 10:30" },
+  { id: "3", user: "Pedro Ruiz", action: "create", entity: "contact", description: "Contacto creado: Lucía Fernández", time: "2026-03-02 11:15" },
+  { id: "4", user: "Ana García", action: "update", entity: "deal", description: "Deal movido a etapa: Reunión", time: "2026-03-03 14:00" },
+  { id: "5", user: "Carlos Admin", action: "update", entity: "team_goal", description: "Meta actualizada: $50k nuevos clientes (60%)", time: "2026-03-03 16:30" },
+  { id: "6", user: "Pedro Ruiz", action: "create", entity: "task", description: "Tarea creada: Enviar material a Lucía", time: "2026-03-04 09:00" },
+  { id: "7", user: "Ana García", action: "update", entity: "contact", description: "Contacto actualizado: María López (status → active)", time: "2026-03-04 10:45" },
+  { id: "8", user: "Carlos Admin", action: "export", entity: "report", description: "Reporte exportado: Pipeline Marzo 2026", time: "2026-03-04 15:00" },
 ];
 
 const actionColors: Record<string, string> = {
@@ -115,9 +59,7 @@ function AuditLogsPage() {
               <th className="text-left text-xs text-surface-400 font-semibold p-4 uppercase tracking-wider">Usuario</th>
               <th className="text-left text-xs text-surface-400 font-semibold p-4 uppercase tracking-wider">Acción</th>
               <th className="text-left text-xs text-surface-400 font-semibold p-4 uppercase tracking-wider">Entidad</th>
-              <th className="text-left text-xs text-surface-400 font-semibold p-4 uppercase tracking-wider">
-                Descripción
-              </th>
+              <th className="text-left text-xs text-surface-400 font-semibold p-4 uppercase tracking-wider">Descripción</th>
             </tr>
           </thead>
           <tbody>

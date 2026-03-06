@@ -1,6 +1,6 @@
-import fs from "node:fs";
-import path from "node:path";
 import pino from "pino";
+import path from "path";
+import fs from "fs";
 
 // Asegurarse de que el directorio de logs exista en el root del monorepo
 const logDir = path.join(process.cwd(), "../../logs");

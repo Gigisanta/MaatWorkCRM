@@ -2,9 +2,9 @@
 // MaatWork CRM — App Layout (Authenticated Shell)
 // ============================================================
 
-import { Outlet, createFileRoute, useLocation } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { createFileRoute, Outlet, useLocation } from "@tanstack/react-router";
 import { Sidebar } from "~/components/layout/Sidebar";
+import { useEffect, useState, useRef } from "react";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -27,8 +27,9 @@ function AppLayout() {
         previousPathname.current = location.pathname;
       }, 150);
       return () => clearTimeout(timeout);
+    } else {
+      setDisplayedContent(<Outlet />);
     }
-    setDisplayedContent(<Outlet />);
   }, [location.pathname]);
 
   return (
@@ -52,7 +53,9 @@ function AppLayout() {
             isTransitioning ? "opacity-0 scale-[0.99]" : "opacity-100 scale-100",
           ].join(" ")}
         >
-          <div className="animate-fade-in max-w-[1600px] mx-auto">{displayedContent}</div>
+          <div className="animate-fade-in max-w-[1600px] mx-auto">
+            {displayedContent}
+          </div>
         </div>
       </main>
     </div>

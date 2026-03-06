@@ -1,20 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import React, { useState } from "react";
-import { Badge } from "~/components/ui/Badge";
-import { Button } from "~/components/ui/Button";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/Card";
-import { EmptyState } from "~/components/ui/EmptyState";
-import { Icon } from "~/components/ui/Icon";
-import { Input } from "~/components/ui/Input";
-import { Container, Grid, Stack } from "~/components/ui/Layout";
-import { Modal, ModalContent, ModalFooter, ModalHeader, ModalTitle } from "~/components/ui/Modal";
 import {
-  useCreateTeamMutation,
+  useTeams,
   useTeamDetails,
   useTeamGoals,
-  useTeams,
   useUpdateGoalMutation,
+  useCreateTeamMutation
 } from "~/lib/hooks/use-crm";
+import { Container, Stack, Grid } from "~/components/ui/Layout";
+import { Card, CardHeader, CardTitle, CardContent } from "~/components/ui/Card";
+import { Button } from "~/components/ui/Button";
+import { Badge } from "~/components/ui/Badge";
+import { Icon } from "~/components/ui/Icon";
+import { EmptyState } from "~/components/ui/EmptyState";
+import { Modal, ModalHeader, ModalTitle, ModalContent, ModalFooter } from "~/components/ui/Modal";
+import { Input } from "~/components/ui/Input";
 import { cn, formatCurrency } from "~/lib/utils";
 
 export const Route = createFileRoute("/_app/teams/")({
@@ -27,12 +27,10 @@ function TeamDetailView({ teamId }: { teamId: string }) {
   const updateGoalMutation = useUpdateGoalMutation();
 
   if (loadingDetails || loadingGoals) {
-    return (
-      <div className="animate-pulse space-y-4">
-        <div className="h-40 bg-secondary/5 rounded-2xl" />
-        <div className="h-60 bg-secondary/5 rounded-2xl" />
-      </div>
-    );
+    return <div className="animate-pulse space-y-4">
+      <div className="h-40 bg-secondary/5 rounded-2xl" />
+      <div className="h-60 bg-secondary/5 rounded-2xl" />
+    </div>;
   }
 
   if (!details) return null;
@@ -85,7 +83,9 @@ function TeamDetailView({ teamId }: { teamId: string }) {
                     <p className="font-semibold text-sm truncate">{m.user?.name}</p>
                     <p className="text-[10px] text-text-muted uppercase tracking-wider">{m.member.role}</p>
                   </div>
-                  {team.leaderId === m.user?.id && <Icon name="Crown" className="text-amber-400" size={14} />}
+                  {team.leaderId === m.user?.id && (
+                    <Icon name="Crown" className="text-amber-400" size={14} />
+                  )}
                 </CardContent>
               </Card>
             ))}
@@ -114,26 +114,19 @@ function TeamDetailView({ teamId }: { teamId: string }) {
               />
             ) : (
               goals?.map((goal: any) => {
-                const progress = Math.min(
-                  Math.round(((Number(goal.currentValue) || 0) / (Number(goal.targetValue) || 1)) * 100),
-                  100,
-                );
+                const progress = Math.min(Math.round(((Number(goal.currentValue) || 0) / (Number(goal.targetValue) || 1)) * 100), 100);
                 return (
                   <Card key={goal.id} variant="glass">
                     <CardContent className="p-5 space-y-4">
                       <Stack direction="row" align="center" justify="between">
                         <Stack direction="column" gap="xs">
                           <h4 className="font-bold text-text">{goal.title}</h4>
-                          <p className="text-xs text-text-muted">
-                            Finaliza el {new Date(goal.endDate).toLocaleDateString()}
-                          </p>
+                          <p className="text-xs text-text-muted">Finaliza el {new Date(goal.endDate).toLocaleDateString()}</p>
                         </Stack>
-                        <span
-                          className={cn(
-                            "text-xl font-black font-mono",
-                            progress >= 90 ? "text-emerald-500" : progress >= 50 ? "text-primary" : "text-amber-500",
-                          )}
-                        >
+                        <span className={cn(
+                          "text-xl font-black font-mono",
+                          progress >= 90 ? "text-emerald-500" : progress >= 50 ? "text-primary" : "text-amber-500"
+                        )}>
                           {progress}%
                         </span>
                       </Stack>
@@ -142,7 +135,7 @@ function TeamDetailView({ teamId }: { teamId: string }) {
                         <div
                           className={cn(
                             "h-full rounded-full transition-all duration-1000 ease-out shadow-lg",
-                            progress >= 90 ? "bg-emerald-500" : "bg-gradient-to-r from-primary to-violet-500",
+                            progress >= 90 ? "bg-emerald-500" : "bg-gradient-to-r from-primary to-violet-500"
                           )}
                           style={{ width: `${progress}%` }}
                         />
@@ -150,16 +143,10 @@ function TeamDetailView({ teamId }: { teamId: string }) {
 
                       <Stack direction="row" justify="between" className="pt-2">
                         <div className="text-xs font-medium text-text-secondary">
-                          Actual:{" "}
-                          <span className="text-text font-mono">
-                            {goal.unit === "currency" ? formatCurrency(goal.currentValue) : goal.currentValue}
-                          </span>
+                          Actual: <span className="text-text font-mono">{goal.unit === "currency" ? formatCurrency(goal.currentValue) : goal.currentValue}</span>
                         </div>
                         <div className="text-xs font-medium text-text-secondary text-right">
-                          Meta:{" "}
-                          <span className="text-text font-mono">
-                            {goal.unit === "currency" ? formatCurrency(goal.targetValue) : goal.targetValue}
-                          </span>
+                          Meta: <span className="text-text font-mono">{goal.unit === "currency" ? formatCurrency(goal.targetValue) : goal.targetValue}</span>
                         </div>
                       </Stack>
                     </CardContent>
@@ -237,7 +224,7 @@ function TeamsPage() {
             onClick={() => setSelectedTeamId(t.id)}
             className={cn(
               "px-6 rounded-full whitespace-nowrap transition-all",
-              activeTeamId === t.id && "bg-primary text-white hover:bg-primary/90 shadow-lg scale-105",
+              activeTeamId === t.id && "bg-primary text-white hover:bg-primary/90 shadow-lg scale-105"
             )}
           >
             {t.name}
@@ -266,7 +253,7 @@ function TeamsPage() {
             label="Nombre del Equipo"
             placeholder="Ej: Equipo de Ventas LATAM"
             value={newTeamForm.name}
-            onChange={(e) => setNewTeamForm((prev) => ({ ...prev, name: e.target.value }))}
+            onChange={(e) => setNewTeamForm(prev => ({ ...prev, name: e.target.value }))}
           />
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-text-secondary">Descripción</label>
@@ -274,14 +261,12 @@ function TeamsPage() {
               className="w-full min-h-[100px] px-3 py-2 rounded-lg border border-border bg-secondary/5 focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm transition-all"
               placeholder="¿Cuál es el propósito de este equipo?"
               value={newTeamForm.description}
-              onChange={(e) => setNewTeamForm((prev) => ({ ...prev, description: e.target.value }))}
+              onChange={(e) => setNewTeamForm(prev => ({ ...prev, description: e.target.value }))}
             />
           </div>
         </ModalContent>
         <ModalFooter>
-          <Button variant="ghost" onClick={() => setShowNewTeamModal(false)}>
-            Cancelar
-          </Button>
+          <Button variant="ghost" onClick={() => setShowNewTeamModal(false)}>Cancelar</Button>
           <Button
             variant="primary"
             onClick={handleCreateTeam}

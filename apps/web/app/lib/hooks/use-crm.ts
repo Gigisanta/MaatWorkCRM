@@ -1,16 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "~/lib/auth-client";
 import { getDashboardMetrics, getPipelineByStage, getRecentActivity } from "../../../server/functions/analytics";
-import { createContact, deleteContact, getContacts, updateContact } from "../../../server/functions/contacts";
-import { createDeal, createStage, getDealsWithContacts, getStages, moveDeal } from "../../../server/functions/pipeline";
-import { createTask, deleteTask, getTasks, updateTask } from "../../../server/functions/tasks";
-import {
-  createTeam,
-  getTeamGoals,
-  getTeamWithMembers,
-  getTeams,
-  updateGoalProgress,
-} from "../../../server/functions/teams";
+import { getTasks, createTask, updateTask, deleteTask } from "../../../server/functions/tasks";
+import { getContacts, createContact, updateContact, deleteContact } from "../../../server/functions/contacts";
+import { getStages, getDealsWithContacts, moveDeal, createDeal, createStage } from "../../../server/functions/pipeline";
+import { getTeams, getTeamWithMembers, getTeamGoals, updateGoalProgress, createTeam } from "../../../server/functions/teams";
 
 // AI_DECISION: Centralized CRM hooks for live data integration
 // Justificación: Synchronizes frontend state with backend server functions using TanStack Query
@@ -186,7 +180,8 @@ export function useMoveDealMutation() {
   const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
 
   return useMutation({
-    mutationFn: (params: { dealId: string; stageId: string }) => moveDeal({ data: params }),
+    mutationFn: (params: { dealId: string; stageId: string }) =>
+      moveDeal({ data: params }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pipeline-board", orgId] });
       queryClient.invalidateQueries({ queryKey: ["pipeline-summary", orgId] });

@@ -3,9 +3,9 @@
 // ============================================================
 
 import { createServerFn } from "@tanstack/react-start";
-import { and, count, desc, eq, sql } from "drizzle-orm";
 import { db } from "../db";
-import { auditLogs, contacts, deals, pipelineStages, tasks, teamGoals } from "../db/schema";
+import { contacts, deals, tasks, teamGoals, pipelineStages, auditLogs } from "../db/schema";
+import { eq, and, count, sql, desc } from "drizzle-orm";
 
 export const getDashboardMetrics = createServerFn({ method: "GET" })
   .inputValidator((input: { orgId: string }) => input)
@@ -20,7 +20,10 @@ export const getDashboardMetrics = createServerFn({ method: "GET" })
       .from(contacts)
       .where(and(eq(contacts.organizationId, data.orgId), eq(contacts.status, "active")));
 
-    const [dealCount] = await db.select({ count: count() }).from(deals).where(eq(deals.organizationId, data.orgId));
+    const [dealCount] = await db
+      .select({ count: count() })
+      .from(deals)
+      .where(eq(deals.organizationId, data.orgId));
 
     const [pipelineValue] = await db
       .select({ total: sql<number>`COALESCE(SUM(${deals.value}), 0)` })

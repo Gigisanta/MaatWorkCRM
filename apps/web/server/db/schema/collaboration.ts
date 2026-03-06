@@ -5,15 +5,13 @@
 // Database: PostgreSQL (Neon)
 // ============================================================
 
-import { integer, pgTable, real, text, timestamp } from "drizzle-orm/pg-core";
-import { organizations, users } from "./auth";
+import { pgTable, text, integer, real, timestamp } from "drizzle-orm/pg-core";
+import { users, organizations } from "./auth";
 
 // ── Teams ────────────────────────────────────────────────────
 export const teams = pgTable("teams", {
   id: text("id").primaryKey(),
-  organizationId: text("organization_id")
-    .notNull()
-    .references(() => organizations.id, { onDelete: "cascade" }),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   description: text("description"),
   leaderId: text("leader_id").references(() => users.id),
@@ -24,24 +22,16 @@ export const teams = pgTable("teams", {
 // ── Team Members ─────────────────────────────────────────────
 export const teamMembers = pgTable("team_members", {
   id: text("id").primaryKey(),
-  teamId: text("team_id")
-    .notNull()
-    .references(() => teams.id, { onDelete: "cascade" }),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  role: text("role", { enum: ["member", "leader"] })
-    .notNull()
-    .default("member"),
+  teamId: text("team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  role: text("role", { enum: ["member", "leader"] }).notNull().default("member"),
   joinedAt: timestamp("joined_at").defaultNow().notNull(),
 });
 
 // ── Team Goals (monthly objectives with tracking) ────────────
 export const teamGoals = pgTable("team_goals", {
   id: text("id").primaryKey(),
-  teamId: text("team_id")
-    .notNull()
-    .references(() => teams.id, { onDelete: "cascade" }),
+  teamId: text("team_id").notNull().references(() => teams.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   description: text("description"),
   targetValue: real("target_value").notNull(),
@@ -52,9 +42,7 @@ export const teamGoals = pgTable("team_goals", {
   endDate: timestamp("end_date").notNull(),
   status: text("status", {
     enum: ["active", "completed", "missed", "cancelled"],
-  })
-    .notNull()
-    .default("active"),
+  }).notNull().default("active"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -62,9 +50,7 @@ export const teamGoals = pgTable("team_goals", {
 // ── Calendar Events (shared team calendar) ───────────────────
 export const calendarEvents = pgTable("calendar_events", {
   id: text("id").primaryKey(),
-  organizationId: text("organization_id")
-    .notNull()
-    .references(() => organizations.id, { onDelete: "cascade" }),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
   teamId: text("team_id").references(() => teams.id),
   title: text("title").notNull(),
   description: text("description"),
@@ -73,12 +59,8 @@ export const calendarEvents = pgTable("calendar_events", {
   location: text("location"),
   type: text("type", {
     enum: ["meeting", "call", "event", "reminder"],
-  })
-    .notNull()
-    .default("meeting"),
-  createdBy: text("created_by")
-    .notNull()
-    .references(() => users.id),
+  }).notNull().default("meeting"),
+  createdBy: text("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

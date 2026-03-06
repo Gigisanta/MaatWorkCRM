@@ -1,24 +1,9 @@
 import { neon } from '@neondatabase/serverless';
-import dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
-import * as fs from 'fs';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Navigate to the root level where .env is located
-const envPath = resolve(__dirname, '../../../../.env');
-console.log("Loading .env from", envPath);
-
-dotenv.config({ path: envPath });
+const sql = neon("postgresql://neondb_owner:npg_PkW1wNbSae8X@ep-holy-shadow-ac20pwz6-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require");
 
 async function main() {
-  const url = process.env.DATABASE_URL;
-  if (!url) throw new Error("DATABASE_URL is not set");
-
-  const sql = neon(url);
-
+  console.log('creating pipeline_stages');
   await sql`
     CREATE TABLE IF NOT EXISTS "pipeline_stages" (
       "id" text PRIMARY KEY NOT NULL,
@@ -30,8 +15,8 @@ async function main() {
       "created_at" timestamp DEFAULT now() NOT NULL
     );
   `;
-  console.log("Verified pipeline_stages");
 
+  console.log('creating deals');
   await sql`
     CREATE TABLE IF NOT EXISTS "deals" (
       "id" text PRIMARY KEY NOT NULL,
@@ -47,7 +32,6 @@ async function main() {
       "updated_at" timestamp DEFAULT now() NOT NULL
     );
   `;
-  console.log("Verified deals");
+  console.log('done!');
 }
-
 main().catch(console.error);
