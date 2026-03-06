@@ -3,9 +3,9 @@
 // ============================================================
 
 import { createServerFn } from "@tanstack/react-start";
+import { asc, eq } from "drizzle-orm";
 import { db } from "../db";
-import { pipelineStages, deals, contacts } from "../db/schema";
-import { eq, asc } from "drizzle-orm";
+import { contacts, deals, pipelineStages } from "../db/schema";
 
 export const getStages = createServerFn({ method: "GET" })
   .inputValidator((input: { orgId: string }) => input)
@@ -33,10 +33,7 @@ export const getDealsWithContacts = createServerFn({ method: "GET" })
 export const moveDeal = createServerFn({ method: "POST" })
   .inputValidator((input: { dealId: string; stageId: string }) => input)
   .handler(async ({ data }) => {
-    await db
-      .update(deals)
-      .set({ stageId: data.stageId, updatedAt: new Date() })
-      .where(eq(deals.id, data.dealId));
+    await db.update(deals).set({ stageId: data.stageId, updatedAt: new Date() }).where(eq(deals.id, data.dealId));
     return { success: true };
   });
 

@@ -3,8 +3,8 @@
 // ============================================================
 
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
-import { routeTree } from "./routeTree.gen";
 import { queryClient } from "~/lib/query-client";
+import { routeTree } from "./routeTree.gen";
 
 export function createRouter() {
   return createTanStackRouter({

@@ -3,7 +3,7 @@
 // ============================================================
 
 import { createFileRoute } from "@tanstack/react-router";
-import { Download, BarChart3, PieChart, TrendingUp } from "lucide-react";
+import { BarChart3, Download, PieChart, TrendingUp } from "lucide-react";
 
 export const Route = createFileRoute("/_app/reports")({
   component: ReportsPage,
@@ -50,9 +50,7 @@ function ReportsPage() {
           <div key={m.label} className="glass-card p-5 animate-fade-in">
             <p className="text-sm text-surface-400">{m.label}</p>
             <p className="text-2xl font-bold text-white mt-1">{m.value}</p>
-            <p className={`text-sm mt-1 ${m.up ? "text-emerald-400" : "text-red-400"}`}>
-              {m.change} vs feb
-            </p>
+            <p className={`text-sm mt-1 ${m.up ? "text-emerald-400" : "text-red-400"}`}>{m.change} vs feb</p>
           </div>
         ))}
       </div>

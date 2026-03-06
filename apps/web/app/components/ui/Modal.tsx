@@ -1,8 +1,8 @@
-import React from 'react';
-import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { Icon } from './Icon';
-import { cn } from '~/lib/utils';
-import { Button } from './Button';
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import React from "react";
+import { cn } from "~/lib/utils";
+import { Button } from "./Button";
+import { Icon } from "./Icon";
 
 export interface ModalProps extends React.HTMLAttributes<HTMLDivElement> {
   open?: boolean;
@@ -10,46 +10,43 @@ export interface ModalProps extends React.HTMLAttributes<HTMLDivElement> {
   title?: string;
   description?: string;
   children: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'full';
+  size?: "sm" | "md" | "lg" | "full";
   trigger?: React.ReactNode;
 }
 
 const sizeClasses = {
-  sm: 'max-w-sm',
-  md: 'max-w-md',
-  lg: 'max-w-2xl',
-  full: 'max-w-full w-[95vw] h-[95vh]',
+  sm: "max-w-sm",
+  md: "max-w-md",
+  lg: "max-w-2xl",
+  full: "max-w-full w-[95vw] h-[95vh]",
 };
 
 export const Modal = React.forwardRef<React.ElementRef<typeof DialogPrimitive.Content>, ModalProps>(
-  (
-    { className, open, onOpenChange, title, description, children, size = 'md', trigger, ...props },
-    ref
-  ) => {
+  ({ className, open, onOpenChange, title, description, children, size = "md", trigger, ...props }, ref) => {
     return (
       <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
         {trigger && <DialogPrimitive.Trigger asChild>{trigger}</DialogPrimitive.Trigger>}
         <DialogPrimitive.Portal>
           <DialogPrimitive.Overlay
             className={cn(
-              'fixed inset-0 z-50 bg-secondary/20 backdrop-blur-md',
-              'data-[state=open]:animate-in data-[state=closed]:animate-out',
-              'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-              'duration-500'
+              "fixed inset-0 z-50 bg-secondary/20 backdrop-blur-md",
+              "data-[state=open]:animate-in data-[state=closed]:animate-out",
+              "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+              "duration-500",
             )}
           />
           <DialogPrimitive.Content
             ref={ref}
             className={cn(
-              'fixed left-[50%] top-[50%] z-50 flex w-full translate-x-[-50%] translate-y-[-50%] flex-col',
-              'enterprise-glass border border-border/40 p-0 shadow-2xl overflow-hidden',
-              'duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out',
-              'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
-              'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
-              'data-[state=open]:animate-pop',
-              'sm:rounded-[2rem] font-body',
+              "fixed left-[50%] top-[50%] z-50 flex w-full translate-x-[-50%] translate-y-[-50%] flex-col",
+              "enterprise-glass border border-border/40 p-0 shadow-2xl overflow-hidden",
+              "duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out",
+              "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+              "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+              "data-[state=open]:animate-pop",
+              "sm:rounded-[2rem] font-body",
               sizeClasses[size],
-              className
+              className,
             )}
             aria-describedby={!description ? undefined : undefined}
             {...props}
@@ -85,25 +82,22 @@ export const Modal = React.forwardRef<React.ElementRef<typeof DialogPrimitive.Co
         </DialogPrimitive.Portal>
       </DialogPrimitive.Root>
     );
-  }
+  },
 );
 
 Modal.displayName = DialogPrimitive.Content.displayName;
 
 export const ModalHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn('flex flex-col space-y-1.5 text-center sm:text-left', className)} {...props} />
+  <div className={cn("flex flex-col space-y-1.5 text-center sm:text-left", className)} {...props} />
 );
 
-ModalHeader.displayName = 'ModalHeader';
+ModalHeader.displayName = "ModalHeader";
 
 export const ModalFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2', className)}
-    {...props}
-  />
+  <div className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", className)} {...props} />
 );
 
-ModalFooter.displayName = 'ModalFooter';
+ModalFooter.displayName = "ModalFooter";
 
 export const ModalTitle = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Title>,
@@ -111,10 +105,7 @@ export const ModalTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn(
-      'text-lg font-semibold leading-none tracking-tight font-display text-text',
-      className
-    )}
+    className={cn("text-lg font-semibold leading-none tracking-tight font-display text-text", className)}
     {...props}
   />
 ));
@@ -127,7 +118,7 @@ export const ModalDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn('text-sm text-text-secondary font-body', className)}
+    className={cn("text-sm text-text-secondary font-body", className)}
     {...props}
   />
 ));
@@ -135,9 +126,7 @@ export const ModalDescription = React.forwardRef<
 ModalDescription.displayName = DialogPrimitive.Description.displayName;
 
 export const ModalContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('flex-1 font-body', className)} {...props} />
-  )
+  ({ className, ...props }, ref) => <div ref={ref} className={cn("flex-1 font-body", className)} {...props} />,
 );
 
-ModalContent.displayName = 'ModalContent';
+ModalContent.displayName = "ModalContent";

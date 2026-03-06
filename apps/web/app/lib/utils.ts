@@ -1,4 +1,4 @@
-import { clsx, type ClassValue } from "clsx";
+import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 /** Merge Tailwind classes with clsx support */
@@ -21,11 +21,7 @@ export function formatDate(date: Date | string, locale = "es-AR"): string {
 }
 
 /** Format currency */
-export function formatCurrency(
-  amount: number,
-  currency = "ARS",
-  locale = "es-AR"
-): string {
+export function formatCurrency(amount: number, currency = "ARS", locale = "es-AR"): string {
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,

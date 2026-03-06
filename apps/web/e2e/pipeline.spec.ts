@@ -2,7 +2,7 @@
 // MaatWork CRM — E2E: Pipeline Kanban Board
 // ============================================================
 
-import { test, expect } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 test.describe("Pipeline Kanban", () => {
   test("pipeline page loads with stages", async ({ page }) => {

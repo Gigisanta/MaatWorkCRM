@@ -1,20 +1,12 @@
-import React from 'react';
-import {
-  useReactTable,
-  getCoreRowModel,
-  flexRender,
-  type ColumnDef,
-} from '@tanstack/react-table';
+import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import React from "react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
 }
 
-export function DataTable<TData, TValue>({
-  columns,
-  data,
-}: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,
@@ -34,12 +26,7 @@ export function DataTable<TData, TValue>({
                       key={header.id}
                       className="h-12 px-4 text-left align-middle font-semibold text-[#A3A3A3] uppercase tracking-wider text-xs whitespace-nowrap"
                     >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                     </th>
                   );
                 })}
@@ -49,29 +36,17 @@ export function DataTable<TData, TValue>({
           <tbody className="divide-y divide-white/5">
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className="hover:bg-white/5 transition-colors cursor-pointer group"
-                >
+                <tr key={row.id} className="hover:bg-white/5 transition-colors cursor-pointer group">
                   {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className="p-4 align-middle text-[#F5F5F5] group-hover:text-white"
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                    <td key={cell.id} className="p-4 align-middle text-[#F5F5F5] group-hover:text-white">
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
                   ))}
                 </tr>
               ))
             ) : (
               <tr>
-                <td
-                  colSpan={columns.length}
-                  className="h-24 text-center text-[#737373]"
-                >
+                <td colSpan={columns.length} className="h-24 text-center text-[#737373]">
                   No results found.
                 </td>
               </tr>
