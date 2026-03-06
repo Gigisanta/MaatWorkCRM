@@ -5,6 +5,7 @@ import { forwardRef, useId, useState } from "react";
 import { cn } from "~/lib/utils";
 import { Icon, type IconName } from "./Icon";
 
+// UI/UX REFINED BY JULES v2
 export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> {
   label?: string;
   error?: string | null | undefined;
@@ -13,6 +14,8 @@ export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElem
   rightIcon?: IconName | undefined;
   /** Callback when right icon is clicked (makes icon interactive) */
   onRightIconClick?: (() => void) | undefined;
+  /** Accessible label for the right icon button */
+  rightIconAriaLabel?: string;
   size?: "sm" | "md" | "lg";
   showPasswordToggle?: boolean;
 }
@@ -37,6 +40,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
 ) {
   const generatedId = useId();
   const id = props.id || generatedId;
+  const errorId = `${id}-error`;
   const [showPassword, setShowPassword] = useState(false);
 
   const errorValue = error ?? null;
@@ -75,6 +79,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           ref={ref}
           id={id}
           type={inputType}
+          aria-invalid={!!errorValue}
+          aria-describedby={errorValue ? errorId : props["aria-describedby"]}
           className={cn(
             "w-full border rounded-xl transition-all duration-300 font-body",
             "bg-surface-900/50 text-surface-100 placeholder:text-surface-600",
@@ -98,7 +104,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
               type="button"
               onClick={onRightIconClick}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-500 hover:text-brand-400 transition-colors cursor-pointer"
-              aria-label="Clear"
+              aria-label={props.rightIconAriaLabel || "Clear"}
             >
               <Icon name={rightIcon} size={16} />
             </button>
@@ -113,13 +119,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-500 hover:text-brand-400 transition-colors cursor-pointer"
             aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+            aria-pressed={showPassword}
           >
             <Icon name={showPassword ? "eye-off" : "eye"} size={16} />
           </button>
         )}
       </div>
       {errorValue && (
-        <p className="mt-1.5 text-sm text-red-400 font-body animate-in fade-in slide-in-from-top-1">{errorValue}</p>
+        <p id={errorId} className="mt-1.5 text-sm text-red-400 font-body animate-in fade-in slide-in-from-top-1">
+          {errorValue}
+        </p>
       )}
     </div>
   );
