@@ -68,37 +68,39 @@
    Base Styles
    ============================================================ */
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  border-color: var(--color-border);
-}
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border-color: var(--color-border);
+  }
 
-html {
-  font-family: var(--font-sans);
-  overflow-x: hidden;
-  scroll-behavior: smooth;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  /* Force dark mode */
-  color-scheme: dark;
-}
+  html {
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Force dark mode */
+    color-scheme: dark;
+  }
 
-body {
-  background: var(--color-background);
-  color: var(--color-text);
-  font-size: 1rem;
-  line-height: 1.5;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  body {
+    background: var(--color-background);
+    color: var(--color-text);
+    font-size: 1rem;
+    line-height: 1.5;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 
-  /* App-wide subtle background texture */
-  background-color: #050505;
-  background-image: radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.05) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(192, 38, 211, 0.03) 0px, transparent 50%);
-  background-attachment: fixed;
+    /* App-wide subtle background texture */
+    background-color: #050505;
+    background-image: radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(192, 38, 211, 0.03) 0px, transparent 50%);
+    background-attachment: fixed;
+  }
 }
 
 /* ============================================================
@@ -208,12 +210,10 @@ body {
 
 .animate-fade-in-up {
   animation: fadeInUp 0.4s ease-out forwards;
-  opacity: 0;
 }
 
 .animate-slide-in-left {
   animation: slideInFromLeft 0.4s ease-out forwards;
-  opacity: 0;
 }
 
 /* ── App Layout Specifics ───────────────────────── */
@@ -222,24 +222,9 @@ body {
   min-height: 100vh;
 }
 
-.app-main {
-  flex: 1;
-  min-width: 0;
-  transition: margin-left 0.3s ease-in-out;
-  padding: 1.5rem 2rem;
-}
-
-/* Sidebar behavior matching new configuration */
-.lg\:ml-52 {
-  margin-left: 13rem;
-} /* 208px */
-.lg\:ml-16 {
-  margin-left: 4rem;
-} /* 64px */
-
 @media (max-width: 1023px) {
   .app-main {
-    margin-left: 0;
+    margin-left: 0 !important;
     padding: 1rem;
     padding-top: 4rem; /* Header space */
     padding-bottom: 6rem; /* Mobile Bottom Bar space */

@@ -22,6 +22,7 @@ import { Route as AppCalendarRouteImport } from './routes/_app/calendar'
 import { Route as AppTeamsIndexRouteImport } from './routes/_app/teams/index'
 import { Route as AppSettingsIndexRouteImport } from './routes/_app/settings/index'
 import { Route as AppContactsIndexRouteImport } from './routes/_app/contacts/index'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AppSettingsAuditRouteImport } from './routes/_app/settings/audit'
 
 const AuthRoute = AuthRouteImport.update({
@@ -87,6 +88,11 @@ const AppContactsIndexRoute = AppContactsIndexRouteImport.update({
   path: '/contacts/',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppSettingsAuditRoute = AppSettingsAuditRouteImport.update({
   id: '/settings/audit',
   path: '/settings/audit',
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/training': typeof AppTrainingRoute
   '/login': typeof AuthLoginRoute
   '/settings/audit': typeof AppSettingsAuditRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/contacts/': typeof AppContactsIndexRoute
   '/settings/': typeof AppSettingsIndexRoute
   '/teams/': typeof AppTeamsIndexRoute
@@ -117,6 +124,7 @@ export interface FileRoutesByTo {
   '/training': typeof AppTrainingRoute
   '/login': typeof AuthLoginRoute
   '/settings/audit': typeof AppSettingsAuditRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/contacts': typeof AppContactsIndexRoute
   '/settings': typeof AppSettingsIndexRoute
   '/teams': typeof AppTeamsIndexRoute
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/_app/training': typeof AppTrainingRoute
   '/_auth/login': typeof AuthLoginRoute
   '/_app/settings/audit': typeof AppSettingsAuditRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/_app/contacts/': typeof AppContactsIndexRoute
   '/_app/settings/': typeof AppSettingsIndexRoute
   '/_app/teams/': typeof AppTeamsIndexRoute
@@ -150,6 +159,7 @@ export interface FileRouteTypes {
     | '/training'
     | '/login'
     | '/settings/audit'
+    | '/api/auth/$'
     | '/contacts/'
     | '/settings/'
     | '/teams/'
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
     | '/training'
     | '/login'
     | '/settings/audit'
+    | '/api/auth/$'
     | '/contacts'
     | '/settings'
     | '/teams'
@@ -180,6 +191,7 @@ export interface FileRouteTypes {
     | '/_app/training'
     | '/_auth/login'
     | '/_app/settings/audit'
+    | '/api/auth/$'
     | '/_app/contacts/'
     | '/_app/settings/'
     | '/_app/teams/'
@@ -189,6 +201,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -284,6 +297,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppContactsIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/settings/audit': {
       id: '/_app/settings/audit'
       path: '/settings/audit'
@@ -336,6 +356,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

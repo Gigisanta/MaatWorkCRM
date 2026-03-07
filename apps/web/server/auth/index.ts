@@ -1,10 +1,12 @@
 // ============================================================
 // MaatWork CRM — better-auth Configuration (PostgreSQL/Neon)
+// UI/UX REFINED BY JULES v2
 // ============================================================
 
+import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization } from "better-auth/plugins";
+import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { db } from "../db";
 
 export const auth = betterAuth({
@@ -25,6 +27,7 @@ export const auth = betterAuth({
   },
 
   plugins: [
+    tanstackStartCookies(),
     organization({
       allowUserToCreateOrganization: true,
     }),

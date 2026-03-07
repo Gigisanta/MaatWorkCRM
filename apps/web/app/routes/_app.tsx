@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { Sidebar } from "~/components/layout/Sidebar";
 import { AICopilot } from "~/components/ui/AICopilot";
 import { CommandPalette } from "~/components/ui/CommandPalette";
+import { cn } from "~/lib/utils";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -36,14 +37,13 @@ function AppLayout() {
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
 
       <main
-        className={[
-          "app-main",
-          "min-h-screen transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
+        className={cn(
+          "app-main flex-1 min-w-0 min-h-screen transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
           collapsed ? "lg:ml-20" : "lg:ml-64",
           "px-4 sm:px-6 lg:px-8",
-          "pt-20 sm:pt-24 lg:pt-24", // Account for fixed header
+          "pt-20 sm:pt-24 lg:pt-24",
           "pb-24 sm:pb-28 lg:pb-12 safe-area-bottom",
-        ].join(" ")}
+        )}
       >
         <AnimatePresence mode="wait">
           <motion.div

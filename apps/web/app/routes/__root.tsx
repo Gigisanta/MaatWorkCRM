@@ -40,7 +40,6 @@ function RootLayout() {
         </head>
         <body className="font-sans min-h-screen">
           <Outlet />
-          <ScrollRestoration />
           <Scripts />
         </body>
       </html>

@@ -1,0 +1,314 @@
+/* ============================================================
+   MaatWork CRM — Global Styles & Design Tokens
+   UI/UX REFINED BY JULES v2
+   ============================================================ */
+@import "tailwindcss";
+
+@layer theme {
+  @theme {
+    /* Core Backgrounds - EXACT HEX VALUES */
+    --color-background: #050505;
+    --color-surface: #0f0f0f;
+    --color-surface-hover: #18181b;
+
+    /* Primary Colors */
+    --color-primary: #8b5cf6;
+    --color-primary-hover: #7c3aed;
+    --color-primary-light: #a78bfa;
+    --color-primary-subtle: rgba(139, 92, 246, 0.1);
+    --color-primary-glow: rgba(139, 92, 246, 0.15);
+    --color-primary-glow-hover: rgba(139, 92, 246, 0.25);
+
+    /* Accent Colors */
+    --color-accent: #c026d3;
+    --color-accent-hover: #a21caf;
+    --color-accent-light: #e879f9;
+    --color-accent-subtle: rgba(192, 38, 211, 0.1);
+
+    /* Text Colors */
+    --color-text-primary: #f5f5f5;
+    --color-text-secondary: #a3a3a3;
+    --color-text-muted: #737373;
+    --color-text-inverse: #ffffff;
+
+    /* Status Colors */
+    --color-success: #22c55e;
+    --color-success-hover: #16a34a;
+    --color-success-bg: rgba(34, 197, 94, 0.1);
+    --color-success-border: rgba(34, 197, 94, 0.2);
+
+    --color-danger: #ef4444;
+    --color-danger-hover: #dc2626;
+    --color-danger-bg: rgba(239, 68, 68, 0.1);
+    --color-danger-border: rgba(239, 68, 68, 0.2);
+
+    --color-warning: #f59e0b;
+    --color-warning-hover: #d97706;
+    --color-warning-bg: rgba(245, 158, 11, 0.1);
+    --color-warning-border: rgba(245, 158, 11, 0.2);
+
+    /* White Accents */
+    --color-white: #ffffff;
+    --color-white-5: rgba(255, 255, 255, 0.05);
+    --color-white-10: rgba(255, 255, 255, 0.1);
+    --color-white-15: rgba(255, 255, 255, 0.15);
+    --color-white-20: rgba(255, 255, 255, 0.2);
+
+    /* Border Colors */
+    --color-border-subtle: rgba(255, 255, 255, 0.05);
+    --color-border-default: rgba(255, 255, 255, 0.1);
+    --color-border-hover: rgba(255, 255, 255, 0.15);
+    --color-border-focus: rgba(139, 92, 246, 0.4);
+
+    /* Shadow System */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.03);
+    --shadow-primary: 0 0 20px rgba(139, 92, 246, 0.15);
+    --shadow-primary-lg: 0 0 30px rgba(139, 92, 246, 0.25);
+    --shadow-focus: 0 0 0 3px rgba(139, 92, 246, 0.4);
+    --shadow-inner: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+
+    /* Typography */
+    --font-display: "Inter", "Satoshi", system-ui, -apple-system, sans-serif;
+    --font-body: "Inter", system-ui, -apple-system, sans-serif;
+    --font-mono: "JetBrains Mono", monospace;
+  }
+}
+
+/* ============================================================
+   Base Styles
+   ============================================================ */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: var(--font-body);
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-size: 1rem;
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Dark Mode ONLY - No light mode override */
+
+/* ============================================================
+   Glassmorphism v2
+   ============================================================ */
+
+.glass-card {
+  background: rgba(15, 15, 15, 0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: var(--shadow-inner), var(--shadow-md);
+  border-radius: 1.25rem;
+}
+
+.glass-card-hover:hover {
+  box-shadow: var(--shadow-inner), var(--shadow-lg), var(--color-primary-glow);
+  border-color: var(--color-border-hover);
+}
+
+.enterprise-glass {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--shadow-lg);
+}
+
+.glass-landing {
+  background: rgba(15, 15, 15, 0.85);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Dark Mode Glassmorphism */
+.dark .glass-card,
+[data-theme="dark"] .glass-card {
+  background: rgba(15, 15, 15, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dark .enterprise-glass,
+[data-theme="dark"] .enterprise-glass {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(15, 15, 15, 0.05));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================================
+   Neon Violet Glow Effects
+   ============================================================ */
+
+.neon-glow {
+  transition: box-shadow 0.3s ease;
+}
+
+.neon-glow:hover {
+  box-shadow: 0 0 20px var(--color-primary-glow-hover), 0 0 30px rgba(192, 38, 211, 0.1), inset 0 0 20px
+    rgba(139, 92, 246, 0.05);
+}
+
+/* ============================================================
+   Focus States (WCAG AAA - Violet Focus Ring)
+   ============================================================ */
+
+*:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+*:focus-visible:not(:focus-visible) {
+  outline: 2px solid var(--color-border-focus);
+  box-shadow: var(--shadow-focus);
+}
+
+/* ============================================================
+   Custom Scrollbar
+   ============================================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.2);
+}
+
+/* ============================================================
+   Animations
+   ============================================================ */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slideInFromLeft 0.3s ease-out forwards;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ============================================================
+   Accessibility: Reduced Motion Support
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================
+   Utility Classes
+   ============================================================ */
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-primary);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
+  box-shadow: var(--shadow-primary);
+  transition: all 0.2s ease;
+}
+
+.button-glow {
+  box-shadow: 0 0 0 0 rgba(139, 92, 246, 0);
+  transition: box-shadow 0.3s ease;
+}
+
+.button-glow:hover,
+.button-glow:focus {
+  box-shadow: 0 0 20px var(--color-primary-glow);
+}
