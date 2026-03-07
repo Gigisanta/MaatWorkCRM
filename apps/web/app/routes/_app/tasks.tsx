@@ -1,18 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import React, { useState } from "react";
-<<<<<<< HEAD
-=======
-import {
-  useTasks,
-  useCreateTaskMutation,
-  useUpdateTaskMutation,
-  useDeleteTaskMutation,
-  useContacts
-} from "~/lib/hooks/use-crm";
-import { Container, Stack, Grid } from "~/components/ui/Layout";
-import { Card, CardHeader, CardTitle, CardContent } from "~/components/ui/Card";
-import { Button } from "~/components/ui/Button";
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
 import { Badge } from "~/components/ui/Badge";
 import { Button } from "~/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/Card";
@@ -63,11 +50,7 @@ function TasksPage() {
     title: "",
     priority: "medium",
     dueDate: "",
-<<<<<<< HEAD
     contactId: "",
-=======
-    contactId: ""
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
   });
 
   const handleCreateTask = async () => {
@@ -158,11 +141,7 @@ function TasksPage() {
                 "rounded-xl px-5 h-9 font-bold text-xs uppercase tracking-wider transition-all",
                 statusFilter === f.id
                   ? "bg-primary text-white shadow-lg shadow-primary/20"
-<<<<<<< HEAD
                   : "text-text-muted hover:text-primary hover:bg-primary/5",
-=======
-                  : "text-text-muted hover:text-primary hover:bg-primary/5"
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
               )}
             >
               {f.label}
@@ -200,19 +179,12 @@ function TasksPage() {
                 )}
                 style={{ animationDelay: `${index * 50}ms` }}
               >
-<<<<<<< HEAD
                 <div
                   className={cn(
                     "absolute left-0 top-0 bottom-0 w-1 transition-all duration-300",
                     priority.color.split(" ")[0].replace("text-", "bg-"),
                   )}
                 />
-=======
-                <div className={cn(
-                  "absolute left-0 top-0 bottom-0 w-1 transition-all duration-300",
-                  priority.color.split(' ')[0].replace('text-', 'bg-')
-                )} />
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
 
                 <CardContent className="p-5 flex items-center gap-5">
                   <button
@@ -221,11 +193,7 @@ function TasksPage() {
                       "w-7 h-7 rounded-xl border-2 flex items-center justify-center transition-all duration-500 shadow-inner",
                       task.status === "completed"
                         ? "bg-primary border-primary text-white scale-110"
-<<<<<<< HEAD
                         : "border-border hover:border-primary/50 bg-secondary/10",
-=======
-                        : "border-border hover:border-primary/50 bg-secondary/10"
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
                     )}
                   >
                     {task.status === "completed" && <Icon name="Check" size={16} strokeWidth={3} />}
@@ -308,13 +276,9 @@ function TasksPage() {
           />
           <Grid cols={2} gap="lg">
             <div className="space-y-2">
-<<<<<<< HEAD
               <label className="text-[10px] font-black text-text-muted/60 uppercase tracking-widest ml-1">
                 Prioridad
               </label>
-=======
-              <label className="text-[10px] font-black text-text-muted/60 uppercase tracking-widest ml-1">Prioridad</label>
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
               <select
                 className="w-full h-12 px-4 rounded-xl border-2 border-border/20 bg-secondary/5 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 text-sm font-bold transition-all appearance-none"
                 value={newTaskForm.priority}
@@ -327,13 +291,9 @@ function TasksPage() {
               </select>
             </div>
             <div className="space-y-2">
-<<<<<<< HEAD
               <label className="text-[10px] font-black text-text-muted/60 uppercase tracking-widest ml-1">
                 Fecha Límite
               </label>
-=======
-              <label className="text-[10px] font-black text-text-muted/60 uppercase tracking-widest ml-1">Fecha Límite</label>
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
               <Input
                 type="date"
                 value={newTaskForm.dueDate}
@@ -343,13 +303,9 @@ function TasksPage() {
             </div>
           </Grid>
           <div className="space-y-2">
-<<<<<<< HEAD
             <label className="text-[10px] font-black text-text-muted/60 uppercase tracking-widest ml-1">
               Contacto Asociado
             </label>
-=======
-            <label className="text-[10px] font-black text-text-muted/60 uppercase tracking-widest ml-1">Contacto Asociado</label>
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
             <select
               className="w-full h-12 px-4 rounded-xl border-2 border-border/20 bg-secondary/5 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 text-sm font-bold transition-all appearance-none"
               value={newTaskForm.contactId}

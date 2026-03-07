@@ -34,7 +34,6 @@ export function StatCard({
     <Card variant="cyber" className={cn("p-7 group", className)}>
       <div className="flex items-start justify-between">
         <div className="space-y-2 px-1 relative z-10">
-<<<<<<< HEAD
           <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] opacity-70 group-hover:opacity-100 transition-opacity">
             {label}
           </p>
@@ -51,18 +50,6 @@ export function StatCard({
                   : "bg-error/10 text-error border border-error/20 group-hover:bg-error/20",
               )}
             >
-=======
-          <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] opacity-70 group-hover:opacity-100 transition-opacity">{label}</p>
-          <p className="text-4xl font-black text-text tracking-tighter group-hover:text-primary transition-all duration-500">{value}</p>
-
-          {change && (
-            <div className={cn(
-              'flex items-center gap-1.5 mt-4 text-[10px] font-black px-2.5 py-1 rounded-lg w-fit uppercase tracking-widest transition-all duration-500',
-              changeType === 'up'
-                ? 'bg-success/10 text-success border border-success/20 group-hover:bg-success/20'
-                : 'bg-error/10 text-error border border-error/20 group-hover:bg-error/20'
-            )}>
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
               <span className="flex items-center gap-1">
                 {changeType === "up" ? "↗" : "↘"} {change}
               </span>
@@ -70,16 +57,12 @@ export function StatCard({
           )}
         </div>
 
-<<<<<<< HEAD
         <div
           className={cn(
             "p-4 rounded-2xl transition-all duration-700 group-hover:scale-110 group-hover:-rotate-12 shadow-sm relative z-10",
             colors[variant],
           )}
         >
-=======
-        <div className={cn('p-4 rounded-2xl transition-all duration-700 group-hover:scale-110 group-hover:-rotate-12 shadow-sm relative z-10', colors[variant])}>
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
           <Icon className="w-6 h-6" strokeWidth={2.5} />
           <div className="absolute inset-0 bg-current opacity-0 group-hover:opacity-10 blur-xl transition-opacity rounded-full" />
         </div>
