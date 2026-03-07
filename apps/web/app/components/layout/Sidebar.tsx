@@ -92,7 +92,7 @@ export function Sidebar({ collapsed, setCollapsed }: { collapsed: boolean; setCo
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] group-hover:shadow-[0_0_25px_rgba(139,92,246,0.5)] group-hover:scale-105 transition-all duration-300 border border-white/10">
                   <Feather className="w-5 h-5" strokeWidth={2.5} />
                 </div>
-                <span className="text-xl font-bold tracking-tight font-display hidden xs:inline-flex">
+                <span className="text-xl font-bold tracking-tight font-display hidden sm:inline-flex">
                   <span className="text-text">Maat</span>
                   <span className="text-primary">Work</span>
                 </span>

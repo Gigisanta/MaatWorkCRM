@@ -7,7 +7,7 @@ import { expect, test } from "@playwright/test";
 test.describe("Pipeline Kanban", () => {
   test("pipeline page loads with stages", async ({ page }) => {
     await page.goto("/pipeline");
-    await expect(page.getByText("Pipeline")).toBeVisible();
+    await expect(page.getByText("Sales Pipeline")).toBeVisible();
     await expect(page.getByText("Prospecto")).toBeVisible();
     await expect(page.getByText("Contactado")).toBeVisible();
     await expect(page.getByText("Reunión")).toBeVisible();
@@ -23,11 +23,11 @@ test.describe("Pipeline Kanban", () => {
 
   test("shows total pipeline value", async ({ page }) => {
     await page.goto("/pipeline");
-    await expect(page.getByText(/Valor total/)).toBeVisible();
+    await expect(page.getByText(/Total Value/)).toBeVisible();
   });
 
   test("new deal button is visible", async ({ page }) => {
     await page.goto("/pipeline");
-    await expect(page.getByText("Nuevo Deal")).toBeVisible();
+    await expect(page.getByText("New Deal")).toBeVisible();
   });
 });

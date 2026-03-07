@@ -109,6 +109,7 @@ function LoginPage() {
                 />
                 <button
                   type="button"
+                  data-testid="password-toggle"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text transition-colors"
                 >
