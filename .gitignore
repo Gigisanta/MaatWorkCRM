@@ -40,3 +40,6 @@ test-results/
 # Misc
 *.log
 npm-debug.log*
+
+# Worktrees (isolated development)
+.worktrees/
