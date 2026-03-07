@@ -1,14 +1,7 @@
-<<<<<<< HEAD
 import { useNavigate } from "@tanstack/react-router";
 import { Command } from "cmdk";
 import { Kanban, LayoutDashboard, Search, Settings, Users } from "lucide-react";
 import React, { useEffect, useState } from "react";
-=======
-import React, { useEffect, useState } from 'react';
-import { Command } from 'cmdk';
-import { Search, LayoutDashboard, Users, Kanban, Settings } from 'lucide-react';
-import { useNavigate } from '@tanstack/react-router';
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
@@ -16,23 +9,14 @@ export function CommandPalette() {
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-<<<<<<< HEAD
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-=======
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
         e.preventDefault();
         setOpen((open) => !open);
       }
     };
 
-<<<<<<< HEAD
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
-=======
-    document.addEventListener('keydown', down);
-    return () => document.removeEventListener('keydown', down);
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
   }, []);
 
   const handleSelect = (path: string) => {
@@ -60,33 +44,21 @@ export function CommandPalette() {
 
           <Command.Group heading="Navigation" className="text-xs font-bold uppercase tracking-wider text-[#A3A3A3] p-2">
             <Command.Item
-<<<<<<< HEAD
               onSelect={() => handleSelect("/dashboard")}
-=======
-              onSelect={() => handleSelect('/dashboard')}
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
               className="flex items-center px-4 py-3 rounded-xl cursor-pointer text-[#F5F5F5] data-[selected=true]:bg-[#8B5CF6]/10 data-[selected=true]:text-[#8B5CF6] transition-colors"
             >
               <LayoutDashboard className="w-5 h-5 mr-3" />
               Go to Dashboard
             </Command.Item>
             <Command.Item
-<<<<<<< HEAD
               onSelect={() => handleSelect("/contacts")}
-=======
-              onSelect={() => handleSelect('/contacts')}
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
               className="flex items-center px-4 py-3 rounded-xl cursor-pointer text-[#F5F5F5] data-[selected=true]:bg-[#8B5CF6]/10 data-[selected=true]:text-[#8B5CF6] transition-colors"
             >
               <Users className="w-5 h-5 mr-3" />
               Go to Contacts
             </Command.Item>
             <Command.Item
-<<<<<<< HEAD
               onSelect={() => handleSelect("/pipeline")}
-=======
-              onSelect={() => handleSelect('/pipeline')}
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
               className="flex items-center px-4 py-3 rounded-xl cursor-pointer text-[#F5F5F5] data-[selected=true]:bg-[#8B5CF6]/10 data-[selected=true]:text-[#8B5CF6] transition-colors"
             >
               <Kanban className="w-5 h-5 mr-3" />
@@ -96,11 +68,7 @@ export function CommandPalette() {
 
           <Command.Group heading="Settings" className="text-xs font-bold uppercase tracking-wider text-[#A3A3A3] p-2">
             <Command.Item
-<<<<<<< HEAD
               onSelect={() => handleSelect("/settings")}
-=======
-              onSelect={() => handleSelect('/settings')}
->>>>>>> origin/feat/maatwork-redesign-jules-v2-6433543738996844966
               className="flex items-center px-4 py-3 rounded-xl cursor-pointer text-[#F5F5F5] data-[selected=true]:bg-[#8B5CF6]/10 data-[selected=true]:text-[#8B5CF6] transition-colors"
             >
               <Settings className="w-5 h-5 mr-3" />
