@@ -1,11 +1,4 @@
-// ============================================================
-// MaatWork CRM — Tasks Page
-// UI/UX REFINED BY JULES v2
-// ============================================================
-
 import { createFileRoute } from "@tanstack/react-router";
-import { AnimatePresence, motion } from "framer-motion";
-import { AlertTriangle, Calendar, Check, ChevronDown, Clock, Plus, Sparkles, User } from "lucide-react";
 import React, { useState } from "react";
 import { Badge } from "~/components/ui/Badge";
 import { Button } from "~/components/ui/Button";
@@ -29,17 +22,17 @@ export const Route = createFileRoute("/_app/tasks")({
   component: TasksPage,
 });
 
-const priorityConfig: Record<string, { label: string; color: string; icon: any }> = {
-  urgent: { label: "Urgente", color: "text-error bg-error/10 border-error/20", icon: AlertTriangle },
-  high: { label: "Alta", color: "text-warning bg-warning/10 border-warning/20", icon: AlertTriangle },
-  medium: { label: "Media", color: "text-info bg-info/10 border-info/20", icon: Clock },
-  low: { label: "Baja", color: "text-text-muted bg-surface-hover border-border", icon: Clock },
+const priorityConfig: Record<string, { label: string; color: string; icon: "AlertTriangle" | "Clock" }> = {
+  urgent: { label: "Urgente", color: "text-red-400 bg-red-400/10 border-red-400/20", icon: "AlertTriangle" },
+  high: { label: "Alta", color: "text-amber-400 bg-amber-400/10 border-amber-400/20", icon: "AlertTriangle" },
+  medium: { label: "Media", color: "text-blue-400 bg-blue-400/10 border-blue-400/20", icon: "Clock" },
+  low: { label: "Baja", color: "text-text-muted bg-secondary/10 border-border/20", icon: "Clock" },
 };
 
 const statusConfig: Record<string, { label: string; color: string }> = {
-  pending: { label: "Pendiente", color: "bg-warning" },
-  in_progress: { label: "En Progreso", color: "bg-info" },
-  completed: { label: "Completada", color: "bg-success" },
+  pending: { label: "Pendiente", color: "bg-amber-500" },
+  in_progress: { label: "En Progreso", color: "bg-blue-500" },
+  completed: { label: "Completada", color: "bg-emerald-500" },
   cancelled: { label: "Cancelada", color: "bg-text-muted" },
 };
 
@@ -90,7 +83,7 @@ function TasksPage() {
   if (isLoading) {
     return (
       <Container className="py-12 flex justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
       </Container>
     );
   }
@@ -99,63 +92,45 @@ function TasksPage() {
     return (
       <Container className="py-12">
         <EmptyState
-          title="Error loading tasks"
+          title="Error al cargar tareas"
           description={(error as Error).message}
-          icon={<AlertTriangle className="text-error w-12 h-12" />}
+          icon={<Icon name="AlertTriangle" className="text-error" />}
         />
       </Container>
     );
   }
 
   return (
-    <Container className="py-8 space-y-8 animate-fade-in">
+    <Container className="py-8 space-y-8">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2"
-      >
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-1">
         <div className="space-y-1.5">
-          <h1 className="text-3xl font-bold text-text tracking-tight font-display">Gestión de Tareas</h1>
-          <p className="text-xs font-semibold text-text-muted uppercase tracking-wider flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(139,92,246,0.6)] animate-pulse" />
-            {tasks?.length || 0} tareas totales <span className="opacity-30">•</span>{" "}
-            {tasks?.filter((t: any) => t.status === "pending").length || 0} pendientes
+          <h1 className="text-4xl font-black text-text tracking-tight font-display">Gestión de Tareas</h1>
+          <p className="text-sm font-bold text-text-muted/70 uppercase tracking-[0.2em] flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            {tasks?.length || 0} tareas en total • {tasks?.filter((t: any) => t.status === "pending").length || 0}{" "}
+            pendientes
           </p>
         </div>
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            className="h-10 px-4 border-border bg-surface text-text-secondary hover:text-primary hover:bg-surface-hover hover:border-border-hover transition-all"
-          >
-            <Sparkles className="w-4 h-4 mr-2 text-accent" />
-            Análisis IA
-          </Button>
-          <Button
-            variant="primary"
-            size="md"
-            onClick={() => setShowNewTaskModal(true)}
-            className="shadow-[0_0_15px_rgba(139,92,246,0.2)] hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] rounded-xl h-10 px-5 font-semibold text-sm group bg-primary hover:bg-primary-hover transition-all"
-          >
-            <Plus className="mr-2 w-4 h-4 group-hover:rotate-90 transition-transform duration-300" strokeWidth={2.5} />
-            Nueva Tarea
-          </Button>
-        </div>
-      </motion.div>
+        <Button
+          variant="primary"
+          size="lg"
+          onClick={() => setShowNewTaskModal(true)}
+          className="shadow-xl shadow-primary/20 hover:shadow-primary/30 h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[11px]"
+        >
+          <Icon name="Plus" className="mr-2" size={16} strokeWidth={3} />
+          Crear Tarea
+        </Button>
+      </div>
 
       {/* Filters & Actions bar */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="flex flex-wrap items-center justify-between gap-4 bg-surface p-2.5 rounded-2xl border border-border shadow-sm"
-      >
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-surface/30 p-2 rounded-2xl border border-border/20 backdrop-blur-sm">
         <div className="flex items-center gap-1">
           {[
             { id: undefined, label: "Todas" },
-            { id: "pending", label: "Pendiente" },
-            { id: "in_progress", label: "En Progreso" },
-            { id: "completed", label: "Completada" },
+            { id: "pending", label: "Pendientes" },
+            { id: "in_progress", label: "En Proceso" },
+            { id: "completed", label: "Completadas" },
           ].map((f) => (
             <Button
               key={f.id || "all"}
@@ -163,10 +138,10 @@ function TasksPage() {
               size="sm"
               onClick={() => setStatusFilter(f.id)}
               className={cn(
-                "rounded-lg px-4 h-8 font-semibold text-xs transition-all duration-200",
+                "rounded-xl px-5 h-9 font-bold text-xs uppercase tracking-wider transition-all",
                 statusFilter === f.id
-                  ? "bg-surface-hover text-text shadow-sm border border-border/50"
-                  : "text-text-secondary hover:text-text hover:bg-surface-hover/50",
+                  ? "bg-primary text-white shadow-lg shadow-primary/20"
+                  : "text-text-muted hover:text-primary hover:bg-primary/5",
               )}
             >
               {f.label}
@@ -175,211 +150,190 @@ function TasksPage() {
         </div>
 
         <div className="flex items-center gap-2 px-2">
-          <div className="h-4 w-[1px] bg-border mx-2 hidden sm:block" />
-          <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider hidden sm:block">
+          <div className="h-4 w-[1px] bg-border/40 mx-2 hidden sm:block" />
+          <p className="text-[10px] font-black text-text-muted/40 uppercase tracking-widest hidden sm:block">
             Filtros Activos
           </p>
         </div>
-      </motion.div>
+      </div>
 
       {/* Task List */}
       <div className="grid gap-3">
-        <AnimatePresence>
-          {tasks?.length === 0 ? (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <EmptyState
-                title="Sin tareas pendientes"
-                description="Relájate, parece que estás al día."
-                icon={<Calendar className="text-primary/30 w-12 h-12" />}
-              />
-            </motion.div>
-          ) : (
-            tasks?.map((task: any, index: number) => {
-              const priority = priorityConfig[task.priority] || priorityConfig.medium;
-              const isOverdue = task.status !== "completed" && task.dueDate && new Date(task.dueDate) < new Date();
-              const PriorityIcon = priority.icon;
+        {tasks?.length === 0 ? (
+          <EmptyState
+            title="Sin tareas pendientes"
+            description="Relájate, parece que estás al día con tus pendientes."
+            icon={<Icon name="Calendar" className="text-primary/40" />}
+          />
+        ) : (
+          tasks?.map((task: any, index: number) => {
+            const priority = priorityConfig[task.priority] || priorityConfig.medium;
+            const isOverdue = task.status !== "completed" && task.dueDate && new Date(task.dueDate) < new Date();
 
-              return (
-                <motion.div
-                  key={task.id}
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <Card
+            return (
+              <Card
+                key={task.id}
+                className={cn(
+                  "hover:shadow-xl transition-all duration-300 group overflow-hidden border-border/20 bg-surface/40 backdrop-blur-md rounded-2xl relative",
+                  task.status === "completed" ? "opacity-60 saturate-[0.8]" : "hover:border-primary/30",
+                )}
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <div
+                  className={cn(
+                    "absolute left-0 top-0 bottom-0 w-1 transition-all duration-300",
+                    priority.color.split(" ")[0].replace("text-", "bg-"),
+                  )}
+                />
+
+                <CardContent className="p-5 flex items-center gap-5">
+                  <button
+                    onClick={() => handleToggleTaskStatus(task)}
                     className={cn(
-                      "hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] transition-all duration-300 group overflow-hidden border-border bg-surface backdrop-blur-3xl rounded-2xl relative",
-                      task.status === "completed" ? "opacity-60 saturate-[0.8]" : "hover:border-primary/30",
+                      "w-7 h-7 rounded-xl border-2 flex items-center justify-center transition-all duration-500 shadow-inner",
+                      task.status === "completed"
+                        ? "bg-primary border-primary text-white scale-110"
+                        : "border-border hover:border-primary/50 bg-secondary/10",
                     )}
                   >
-                    <div
+                    {task.status === "completed" && <Icon name="Check" size={16} strokeWidth={3} />}
+                  </button>
+
+                  <div className="flex-1 min-w-0">
+                    <p
                       className={cn(
-                        "absolute left-0 top-0 bottom-0 w-1 transition-all duration-300",
-                        priority.color.split(" ")[0].replace("text-", "bg-"),
+                        "text-base font-bold transition-all truncate tracking-tight",
+                        task.status === "completed" ? "text-text-muted/60 line-through" : "text-text",
                       )}
-                    />
-
-                    <CardContent className="p-4 flex items-center gap-4">
-                      <button
-                        onClick={() => handleToggleTaskStatus(task)}
-                        className={cn(
-                          "w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-300 shadow-inner shrink-0",
-                          task.status === "completed"
-                            ? "bg-primary border-primary text-white scale-110"
-                            : "border-border hover:border-primary/50 bg-surface-hover",
-                        )}
-                      >
-                        {task.status === "completed" && <Check size={14} strokeWidth={3} />}
-                      </button>
-
-                      <div className="flex-1 min-w-0">
-                        <p
-                          className={cn(
-                            "text-sm font-bold transition-all truncate tracking-tight",
-                            task.status === "completed"
-                              ? "text-text-muted line-through"
-                              : "text-text group-hover:text-primary-light",
-                          )}
-                        >
-                          {task.title}
-                        </p>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-1.5">
-                          {task.contactId && (
-                            <div className="flex items-center gap-1.5 text-[10px] font-semibold text-text-secondary uppercase tracking-wider bg-surface-hover px-2 py-0.5 rounded-md border border-border/50">
-                              <User size={10} className="text-primary" />
-                              {contacts?.find((c: any) => c.id === task.contactId)?.name || "Contact"}
-                            </div>
-                          )}
-                          {task.dueDate && (
-                            <div
-                              className={cn(
-                                "flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider",
-                                isOverdue ? "text-error" : "text-text-muted",
-                              )}
-                            >
-                              <Calendar size={10} />
-                              {new Date(task.dueDate).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
-                              {isOverdue && (
-                                <span className="flex items-center gap-1 ml-1 text-[9px] bg-error/10 px-1.5 rounded-md border border-error/20">
-                                  <span className="w-1 h-1 rounded-full bg-error animate-pulse" />
-                                  Vencida
-                                </span>
-                              )}
-                            </div>
-                          )}
+                    >
+                      {task.title}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2">
+                      {task.contactId && (
+                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-text-muted/70 uppercase tracking-widest bg-secondary/10 px-2 py-0.5 rounded-md">
+                          <Icon name="User" size={10} className="text-primary" />
+                          {contacts?.find((c: any) => c.id === task.contactId)?.name || "Contacto"}
                         </div>
-                      </div>
-
-                      <div className="flex items-center gap-3 shrink-0">
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "h-7 px-2.5 flex items-center gap-1.5 border font-bold text-[10px] uppercase tracking-wider rounded-lg transition-all",
-                            priority.color,
-                          )}
-                        >
-                          <PriorityIcon size={10} strokeWidth={2.5} />
-                          {priority.label}
-                        </Badge>
-
+                      )}
+                      {task.dueDate && (
                         <div
                           className={cn(
-                            "w-2.5 h-2.5 rounded-full border-2 border-background shadow-sm",
-                            statusConfig[task.status]?.color || "bg-border",
+                            "flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.15em]",
+                            isOverdue ? "text-error" : "text-text-muted/50",
                           )}
-                        />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })
-          )}
-        </AnimatePresence>
+                        >
+                          <Icon name="Calendar" size={10} />
+                          {new Date(task.dueDate).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
+                          {isOverdue && (
+                            <span className="flex items-center gap-1 ml-1 text-[9px] bg-error/10 px-1.5 rounded-full border border-error/20">
+                              <span className="w-1 h-1 rounded-full bg-error animate-pulse" />
+                              Vencido
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "h-8 px-3 flex items-center gap-2 border-[1.5px] font-black text-[10px] uppercase tracking-widest rounded-xl transition-all group-hover:px-4",
+                        priority.color,
+                      )}
+                    >
+                      <Icon name={priority.icon} size={12} strokeWidth={2.5} />
+                      {priority.label}
+                    </Badge>
+
+                    <div
+                      className={cn(
+                        "w-3 h-3 rounded-full border-2 border-background shadow-lg",
+                        statusConfig[task.status]?.color || "bg-border",
+                      )}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
       </div>
 
       {/* New Task Modal */}
-      <Modal open={showNewTaskModal} onOpenChange={setShowNewTaskModal}>
-        <ModalHeader className="px-6 pt-6 pb-4 border-b border-border bg-surface">
-          <ModalTitle className="text-xl font-bold tracking-tight text-text">Crear Nueva Tarea</ModalTitle>
-          <p className="text-xs font-medium text-text-muted mt-1">¿Qué necesita hacerse?</p>
+      <Modal open={showNewTaskModal} onClose={() => setShowNewTaskModal(false)}>
+        <ModalHeader className="border-b border-border/10 pb-4">
+          <ModalTitle className="text-2xl font-black tracking-tight">Crear Nueva Tarea</ModalTitle>
         </ModalHeader>
-        <ModalContent className="p-6 space-y-6 bg-background">
+        <ModalContent className="space-y-6 pt-6">
           <Input
-            label="DESCRIPCIÓN DE LA TAREA"
-            placeholder="ej. Llamar al cliente para seguimiento..."
+            label="¿Qué hace falta hacer?"
+            placeholder="Ej: Llamar a cliente para seguimiento..."
             value={newTaskForm.title}
             onChange={(e) => setNewTaskForm((prev) => ({ ...prev, title: e.target.value }))}
-            className="bg-surface-hover border-border focus:border-primary/50 transition-all rounded-xl h-12 text-sm font-medium"
+            className="text-lg font-bold"
           />
-          <Grid cols={2} gap={4}>
+          <Grid cols={2} gap="lg">
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">Prioridad</label>
-              <div className="relative group">
-                <select
-                  className="w-full h-12 px-4 rounded-xl border border-border bg-surface-hover focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 text-sm font-medium transition-all appearance-none cursor-pointer hover:border-border-hover text-text"
-                  value={newTaskForm.priority}
-                  onChange={(e) => setNewTaskForm((prev) => ({ ...prev, priority: e.target.value }))}
-                >
-                  <option value="low">Baja</option>
-                  <option value="medium">Media</option>
-                  <option value="high">Alta</option>
-                  <option value="urgent">Urgente</option>
-                </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-text-muted group-hover:text-primary transition-colors">
-                  <ChevronDown size={16} />
-                </div>
-              </div>
+              <label className="text-[10px] font-black text-text-muted/60 uppercase tracking-widest ml-1">
+                Prioridad
+              </label>
+              <select
+                className="w-full h-12 px-4 rounded-xl border-2 border-border/20 bg-secondary/5 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 text-sm font-bold transition-all appearance-none"
+                value={newTaskForm.priority}
+                onChange={(e) => setNewTaskForm((prev) => ({ ...prev, priority: e.target.value }))}
+              >
+                <option value="low">Low (Baja)</option>
+                <option value="medium">Medium (Media)</option>
+                <option value="high">High (Alta)</option>
+                <option value="urgent">Urgent (Urgente)</option>
+              </select>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">Fecha de Vencimiento</label>
+              <label className="text-[10px] font-black text-text-muted/60 uppercase tracking-widest ml-1">
+                Fecha Límite
+              </label>
               <Input
                 type="date"
                 value={newTaskForm.dueDate}
                 onChange={(e) => setNewTaskForm((prev) => ({ ...prev, dueDate: e.target.value }))}
-                className="bg-surface-hover border-border focus:border-primary/50 transition-all rounded-xl h-12 text-sm font-medium text-text"
+                className="h-12 rounded-xl"
               />
             </div>
           </Grid>
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">
+            <label className="text-[10px] font-black text-text-muted/60 uppercase tracking-widest ml-1">
               Contacto Asociado
             </label>
-            <div className="relative group">
-              <select
-                className="w-full h-12 px-4 rounded-xl border border-border bg-surface-hover focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 text-sm font-medium transition-all appearance-none cursor-pointer hover:border-border-hover text-text"
-                value={newTaskForm.contactId}
-                onChange={(e) => setNewTaskForm((prev) => ({ ...prev, contactId: e.target.value }))}
-              >
-                <option value="">Sin contacto</option>
-                {contacts?.map((c: any) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-text-muted group-hover:text-primary transition-colors">
-                <ChevronDown size={16} />
-              </div>
-            </div>
+            <select
+              className="w-full h-12 px-4 rounded-xl border-2 border-border/20 bg-secondary/5 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 text-sm font-bold transition-all appearance-none"
+              value={newTaskForm.contactId}
+              onChange={(e) => setNewTaskForm((prev) => ({ ...prev, contactId: e.target.value }))}
+            >
+              <option value="">Sin contacto</option>
+              {contacts?.map((c: any) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
           </div>
         </ModalContent>
-        <ModalFooter className="p-6 border-t border-border bg-surface gap-4">
+        <ModalFooter className="border-t border-border/10 pt-4 mt-6">
           <Button
             variant="ghost"
             onClick={() => setShowNewTaskModal(false)}
-            className="rounded-xl px-6 h-10 text-text-secondary hover:text-text hover:bg-surface-hover transition-all duration-200 font-semibold text-sm"
+            className="font-bold text-xs uppercase tracking-widest"
           >
             Cancelar
           </Button>
           <Button
             variant="primary"
-            size="md"
+            size="lg"
             onClick={handleCreateTask}
             disabled={createTaskMutation.isPending || !newTaskForm.title}
-            className="px-8 h-10 font-semibold text-sm shadow-[0_0_15px_rgba(139,92,246,0.2)] bg-primary hover:bg-primary-hover rounded-xl transition-all duration-300"
+            className="px-8 font-black uppercase tracking-widest text-[11px] shadow-lg shadow-primary/20"
           >
             {createTaskMutation.isPending ? "Procesando..." : "Confirmar Tarea"}
           </Button>

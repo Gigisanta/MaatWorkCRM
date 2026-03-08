@@ -6,15 +6,23 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  AlertCircle,
   AlertTriangle,
+  ArrowRight,
   Calendar,
-  ChevronDown,
   DollarSign,
   Filter,
   GripVertical,
   Layers,
+  LayoutGrid,
+  List,
   MoreHorizontal,
+  MoveHorizontal,
   Plus,
+  RotateCw,
+  Search,
+  Settings,
+  SlidersHorizontal,
   Sparkles,
   User,
 } from "lucide-react";
@@ -125,9 +133,9 @@ function PipelinePage() {
     return (
       <Container className="py-12 text-center">
         <EmptyState
-          title="Pipeline Error"
+          title="Error al cargar el pipeline"
           description={(error as Error).message}
-          icon={<AlertTriangle className="w-12 h-12 text-error" />}
+          icon={<AlertTriangle className="w-12 h-12 text-[#EF4444]" />}
         />
       </Container>
     );
@@ -166,14 +174,11 @@ function PipelinePage() {
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
         <SectionHeader
           title="Pipeline de Ventas"
-          description={`${totalDeals} deals activos en el funnel actual.`}
+          description={`${totalDeals} negocios activos en el embudo actual.`}
           icon={Layers}
           actions={
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="border-border bg-surface text-text-secondary hover:text-primary hover:bg-surface-hover h-10 px-4"
-              >
+            <div className="flex gap-4">
+              <Button variant="outline" className="border-white/5 bg-[#18181B] text-[#A3A3A3] hover:text-[#8B5CF6]">
                 <Filter className="w-4 h-4 mr-2" />
                 Filtrar
               </Button>
@@ -188,10 +193,10 @@ function PipelinePage() {
                     setShowNewStageModal(true);
                   }
                 }}
-                className="rounded-xl shadow-[0_0_15px_rgba(139,92,246,0.2)] hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] bg-primary hover:bg-primary-hover h-10 px-5 font-semibold"
+                className="rounded-xl shadow-[0_0_20px_rgba(139,92,246,0.3)] bg-[#8B5CF6] hover:bg-[#7C3AED]"
               >
                 <Plus className="mr-2 w-4 h-4" />
-                Nuevo Deal
+                Nuevo Negocio
               </Button>
             </div>
           }
@@ -202,40 +207,25 @@ function PipelinePage() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-2"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 px-2"
       >
         <StatCard
-          label="Valor Total"
+          title="Valor Total"
           value={formatCurrency(totalValue)}
-          change="12% este mes"
-          changeType="up"
-          variant="brand"
+          trend={{ value: 12, isPositive: true }}
+          variant="primary"
           icon={DollarSign}
         />
-        <StatCard
-          label="Deals Activos"
-          value={totalDeals.toString()}
-          change="Sincronizado"
-          changeType="up"
-          variant="violet"
-          icon={Layers}
-        />
-        <StatCard label="Tasa de Éxito" value="68%" change="5% vs Ene" changeType="up" variant="emerald" icon={Calendar} />
-        <StatCard
-          label="Meta Mensual"
-          value="$1.2M"
-          change="En camino"
-          changeType="up"
-          variant="amber"
-          icon={Calendar}
-        />
+        <StatCard title="Negocios" value={totalDeals.toString()} variant="info" icon={Layers} />
+        <StatCard title="Tasa de Cierre" value="68%" variant="success" icon={Calendar} />
+        <StatCard title="Meta Mensual" value="$1.2M" variant="warning" icon={Calendar} />
       </motion.div>
 
       {/* Kanban Board */}
       <div className="flex gap-6 overflow-x-auto pb-8 pt-4 px-2 snap-x snap-mandatory min-h-[500px]">
         {isLoading ? (
           <div className="w-full flex justify-center py-20">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8B5CF6]" />
           </div>
         ) : (
           board?.map((stage, idx) => (
@@ -245,9 +235,9 @@ function PipelinePage() {
               transition={{ delay: 0.2 + idx * 0.1 }}
               key={stage.id}
               className={cn(
-                "flex-shrink-0 w-80 flex flex-col gap-4 rounded-2xl bg-surface border border-border p-4 snap-center transition-all duration-300 backdrop-blur-3xl",
+                "flex-shrink-0 w-80 flex flex-col gap-4 rounded-3xl bg-[#0F0F0F] border border-white/5 p-4 snap-center transition-all duration-300 backdrop-blur-3xl",
                 dragOverStageId === stage.id
-                  ? "bg-surface-hover ring-2 ring-primary/50 shadow-[0_0_25px_rgba(139,92,246,0.15)]"
+                  ? "bg-[#18181B] ring-2 ring-[#8B5CF6]/50 shadow-[0_0_30px_rgba(139,92,246,0.15)]"
                   : "",
               )}
               onDragOver={(e) => handleDragOver(e, stage.id)}
@@ -257,20 +247,20 @@ function PipelinePage() {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
                   <div
-                    className="w-2.5 h-2.5 rounded-full shadow-[0_0_8px_currentColor]"
+                    className="w-3 h-3 rounded-full shadow-[0_0_10px_currentColor]"
                     style={{ backgroundColor: stage.color, color: stage.color }}
                   />
-                  <h3 className="font-bold text-sm text-text uppercase tracking-wider">{stage.name}</h3>
-                  <span className="text-xs font-semibold text-text-muted bg-surface-hover px-2 py-0.5 rounded-md border border-border/50">
+                  <h3 className="font-black text-sm text-[#F5F5F5] uppercase tracking-wider">{stage.name}</h3>
+                  <span className="text-xs font-bold text-[#737373] bg-[#18181B] px-2 py-0.5 rounded-lg border border-white/5">
                     {stage.deals.length}
                   </span>
                 </div>
-                <button className="text-text-muted hover:text-primary transition-colors p-1.5 rounded-lg hover:bg-surface-hover">
+                <button className="text-[#737373] hover:text-[#8B5CF6] transition-colors p-1 rounded-lg hover:bg-white/5">
                   <MoreHorizontal size={16} />
                 </button>
               </div>
 
-              <div className="text-[10px] font-bold text-text-secondary tracking-widest uppercase mb-2">
+              <div className="text-[11px] font-black text-[#A3A3A3] tracking-widest uppercase mb-2">
                 {formatCurrency(stageTotalValues[stage.id] || 0)}
               </div>
 
@@ -281,9 +271,9 @@ function PipelinePage() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="h-24 rounded-xl border-2 border-dashed border-border flex items-center justify-center text-text-muted text-xs font-semibold uppercase tracking-wider"
+                      className="h-24 rounded-2xl border-2 border-dashed border-white/5 flex items-center justify-center text-[#737373] text-xs font-bold uppercase tracking-wider"
                     >
-                      Arrastra un deal aquí
+                      Arrastra un deal
                     </motion.div>
                   ) : (
                     stage.deals.map(({ deal, contact }: any) => {
@@ -302,27 +292,27 @@ function PipelinePage() {
                           <Card
                             variant="cyber"
                             className={cn(
-                              "cursor-grab active:cursor-grabbing border-border hover:border-primary/30 group/card bg-surface-hover",
+                              "cursor-grab active:cursor-grabbing border-white/5 hover:border-[#8B5CF6]/30 group/card",
                               isDragging
                                 ? "opacity-50 scale-95 shadow-none"
-                                : "hover:shadow-[0_8px_20px_rgba(139,92,246,0.1)] hover:-translate-y-1",
+                                : "hover:shadow-[0_8px_25px_rgba(139,92,246,0.15)] hover:-translate-y-1",
                             )}
                           >
                             <div
-                              className="absolute top-0 left-0 w-full h-[2px] opacity-50 transition-opacity group-hover/card:opacity-100"
+                              className="absolute top-0 left-0 w-full h-[3px] opacity-50 transition-opacity group-hover/card:opacity-100"
                               style={{ backgroundColor: stage.color }}
                             />
-                            <CardContent className="p-4 space-y-4">
+                            <CardContent className="p-5 space-y-4">
                               <Stack direction="row" justify="between" align="start">
-                                <div className="space-y-1.5 flex-1 min-w-0">
-                                  <p className="font-bold text-sm text-text line-clamp-2 leading-tight group-hover/card:text-primary-light transition-colors duration-300 tracking-tight">
+                                <div className="space-y-2 flex-1 min-w-0">
+                                  <p className="font-black text-sm text-[#F5F5F5] line-clamp-2 leading-tight group-hover/card:text-[#8B5CF6] transition-colors duration-300 tracking-tight">
                                     {deal.title}
                                   </p>
                                   <div className="flex items-center gap-2 min-w-0">
-                                    <div className="w-5 h-5 rounded-md bg-surface flex items-center justify-center shrink-0 border border-border group-hover/card:border-primary/30">
-                                      <User size={10} className="text-primary" />
+                                    <div className="w-6 h-6 rounded-lg bg-[#18181B] flex items-center justify-center shrink-0 border border-white/5 group-hover/card:border-[#8B5CF6]/30">
+                                      <User size={12} className="text-[#8B5CF6]" />
                                     </div>
-                                    <span className="text-[10px] text-text-secondary font-semibold truncate tracking-tight">
+                                    <span className="text-[11px] text-[#A3A3A3] font-bold truncate tracking-tight">
                                       {contact?.name || "Sin Contacto"}
                                     </span>
                                   </div>
@@ -330,32 +320,32 @@ function PipelinePage() {
                               </Stack>
 
                               {/* AI Suggestion Button */}
-                              <button className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-primary/5 border border-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider hover:bg-primary/15 transition-colors opacity-0 group-hover/card:opacity-100">
-                                <Sparkles size={10} />
-                                Sugerir Siguiente Paso
+                              <button className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-[#8B5CF6]/5 border border-[#8B5CF6]/10 text-[#8B5CF6] text-[10px] font-black uppercase tracking-widest hover:bg-[#8B5CF6]/20 transition-colors opacity-0 group-hover/card:opacity-100">
+                                <Sparkles size={12} />
+                                Sugerir Acción
                               </button>
 
-                              <div className="flex items-center justify-between pt-3 border-t border-border/50">
+                              <div className="flex items-center justify-between pt-3 border-t border-white/5">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-sm font-bold text-text tracking-tight">
+                                  <span className="text-sm font-black text-[#F5F5F5] tracking-tight">
                                     {formatCurrency(Number(deal.value) || 0)}
                                   </span>
                                 </div>
 
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-3">
                                   {deal.probability && (
                                     <Badge
-                                      variant="success"
-                                      className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-success/10 text-success border-success/20"
+                                      variant="pill"
+                                      className="px-2.5 py-0.5 text-[10px] font-black rounded-full bg-[#22C55E]/10 text-[#22C55E] border-[#22C55E]/20"
                                     >
                                       {deal.probability}%
                                     </Badge>
                                   )}
                                   <Button
                                     variant="ghost"
-                                    className="p-0 h-6 w-6 rounded-md hover:bg-surface text-text-muted hover:text-text transition-colors duration-300 cursor-grab active:cursor-grabbing"
+                                    className="p-0 h-8 w-8 rounded-xl hover:bg-white/10 text-[#737373] hover:text-[#F5F5F5] transition-colors duration-300 cursor-grab active:cursor-grabbing"
                                   >
-                                    <GripVertical className="w-3.5 h-3.5" />
+                                    <GripVertical className="w-4 h-4" />
                                   </Button>
                                 </div>
                               </div>
@@ -380,49 +370,49 @@ function PipelinePage() {
         >
           <Button
             variant="ghost"
-            className="w-full h-[120px] border-2 border-dashed border-border bg-surface rounded-2xl hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 text-text-muted hover:text-primary flex-col gap-3 group/add-stage backdrop-blur-3xl"
+            className="w-full h-[150px] border-2 border-dashed border-white/10 bg-[#0F0F0F] rounded-3xl hover:border-[#8B5CF6]/50 hover:bg-[#8B5CF6]/5 transition-all duration-500 text-[#737373] hover:text-[#8B5CF6] flex-col gap-4 group/add-stage backdrop-blur-3xl"
             onClick={() => setShowNewStageModal(true)}
           >
-            <div className="w-10 h-10 rounded-xl bg-surface-hover border border-border shadow-sm flex items-center justify-center group-hover/add-stage:scale-110 group-hover/add-stage:rotate-90 transition-all duration-300">
-              <Plus size={20} className="text-primary" />
+            <div className="w-12 h-12 rounded-2xl bg-[#18181B] border border-white/5 shadow-md flex items-center justify-center group-hover/add-stage:scale-110 group-hover/add-stage:rotate-90 transition-all duration-500">
+              <Plus size={24} className="text-[#8B5CF6]" />
             </div>
-            <span className="font-bold text-[10px] uppercase tracking-wider">Nueva Etapa</span>
+            <span className="font-black text-[10px] uppercase tracking-[0.2em]">Nueva Etapa</span>
           </Button>
         </motion.div>
       </div>
 
       {/* New Deal Modal */}
       <Modal open={showNewDealModal} onOpenChange={setShowNewDealModal}>
-        <ModalHeader className="px-6 pt-6 pb-4 border-b border-border bg-surface">
-          <ModalTitle className="text-xl font-bold tracking-tight text-text">Nuevo Deal</ModalTitle>
-          <p className="text-xs font-medium text-text-muted mt-1">Ingresa los detalles de la oportunidad</p>
+        <ModalHeader className="px-8 pt-8 pb-6 border-b border-white/5 bg-[#18181B]">
+          <ModalTitle className="text-2xl font-black tracking-tight text-[#F5F5F5]">Nuevo Negocio</ModalTitle>
+          <p className="text-xs font-bold text-[#A3A3A3] uppercase tracking-widest mt-1">
+            Ingresa los detalles de la oportunidad
+          </p>
         </ModalHeader>
-        <ModalContent className="p-6 space-y-6 bg-background">
+        <ModalContent className="p-8 space-y-8 bg-[#0F0F0F]">
           <Input
-            label="TÍTULO DEL DEAL"
-            placeholder="ej. Implementación de CRM"
+            label="TÍTULO DEL NEGOCIO"
+            placeholder="Ej: Implementación CRM"
             value={newDealForm.title}
             onChange={(e) => setNewDealForm((prev) => ({ ...prev, title: e.target.value }))}
-            className="bg-surface-hover border-border focus:border-primary/50 transition-all rounded-xl h-12"
+            className="bg-[#18181B] border-white/5 focus:border-[#8B5CF6]/50 transition-all rounded-[1.25rem] h-14"
           />
-          <div className="relative">
-            <Input
-              label="VALOR ESTIMADO"
-              type="number"
-              placeholder="0.00"
-              value={newDealForm.value}
-              onChange={(e) => setNewDealForm((prev) => ({ ...prev, value: e.target.value }))}
-              className="bg-surface-hover border-border focus:border-primary/50 transition-all rounded-xl h-12 pl-10"
-            />
-            <DollarSign className="w-4 h-4 text-text-muted absolute left-3 top-[38px]" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">
+          <Input
+            label="VALOR ESTIMADO"
+            type="number"
+            placeholder="0.00"
+            value={newDealForm.value}
+            onChange={(e) => setNewDealForm((prev) => ({ ...prev, value: e.target.value }))}
+            className="bg-[#18181B] border-white/5 focus:border-[#8B5CF6]/50 transition-all rounded-[1.25rem] h-14"
+            icon={<DollarSign className="w-5 h-5 text-[#8B5CF6]/60" />}
+          />
+          <div className="space-y-3">
+            <label className="text-[10px] font-black text-[#A3A3A3] uppercase tracking-[0.25em] ml-1">
               Contacto Asociado
             </label>
             <div className="relative group">
               <select
-                className="w-full h-12 px-4 rounded-xl border border-border bg-surface-hover focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 text-sm transition-all text-text appearance-none cursor-pointer hover:border-border-hover"
+                className="w-full h-14 px-6 rounded-[1.25rem] border border-white/5 bg-[#18181B] focus:outline-none focus:ring-2 focus:ring-[#8B5CF6]/20 text-sm transition-all text-[#F5F5F5] appearance-none cursor-pointer hover:border-white/10"
                 value={newDealForm.contactId}
                 onChange={(e) => setNewDealForm((prev) => ({ ...prev, contactId: e.target.value }))}
               >
@@ -433,17 +423,17 @@ function PipelinePage() {
                   </option>
                 ))}
               </select>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-text-muted group-hover:text-primary transition-colors">
-                <ChevronDown size={16} />
+              <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-[#737373] group-hover:text-[#8B5CF6] transition-colors">
+                <GripVertical size={16} />
               </div>
             </div>
           </div>
         </ModalContent>
-        <ModalFooter className="p-6 border-t border-border bg-surface gap-4">
+        <ModalFooter className="p-8 border-t border-white/5 bg-[#18181B] gap-4">
           <Button
             variant="ghost"
             onClick={() => setShowNewDealModal(false)}
-            className="rounded-xl px-6 h-10 text-text-secondary hover:text-text hover:bg-surface-hover transition-all duration-200 font-semibold text-sm"
+            className="rounded-2xl px-8 h-12 text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-white/5 transition-all duration-300"
           >
             Cancelar
           </Button>
@@ -451,56 +441,58 @@ function PipelinePage() {
             variant="primary"
             onClick={handleCreateDeal}
             disabled={createDealMutation.isPending || !newDealForm.title || !newDealForm.contactId}
-            className="rounded-xl px-8 h-10 shadow-[0_0_15px_rgba(139,92,246,0.2)] bg-primary hover:bg-primary-hover hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 font-semibold text-sm"
+            className="rounded-2xl px-10 h-14 shadow-[0_0_20px_rgba(139,92,246,0.3)] bg-[#8B5CF6] hover:bg-[#7C3AED] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 font-black tracking-tight"
           >
-            {createDealMutation.isPending ? "Procesando..." : "Crear Deal"}
+            {createDealMutation.isPending ? "Procesando..." : "Crear Negocio"}
           </Button>
         </ModalFooter>
       </Modal>
 
       {/* New Stage Modal */}
       <Modal open={showNewStageModal} onOpenChange={setShowNewStageModal}>
-        <ModalHeader className="px-6 pt-6 pb-4 border-b border-border bg-surface">
-          <ModalTitle className="text-xl font-bold tracking-tight text-text">Nueva Etapa</ModalTitle>
-          <p className="text-xs font-medium text-text-muted mt-1">Personaliza tu flujo de trabajo</p>
+        <ModalHeader className="px-8 pt-8 pb-6 border-b border-white/5 bg-[#18181B]">
+          <ModalTitle className="text-2xl font-black tracking-tight text-[#F5F5F5]">Nueva Etapa</ModalTitle>
+          <p className="text-xs font-bold text-[#A3A3A3] uppercase tracking-widest mt-1">
+            Personaliza tu flujo de trabajo
+          </p>
         </ModalHeader>
-        <ModalContent className="p-6 space-y-6 bg-background">
+        <ModalContent className="p-8 space-y-8 bg-[#0F0F0F]">
           <Input
             label="NOMBRE DE LA ETAPA"
-            placeholder="ej. Análisis de Necesidades"
+            placeholder="Ej: Análisis de Necesidades"
             value={newStageForm.name}
             onChange={(e) => setNewStageForm((prev) => ({ ...prev, name: e.target.value }))}
-            className="bg-surface-hover border-border focus:border-primary/50 transition-all rounded-xl h-12"
+            className="bg-[#18181B] border-white/5 focus:border-[#8B5CF6]/50 transition-all rounded-[1.25rem] h-14"
           />
-          <div className="space-y-3">
-            <label className="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">
+          <div className="space-y-4">
+            <label className="text-[10px] font-black text-[#A3A3A3] uppercase tracking-[0.25em] ml-1">
               Color de Identidad
             </label>
-            <div className="grid grid-cols-4 sm:grid-cols-8 gap-3 p-4 bg-surface-hover rounded-2xl border border-border shadow-inner">
+            <div className="grid grid-cols-4 sm:grid-cols-8 gap-4 p-6 bg-[#18181B] rounded-[1.5rem] border border-white/5 shadow-inner">
               {["#8B5CF6", "#C026D3", "#22C55E", "#3B82F6", "#F59E0B", "#EF4444", "#EC4899", "#06B6D4"].map((color) => (
                 <button
                   key={color}
                   onClick={() => setNewStageForm((prev) => ({ ...prev, color }))}
                   className={cn(
-                    "w-8 h-8 rounded-lg border-2 transition-all duration-300 shadow-sm",
+                    "w-10 h-10 rounded-xl border-2 transition-all duration-500 shadow-md",
                     newStageForm.color === color
-                      ? "border-white scale-110 ring-2 ring-primary/30 z-10"
-                      : "border-transparent opacity-50 hover:opacity-100 hover:scale-105",
+                      ? "border-white scale-125 ring-4 ring-[#8B5CF6]/30 z-10"
+                      : "border-transparent opacity-40 hover:opacity-100 hover:scale-110",
                   )}
                   style={{
                     backgroundColor: color,
-                    boxShadow: newStageForm.color === color ? `0 0 15px ${color}80` : "none",
+                    boxShadow: newStageForm.color === color ? `0 0 20px ${color}80` : "none",
                   }}
                 />
               ))}
             </div>
           </div>
         </ModalContent>
-        <ModalFooter className="p-6 border-t border-border bg-surface gap-4">
+        <ModalFooter className="p-8 border-t border-white/5 bg-[#18181B] gap-4">
           <Button
             variant="ghost"
             onClick={() => setShowNewStageModal(false)}
-            className="rounded-xl px-6 h-10 text-text-secondary hover:text-text hover:bg-surface-hover transition-all duration-200 font-semibold text-sm"
+            className="rounded-2xl px-8 h-12 text-[#A3A3A3] hover:text-[#F5F5F5] hover:bg-white/5 transition-all duration-300"
           >
             Cancelar
           </Button>
@@ -508,7 +500,7 @@ function PipelinePage() {
             variant="primary"
             onClick={handleCreateStage}
             disabled={createStageMutation.isPending || !newStageForm.name || !newStageForm.color}
-            className="rounded-xl px-8 h-10 shadow-[0_0_15px_rgba(139,92,246,0.2)] bg-primary hover:bg-primary-hover hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 font-semibold text-sm"
+            className="rounded-2xl px-10 h-14 shadow-[0_0_20px_rgba(139,92,246,0.3)] bg-[#8B5CF6] hover:bg-[#7C3AED] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 font-black tracking-tight"
           >
             {createStageMutation.isPending ? "Procesando..." : "Crear Etapa"}
           </Button>
