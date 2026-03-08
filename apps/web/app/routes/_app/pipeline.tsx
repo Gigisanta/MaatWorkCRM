@@ -255,7 +255,10 @@ function PipelinePage() {
                     {stage.deals.length}
                   </span>
                 </div>
-                <button className="text-[#737373] hover:text-[#8B5CF6] transition-colors p-1 rounded-lg hover:bg-white/5">
+                <button
+                  aria-label="Más opciones de etapa"
+                  className="text-[#737373] hover:text-[#8B5CF6] transition-colors p-1 rounded-lg hover:bg-white/5"
+                >
                   <MoreHorizontal size={16} />
                 </button>
               </div>
@@ -320,7 +323,10 @@ function PipelinePage() {
                               </Stack>
 
                               {/* AI Suggestion Button */}
-                              <button className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-[#8B5CF6]/5 border border-[#8B5CF6]/10 text-[#8B5CF6] text-[10px] font-black uppercase tracking-widest hover:bg-[#8B5CF6]/20 transition-colors opacity-0 group-hover/card:opacity-100">
+                              <button
+                                type="button"
+                                className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-[#8B5CF6]/5 border border-[#8B5CF6]/10 text-[#8B5CF6] text-[10px] font-black uppercase tracking-widest hover:bg-[#8B5CF6]/20 transition-colors opacity-0 group-hover/card:opacity-100"
+                              >
                                 <Sparkles size={12} />
                                 Sugerir Acción
                               </button>
@@ -343,6 +349,7 @@ function PipelinePage() {
                                   )}
                                   <Button
                                     variant="ghost"
+                                    aria-label="Arrastrar negocio"
                                     className="p-0 h-8 w-8 rounded-xl hover:bg-white/10 text-[#737373] hover:text-[#F5F5F5] transition-colors duration-300 cursor-grab active:cursor-grabbing"
                                   >
                                     <GripVertical className="w-4 h-4" />
@@ -468,10 +475,18 @@ function PipelinePage() {
             <label className="text-[10px] font-black text-[#A3A3A3] uppercase tracking-[0.25em] ml-1">
               Color de Identidad
             </label>
-            <div className="grid grid-cols-4 sm:grid-cols-8 gap-4 p-6 bg-[#18181B] rounded-[1.5rem] border border-white/5 shadow-inner">
+            <div
+              className="grid grid-cols-4 sm:grid-cols-8 gap-4 p-6 bg-[#18181B] rounded-[1.5rem] border border-white/5 shadow-inner"
+              role="radiogroup"
+              aria-label="Seleccionar color de la etapa"
+            >
               {["#8B5CF6", "#C026D3", "#22C55E", "#3B82F6", "#F59E0B", "#EF4444", "#EC4899", "#06B6D4"].map((color) => (
                 <button
+                  type="button"
                   key={color}
+                  role="radio"
+                  aria-checked={newStageForm.color === color}
+                  aria-label={`Color ${color}`}
                   onClick={() => setNewStageForm((prev) => ({ ...prev, color }))}
                   className={cn(
                     "w-10 h-10 rounded-xl border-2 transition-all duration-500 shadow-md",

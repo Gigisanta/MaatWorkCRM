@@ -149,7 +149,10 @@ function ContactsPage() {
         id: "actions",
         cell: () => (
           <div className="flex justify-end pr-4">
-            <button className="p-2 text-[#737373] hover:text-[#8B5CF6] hover:bg-[#8B5CF6]/10 rounded-lg transition-colors">
+            <button
+              aria-label="Más opciones de contacto"
+              className="p-2 text-[#737373] hover:text-[#8B5CF6] hover:bg-[#8B5CF6]/10 rounded-lg transition-colors"
+            >
               <MoreVertical size={16} />
             </button>
           </div>
