@@ -11,6 +11,14 @@ export function createRouter() {
     routeTree,
     defaultPreload: "intent",
     scrollRestoration: true,
+    defaultNotFoundComponent: () => (
+      <div className="flex items-center justify-center min-h-screen bg-background text-text">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4">404</h1>
+          <p className="text-text-secondary">Page not found</p>
+        </div>
+      </div>
+    ),
     context: {
       queryClient,
     },

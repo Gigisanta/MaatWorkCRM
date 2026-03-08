@@ -21,6 +21,7 @@ export const Route = createRootRoute({
       },
     ],
     links: [
+      { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -40,7 +41,6 @@ function RootLayout() {
         </head>
         <body className="font-sans min-h-screen">
           <Outlet />
-          <ScrollRestoration />
           <Scripts />
         </body>
       </html>

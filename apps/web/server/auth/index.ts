@@ -1,10 +1,12 @@
 // ============================================================
 // MaatWork CRM — better-auth Configuration (PostgreSQL/Neon)
+// UI/UX REFINED BY JULES v2
 // ============================================================
 
+import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization } from "better-auth/plugins";
+import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { db } from "../db";
 
 export const auth = betterAuth({
@@ -21,10 +23,22 @@ export const auth = betterAuth({
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      prompt: "consent",
+      accessType: "offline",
+      scopes: [
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.profile",
+        "https://www.googleapis.com/auth/userinfo.email",
+        "https://www.googleapis.com/auth/calendar",
+        "https://www.googleapis.com/auth/calendar.events",
+        "https://www.googleapis.com/auth/drive",
+        "https://www.googleapis.com/auth/drive.file",
+      ],
     },
   },
 
   plugins: [
+    tanstackStartCookies(),
     organization({
       allowUserToCreateOrganization: true,
     }),

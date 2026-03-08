@@ -56,3 +56,13 @@ export const createTeam = createServerFn({ method: "POST" })
     });
     return { id };
   });
+
+export const updateTeam = createServerFn({ method: "POST" })
+  .inputValidator((input: { teamId: string; name: string; description?: string }) => input)
+  .handler(async ({ data }) => {
+    await db
+      .update(teams)
+      .set({ name: data.name, description: data.description, updatedAt: new Date() })
+      .where(eq(teams.id, data.teamId));
+    return { id: data.teamId };
+  });

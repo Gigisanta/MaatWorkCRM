@@ -9,10 +9,10 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     tsConfigPaths(),
+    nitro(),
     tanstackStart({
       srcDirectory: "app",
     }),
     viteReact(),
-    nitro(),
   ],
 });

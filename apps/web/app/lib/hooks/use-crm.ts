@@ -10,7 +10,14 @@ import {
   getTeamWithMembers,
   getTeams,
   updateGoalProgress,
+  updateTeam,
 } from "../../../server/functions/teams";
+import {
+  createFinancialProfile,
+  deleteFinancialProfile,
+  getFinancialProfile,
+  updateFinancialProfile,
+} from "../../../server/functions/financial-profiles";
 
 // AI_DECISION: Centralized CRM hooks for live data integration
 // Justificación: Synchronizes frontend state with backend server functions using TanStack Query
@@ -272,6 +279,62 @@ export function useCreateTeamMutation() {
       createTeam({ data: { ...data, orgId: orgId! } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["teams"] });
+    },
+  });
+}
+
+export function useUpdateTeamMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { teamId: string; name: string; description?: string }) => updateTeam({ data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
+      queryClient.invalidateQueries({ queryKey: ["team-details"] });
+    },
+  });
+}
+
+/**
+ * Financial Profiles
+ */
+export function useFinancialProfile(contactId: string) {
+  return useQuery({
+    queryKey: ["financial-profile", contactId],
+    queryFn: () => getFinancialProfile({ data: { contactId } }),
+    enabled: !!contactId,
+  });
+}
+
+export function useCreateFinancialProfileMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: any) => createFinancialProfile({ data }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["financial-profile", variables.data?.contactId] });
+    },
+  });
+}
+
+export function useUpdateFinancialProfileMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { contactId: string; data: any }) => updateFinancialProfile({ data }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["financial-profile", variables.contactId] });
+    },
+  });
+}
+
+export function useDeleteFinancialProfileMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (contactId: string) => deleteFinancialProfile({ data: { contactId } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["financial-profile"] });
     },
   });
 }

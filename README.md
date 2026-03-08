@@ -164,6 +164,17 @@ Variables necesarias en Vercel:
 - `BETTER_AUTH_URL` (tu dominio)
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
 
+## Documentación Adicional
+
+- [Testing Reports](./docs/testing/) — Reportes completos de testing
+- [Implementation Progress](./docs/implementation/) — Progreso de implementación de features
+- [Architecture](./docs/architecture/) — Decisiones técnicas y análisis
+- [Screenshots](./docs/screenshots/) — Capturas de pantalla de la UI
+
+## Contribuir
+
+Lee nuestra [Guía de Contribución](./CONTRIBUTING.md) antes de hacer contribuciones.
+
 ## Licencia
 
-Propiedad de MaatWork. Todos los derechos reservados.
+MIT License — ver [LICENSE](./LICENSE) para más detalles.
