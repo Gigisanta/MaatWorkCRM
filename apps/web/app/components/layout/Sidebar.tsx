@@ -8,11 +8,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   BarChart3,
   Bell,
+  Calendar,
   CheckSquare,
   ChevronLeft,
   Feather,
   FileText,
   GraduationCap,
+  HardDrive,
   Kanban,
   LayoutDashboard,
   Menu,
@@ -26,6 +28,22 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "~/lib/utils";
+
+// Framer Motion variants for smoother transitions
+const drawerVariants = {
+  closed: { x: "-100%" },
+  open: { x: 0 },
+};
+
+// Simple spacer for safe-area in mobile (inline style approach)
+import type { CSSProperties } from "react";
+const safeAreaTop: CSSProperties = { paddingTop: "env(safe-area-inset-top)" };
+const safeAreaBottom: CSSProperties = { paddingBottom: "env(safe-area-inset-bottom)" };
+
+// ============================================================
+// MaatWork CRM — Sidebar Component
+// UI/UX REFINED BY JULES v2
+// ============================================================
 
 // Define the sections matching the reference as much as possible
 const sections = [
@@ -63,6 +81,13 @@ const sections = [
     title: "Gestión",
     items: [{ to: "/settings", label: "Configuración Global", icon: Settings, external: false }],
   },
+  {
+    title: "Google",
+    items: [
+      { to: "/calendar", label: "Calendario", icon: Calendar, external: false },
+      { to: "/drive", label: "Drive", icon: HardDrive, external: false },
+    ],
+  },
 ];
 
 export function Sidebar({ collapsed, setCollapsed }: { collapsed: boolean; setCollapsed: (val: boolean) => void }) {
@@ -75,6 +100,18 @@ export function Sidebar({ collapsed, setCollapsed }: { collapsed: boolean; setCo
     setMobileMenuOpen(false);
   }, [currentPath]);
 
+  // Close mobile drawer with Escape key
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mobileMenuOpen]);
+
   return (
     <>
       {/* Header */}
@@ -84,6 +121,8 @@ export function Sidebar({ collapsed, setCollapsed }: { collapsed: boolean; setCo
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden p-2 rounded-xl text-text-muted hover:bg-surface-hover hover:text-primary transition-all active:scale-95"
+              aria-controls="mobile-drawer"
+              aria-expanded={mobileMenuOpen}
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -102,7 +141,10 @@ export function Sidebar({ collapsed, setCollapsed }: { collapsed: boolean; setCo
 
           <div className="flex items-center shrink-0 gap-3">
             {/* Global Search Trigger (Cmd+K) */}
-            <button className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-hover border border-border/50 text-text-muted hover:text-text hover:border-border transition-all group">
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent("toggle-command-palette"))}
+              className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-hover border border-border/50 text-text-muted hover:text-text hover:border-border transition-all group active:scale-95"
+            >
               <Search className="w-4 h-4 group-hover:text-primary transition-colors" />
               <span className="text-sm font-medium">Search...</span>
               <kbd className="hidden lg:inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-surface text-[10px] font-mono font-medium text-text-muted border border-border/50">
@@ -140,12 +182,16 @@ export function Sidebar({ collapsed, setCollapsed }: { collapsed: boolean; setCo
       </header>
 
       {/* Desktop Sidebar */}
-      <aside
+      <motion.aside
+        // Desktop sidebar expands/contracts with a smooth animation
+        initial={{ width: collapsed ? 80 : 256 }}
+        animate={{ width: collapsed ? 80 : 256 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className={cn(
           "hidden lg:flex fixed left-0 top-16 h-[calc(100vh-4rem)] z-30 flex-col",
-          "bg-surface/50 backdrop-blur-xl border-r border-border/40 transition-all duration-300 ease-in-out overflow-x-hidden",
-          collapsed ? "w-20" : "w-64",
+          "bg-surface/50 backdrop-blur-xl border-r border-border/40 overflow-x-hidden",
         )}
+        style={{ width: collapsed ? 80 : 256 }}
       >
         <NavContent collapsed={collapsed} currentPath={currentPath} />
 
@@ -163,12 +209,13 @@ export function Sidebar({ collapsed, setCollapsed }: { collapsed: boolean; setCo
             {!collapsed && <span className="ml-3 text-sm font-semibold tracking-wide">Collapse</span>}
           </button>
         </div>
-      </aside>
+      </motion.aside>
 
       {/* Mobile Drawer */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden flex">
+          <div className="fixed inset-0 z-50 lg:hidden flex" aria-label="Mobile menu open">
+            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -176,14 +223,28 @@ export function Sidebar({ collapsed, setCollapsed }: { collapsed: boolean; setCo
               className="fixed inset-0 bg-background/80 backdrop-blur-sm"
               onClick={() => setMobileMenuOpen(false)}
             />
-            <motion.div
-              initial={{ x: "-100%" }}
+            {/* Drawer with touch drag support */}
+            <motion.aside
+              id="mobile-drawer"
+              initial={{ x: -320 }}
               animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
+              exit={{ x: -320 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              drag="x"
+              dragConstraints={{ left: -320, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, info) => {
+                if (info.offset.x > 120 || info.velocity.x > 800) {
+                  setMobileMenuOpen(false);
+                }
+              }}
               className="relative w-[320px] max-w-[85vw] bg-surface h-full flex flex-col shadow-2xl border-r border-border/50"
+              style={safeAreaTop}
+              aria-label="Mobile Menu"
+              role="dialog"
+              aria-modal="true"
             >
-              <div className="flex items-center justify-between p-6 border-b border-border/50 shrink-0">
+              <div className="flex items-center justify-between p-6 border-b border-border/50 shrink-0" style={safeAreaTop}>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] border border-white/10">
                     <Feather className="w-5 h-5" strokeWidth={2.5} />
@@ -203,7 +264,7 @@ export function Sidebar({ collapsed, setCollapsed }: { collapsed: boolean; setCo
               </div>
               <NavContent collapsed={false} currentPath={currentPath} isMobile />
 
-              <div className="mt-auto p-6 border-t border-border/50 bg-surface-hover/30">
+              <div className="mt-auto p-6 border-t border-border/50 bg-surface-hover/30" style={safeAreaBottom}>
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center font-bold shadow-[0_0_15px_rgba(139,92,246,0.3)]">
                     A
@@ -217,7 +278,7 @@ export function Sidebar({ collapsed, setCollapsed }: { collapsed: boolean; setCo
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </motion.aside>
           </div>
         )}
       </AnimatePresence>
@@ -230,6 +291,11 @@ function NavContent({
   currentPath,
   isMobile = false,
 }: { collapsed: boolean; currentPath: string; isMobile?: boolean }) {
+  const [openSections, setOpenSections] = useState<number[]>(() => sections.map((_, i) => i));
+  const toggleSection = (idx: number) => {
+    setOpenSections((prev) => (prev.includes(idx) ? prev.filter((n) => n !== idx) : [...prev, idx]));
+  };
+
   return (
     <nav
       className={cn(
@@ -237,89 +303,101 @@ function NavContent({
         isMobile ? "p-6" : collapsed ? "py-6 px-2" : "p-6",
       )}
     >
-      {sections.map((section, idx) => (
-        <div key={idx} className="space-y-2">
-          {section.title && !collapsed && (
+      {sections.map((section, idx) => {
+        const isOpen = openSections.includes(idx);
+        return (
+          <div key={idx} className="space-y-2">
             <div
               className={cn(
+                "flex items-center justify-between cursor-pointer",
                 "text-text-muted uppercase tracking-wider text-xs font-semibold pl-3 mb-3",
-                isMobile ? "opacity-60" : "",
+                isMobile ? (isOpen ? "opacity-100" : "opacity-60") : "",
               )}
+              onClick={() => toggleSection(idx)}
             >
-              {section.title}
+              {section.title && !collapsed && (
+                <span className="flex items-center gap-2">{section.title}</span>
+              )}
+              <motion.span animate={{ rotate: isOpen ? 180 : 0 }}>
+                <ChevronLeft className={cn("w-4 h-4 transform transition-transform", isOpen ? "-rotate-90" : "")} />
+              </motion.span>
             </div>
-          )}
-          <div className="space-y-1 font-display">
-            {section.items.map((item) => {
-              const isActive = !item.external && currentPath.startsWith(item.to);
+            {isOpen && (
+              <motion.div layout initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} transition={{ duration: 0.2 }}>
+                <div className="space-y-1 font-display">
+                  {section.items.map((item) => {
+                    const isActive = !item.external && currentPath.startsWith(item.to);
 
-              const linkClasses = cn(
-                "relative flex items-center rounded-xl transition-all duration-300 min-w-0 font-body group active:scale-[0.98]",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
-                collapsed ? "justify-center w-12 h-12 mx-auto" : "gap-3.5 px-3.5 py-3 w-full",
-                isActive
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-text-secondary hover:text-text hover:bg-surface-hover",
-              );
-
-              const content = (
-                <>
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeNavIndicator"
-                      className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full shadow-[0_0_10px_rgba(139,92,246,0.5)]"
-                      initial={false}
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    />
-                  )}
-                  <item.icon
-                    className={cn(
-                      "shrink-0 transition-all duration-300",
-                      collapsed ? "w-5 h-5" : "w-5 h-5",
+                    const linkClasses = cn(
+                      "relative flex items-center rounded-xl transition-all duration-300 min-w-0 font-body group active:scale-[0.98]",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
+                      collapsed ? "justify-center w-12 h-12 mx-auto" : "gap-3.5 px-3.5 py-3 w-full",
                       isActive
-                        ? "text-primary drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]"
-                        : "group-hover:scale-110 group-hover:text-primary",
-                    )}
-                    strokeWidth={isActive ? 2.5 : 2}
-                  />
-                  {!collapsed && (
-                    <span
-                      className={cn(
-                        "truncate tracking-tight",
-                        isMobile ? "text-base" : "text-sm",
-                        isActive ? "font-semibold" : "font-medium",
-                      )}
-                    >
-                      {item.label}
-                    </span>
-                  )}
-                </>
-              );
+                        ? "bg-primary/10 text-primary font-medium"
+                        : "text-text-secondary hover:text-text hover:bg-surface-hover",
+                    );
 
-              if (item.external) {
-                return (
-                  <a
-                    key={item.to}
-                    href={item.to}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={linkClasses}
-                    title={collapsed ? item.label : undefined}
-                  >
-                    {content}
-                  </a>
-                );
-              }
+                    const content = (
+                      <>
+                        {isActive && (
+                          <motion.div
+                            layoutId="activeNavIndicator"
+                            className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full shadow-[0_0_10px_rgba(139,92,246,0.5)]"
+                            initial={false}
+                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                          />
+                        )}
+                        <item.icon
+                          className={cn(
+                            "shrink-0 transition-all duration-300",
+                            collapsed ? "w-5 h-5" : "w-5 h-5",
+                            isActive
+                              ? "text-primary drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]"
+                              : "group-hover:scale-110 group-hover:text-primary",
+                          )}
+                          strokeWidth={isActive ? 2.5 : 2}
+                        />
+                        {!collapsed && (
+                          <span
+                            className={cn(
+                              "truncate tracking-tight",
+                              isMobile ? "text-base" : "text-sm",
+                              isActive ? "font-semibold" : "font-medium",
+                            )}
+                          >
+                            {item.label}
+                          </span>
+                        )}
+                      </>
+                    );
 
-              return (
-                <Link key={item.to} to={item.to} className={linkClasses} title={collapsed ? item.label : undefined}>
-                  {content}
-                </Link>
-              );
-            })}
+                    if (item.external) {
+                      return (
+                        <a
+                          key={item.to}
+                          href={item.to}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={linkClasses}
+                          title={collapsed ? item.label : undefined}
+                        >
+                          {content}
+                        </a>
+                      );
+                    }
+
+                    return (
+                      <Link key={item.to} to={item.to} className={linkClasses} title={collapsed ? item.label : undefined}>
+                        {content}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </nav>
   );
 }

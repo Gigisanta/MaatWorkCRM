@@ -25,10 +25,10 @@ function ReportsPage() {
   ];
 
   const metrics = [
-    { label: "New Contacts (Mar)", value: "3", change: "+50%", up: true },
-    { label: "Closed Deals", value: "1", change: "+100%", up: true },
-    { label: "Conversion Rate", value: "25%", change: "-5%", up: false },
-    { label: "Tasks Completed", value: "12", change: "+20%", up: true },
+    { label: "Nuevos Contactos (Mar)", value: "3", change: "+50%", up: true },
+    { label: "Deals Cerrados", value: "1", change: "+100%", up: true },
+    { label: "Tasa de Conversión", value: "25%", change: "-5%", up: false },
+    { label: "Tareas Completadas", value: "12", change: "+20%", up: true },
   ];
 
   const maxValue = Math.max(...pipelineData.map((d) => d.value));
@@ -42,9 +42,9 @@ function ReportsPage() {
         className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2"
       >
         <div className="space-y-1.5">
-          <h1 className="text-3xl font-bold text-text font-display tracking-tight">Reports & Analytics</h1>
+          <h1 className="text-3xl font-bold text-text font-display tracking-tight">Reportes y Análisis</h1>
           <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">
-            Metrics and insights — March 2026
+            Métricas e información — Marzo 2026
           </p>
         </div>
         <div className="flex gap-3">
@@ -58,7 +58,7 @@ function ReportsPage() {
             variant="primary"
             className="shadow-[0_0_15px_rgba(139,92,246,0.2)] hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] rounded-xl h-10 px-5 font-semibold text-sm bg-primary hover:bg-primary-hover transition-all"
           >
-            <Download className="w-4 h-4 mr-2" strokeWidth={2.5} /> PDF Report
+            <Download className="w-4 h-4 mr-2" strokeWidth={2.5} /> Reporte PDF
           </Button>
         </div>
       </motion.div>
@@ -73,14 +73,14 @@ function ReportsPage() {
             </div>
             <div className="space-y-1">
               <h3 className="text-sm font-bold text-text flex items-center gap-2">
-                AI Insight
+                Análisis IA
                 <span className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] uppercase tracking-wider font-bold border border-primary/20">
-                  New
+                  Nuevo
                 </span>
               </h3>
               <p className="text-sm text-text-secondary font-medium leading-relaxed">
-                Your team is <strong className="text-primary">23% above target</strong> this month. The "Proposal" stage
-                has the highest bottleneck. Consider following up with the 3 deals stuck there for over 7 days.
+                Tu equipo está <strong className="text-primary">23% por encima del objetivo</strong> este mes. La etapa "Propuesta"
+                tiene el mayor cuello de botella. Considera dar seguimiento a los 3 deals estancados ahí por más de 7 días.
               </p>
             </div>
           </CardContent>
@@ -122,7 +122,7 @@ function ReportsPage() {
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
           <Card variant="glass" className="p-6 border-border bg-surface h-full">
             <h2 className="text-sm font-bold text-text uppercase tracking-wider mb-6 flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-primary" /> Pipeline by Stage (Value)
+              <BarChart3 className="w-4 h-4 text-primary" /> Pipeline por Etapa (Valor)
             </h2>
             <div className="space-y-5">
               {pipelineData.map((d) => (
@@ -161,10 +161,10 @@ function ReportsPage() {
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}>
           <Card variant="glass" className="p-6 border-border bg-surface h-full">
             <h2 className="text-sm font-bold text-text uppercase tracking-wider mb-6 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-success" /> Monthly Trend
+              <TrendingUp className="w-4 h-4 text-success" /> Tendencia Mensual
             </h2>
             <div className="grid grid-cols-3 gap-4 h-[calc(100%-3rem)]">
-              {["January", "February", "March"].map((month, i) => (
+              {["Enero", "Febrero", "Marzo"].map((month, i) => (
                 <div
                   key={month}
                   className="flex flex-col justify-end text-center p-4 rounded-xl bg-surface-hover border border-border/50 hover:border-primary/30 transition-all group"

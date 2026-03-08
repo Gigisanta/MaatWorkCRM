@@ -165,8 +165,8 @@ function PipelinePage() {
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
         <SectionHeader
-          title="Sales Pipeline"
-          description={`${totalDeals} active deals in the current funnel.`}
+          title="Pipeline de Ventas"
+          description={`${totalDeals} deals activos en el funnel actual.`}
           icon={Layers}
           actions={
             <div className="flex gap-3">
@@ -175,7 +175,7 @@ function PipelinePage() {
                 className="border-border bg-surface text-text-secondary hover:text-primary hover:bg-surface-hover h-10 px-4"
               >
                 <Filter className="w-4 h-4 mr-2" />
-                Filter
+                Filtrar
               </Button>
               <Button
                 variant="primary"
@@ -191,7 +191,7 @@ function PipelinePage() {
                 className="rounded-xl shadow-[0_0_15px_rgba(139,92,246,0.2)] hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] bg-primary hover:bg-primary-hover h-10 px-5 font-semibold"
               >
                 <Plus className="mr-2 w-4 h-4" />
-                New Deal
+                Nuevo Deal
               </Button>
             </div>
           }
@@ -205,26 +205,26 @@ function PipelinePage() {
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-2"
       >
         <StatCard
-          label="Total Value"
+          label="Valor Total"
           value={formatCurrency(totalValue)}
-          change="12% this month"
+          change="12% este mes"
           changeType="up"
           variant="brand"
           icon={DollarSign}
         />
         <StatCard
-          label="Active Deals"
+          label="Deals Activos"
           value={totalDeals.toString()}
-          change="Synced"
+          change="Sincronizado"
           changeType="up"
           variant="violet"
           icon={Layers}
         />
-        <StatCard label="Win Rate" value="68%" change="5% vs Jan" changeType="up" variant="emerald" icon={Calendar} />
+        <StatCard label="Tasa de Éxito" value="68%" change="5% vs Ene" changeType="up" variant="emerald" icon={Calendar} />
         <StatCard
-          label="Monthly Goal"
+          label="Meta Mensual"
           value="$1.2M"
-          change="On track"
+          change="En camino"
           changeType="up"
           variant="amber"
           icon={Calendar}
@@ -283,7 +283,7 @@ function PipelinePage() {
                       exit={{ opacity: 0 }}
                       className="h-24 rounded-xl border-2 border-dashed border-border flex items-center justify-center text-text-muted text-xs font-semibold uppercase tracking-wider"
                     >
-                      Drop a deal here
+                      Arrastra un deal aquí
                     </motion.div>
                   ) : (
                     stage.deals.map(({ deal, contact }: any) => {
@@ -323,7 +323,7 @@ function PipelinePage() {
                                       <User size={10} className="text-primary" />
                                     </div>
                                     <span className="text-[10px] text-text-secondary font-semibold truncate tracking-tight">
-                                      {contact?.name || "No Contact"}
+                                      {contact?.name || "Sin Contacto"}
                                     </span>
                                   </div>
                                 </div>
@@ -332,7 +332,7 @@ function PipelinePage() {
                               {/* AI Suggestion Button */}
                               <button className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-primary/5 border border-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider hover:bg-primary/15 transition-colors opacity-0 group-hover/card:opacity-100">
                                 <Sparkles size={10} />
-                                Suggest Next Move
+                                Sugerir Siguiente Paso
                               </button>
 
                               <div className="flex items-center justify-between pt-3 border-t border-border/50">
@@ -386,7 +386,7 @@ function PipelinePage() {
             <div className="w-10 h-10 rounded-xl bg-surface-hover border border-border shadow-sm flex items-center justify-center group-hover/add-stage:scale-110 group-hover/add-stage:rotate-90 transition-all duration-300">
               <Plus size={20} className="text-primary" />
             </div>
-            <span className="font-bold text-[10px] uppercase tracking-wider">New Stage</span>
+            <span className="font-bold text-[10px] uppercase tracking-wider">Nueva Etapa</span>
           </Button>
         </motion.div>
       </div>
@@ -394,20 +394,20 @@ function PipelinePage() {
       {/* New Deal Modal */}
       <Modal open={showNewDealModal} onOpenChange={setShowNewDealModal}>
         <ModalHeader className="px-6 pt-6 pb-4 border-b border-border bg-surface">
-          <ModalTitle className="text-xl font-bold tracking-tight text-text">New Deal</ModalTitle>
-          <p className="text-xs font-medium text-text-muted mt-1">Enter the details of the opportunity</p>
+          <ModalTitle className="text-xl font-bold tracking-tight text-text">Nuevo Deal</ModalTitle>
+          <p className="text-xs font-medium text-text-muted mt-1">Ingresa los detalles de la oportunidad</p>
         </ModalHeader>
         <ModalContent className="p-6 space-y-6 bg-background">
           <Input
-            label="DEAL TITLE"
-            placeholder="e.g. CRM Implementation"
+            label="TÍTULO DEL DEAL"
+            placeholder="ej. Implementación de CRM"
             value={newDealForm.title}
             onChange={(e) => setNewDealForm((prev) => ({ ...prev, title: e.target.value }))}
             className="bg-surface-hover border-border focus:border-primary/50 transition-all rounded-xl h-12"
           />
           <div className="relative">
             <Input
-              label="ESTIMATED VALUE"
+              label="VALOR ESTIMADO"
               type="number"
               placeholder="0.00"
               value={newDealForm.value}
@@ -418,7 +418,7 @@ function PipelinePage() {
           </div>
           <div className="space-y-2">
             <label className="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">
-              Associated Contact
+              Contacto Asociado
             </label>
             <div className="relative group">
               <select
@@ -426,7 +426,7 @@ function PipelinePage() {
                 value={newDealForm.contactId}
                 onChange={(e) => setNewDealForm((prev) => ({ ...prev, contactId: e.target.value }))}
               >
-                <option value="">Select contact...</option>
+                <option value="">Seleccionar contacto...</option>
                 {contacts?.map((c: any) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
@@ -445,7 +445,7 @@ function PipelinePage() {
             onClick={() => setShowNewDealModal(false)}
             className="rounded-xl px-6 h-10 text-text-secondary hover:text-text hover:bg-surface-hover transition-all duration-200 font-semibold text-sm"
           >
-            Cancel
+            Cancelar
           </Button>
           <Button
             variant="primary"
@@ -453,7 +453,7 @@ function PipelinePage() {
             disabled={createDealMutation.isPending || !newDealForm.title || !newDealForm.contactId}
             className="rounded-xl px-8 h-10 shadow-[0_0_15px_rgba(139,92,246,0.2)] bg-primary hover:bg-primary-hover hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 font-semibold text-sm"
           >
-            {createDealMutation.isPending ? "Processing..." : "Create Deal"}
+            {createDealMutation.isPending ? "Procesando..." : "Crear Deal"}
           </Button>
         </ModalFooter>
       </Modal>
@@ -461,20 +461,20 @@ function PipelinePage() {
       {/* New Stage Modal */}
       <Modal open={showNewStageModal} onOpenChange={setShowNewStageModal}>
         <ModalHeader className="px-6 pt-6 pb-4 border-b border-border bg-surface">
-          <ModalTitle className="text-xl font-bold tracking-tight text-text">New Stage</ModalTitle>
-          <p className="text-xs font-medium text-text-muted mt-1">Customize your workflow</p>
+          <ModalTitle className="text-xl font-bold tracking-tight text-text">Nueva Etapa</ModalTitle>
+          <p className="text-xs font-medium text-text-muted mt-1">Personaliza tu flujo de trabajo</p>
         </ModalHeader>
         <ModalContent className="p-6 space-y-6 bg-background">
           <Input
-            label="STAGE NAME"
-            placeholder="e.g. Needs Analysis"
+            label="NOMBRE DE LA ETAPA"
+            placeholder="ej. Análisis de Necesidades"
             value={newStageForm.name}
             onChange={(e) => setNewStageForm((prev) => ({ ...prev, name: e.target.value }))}
             className="bg-surface-hover border-border focus:border-primary/50 transition-all rounded-xl h-12"
           />
           <div className="space-y-3">
             <label className="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">
-              Identity Color
+              Color de Identidad
             </label>
             <div className="grid grid-cols-4 sm:grid-cols-8 gap-3 p-4 bg-surface-hover rounded-2xl border border-border shadow-inner">
               {["#8B5CF6", "#C026D3", "#22C55E", "#3B82F6", "#F59E0B", "#EF4444", "#EC4899", "#06B6D4"].map((color) => (
@@ -502,7 +502,7 @@ function PipelinePage() {
             onClick={() => setShowNewStageModal(false)}
             className="rounded-xl px-6 h-10 text-text-secondary hover:text-text hover:bg-surface-hover transition-all duration-200 font-semibold text-sm"
           >
-            Cancel
+            Cancelar
           </Button>
           <Button
             variant="primary"
@@ -510,7 +510,7 @@ function PipelinePage() {
             disabled={createStageMutation.isPending || !newStageForm.name || !newStageForm.color}
             className="rounded-xl px-8 h-10 shadow-[0_0_15px_rgba(139,92,246,0.2)] bg-primary hover:bg-primary-hover hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 font-semibold text-sm"
           >
-            {createStageMutation.isPending ? "Processing..." : "Create Stage"}
+            {createStageMutation.isPending ? "Procesando..." : "Crear Etapa"}
           </Button>
         </ModalFooter>
       </Modal>

@@ -3,7 +3,7 @@
 // UI/UX REFINED BY JULES v2
 // ============================================================
 
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
   Activity as ActivityIcon,
@@ -97,7 +97,7 @@ function ActivityItem({
         </div>
         <p className="text-[10px] text-text-secondary mt-1.5 font-semibold uppercase tracking-wider flex items-center gap-1.5">
           <Sparkles className="w-3 h-3 text-accent" />
-          Analyzed by MaatWork AI
+          Analizado por MaatWork AI
         </p>
       </div>
     </motion.div>
@@ -129,7 +129,7 @@ function DashboardPage() {
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
         <SectionHeader
           title="Dashboard"
-          description={`Welcome back. Here's your activity summary for ${new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })}.`}
+          description={`Bienvenido. Aquí está tu resumen de actividad para ${new Date().toLocaleDateString("es-AR", { month: "long", year: "numeric" })}.`}
           icon={LayoutDashboard}
           actions={
             <div className="flex items-center gap-3">
@@ -138,16 +138,18 @@ function DashboardPage() {
                 size="md"
                 className="border-border text-text font-semibold text-sm h-10 hover:bg-surface-hover"
               >
-                History
+                Historial
               </Button>
-              <Button
-                variant="primary"
-                size="md"
-                className="shadow-[0_0_20px_rgba(139,92,246,0.3)] h-10 px-5 bg-primary hover:bg-primary-hover font-semibold"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                New Deal
-              </Button>
+              <Link to="/pipeline">
+                <Button
+                  variant="primary"
+                  size="md"
+                  className="shadow-[0_0_20px_rgba(139,92,246,0.3)] h-10 px-5 bg-primary hover:bg-primary-hover font-semibold"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nuevo Deal
+                </Button>
+              </Link>
             </div>
           }
         />
@@ -161,9 +163,9 @@ function DashboardPage() {
           transition={{ delay: 0.1 }}
         >
           <StatCard
-            label="Total Contacts"
+            label="Total Contactos"
             value={metrics?.totalContacts ?? 0}
-            change="12% this month"
+            change="12% este mes"
             changeType="up"
             icon={Users}
             variant="brand"
@@ -175,9 +177,9 @@ function DashboardPage() {
           transition={{ delay: 0.2 }}
         >
           <StatCard
-            label="Pipeline Value"
+            label="Valor del Pipeline"
             value={formatCurrency(metrics?.pipelineValue ?? 0)}
-            change="5.2% vs Jan"
+            change="5.2% vs Ene"
             changeType="up"
             icon={DollarSign}
             variant="emerald"
@@ -189,9 +191,9 @@ function DashboardPage() {
           transition={{ delay: 0.3 }}
         >
           <StatCard
-            label="Pending Tasks"
+            label="Tareas Pendientes"
             value={metrics?.pendingTasks ?? 0}
-            change={metrics?.pendingTasks === 0 ? "All caught up!" : "Attention needed"}
+            change={metrics?.pendingTasks === 0 ? "¡Todo al día!" : "Requiere atención"}
             changeType={metrics?.pendingTasks === 0 ? "up" : "down"}
             icon={CheckSquare}
             variant="amber"
@@ -205,7 +207,7 @@ function DashboardPage() {
           <StatCard
             label="Total Deals"
             value={metrics?.totalDeals ?? 0}
-            change="Synced"
+            change="Sincronizado"
             changeType="up"
             icon={Target}
             variant="violet"
@@ -225,7 +227,7 @@ function DashboardPage() {
           <div className="flex items-center justify-between mb-2 px-1">
             <div className="flex items-center gap-3">
               <div className="w-1.5 h-5 bg-primary rounded-full shadow-[0_0_10px_rgba(139,92,246,0.8)]" />
-              <h2 className="text-xl font-bold text-text font-display tracking-tight">Quick Actions</h2>
+              <h2 className="text-xl font-bold text-text font-display tracking-tight">Acciones Rápidas</h2>
             </div>
             <Button variant="ghost" size="sm" className="text-primary hover:bg-primary/10 px-2 h-7 rounded-lg">
               <Sparkles className="w-3.5 h-3.5 mr-1.5" />
@@ -233,10 +235,10 @@ function DashboardPage() {
             </Button>
           </div>
           <Stack gap={3}>
-            <QuickAction label="New Contact" icon={Users} to="/contacts" />
-            <QuickAction label="Create Task" icon={CheckSquare} to="/tasks" color="secondary" />
-            <QuickAction label="View Pipeline" icon={TrendingUp} to="/pipeline" />
-            <QuickAction label="Calendar" icon={Clock} to="/calendar" color="secondary" />
+            <QuickAction label="Nuevo Contacto" icon={Users} to="/contacts" />
+            <QuickAction label="Crear Tarea" icon={CheckSquare} to="/tasks" color="secondary" />
+            <QuickAction label="Ver Pipeline" icon={TrendingUp} to="/pipeline" />
+            <QuickAction label="Calendario" icon={Clock} to="/calendar" color="secondary" />
           </Stack>
 
           <Card
@@ -246,11 +248,11 @@ function DashboardPage() {
             <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10 opacity-50" />
             <div className="relative z-10">
               <h3 className="text-lg font-bold mb-1.5 font-display flex items-center gap-2">
-                Monthly Goal
+                Meta Mensual
                 <Sparkles className="w-4 h-4 text-warning" />
               </h3>
               <p className="text-text-secondary text-xs mb-5 font-medium">
-                You are at 75% of your sales target this month. Keep it up!
+                ¡Estás al 75% de tu meta de ventas este mes. Sigue así!
               </p>
               <div className="h-2.5 w-full bg-background rounded-full overflow-hidden shadow-inner border border-border/50">
                 <motion.div
@@ -278,10 +280,10 @@ function DashboardPage() {
                 <div className="p-2.5 bg-surface-hover border border-border text-primary rounded-xl shadow-sm">
                   <Clock className="w-5 h-5" strokeWidth={2.5} />
                 </div>
-                <h2 className="text-xl font-bold text-text font-display tracking-tight">Recent Activity</h2>
+                <h2 className="text-xl font-bold text-text font-display tracking-tight">Actividad Reciente</h2>
               </div>
               <Button variant="ghost" size="sm" className="text-primary hover:bg-primary/10 font-bold text-xs">
-                View All
+                Ver Todo
               </Button>
             </div>
             <Stack gap={0}>

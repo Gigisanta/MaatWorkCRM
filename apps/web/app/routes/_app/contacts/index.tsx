@@ -48,9 +48,9 @@ const statusColors: Record<string, string> = {
 
 const statusLabels: Record<string, string> = {
   lead: "Lead",
-  prospect: "Prospect",
-  active: "Active",
-  inactive: "Inactive",
+  prospect: "Prospecto",
+  active: "Cliente Activo",
+  inactive: "Inactivo",
 };
 
 function ContactsPage() {
@@ -91,7 +91,7 @@ function ContactsPage() {
   const columns = [
     {
       accessorKey: "name",
-      header: "Contact",
+      header: "Contacto",
       cell: (info: any) => {
         const contact = info.row.original;
         return (
@@ -116,7 +116,7 @@ function ContactsPage() {
     },
     {
       accessorKey: "company",
-      header: "Company",
+      header: "Empresa",
       cell: (info: any) => {
         const val = info.getValue();
         return val ? (
@@ -131,7 +131,7 @@ function ContactsPage() {
     },
     {
       accessorKey: "phone",
-      header: "Phone",
+      header: "Teléfono",
       cell: (info: any) => {
         const val = info.getValue();
         return val ? (
@@ -146,7 +146,7 @@ function ContactsPage() {
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: "Estado",
       cell: (info: any) => {
         const status = info.getValue();
         return (
@@ -190,11 +190,11 @@ function ContactsPage() {
         className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2"
       >
         <div className="space-y-1.5">
-          <h1 className="text-3xl font-bold text-text leading-tight tracking-tight font-display">Contacts Directory</h1>
+          <h1 className="text-3xl font-bold text-text leading-tight tracking-tight font-display">Directorio de Contactos</h1>
           <p className="text-xs font-semibold text-text-muted uppercase tracking-wider flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(139,92,246,0.6)] animate-pulse" />
-            {contacts?.length || 0} Records <span className="opacity-30">•</span>{" "}
-            {contacts?.filter((c: any) => c.status === "active").length || 0} Active Clients
+            {contacts?.length || 0} Registros <span className="opacity-30">•</span>{" "}
+            {contacts?.filter((c: any) => c.status === "active").length || 0} Clientes Activos
           </p>
         </div>
         <div className="flex gap-3">
@@ -203,7 +203,7 @@ function ContactsPage() {
             className="h-10 px-4 border-border bg-surface text-text-secondary hover:text-primary hover:bg-surface-hover hover:border-border-hover transition-all"
           >
             <Sparkles className="w-4 h-4 mr-2 text-accent" />
-            Find Similar (AI)
+            Buscar Similares (IA)
           </Button>
           <Button
             variant="primary"
@@ -216,7 +216,7 @@ function ContactsPage() {
               size={16}
               strokeWidth={2.5}
             />
-            New Contact
+            Nuevo Contacto
           </Button>
         </div>
       </motion.div>
@@ -236,7 +236,7 @@ function ContactsPage() {
           />
           <input
             type="text"
-            placeholder="Search by name, email or company..."
+            placeholder="Buscar por nombre, email o empresa..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-12 pr-4 h-full bg-surface-hover border border-transparent rounded-xl focus:border-primary/30 focus:bg-surface focus:outline-none text-sm font-medium placeholder:text-text-muted transition-all shadow-inner text-text"
@@ -245,11 +245,11 @@ function ContactsPage() {
 
         <div className="flex items-center gap-1 p-1 bg-surface-hover rounded-xl border border-border/50 shadow-inner">
           {[
-            { id: undefined, label: "All" },
+            { id: undefined, label: "Todos" },
             { id: "lead", label: "Leads" },
-            { id: "prospect", label: "Prospects" },
-            { id: "active", label: "Active" },
-            { id: "inactive", label: "Inactive" },
+            { id: "prospect", label: "Prospectos" },
+            { id: "active", label: "Activos" },
+            { id: "inactive", label: "Inactivos" },
           ].map((f) => (
             <Button
               key={f.id || "all"}
@@ -275,14 +275,14 @@ function ContactsPage() {
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
         {error ? (
           <EmptyState
-            title="Operational Error"
-            description="There was a problem retrieving the records."
+            title="Error Operativo"
+            description="Hubo un problema al recuperar los registros."
             icon={<AlertTriangle className="text-error" size={40} />}
           />
         ) : contacts?.length === 0 ? (
           <EmptyState
-            title="No results found"
-            description="No active records found for this filter."
+            title="Sin resultados"
+            description="No se encontraron registros activos para este filtro."
             icon={<Users className="text-primary/30" size={40} />}
           />
         ) : (
@@ -295,8 +295,8 @@ function ContactsPage() {
       {/* Modal */}
       <Modal open={showNewContactModal} onOpenChange={setShowNewContactModal}>
         <ModalHeader className="px-6 pt-6 pb-4 border-b border-border bg-surface">
-          <ModalTitle className="text-xl font-bold tracking-tight text-text">New Contact</ModalTitle>
-          <p className="text-xs font-medium text-text-muted mt-1">Create a new record in your database</p>
+          <ModalTitle className="text-xl font-bold tracking-tight text-text">Nuevo Contacto</ModalTitle>
+          <p className="text-xs font-medium text-text-muted mt-1">Crear un nuevo registro en tu base de datos</p>
         </ModalHeader>
         <ModalContent className="p-6 space-y-8 bg-background">
           <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
@@ -311,17 +311,17 @@ function ContactsPage() {
             </div>
             <div className="flex-1 space-y-5 w-full">
               <Input
-                label="FULL NAME"
-                placeholder="e.g. Jane Doe"
+                label="NOMBRE COMPLETO"
+                placeholder="ej. Juan Pérez"
                 value={newContactForm.name}
                 onChange={(e) => setNewContactForm((prev) => ({ ...prev, name: e.target.value }))}
                 className="bg-surface-hover border-border focus:border-primary/50 transition-all rounded-xl h-12"
               />
               <div className="relative">
                 <Input
-                  label="CORPORATE EMAIL"
+                  label="EMAIL CORPORATIVO"
                   type="email"
-                  placeholder="jane@company.com"
+                  placeholder="juan@empresa.com"
                   value={newContactForm.email}
                   onChange={(e) => setNewContactForm((prev) => ({ ...prev, email: e.target.value }))}
                   className="bg-surface-hover border-border focus:border-primary/50 transition-all rounded-xl h-12 pl-10"
@@ -332,13 +332,13 @@ function ContactsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
+<div className="space-y-2">
               <label className="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">
-                MOBILE PHONE
+                TELÉFONO MÓVIL
               </label>
               <div className="relative">
                 <Input
-                  placeholder="+1 234 ..."
+                  placeholder="+54 11 ..."
                   value={newContactForm.phone}
                   onChange={(e) => setNewContactForm((prev) => ({ ...prev, phone: e.target.value }))}
                   className="bg-surface-hover border-border focus:border-primary/50 transition-all rounded-xl h-12 pl-10"
@@ -348,7 +348,7 @@ function ContactsPage() {
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">
-                LEVEL / STATUS
+                NIVEL / ESTADO
               </label>
               <div className="relative group">
                 <select
@@ -356,10 +356,10 @@ function ContactsPage() {
                   value={newContactForm.status}
                   onChange={(e) => setNewContactForm((prev) => ({ ...prev, status: e.target.value }))}
                 >
-                  <option value="lead">Prospect (Lead)</option>
-                  <option value="prospect">Opportunity</option>
-                  <option value="active">Active Client</option>
-                  <option value="inactive">Inactive</option>
+                  <option value="lead">Lead (Prospecto)</option>
+                  <option value="prospect">Oportunidad</option>
+                  <option value="active">Cliente Activo</option>
+                  <option value="inactive">Inactivo</option>
                 </select>
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-text-muted group-hover:text-primary transition-colors">
                   <ChevronDown size={16} />
@@ -370,8 +370,8 @@ function ContactsPage() {
 
           <div className="relative">
             <Input
-              label="ORGANIZATION / COMPANY"
-              placeholder="e.g. Global Investments Inc."
+              label="ORGANIZACIÓN / EMPRESA"
+              placeholder="ej. Inversiones Global SA"
               value={newContactForm.company}
               onChange={(e) => setNewContactForm((prev) => ({ ...prev, company: e.target.value }))}
               className="bg-surface-hover border-border focus:border-primary/50 transition-all rounded-xl h-12 pl-10"
@@ -385,7 +385,7 @@ function ContactsPage() {
             onClick={() => setShowNewContactModal(false)}
             className="rounded-xl px-6 h-10 text-text-secondary hover:text-text hover:bg-surface-hover transition-all duration-200 font-semibold text-sm"
           >
-            Cancel
+            Cancelar
           </Button>
           <Button
             variant="primary"
@@ -394,7 +394,7 @@ function ContactsPage() {
             disabled={createContactMutation.isPending || !newContactForm.name || !newContactForm.email}
             className="px-8 h-10 font-semibold text-sm shadow-[0_0_15px_rgba(139,92,246,0.2)] bg-primary hover:bg-primary-hover rounded-xl transition-all duration-300"
           >
-            {createContactMutation.isPending ? "Validating..." : "Save Record"}
+            {createContactMutation.isPending ? "Validando..." : "Guardar Registro"}
           </Button>
         </ModalFooter>
       </Modal>

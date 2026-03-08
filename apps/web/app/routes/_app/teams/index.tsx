@@ -10,6 +10,7 @@ import React, { useState } from "react";
 import { Badge } from "~/components/ui/Badge";
 import { Button } from "~/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/Card";
+import { EditTeamModal } from "~/components/ui/EditTeamModal";
 import { EmptyState } from "~/components/ui/EmptyState";
 import { Icon } from "~/components/ui/Icon";
 import { Input } from "~/components/ui/Input";
@@ -21,6 +22,7 @@ import {
   useTeamGoals,
   useTeams,
   useUpdateGoalMutation,
+  useUpdateTeamMutation,
 } from "~/lib/hooks/use-crm";
 import { cn, formatCurrency } from "~/lib/utils";
 
@@ -28,7 +30,10 @@ export const Route = createFileRoute("/_app/teams/")({
   component: TeamsPage,
 });
 
-function TeamDetailView({ teamId }: { teamId: string }) {
+function TeamDetailView({
+  teamId,
+  onEdit,
+}: { teamId: string; onEdit?: (team: { id: string; name: string; description?: string }) => void }) {
   const { data: details, isLoading: loadingDetails } = useTeamDetails(teamId);
   const { data: goals, isLoading: loadingGoals } = useTeamGoals(teamId);
   const updateGoalMutation = useUpdateGoalMutation();
@@ -68,16 +73,17 @@ function TeamDetailView({ teamId }: { teamId: string }) {
               variant="outline"
               size="sm"
               className="border-border hover:bg-surface-hover text-text-secondary hover:text-text"
+              onClick={() => onEdit?.({ id: team.id, name: team.name, description: team.description || undefined })}
             >
               <Settings className="w-4 h-4 mr-2" />
-              Edit Team
+              Editar Equipo
             </Button>
           </Stack>
 
           <Stack direction="col" gap="xs">
             <h2 className="text-3xl font-bold text-text font-display tracking-tight">{team.name}</h2>
             <p className="text-text-muted text-sm max-w-2xl font-medium">
-              {team.description || "No description provided."}
+              {team.description || "Sin descripción."}
             </p>
           </Stack>
         </CardContent>
@@ -88,7 +94,7 @@ function TeamDetailView({ teamId }: { teamId: string }) {
         <div className="lg:col-span-1 space-y-4">
           <div className="flex items-center justify-between px-1">
             <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-2">
-              <UserCheck size={14} className="text-primary" /> Members
+              <UserCheck size={14} className="text-primary" /> Miembros
             </h3>
             <Badge variant="outline" className="bg-surface-hover border-border text-text-secondary font-bold">
               {members.length}
@@ -128,7 +134,7 @@ function TeamDetailView({ teamId }: { teamId: string }) {
               variant="ghost"
               className="w-full justify-start h-12 text-text-muted hover:text-primary hover:bg-primary/5 border border-dashed border-border hover:border-primary/30 rounded-xl transition-all"
             >
-              <Plus size={16} className="mr-2" /> Invite Member
+              <Plus size={16} className="mr-2" /> Invitar Miembro
             </Button>
           </div>
         </div>
@@ -137,18 +143,18 @@ function TeamDetailView({ teamId }: { teamId: string }) {
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between px-1">
             <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-2">
-              <Target size={14} className="text-accent" /> Team Goals
+              <Target size={14} className="text-accent" /> Metas del Equipo
             </h3>
             <Button variant="ghost" size="sm" className="h-8 text-xs text-primary hover:bg-primary/10 font-semibold">
               <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-              AI Insights
+              Análisis IA
             </Button>
           </div>
           <div className="grid gap-4">
             {goals?.length === 0 ? (
               <EmptyState
-                title="No active goals"
-                description="This team doesn't have any goals assigned for the current period."
+                title="Sin metas activas"
+                description="Este equipo no tiene metas asignadas para el período actual."
                 icon={<Target className="text-text-muted/50 w-12 h-12" />}
               />
             ) : (
@@ -176,7 +182,7 @@ function TeamDetailView({ teamId }: { teamId: string }) {
                             </h4>
                             <p className="text-xs text-text-muted font-medium flex items-center gap-1.5">
                               <Icon name="calendar" className="w-3.5 h-3.5" />
-                              Ends {new Date(goal.endDate).toLocaleDateString()}
+                              Termina {new Date(goal.endDate).toLocaleDateString()}
                             </p>
                           </Stack>
                           <div className="flex flex-col items-end">
@@ -189,7 +195,7 @@ function TeamDetailView({ teamId }: { teamId: string }) {
                               {progress}%
                             </span>
                             <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">
-                              Completion
+                              Completado
                             </span>
                           </div>
                         </Stack>
@@ -208,13 +214,13 @@ function TeamDetailView({ teamId }: { teamId: string }) {
 
                         <Stack direction="row" justify="between" className="pt-2 border-t border-border/50">
                           <div className="text-xs font-semibold text-text-secondary">
-                            Current:{" "}
+                            Actual:{" "}
                             <span className="text-text font-bold ml-1">
                               {goal.unit === "currency" ? formatCurrency(goal.currentValue) : goal.currentValue}
                             </span>
                           </div>
                           <div className="text-xs font-semibold text-text-secondary text-right">
-                            Target:{" "}
+                            Meta:{" "}
                             <span className="text-text font-bold ml-1">
                               {goal.unit === "currency" ? formatCurrency(goal.targetValue) : goal.targetValue}
                             </span>
@@ -237,9 +243,12 @@ function TeamsPage() {
   const { data: teams, isLoading, error } = useTeams();
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const [showNewTeamModal, setShowNewTeamModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingTeam, setEditingTeam] = useState<{ id: string; name: string; description?: string } | null>(null);
   const [newTeamForm, setNewTeamForm] = useState({ name: "", description: "" });
 
   const createTeamMutation = useCreateTeamMutation();
+  const updateTeamMutation = useUpdateTeamMutation();
 
   const handleCreateTeam = async () => {
     if (!newTeamForm.name) return;
@@ -250,6 +259,26 @@ function TeamsPage() {
       if (res.id) setSelectedTeamId(res.id);
     } catch (err) {
       console.error("Failed to create team:", err);
+    }
+  };
+
+  const handleEditTeam = (team: { id: string; name: string; description?: string }) => {
+    setEditingTeam(team);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateTeam = async (name: string, description: string) => {
+    if (!editingTeam || !name.trim()) return;
+    try {
+      await updateTeamMutation.mutateAsync({
+        teamId: editingTeam.id,
+        name,
+        description,
+      });
+      setShowEditModal(false);
+      setEditingTeam(null);
+    } catch (err) {
+      console.error("Failed to update team:", err);
     }
   };
 
@@ -284,9 +313,9 @@ function TeamsPage() {
         className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2"
       >
         <div className="space-y-1.5">
-          <h1 className="text-3xl font-bold text-text font-display tracking-tight">Teams & Goals</h1>
+          <h1 className="text-3xl font-bold text-text font-display tracking-tight">Equipos y Metas</h1>
           <p className="text-xs font-semibold text-text-muted uppercase tracking-wider">
-            High performance management and strategic collaboration.
+            Gestión de alto rendimiento y colaboración estratégica.
           </p>
         </div>
         <Button
@@ -294,7 +323,7 @@ function TeamsPage() {
           onClick={() => setShowNewTeamModal(true)}
           className="shadow-[0_0_15px_rgba(139,92,246,0.2)] hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] rounded-xl h-10 px-5 font-semibold text-sm bg-primary hover:bg-primary-hover transition-all"
         >
-          <Plus className="mr-2 w-4 h-4" strokeWidth={2.5} /> New Team
+          <Plus className="mr-2 w-4 h-4" strokeWidth={2.5} /> Nuevo Equipo
         </Button>
       </motion.div>
 
@@ -317,15 +346,15 @@ function TeamsPage() {
       </div>
 
       {activeTeamId ? (
-        <TeamDetailView teamId={activeTeamId} />
+        <TeamDetailView teamId={activeTeamId} onEdit={handleEditTeam} />
       ) : (
         <EmptyState
-          title="No teams found"
-          description="You haven't created any teams for your organization yet."
+          title="No se encontraron equipos"
+          description="Aún no has creado equipos para tu organización."
           icon={<Users className="text-text-muted/50 w-12 h-12" />}
           action={
             <Button variant="primary" onClick={() => setShowNewTeamModal(true)} className="mt-4">
-              Create first team
+              Crear primer equipo
             </Button>
           }
         />
@@ -334,22 +363,22 @@ function TeamsPage() {
       {/* New Team Modal */}
       <Modal open={showNewTeamModal} onOpenChange={setShowNewTeamModal}>
         <ModalHeader className="px-6 pt-6 pb-4 border-b border-border bg-surface">
-          <ModalTitle className="text-xl font-bold tracking-tight text-text">New Team</ModalTitle>
-          <p className="text-xs font-medium text-text-muted mt-1">Create a new workspace for collaboration</p>
+          <ModalTitle className="text-xl font-bold tracking-tight text-text">Nuevo Equipo</ModalTitle>
+          <p className="text-xs font-medium text-text-muted mt-1">Crear un nuevo espacio de trabajo para colaboración</p>
         </ModalHeader>
         <ModalContent className="p-6 space-y-6 bg-background">
           <Input
-            label="TEAM NAME"
-            placeholder="e.g. LATAM Sales Team"
+            label="NOMBRE DEL EQUIPO"
+            placeholder="ej. Equipo de Ventas LATAM"
             value={newTeamForm.name}
             onChange={(e) => setNewTeamForm((prev) => ({ ...prev, name: e.target.value }))}
             className="bg-surface-hover border-border focus:border-primary/50 transition-all rounded-xl h-12"
           />
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">Description</label>
+            <label className="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">Descripción</label>
             <textarea
               className="w-full min-h-[120px] px-4 py-3 rounded-xl border border-border bg-surface-hover focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 text-sm font-medium transition-all text-text placeholder:text-text-muted resize-none"
-              placeholder="What is the purpose of this team?"
+              placeholder="¿Cuál es el propósito de este equipo?"
               value={newTeamForm.description}
               onChange={(e) => setNewTeamForm((prev) => ({ ...prev, description: e.target.value }))}
             />
@@ -361,7 +390,7 @@ function TeamsPage() {
             onClick={() => setShowNewTeamModal(false)}
             className="rounded-xl px-6 h-10 text-text-secondary hover:text-text hover:bg-surface-hover transition-all duration-200 font-semibold text-sm"
           >
-            Cancel
+            Cancelar
           </Button>
           <Button
             variant="primary"
@@ -369,10 +398,23 @@ function TeamsPage() {
             disabled={createTeamMutation.isPending || !newTeamForm.name}
             className="rounded-xl px-8 h-10 shadow-[0_0_15px_rgba(139,92,246,0.2)] bg-primary hover:bg-primary-hover hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 font-semibold text-sm"
           >
-            {createTeamMutation.isPending ? "Creating..." : "Create Team"}
+            {createTeamMutation.isPending ? "Creando..." : "Crear Equipo"}
           </Button>
         </ModalFooter>
       </Modal>
+
+      {/* Edit Team Modal */}
+      <EditTeamModal
+        teamId={editingTeam?.id || ""}
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditingTeam(null);
+        }}
+        onSave={handleUpdateTeam}
+        initialName={editingTeam?.name || ""}
+        initialDescription={editingTeam?.description || ""}
+      />
     </Container>
   );
 }

@@ -7,17 +7,21 @@ import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
   Calendar as CalendarIcon,
+  CalendarDays,
   ChevronLeft,
   ChevronRight,
   Clock,
+  ExternalLink,
   MapPin,
   MoreHorizontal,
   Phone,
   Plus,
+  RefreshCw,
   Sparkles,
   Video,
 } from "lucide-react";
-import React, { useState } from "react";
+import { useState } from "react";
+import { useSession } from "~/lib/auth-client";
 import { Badge } from "~/components/ui/Badge";
 import { Button } from "~/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/Card";
@@ -76,6 +80,50 @@ const colorMap: Record<string, string> = {
 
 function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date(2026, 2, 4)); // March 4, 2026
+  const [showGoogleCalendar, setShowGoogleCalendar] = useState(false);
+  const [googleEvents, setGoogleEvents] = useState<any[]>([]);
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
+  const { data: session } = useSession();
+
+  const fetchGoogleEvents = async () => {
+    if (!session?.user) return;
+    setLoadingGoogle(true);
+    try {
+      const response = await fetch("/api/google/calendar/events");
+      if (response.ok) {
+        const data = await response.json();
+        setGoogleEvents(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch Google Calendar events:", error);
+    } finally {
+      setLoadingGoogle(false);
+    }
+  };
+
+  const toggleGoogleCalendar = () => {
+    if (!showGoogleCalendar && session?.user) {
+      fetchGoogleEvents();
+    }
+    setShowGoogleCalendar(!showGoogleCalendar);
+  };
+
+  // Transform Google Calendar events to local format
+  const googleEventsTransformed = googleEvents.map((event: any) => {
+    const startDate = new Date(event.start?.dateTime || event.start?.date || new Date());
+    const endDate = new Date(event.end?.dateTime || event.end?.date || new Date());
+    return {
+      id: event.id,
+      title: event.summary || "Untitled Event",
+      type: "meeting" as const,
+      startAt: startDate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+      endAt: endDate.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+      day: startDate.getDate(),
+      location: event.location || "",
+      color: "info" as const,
+      isGoogle: true,
+    };
+  });
 
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
@@ -101,6 +149,29 @@ function CalendarPage() {
           </p>
         </div>
         <div className="flex gap-3">
+          <Button
+            variant={showGoogleCalendar ? "primary" : "outline"}
+            onClick={toggleGoogleCalendar}
+            disabled={!session?.user}
+            className={cn(
+              "h-10 px-4 border-border bg-surface hover:bg-surface-hover transition-all",
+              showGoogleCalendar && "bg-primary hover:bg-primary-hover text-white"
+            )}
+          >
+            <CalendarDays className="w-4 h-4 mr-2" />
+            Google Calendar
+          </Button>
+          {showGoogleCalendar && session?.user && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={fetchGoogleEvents}
+              disabled={loadingGoogle}
+              className="h-10 px-3"
+            >
+              <RefreshCw className={cn("w-4 h-4", loadingGoogle && "animate-spin")} />
+            </Button>
+          )}
           <Button
             variant="outline"
             className="h-10 px-4 border-border bg-surface text-text-secondary hover:text-primary hover:bg-surface-hover hover:border-border-hover transition-all"
@@ -170,6 +241,9 @@ function CalendarPage() {
 
                 {days.map((day) => {
                   const dayEvents = DEMO_EVENTS.filter((e) => e.day === day);
+                  const googleDayEvents = showGoogleCalendar
+                    ? googleEventsTransformed.filter((e) => e.day === day)
+                    : [];
                   const isToday = day === today;
 
                   return (
@@ -197,20 +271,32 @@ function CalendarPage() {
                       </div>
 
                       <div className="mt-2 space-y-1.5 overflow-y-auto max-h-[80px] scrollbar-hide">
-                        {dayEvents.map((e) => (
-                          <motion.div
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            key={e.id}
-                            className={cn(
-                              "text-[10px] px-2 py-1 rounded-md border font-semibold truncate transition-all cursor-pointer hover:brightness-110",
-                              colorMap[e.color],
-                            )}
-                          >
-                            {e.startAt} {e.title}
-                          </motion.div>
-                        ))}
-                      </div>
+                          {dayEvents.map((e) => (
+                            <motion.div
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              key={e.id}
+                              className={cn(
+                                "text-[10px] px-2 py-1 rounded-md border font-semibold truncate transition-all cursor-pointer hover:brightness-110",
+                                colorMap[e.color],
+                              )}
+                            >
+                              {e.startAt} {e.title}
+                            </motion.div>
+                          ))}
+                          {googleDayEvents.map((e: any) => (
+                            <motion.div
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              key={e.id}
+                              className="text-[10px] px-2 py-1 rounded-md border font-semibold truncate transition-all cursor-pointer hover:brightness-110 bg-info/10 border-info/20 text-info flex items-center gap-1"
+                              title={e.location || "Google Calendar Event"}
+                            >
+                              <ExternalLink size={8} />
+                              {e.startAt} {e.title}
+                            </motion.div>
+                          ))}
+                        </div>
                     </div>
                   );
                 })}
@@ -224,23 +310,26 @@ function CalendarPage() {
           <div className="space-y-4">
             <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider px-1">Upcoming Events</h3>
             <div className="space-y-3">
-              {DEMO_EVENTS.map((e, idx) => (
+              {(showGoogleCalendar ? [...DEMO_EVENTS, ...googleEventsTransformed] : DEMO_EVENTS).map((e: any, idx: number) => (
                 <motion.div
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.1 }}
                   key={e.id}
                 >
-                  <Card className="hover:shadow-[0_4px_15px_rgba(0,0,0,0.1)] border-border bg-surface hover:border-primary/30 transition-all duration-300 group">
+                  <Card className={cn(
+                    "hover:shadow-[0_4px_15px_rgba(0,0,0,0.1)] border-border bg-surface hover:border-primary/30 transition-all duration-300 group",
+                    e.isGoogle && "border-info/30 hover:border-info/50"
+                  )}>
                     <CardContent className="p-3.5">
                       <Stack direction="row" gap="sm" align="start">
                         <div
                           className={cn(
                             "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border transition-colors",
-                            colorMap[e.color],
+                            e.isGoogle ? "bg-info/10 border-info/20" : colorMap[e.color],
                           )}
                         >
-                          <Icon name={typeIcons[e.type] as any} size={18} />
+                          {e.isGoogle ? <ExternalLink size={18} className="text-info" /> : <Icon name={typeIcons[e.type] as any} size={18} />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="text-sm font-bold text-text truncate group-hover:text-primary-light transition-colors">

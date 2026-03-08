@@ -82,17 +82,18 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           aria-invalid={!!errorValue}
           aria-describedby={errorValue ? errorId : props["aria-describedby"]}
           className={cn(
-            "w-full border rounded-xl transition-all duration-300 font-body",
+            "w-full border rounded-xl transition-all duration-300 ease-out font-body",
             "bg-surface-900/50 text-surface-100 placeholder:text-surface-600",
-            "focus:outline-none focus:ring-2 focus:ring-brand-600/30 focus:border-brand-600 focus:shadow-[0_0_20px_rgba(139,92,246,0.1)]",
+            "focus:outline-none focus:ring-2 focus:ring-brand-600/40 focus:border-brand-600 focus:shadow-[0_0_30px_rgba(139,92,246,0.15)] focus:scale-[1.01]",
+            "active:scale-[1.01]",
             sizeClasses[size],
             iconPadding[size],
             rightIcon && !leftIcon && "pr-10",
             isPassword && showPasswordToggle && "pr-10",
             errorValue
-              ? "border-red-600 focus:border-red-600 focus:ring-red-600/30"
-              : "border-surface-800 hover:border-surface-700",
-            props.disabled && "opacity-50 cursor-not-allowed bg-surface-950",
+              ? "border-red-600/80 focus:border-red-600 focus:ring-red-600/40 focus:shadow-[0_0_30px_rgba(239,68,68,0.15)] animate-[pulse_2s_ease-in-out_infinite]"
+              : "border-surface-800 hover:border-brand-600/60 hover:shadow-[0_0_15px_rgba(139,92,246,0.1)]",
+            props.disabled && "opacity-50 cursor-not-allowed bg-surface-950 hover:border-surface-800",
             className,
           )}
           {...props}

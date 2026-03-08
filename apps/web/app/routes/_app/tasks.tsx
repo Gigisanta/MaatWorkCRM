@@ -30,17 +30,17 @@ export const Route = createFileRoute("/_app/tasks")({
 });
 
 const priorityConfig: Record<string, { label: string; color: string; icon: any }> = {
-  urgent: { label: "Urgent", color: "text-error bg-error/10 border-error/20", icon: AlertTriangle },
-  high: { label: "High", color: "text-warning bg-warning/10 border-warning/20", icon: AlertTriangle },
-  medium: { label: "Medium", color: "text-info bg-info/10 border-info/20", icon: Clock },
-  low: { label: "Low", color: "text-text-muted bg-surface-hover border-border", icon: Clock },
+  urgent: { label: "Urgente", color: "text-error bg-error/10 border-error/20", icon: AlertTriangle },
+  high: { label: "Alta", color: "text-warning bg-warning/10 border-warning/20", icon: AlertTriangle },
+  medium: { label: "Media", color: "text-info bg-info/10 border-info/20", icon: Clock },
+  low: { label: "Baja", color: "text-text-muted bg-surface-hover border-border", icon: Clock },
 };
 
 const statusConfig: Record<string, { label: string; color: string }> = {
-  pending: { label: "Pending", color: "bg-warning" },
-  in_progress: { label: "In Progress", color: "bg-info" },
-  completed: { label: "Completed", color: "bg-success" },
-  cancelled: { label: "Cancelled", color: "bg-text-muted" },
+  pending: { label: "Pendiente", color: "bg-warning" },
+  in_progress: { label: "En Progreso", color: "bg-info" },
+  completed: { label: "Completada", color: "bg-success" },
+  cancelled: { label: "Cancelada", color: "bg-text-muted" },
 };
 
 function TasksPage() {
@@ -116,11 +116,11 @@ function TasksPage() {
         className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2"
       >
         <div className="space-y-1.5">
-          <h1 className="text-3xl font-bold text-text tracking-tight font-display">Task Management</h1>
+          <h1 className="text-3xl font-bold text-text tracking-tight font-display">Gestión de Tareas</h1>
           <p className="text-xs font-semibold text-text-muted uppercase tracking-wider flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(139,92,246,0.6)] animate-pulse" />
-            {tasks?.length || 0} total tasks <span className="opacity-30">•</span>{" "}
-            {tasks?.filter((t: any) => t.status === "pending").length || 0} pending
+            {tasks?.length || 0} tareas totales <span className="opacity-30">•</span>{" "}
+            {tasks?.filter((t: any) => t.status === "pending").length || 0} pendientes
           </p>
         </div>
         <div className="flex gap-3">
@@ -129,7 +129,7 @@ function TasksPage() {
             className="h-10 px-4 border-border bg-surface text-text-secondary hover:text-primary hover:bg-surface-hover hover:border-border-hover transition-all"
           >
             <Sparkles className="w-4 h-4 mr-2 text-accent" />
-            AI Breakdown
+            Análisis IA
           </Button>
           <Button
             variant="primary"
@@ -138,7 +138,7 @@ function TasksPage() {
             className="shadow-[0_0_15px_rgba(139,92,246,0.2)] hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] rounded-xl h-10 px-5 font-semibold text-sm group bg-primary hover:bg-primary-hover transition-all"
           >
             <Plus className="mr-2 w-4 h-4 group-hover:rotate-90 transition-transform duration-300" strokeWidth={2.5} />
-            New Task
+            Nueva Tarea
           </Button>
         </div>
       </motion.div>
@@ -152,10 +152,10 @@ function TasksPage() {
       >
         <div className="flex items-center gap-1">
           {[
-            { id: undefined, label: "All" },
-            { id: "pending", label: "Pending" },
-            { id: "in_progress", label: "In Progress" },
-            { id: "completed", label: "Completed" },
+            { id: undefined, label: "Todas" },
+            { id: "pending", label: "Pendiente" },
+            { id: "in_progress", label: "En Progreso" },
+            { id: "completed", label: "Completada" },
           ].map((f) => (
             <Button
               key={f.id || "all"}
@@ -177,7 +177,7 @@ function TasksPage() {
         <div className="flex items-center gap-2 px-2">
           <div className="h-4 w-[1px] bg-border mx-2 hidden sm:block" />
           <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider hidden sm:block">
-            Active Filters
+            Filtros Activos
           </p>
         </div>
       </motion.div>
@@ -188,8 +188,8 @@ function TasksPage() {
           {tasks?.length === 0 ? (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <EmptyState
-                title="No pending tasks"
-                description="Relax, it looks like you're all caught up."
+                title="Sin tareas pendientes"
+                description="Relájate, parece que estás al día."
                 icon={<Calendar className="text-primary/30 w-12 h-12" />}
               />
             </motion.div>
@@ -264,7 +264,7 @@ function TasksPage() {
                               {isOverdue && (
                                 <span className="flex items-center gap-1 ml-1 text-[9px] bg-error/10 px-1.5 rounded-md border border-error/20">
                                   <span className="w-1 h-1 rounded-full bg-error animate-pulse" />
-                                  Overdue
+                                  Vencida
                                 </span>
                               )}
                             </div>
@@ -303,30 +303,30 @@ function TasksPage() {
       {/* New Task Modal */}
       <Modal open={showNewTaskModal} onOpenChange={setShowNewTaskModal}>
         <ModalHeader className="px-6 pt-6 pb-4 border-b border-border bg-surface">
-          <ModalTitle className="text-xl font-bold tracking-tight text-text">Create New Task</ModalTitle>
-          <p className="text-xs font-medium text-text-muted mt-1">What needs to be done?</p>
+          <ModalTitle className="text-xl font-bold tracking-tight text-text">Crear Nueva Tarea</ModalTitle>
+          <p className="text-xs font-medium text-text-muted mt-1">¿Qué necesita hacerse?</p>
         </ModalHeader>
         <ModalContent className="p-6 space-y-6 bg-background">
           <Input
-            label="TASK DESCRIPTION"
-            placeholder="e.g. Call client for follow-up..."
+            label="DESCRIPCIÓN DE LA TAREA"
+            placeholder="ej. Llamar al cliente para seguimiento..."
             value={newTaskForm.title}
             onChange={(e) => setNewTaskForm((prev) => ({ ...prev, title: e.target.value }))}
             className="bg-surface-hover border-border focus:border-primary/50 transition-all rounded-xl h-12 text-sm font-medium"
           />
           <Grid cols={2} gap={4}>
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">Priority</label>
+              <label className="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">Prioridad</label>
               <div className="relative group">
                 <select
                   className="w-full h-12 px-4 rounded-xl border border-border bg-surface-hover focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 text-sm font-medium transition-all appearance-none cursor-pointer hover:border-border-hover text-text"
                   value={newTaskForm.priority}
                   onChange={(e) => setNewTaskForm((prev) => ({ ...prev, priority: e.target.value }))}
                 >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="urgent">Urgent</option>
+                  <option value="low">Baja</option>
+                  <option value="medium">Media</option>
+                  <option value="high">Alta</option>
+                  <option value="urgent">Urgente</option>
                 </select>
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-text-muted group-hover:text-primary transition-colors">
                   <ChevronDown size={16} />
@@ -334,7 +334,7 @@ function TasksPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">Due Date</label>
+              <label className="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">Fecha de Vencimiento</label>
               <Input
                 type="date"
                 value={newTaskForm.dueDate}
@@ -345,7 +345,7 @@ function TasksPage() {
           </Grid>
           <div className="space-y-2">
             <label className="text-[10px] font-bold text-text-muted uppercase tracking-wider ml-1">
-              Associated Contact
+              Contacto Asociado
             </label>
             <div className="relative group">
               <select
@@ -353,7 +353,7 @@ function TasksPage() {
                 value={newTaskForm.contactId}
                 onChange={(e) => setNewTaskForm((prev) => ({ ...prev, contactId: e.target.value }))}
               >
-                <option value="">No contact</option>
+                <option value="">Sin contacto</option>
                 {contacts?.map((c: any) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
@@ -372,7 +372,7 @@ function TasksPage() {
             onClick={() => setShowNewTaskModal(false)}
             className="rounded-xl px-6 h-10 text-text-secondary hover:text-text hover:bg-surface-hover transition-all duration-200 font-semibold text-sm"
           >
-            Cancel
+            Cancelar
           </Button>
           <Button
             variant="primary"
@@ -381,7 +381,7 @@ function TasksPage() {
             disabled={createTaskMutation.isPending || !newTaskForm.title}
             className="px-8 h-10 font-semibold text-sm shadow-[0_0_15px_rgba(139,92,246,0.2)] bg-primary hover:bg-primary-hover rounded-xl transition-all duration-300"
           >
-            {createTaskMutation.isPending ? "Processing..." : "Confirm Task"}
+            {createTaskMutation.isPending ? "Procesando..." : "Confirmar Tarea"}
           </Button>
         </ModalFooter>
       </Modal>

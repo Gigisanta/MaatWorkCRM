@@ -50,6 +50,7 @@
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.41.0",
     "framer-motion": "^12.35.0",
+    "googleapis": "^140.0.1",
     "inngest": "^3.27.0",
     "lucide-react": "^0.468.0",
     "pino": "^10.3.1",

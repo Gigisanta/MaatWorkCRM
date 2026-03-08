@@ -4,7 +4,7 @@ import { cn } from "~/lib/utils";
 export interface ButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "onClick"> {
   /** Visual style variant */
   variant?: "primary" | "secondary" | "accent" | "outline" | "ghost" | "destructive" | "joy";
-  /** Size of the button */
+  /** Size of button */
   size?: "sm" | "md" | "lg";
   /** Full width button */
   fullWidth?: boolean;
@@ -13,6 +13,8 @@ export interface ButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonE
   children: React.ReactNode;
   /** Click handler */
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  /** Accessible label for screen readers */
+  "aria-label"?: string;
 }
 
 /**
@@ -29,6 +31,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       children,
       disabled,
       onClick,
+      "aria-label": ariaLabel,
       ...props
     },
     ref,
@@ -38,25 +41,30 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
+        aria-label={ariaLabel}
+        aria-disabled={isDisabled}
+        aria-busy={loading}
         className={cn(
           "inline-flex items-center justify-center font-body font-semibold",
-          "rounded-xl transition-all duration-300 relative overflow-hidden",
-          "focus:outline-none focus:ring-2 focus:ring-brand-600/50 focus:ring-offset-2 focus:ring-offset-surface-950",
+          "rounded-xl transition-all duration-300 ease-out relative overflow-hidden",
+          "focus:outline-none focus:ring-2 focus:ring-brand-600/60 focus:ring-offset-2 focus:ring-offset-surface-950",
           "disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none",
-          "active:scale-[0.98] active:brightness-95",
+          "active:scale-[0.97] active:brightness-90",
+          !loading && "hover:scale-[1.02]",
           {
-            "bg-brand-600 text-white shadow-[0_0_20px_rgba(139,92,246,0.2)] hover:bg-brand-500 hover:shadow-[0_0_25px_rgba(139,92,246,0.3)] hover:-translate-y-0.5":
+            "bg-brand-600 text-white shadow-[0_0_20px_rgba(139,92,246,0.25)] hover:bg-brand-500 hover:shadow-[0_0_30px_rgba(139,92,246,0.35)] hover:-translate-y-0.5 active:translate-y-0":
               variant === "primary",
-            "bg-surface-800 text-surface-100 hover:bg-surface-700 hover:shadow-lg hover:-translate-y-0.5":
+            "bg-surface-800 text-surface-100 hover:bg-surface-700 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0":
               variant === "secondary",
-            "bg-emerald-600 text-white hover:bg-emerald-500 hover:shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:-translate-y-0.5":
+            "bg-emerald-600 text-white hover:bg-emerald-500 hover:shadow-[0_0_25px_rgba(16,185,129,0.25)] hover:-translate-y-0.5 active:translate-y-0":
               variant === "accent",
-            "bg-orange-600 text-white hover:bg-orange-500 hover:shadow-[0_0_20px_rgba(249,115,22,0.2)] hover:-translate-y-0.5":
+            "bg-orange-600 text-white hover:bg-orange-500 hover:shadow-[0_0_25px_rgba(249,115,22,0.25)] hover:-translate-y-0.5 active:translate-y-0":
               variant === "joy",
-            "border border-surface-700 bg-transparent text-surface-200 hover:bg-surface-800 hover:text-white hover:border-surface-600 hover:shadow-sm":
+            "border border-surface-700 bg-transparent text-surface-200 hover:bg-surface-800 hover:text-white hover:border-surface-600 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0":
               variant === "outline",
-            "bg-transparent text-surface-400 hover:bg-surface-800/50 hover:text-surface-100": variant === "ghost",
-            "bg-red-600 text-white hover:bg-red-500 hover:shadow-[0_0_20px_rgba(239,44,44,0.2)] hover:-translate-y-0.5":
+            "bg-transparent text-surface-400 hover:bg-surface-800/60 hover:text-surface-100 hover:shadow-md active:bg-surface-800/80":
+              variant === "ghost",
+            "bg-red-600 text-white hover:bg-red-500 hover:shadow-[0_0_25px_rgba(239,44,44,0.25)] hover:-translate-y-0.5 active:translate-y-0":
               variant === "destructive",
           },
           {

@@ -11,6 +11,11 @@ import { AICopilot } from "~/components/ui/AICopilot";
 import { CommandPalette } from "~/components/ui/CommandPalette";
 import { cn } from "~/lib/utils";
 
+// ============================================================
+// MaatWork CRM — App Layout (Authenticated Shell)
+// UI/UX REFINED BY JULES v2
+// ============================================================
+
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
 });
@@ -29,6 +34,9 @@ function AppLayout() {
 
   return (
     <div className="app-layout bg-background text-text min-h-screen font-sans selection:bg-primary/30 selection:text-primary-light">
+      {/* Accessibility: Live region for announcements */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only" id="a11y-announcements" />
+
       {/* Global Features */}
       <CommandPalette />
       <AICopilot open={isCopilotOpen} onClose={() => setIsCopilotOpen(false)} />
