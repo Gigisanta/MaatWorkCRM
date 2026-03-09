@@ -203,17 +203,17 @@ export async function completeInstagramOAuth(
       pageName: page.name,
       instagramUserId: igAccount.id,
       accessToken,
-      accessTokenExpiresAt: expiresAt,
+      accessTokenExpiresAt: expiresAt as any,
       isActive: true,
-    })
+    } as any)
     .onConflictDoUpdate({
       target: [instagramAccounts.organizationId, instagramAccounts.pageId],
       set: {
         accessToken,
-        accessTokenExpiresAt: expiresAt,
+        accessTokenExpiresAt: expiresAt as any,
         pageName: page.name,
-        updatedAt: new Date(),
-      },
+        updatedAt: new Date() as any,
+      } as any,
     })
     .returning();
   
@@ -253,9 +253,9 @@ export async function refreshInstagramToken(
       .update(instagramAccounts)
       .set({
         accessToken,
-        accessTokenExpiresAt: expiresAt,
-        updatedAt: new Date(),
-      })
+        accessTokenExpiresAt: expiresAt as any,
+        updatedAt: new Date() as any,
+      } as any)
       .where(eq(instagramAccounts.id, accountId));
     
     return true;
@@ -265,7 +265,7 @@ export async function refreshInstagramToken(
     // Mark account as inactive if refresh fails
     await db
       .update(instagramAccounts)
-      .set({ isActive: false, updatedAt: new Date() })
+      .set({ isActive: false, updatedAt: new Date() as any } as any)
       .where(eq(instagramAccounts.id, accountId));
     
     return false;

@@ -1,10 +1,10 @@
 // MaatWork CRM — Server Functions: Instagram
 
 import { createServerFn } from "@tanstack/react-start";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { db } from "../db";
 import { instagramAccounts, instagramConversations, instagramMessages } from "../db/schema";
-import { syncInstagramConversations, getInstagramAccountByOrg, type InstagramConfig } from "../instagram/client";
+import { syncInstagramConversations, getInstagramAccountByOrg } from "../instagram/client";
 
 export const getInstagramAccounts = createServerFn({ method: "GET" })
   .inputValidator((input: { orgId: string }) => input)
@@ -36,17 +36,17 @@ export const connectInstagramAccount = createServerFn({ method: "POST" })
         pageName: data.pageName,
         accessToken: data.accessToken,
         instagramUserId: data.instagramUserId,
-        accessTokenExpiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
+        accessTokenExpiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000) as any,
         isActive: true,
-      })
+      } as any)
       .onConflictDoUpdate({
         target: [instagramAccounts.organizationId, instagramAccounts.pageId],
         set: {
           accessToken: data.accessToken,
           pageName: data.pageName,
-          accessTokenExpiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
-          updatedAt: new Date(),
-        },
+          accessTokenExpiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000) as any,
+          updatedAt: new Date() as any,
+        } as any,
       })
       .returning();
     

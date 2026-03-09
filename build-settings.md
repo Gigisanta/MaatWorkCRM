@@ -1,0 +1,493 @@
+- generic [active] [ref=e1]:
+  - link "Skip to content":
+    - /url: "#geist-skip-nav"
+  - main [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - generic [ref=e9]:
+            - link "giolivo's projects Hobby" [ref=e10] [cursor=pointer]:
+              - /url: /giolivos-projects
+              - img [ref=e11]
+              - generic [ref=e12]:
+                - generic [ref=e13]: giolivo's projects
+                - generic [ref=e15]: Hobby
+            - button [ref=e16] [cursor=pointer]:
+              - img [ref=e18]
+          - button "Find… F" [ref=e21]:
+            - generic [ref=e23]:
+              - img [ref=e25]
+              - generic [ref=e27]: Find…
+              - generic [ref=e29]: F
+        - navigation [ref=e31]:
+          - generic [ref=e32]:
+            - generic:
+              - generic:
+                - link "Other Overview":
+                  - /url: /giolivos-projects/web
+                  - generic:
+                    - img "Other":
+                      - img "Other"
+                  - generic:
+                    - generic: Overview
+                - link "Deployments":
+                  - /url: /giolivos-projects/web/deployments
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Deployments
+                - link "Logs":
+                  - /url: /giolivos-projects/web/logs
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Logs
+                - link "Analytics":
+                  - /url: /giolivos-projects/web/analytics
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Analytics
+                - link "Speed Insights":
+                  - /url: /giolivos-projects/web/speed-insights
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Speed Insights
+                - link "Observability":
+                  - /url: /giolivos-projects/web/observability
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Observability
+                  - generic:
+                    - img
+                - link "Firewall":
+                  - /url: /giolivos-projects/web/firewall
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Firewall
+                  - generic:
+                    - img
+                - link "CDN":
+                  - /url: /giolivos-projects/web/cdn
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: CDN
+                  - generic:
+                    - img
+                - separator
+                - link "Domains":
+                  - /url: /giolivos-projects/web/settings/domains
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Domains
+                - link "Integrations":
+                  - /url: /giolivos-projects/web/settings/integrations
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Integrations
+                - link "Storage":
+                  - /url: /giolivos-projects/web/stores
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Storage
+                - link "Flags":
+                  - /url: /giolivos-projects/web/flags
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Flags
+                  - generic:
+                    - img
+                - link "Agent":
+                  - /url: /giolivos-projects/web/agent
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Agent
+                  - generic:
+                    - img
+                - link "AI Gateway":
+                  - /url: /giolivos-projects/web/ai-gateway
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: AI Gateway
+                  - generic:
+                    - img
+                - link "Sandboxes":
+                  - /url: /giolivos-projects/web/sandboxes
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Sandboxes
+                - separator
+                - link "Usage":
+                  - /url: /giolivos-projects/web/usage
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Usage
+                - link "Settings":
+                  - /url: /giolivos-projects/web/settings
+                  - generic:
+                    - img
+                  - generic:
+                    - generic: Settings
+                  - generic:
+                    - img
+            - generic [ref=e33]:
+              - button "Settings" [ref=e35] [cursor=pointer]:
+                - img [ref=e37]
+                - generic [ref=e39]: Settings
+              - generic [ref=e41]:
+                - link "General" [ref=e42] [cursor=pointer]:
+                  - /url: /giolivos-projects/web/settings/general
+                  - generic [ref=e44]: General
+                - link "Build and Deployment" [ref=e45] [cursor=pointer]:
+                  - /url: /giolivos-projects/web/settings/build-and-deployment
+                  - generic [ref=e47]: Build and Deployment
+                - link "Environments" [ref=e48] [cursor=pointer]:
+                  - /url: /giolivos-projects/web/settings/environments
+                  - generic [ref=e50]: Environments
+                - link "Environment Variables" [ref=e51] [cursor=pointer]:
+                  - /url: /giolivos-projects/web/settings/environment-variables
+                  - generic [ref=e53]: Environment Variables
+                - link "Git" [ref=e54] [cursor=pointer]:
+                  - /url: /giolivos-projects/web/settings/git
+                  - generic [ref=e56]: Git
+                - link "Deployment Protection" [ref=e57] [cursor=pointer]:
+                  - /url: /giolivos-projects/web/settings/deployment-protection
+                  - generic [ref=e59]: Deployment Protection
+                - link "Functions" [ref=e60] [cursor=pointer]:
+                  - /url: /giolivos-projects/web/settings/functions
+                  - generic [ref=e62]: Functions
+                - link "Cron Jobs" [ref=e63] [cursor=pointer]:
+                  - /url: /giolivos-projects/web/settings/cron-jobs
+                  - generic [ref=e65]: Cron Jobs
+                - link "Microfrontends" [ref=e66] [cursor=pointer]:
+                  - /url: /giolivos-projects/web/settings/microfrontends
+                  - generic [ref=e68]: Microfrontends
+                - link "Project Members" [ref=e69] [cursor=pointer]:
+                  - /url: /giolivos-projects/web/settings/project-members
+                  - generic [ref=e71]: Project Members
+                - link "Drains" [ref=e72] [cursor=pointer]:
+                  - /url: /giolivos-projects/web/settings/drains
+                  - generic [ref=e74]: Drains
+                - link "Security" [ref=e75] [cursor=pointer]:
+                  - /url: /giolivos-projects/web/settings/security
+                  - generic [ref=e77]: Security
+                - link "Connectivity" [ref=e78] [cursor=pointer]:
+                  - /url: /giolivos-projects/web/settings/connectivity
+                  - generic [ref=e80]: Connectivity
+                - link "Advanced" [ref=e81] [cursor=pointer]:
+                  - /url: /giolivos-projects/web/settings/advanced
+                  - generic [ref=e83]: Advanced
+        - generic [ref=e88]:
+          - button "Avatar for gigisanta gigisanta" [ref=e89] [cursor=pointer]:
+            - img "Avatar for gigisanta" [ref=e90]:
+              - img "Avatar for gigisanta" [ref=e91]
+            - generic [ref=e92]: gigisanta
+            - img [ref=e94]
+          - button "253 unseen notifications" [ref=e313] [cursor=pointer]:
+            - generic [ref=e314]:
+              - generic [ref=e315]:
+                - img
+              - img [ref=e316]
+      - button [ref=e101] [cursor=pointer]:
+        - img [ref=e102]
+    - generic [ref=e104]:
+      - generic [ref=e105]:
+        - generic [ref=e108]:
+          - link "Other web" [ref=e318] [cursor=pointer]:
+            - /url: /giolivos-projects/web
+            - img "Other" [ref=e319]:
+              - img "Other" [ref=e320]
+            - generic [ref=e112]: web
+          - button [ref=e113] [cursor=pointer]:
+            - img [ref=e115]
+          - link "Back to team view" [ref=e119] [cursor=pointer]:
+            - /url: /giolivos-projects/~/settings/build-and-deployment
+            - img [ref=e121]
+        - generic [ref=e123]:
+          - generic [ref=e321]:
+            - link "Project Settings" [ref=e322] [cursor=pointer]:
+              - /url: /giolivos-projects/web/settings
+            - img [ref=e323]
+          - generic [ref=e124]: Build and Deployment
+        - button "Open page actions menu" [ref=e126] [cursor=pointer]:
+          - img [ref=e128]
+      - generic [ref=e325]:
+        - generic [ref=e327]:
+          - generic [ref=e328]:
+            - heading "Framework Settings" [level=4] [ref=e329]:
+              - link "Framework Settings" [ref=e331] [cursor=pointer]:
+                - /url: "#framework-settings"
+                - generic [ref=e332]: Framework Settings
+                - img [ref=e333]
+            - paragraph [ref=e335]: When using a framework for a new project, it will be automatically detected. As a result, several project settings are automatically configured to achieve the best result. You can override them below.
+            - generic [ref=e337]:
+              - generic [ref=e338]:
+                - img [ref=e339]
+                - paragraph [ref=e341]: Configuration Settings in the current Production deployment differ from your current Project Settings.
+              - button "Production Overrides web-d606r242r-giolivos-projects.vercel.app" [ref=e343] [cursor=pointer]:
+                - generic [ref=e344]:
+                  - img [ref=e345]
+                  - generic [ref=e349]: Production Overrides
+                  - link "web-d606r242r-giolivos-projects.vercel.app" [ref=e353]:
+                    - /url: https://vercel.com/giolivos-projects/web/HkG85mzbS7NoXd8CuGo2ND2xnVnJ
+              - button "Project Settings" [ref=e355] [cursor=pointer]:
+                - generic [ref=e356]:
+                  - img [ref=e357]
+                  - generic [ref=e361]: Project Settings
+          - generic [ref=e362]:
+            - generic [ref=e364]:
+              - text: Learn more about
+              - link "Build and Development Settings" [ref=e365] [cursor=pointer]:
+                - /url: /docs/deployments/configure-a-build#build-and-development-settings
+                - text: Build and Development Settings
+                - img [ref=e366]
+            - button "Save" [disabled] [ref=e371]:
+              - generic [ref=e372]: Save
+        - generic [ref=e374]:
+          - generic [ref=e375]:
+            - heading "Root Directory" [level=4] [ref=e376]:
+              - link "Root Directory" [ref=e378] [cursor=pointer]:
+                - /url: "#root-directory"
+                - generic [ref=e379]: Root Directory
+                - img [ref=e380]
+            - paragraph [ref=e382]: The directory within your project, where your code is located. Leave this field empty if your code is not located in a subdirectory.
+            - generic [ref=e383]:
+              - textbox "./" [ref=e386]
+              - generic [ref=e387]:
+                - paragraph [ref=e388]:
+                  - text: Include files outside the root directory in the
+                  - link "Build Step" [ref=e389] [cursor=pointer]:
+                    - /url: /docs/deployments/build-step
+                    - text: Build Step
+                    - img [ref=e390]
+                  - text: .
+                - generic "Enabled" [ref=e392]:
+                  - paragraph [ref=e394]: Enabled
+                  - checkbox "Include files outside the root directory in the Build Step . Enabled" [checked] [ref=e395]
+              - separator [ref=e398]
+              - generic [ref=e399]:
+                - paragraph [ref=e400]:
+                  - link "Skip deployments" [ref=e401] [cursor=pointer]:
+                    - /url: /docs/monorepos#skipping-unaffected-projects
+                    - text: Skip deployments
+                    - img [ref=e402]
+                  - text: when there are no changes to the root directory or its dependencies.
+                - generic "Disabled" [ref=e405]:
+                  - paragraph [ref=e407]: Disabled
+                  - checkbox "Skip deployments when there are no changes to the root directory or its dependencies. Disabled" [disabled] [ref=e408]
+          - generic [ref=e411]:
+            - paragraph [ref=e413]:
+              - text: Learn more about
+              - link "Root Directory" [ref=e414] [cursor=pointer]:
+                - /url: /docs/deployments/configure-a-build#root-directory
+                - text: Root Directory
+                - img [ref=e415]
+            - button "Save" [disabled] [ref=e420]:
+              - generic [ref=e421]: Save
+        - generic [ref=e423]:
+          - generic [ref=e424]:
+            - heading "Ignored Build Step" [level=4] [ref=e425]:
+              - link "Ignored Build Step" [ref=e427] [cursor=pointer]:
+                - /url: "#ignored-build-step"
+                - generic [ref=e428]: Ignored Build Step
+                - img [ref=e429]
+            - paragraph [ref=e431]:
+              - text: When a commit is pushed to the Git repository that is connected with your Project, its SHA will determine if a new Build has to be issued. If the SHA was deployed before, no new Build will be issued.
+              - text: You can customize this behavior with a command that exits with code 1 (new Build needed) or code 0.
+            - generic [ref=e434]:
+              - generic [ref=e435]: Behavior
+              - generic [ref=e436]:
+                - combobox "Behavior" [ref=e437] [cursor=pointer]:
+                  - option "Automatic" [selected]
+                  - option "Only build production"
+                  - option "Only build pre-production"
+                  - option "Only build if there are changes"
+                  - option "Only build if there are changes in a folder"
+                  - option "Don't build anything"
+                  - option "Run my Bash script"
+                  - option "Run my Node script"
+                  - option "Custom"
+                - generic:
+                  - img
+          - generic [ref=e438]:
+            - paragraph [ref=e440]:
+              - text: Learn more about
+              - link "Ignored Build Step" [ref=e441] [cursor=pointer]:
+                - /url: /docs/project-configuration/git-settings#ignored-build-step
+                - text: Ignored Build Step
+                - img [ref=e442]
+            - button "Save" [disabled] [ref=e447]:
+              - generic [ref=e448]: Save
+        - generic [ref=e450]:
+          - generic [ref=e451]:
+            - heading "Node.js Version" [level=4] [ref=e452]:
+              - link "Node.js Version" [ref=e454] [cursor=pointer]:
+                - /url: "#node.js-version"
+                - generic [ref=e455]: Node.js Version
+                - img [ref=e456]
+            - paragraph [ref=e458]: The version of Node.js that is used in the Build Step and for Serverless Functions. A new Deployment is required for your changes to take effect.
+            - generic [ref=e463]:
+              - combobox [ref=e464] [cursor=pointer]:
+                - option "24.x" [selected]
+                - option "22.x"
+                - option "20.x"
+              - generic:
+                - img
+          - generic [ref=e465]:
+            - paragraph [ref=e467]:
+              - text: Learn more about
+              - link "Node.js Version" [ref=e468] [cursor=pointer]:
+                - /url: /docs/functions/serverless-functions/runtimes/node-js#node.js-version
+                - text: Node.js Version
+                - img [ref=e469]
+            - button "Save" [disabled] [ref=e474]:
+              - generic [ref=e475]: Save
+        - generic [ref=e477]:
+          - generic [ref=e478]:
+            - heading "On-Demand Concurrent Builds" [level=4] [ref=e479]:
+              - link "On-Demand Concurrent Builds" [ref=e481] [cursor=pointer]:
+                - /url: "#on-demand-concurrent-builds"
+                - generic [ref=e482]: On-Demand Concurrent Builds
+                - img [ref=e483]
+            - paragraph [ref=e485]: Skip the build queue and build deployments immediately. Usage costs apply per build minute.
+            - radiogroup [ref=e487]:
+              - generic [ref=e488]:
+                - generic [ref=e490]:
+                  - radio "Run all builds immediately Skip the queue for all builds" [ref=e492]
+                  - generic [ref=e496]:
+                    - generic [ref=e497]: Run all builds immediately
+                    - paragraph [ref=e498]: Skip the queue for all builds
+                - generic [ref=e500]:
+                  - radio "Run up to one build per branch New deployments within a branch are queued" [ref=e502]
+                  - generic [ref=e506]:
+                    - generic [ref=e507]: Run up to one build per branch
+                    - paragraph [ref=e508]: New deployments within a branch are queued
+                - generic [ref=e510]:
+                  - radio "Disable on-demand concurrent builds Builds are queued, maximum of one at a time" [checked] [ref=e512]
+                  - generic [ref=e516]:
+                    - generic [ref=e517]: Disable on-demand concurrent builds
+                    - paragraph [ref=e518]: Builds are queued, maximum of one at a time
+          - paragraph [ref=e521]:
+            - text: This feature is available on the
+            - link "Pro plan" [ref=e522] [cursor=pointer]:
+              - /url: /pricing
+              - text: Pro plan
+              - img [ref=e523]
+        - generic [ref=e527]:
+          - generic [ref=e528]:
+            - heading "Build Machine" [level=4] [ref=e529]:
+              - link "Build Machine" [ref=e531] [cursor=pointer]:
+                - /url: "#build-machine"
+                - generic [ref=e532]: Build Machine
+                - img [ref=e533]
+            - paragraph [ref=e535]: Choose a larger build machine. Charges apply per minute if it exceeds your team's pre-committed concurrency.
+            - radiogroup [ref=e537]:
+              - generic [ref=e538]:
+                - generic [ref=e540]:
+                  - radio "Standard 4 vCPUs 8 GB Memory Team Default Cost-effective option for lightweight apps and APIs" [checked] [ref=e542]
+                  - generic [ref=e546]:
+                    - generic [ref=e547]:
+                      - generic [ref=e548]: Standard
+                      - generic [ref=e549]:
+                        - generic [ref=e551]: 4 vCPUs
+                        - generic [ref=e553]: 8 GB Memory
+                        - generic [ref=e555]: Team Default
+                    - paragraph [ref=e556]: Cost-effective option for lightweight apps and APIs
+                - generic [ref=e558]:
+                  - radio "Enhanced 8 vCPUs 16 GB Memory Increased compute, ideal for large applications" [ref=e560]
+                  - generic [ref=e564]:
+                    - generic [ref=e565]:
+                      - generic [ref=e566]: Enhanced
+                      - generic [ref=e567]:
+                        - generic [ref=e569]: 8 vCPUs
+                        - generic [ref=e571]: 16 GB Memory
+                    - paragraph [ref=e572]: Increased compute, ideal for large applications
+                - generic [ref=e574]:
+                  - radio "Turbo 30 vCPUs 60 GB Memory Optimized for Turbopack builds which take advantage of multiple cores" [ref=e576]
+                  - generic [ref=e580]:
+                    - generic [ref=e581]:
+                      - generic [ref=e582]: Turbo
+                      - generic [ref=e583]:
+                        - generic [ref=e585]: 30 vCPUs
+                        - generic [ref=e587]: 60 GB Memory
+                    - paragraph [ref=e588]: Optimized for Turbopack builds which take advantage of multiple cores
+          - generic [ref=e591]:
+            - text: Learn more about
+            - link "Build Machine types" [ref=e592] [cursor=pointer]:
+              - /url: /docs/builds/managing-builds#build-machine-types
+              - text: Build Machine types
+              - img [ref=e593]
+            - text: and
+            - link "Pricing" [ref=e595] [cursor=pointer]:
+              - /url: /docs/builds/managing-builds#on-demand-concurrent-builds-pricing
+              - text: Pricing
+              - img [ref=e596]
+        - generic [ref=e599]:
+          - generic [ref=e600]:
+            - heading "Deployment Checks" [level=2] [ref=e601]
+            - paragraph [ref=e602]: Define checks needed to promote a deployment to production
+          - generic [ref=e603]:
+            - paragraph [ref=e604]: No checks configured
+            - generic [ref=e606]:
+              - paragraph [ref=e607]: Use events or statuses from your checks provider to determine when a deployment is promoted to Production.
+              - button "Add Checks" [ref=e609] [cursor=pointer]:
+                - img [ref=e611]
+                - generic [ref=e613]: Add Checks
+        - generic [ref=e615]:
+          - generic [ref=e616]:
+            - heading "Rolling Releases" [level=4] [ref=e618]:
+              - link "Rolling Releases" [ref=e619] [cursor=pointer]:
+                - /url: "#rolling-releases"
+                - generic [ref=e620]: Rolling Releases
+                - img [ref=e621]
+            - paragraph [ref=e623]: Configure rolling release settings for your production environment. Rolling releases allow you to gradually deploy changes to users by defining a percentage of traffic for each stage.
+            - generic [ref=e625] [cursor=pointer]:
+              - generic [ref=e626]: Disabled
+              - checkbox "Disabled" [ref=e627]
+          - generic [ref=e631]:
+            - paragraph [ref=e632]:
+              - text: This feature is available on the
+              - link "Pro plan" [ref=e633] [cursor=pointer]:
+                - /url: /pricing
+                - text: Pro plan
+                - img [ref=e634]
+            - button "Save" [disabled] [ref=e636]:
+              - generic [ref=e637]: Save
+        - generic [ref=e639]:
+          - generic [ref=e640]:
+            - heading "Prioritize Production Builds" [level=4] [ref=e641]:
+              - link "Prioritize Production Builds" [ref=e643] [cursor=pointer]:
+                - /url: "#prioritize-production-builds"
+                - generic [ref=e644]: Prioritize Production Builds
+                - img [ref=e645]
+            - paragraph [ref=e647]: Builds for Production environment will be prioritized over Pre-Production environments.
+            - generic [ref=e648] [cursor=pointer]:
+              - checkbox "Enabled" [checked] [ref=e650]
+              - text: Enabled
+          - generic [ref=e653]:
+            - paragraph [ref=e655]:
+              - text: Learn more about
+              - link "Prioritize Production Builds" [ref=e656] [cursor=pointer]:
+                - /url: /docs/deployments/concurrent-builds#prioritize-production-builds
+                - text: Prioritize Production Builds
+                - img [ref=e657]
+            - button "Save" [disabled] [ref=e662]:
+              - generic [ref=e663]: Save
+  - alert [ref=e311]
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - img

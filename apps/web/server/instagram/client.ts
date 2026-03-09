@@ -137,10 +137,10 @@ export async function syncInstagramConversations(
           await db
             .update(instagramConversations)
             .set({
-              lastMessageAt: new Date(conv.updated_time),
+              lastMessageAt: new Date(conv.updated_time) as any,
               lastMessagePreview: lastMsg?.message?.substring(0, 200) || null,
-              updatedAt: new Date(),
-            })
+              updatedAt: new Date() as any,
+            } as any)
             .where(eq(instagramConversations.id, existingConv.id));
 
           for (const msg of messages.slice(0, 10)) {
@@ -158,9 +158,9 @@ export async function syncInstagramConversations(
                 content: msg.message,
                 fromIgUserId: msg.from.id,
                 fromMe: msg.from.id === account.instagramUserId,
-                timestamp: new Date(msg.created_at * 1000),
-                createdAt: new Date(),
-              });
+                timestamp: new Date(msg.created_at * 1000) as any,
+                createdAt: new Date() as any,
+              } as any);
             }
           }
         } else {
@@ -169,13 +169,13 @@ export async function syncInstagramConversations(
             id: newConvId,
             accountId: account.id,
             igConversationId: conv.id,
-            participantIgId: participant?.id || "",
+            participantIgId: (participant as any)?.id || "",
             participantUsername: participant?.username || "",
             participantProfileUrl: participant?.profile_picture || "",
-            lastMessageAt: new Date(conv.updated_time),
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          });
+            lastMessageAt: new Date(conv.updated_time) as any,
+            createdAt: new Date() as any,
+            updatedAt: new Date() as any,
+          } as any);
         }
         synced++;
       } catch (err) {
@@ -185,7 +185,7 @@ export async function syncInstagramConversations(
 
     await db
       .update(instagramAccounts)
-      .set({ lastSyncedAt: new Date() })
+      .set({ lastSyncedAt: new Date() as any } as any)
       .where(eq(instagramAccounts.id, accountId));
 
     return { synced, errors };
@@ -201,6 +201,6 @@ export async function linkConversationToContact(
 ) {
   return db
     .update(instagramConversations)
-    .set({ contactId, updatedAt: new Date() })
+    .set({ contactId, updatedAt: new Date() as any } as any)
     .where(eq(instagramConversations.id, conversationId));
 }

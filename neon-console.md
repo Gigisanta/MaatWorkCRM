@@ -1,0 +1,236 @@
+- generic [ref=e120]:
+  - generic [ref=e121]:
+    - navigation "Breadcrumbs" [ref=e122]:
+      - list "Migas de pan" [ref=e123]:
+        - listitem [ref=e124]:
+          - link "Neon logo" [ref=e125] [cursor=pointer]:
+            - /url: /app/
+            - img [ref=e127]
+        - listitem [ref=e129]:
+          - separator [ref=e130]: /
+          - generic [ref=e131]:
+            - link "giolivo Free" [ref=e132] [cursor=pointer]:
+              - /url: /app/org-old-violet-80722775/projects
+              - generic [ref=e133]: giolivo
+              - generic [ref=e134]: Free
+            - button "Open menu" [ref=e135] [cursor=pointer]:
+              - img [ref=e137]
+    - generic [ref=e139]:
+      - link "All OK" [ref=e140] [cursor=pointer]:
+        - /url: https://neonstatus.com
+        - generic [ref=e142]:
+          - paragraph [ref=e143]
+          - text: All OK
+      - button "Resources menu" [ref=e144] [cursor=pointer]:
+        - img [ref=e146]
+      - button "Upgrade" [ref=e148] [cursor=pointer]:
+        - generic [ref=e149]: Upgrade
+      - button "giolivo santarelli account menu button" [ref=e150] [cursor=pointer]
+  - generic [ref=e152]:
+    - complementary [ref=e154]:
+      - navigation "Sidebar" [ref=e155]:
+        - generic [ref=e156]:
+          - group "Organization" [ref=e158]:
+            - heading "Organization" [level=2] [ref=e160]
+            - list [ref=e161]:
+              - listitem [ref=e162]:
+                - link "Projects" [ref=e164] [cursor=pointer]:
+                  - /url: /app/org-old-violet-80722775/projects
+                  - img [ref=e166]
+                  - generic [ref=e168]: Projects
+              - listitem [ref=e169]:
+                - link "People" [ref=e171] [cursor=pointer]:
+                  - /url: /app/org-old-violet-80722775/people
+                  - img [ref=e173]
+                  - generic [ref=e175]: People
+              - listitem [ref=e176]:
+                - link "Billing" [ref=e178]:
+                  - /url: /app/org-old-violet-80722775/billing
+                  - img [ref=e180]
+                  - generic [ref=e182]: Billing
+              - listitem [ref=e183]:
+                - link "Integrations" [ref=e185] [cursor=pointer]:
+                  - /url: /app/org-old-violet-80722775/integrations
+                  - img [ref=e187]
+                  - generic [ref=e190]: Integrations
+              - listitem [ref=e191]:
+                - link "Settings" [ref=e193] [cursor=pointer]:
+                  - /url: /app/org-old-violet-80722775/settings
+                  - img [ref=e195]
+                  - generic [ref=e198]: Settings
+          - group [ref=e200]:
+            - list [ref=e201]:
+              - listitem [ref=e202]:
+                - link "Feedback" [ref=e204] [cursor=pointer]:
+                  - img [ref=e206]
+                  - generic [ref=e209]: Feedback
+      - link "Collapse menu" [ref=e212] [cursor=pointer]:
+        - img [ref=e214]
+        - generic [ref=e216]: Collapse menu
+    - generic [ref=e221]:
+      - generic [ref=e223]:
+        - banner [ref=e224]:
+          - heading "Billing" [level=1] [ref=e225]
+          - button "View past invoices" [disabled] [ref=e228]:
+            - generic [ref=e229]: View past invoices
+        - generic [ref=e231]:
+          - generic [ref=e233]:
+            - generic [ref=e234]:
+              - generic [ref=e235]:
+                - heading "Free Plan" [level=1] [ref=e236]
+                - generic [ref=e237]: Current plan
+              - generic [ref=e238]: $0 / month
+            - generic [ref=e239]:
+              - heading "What's included per project:" [level=2] [ref=e240]
+              - list [ref=e241]:
+                - listitem [ref=e242]:
+                  - img [ref=e244]
+                  - text: 0.5 GB storage
+                - listitem [ref=e246]:
+                  - img [ref=e248]
+                  - text: Autoscaling to 2 CU
+                  - img [ref=e252]
+                - listitem [ref=e254]:
+                  - img [ref=e256]
+                  - text: 100 compute hours
+                - listitem [ref=e258]:
+                  - img [ref=e260]
+                  - text: 10 branches
+          - generic [ref=e262]:
+            - generic [ref=e263]:
+              - generic [ref=e264]:
+                - heading "Upgrade plan" [level=2] [ref=e265]
+                - link "Compare plans" [ref=e266] [cursor=pointer]:
+                  - /url: https://neon.com/pricing
+                  - text: Compare plans
+                  - img [ref=e268]
+              - generic [ref=e270]: Our plans are built to fit the size of your project. Pay a flat rate for a set plan, plus a little extra if you go over. Upgrade to the next tier as your project grows.
+            - generic [ref=e271]:
+              - generic [ref=e272]:
+                - generic [ref=e273]:
+                  - generic [ref=e274]:
+                    - heading "Launch" [level=3] [ref=e276]
+                    - generic [ref=e277]: $0.106 per CU-hour
+                  - button "Select plan" [ref=e279] [cursor=pointer]:
+                    - generic [ref=e280]: Select plan
+                - generic [ref=e282]:
+                  - generic [ref=e283]:
+                    - heading "Usage-based pricing:" [level=4] [ref=e284]
+                    - list [ref=e285]:
+                      - listitem [ref=e286]:
+                        - img [ref=e289]
+                        - generic [ref=e291]: $0.35 / GB-month of storage
+                      - listitem [ref=e292]:
+                        - img [ref=e295]
+                        - generic [ref=e297]: $0.20 / GB-month of instant restore
+                    - separator [ref=e298]
+                  - generic [ref=e299]:
+                    - heading "Included:" [level=4] [ref=e300]
+                    - list [ref=e301]:
+                      - listitem [ref=e302]:
+                        - img [ref=e305]
+                        - generic [ref=e307]: Free limits are removed
+                      - listitem [ref=e308]:
+                        - img [ref=e311]
+                        - generic [ref=e313]:
+                          - text: Autoscale to 16 CU
+                          - img [ref=e316]
+                      - listitem [ref=e318]:
+                        - img [ref=e321]
+                        - generic [ref=e323]:
+                          - text: Scale to zero after 5 minutes
+                          - img [ref=e326]
+                      - listitem [ref=e328]:
+                        - img [ref=e331]
+                        - generic [ref=e333]: Up to 100 projects
+                  - generic [ref=e334]:
+                    - heading "Per project:" [level=4] [ref=e335]
+                    - list [ref=e336]:
+                      - listitem [ref=e337]:
+                        - img [ref=e340]
+                        - generic [ref=e342]:
+                          - text: Includes 10 branches
+                          - img [ref=e345]
+                      - listitem [ref=e347]:
+                        - img [ref=e350]
+                        - generic [ref=e352]:
+                          - text: 100 GB public network transfer
+                          - img [ref=e355]
+              - generic [ref=e357]:
+                - generic [ref=e358]:
+                  - generic [ref=e359]:
+                    - heading "Scale" [level=3] [ref=e361]
+                    - generic [ref=e362]: $0.222 per CU-hour
+                  - button "Select plan" [ref=e364] [cursor=pointer]:
+                    - generic [ref=e365]: Select plan
+                - generic [ref=e367]:
+                  - generic [ref=e368]:
+                    - heading "Usage-based pricing:" [level=4] [ref=e369]
+                    - list [ref=e370]:
+                      - listitem [ref=e371]:
+                        - img [ref=e374]
+                        - generic [ref=e376]: $0.35 / GB-month of storage
+                      - listitem [ref=e377]:
+                        - img [ref=e380]
+                        - generic [ref=e382]: $0.20 / GB-month of instant restore
+                    - separator [ref=e383]
+                  - generic [ref=e384]:
+                    - heading "Included:" [level=4] [ref=e385]
+                    - list [ref=e386]:
+                      - listitem [ref=e387]:
+                        - img [ref=e390]
+                        - generic [ref=e392]: Free limits are removed
+                      - listitem [ref=e393]:
+                        - img [ref=e396]
+                        - generic [ref=e398]:
+                          - text: Autoscale to 16 CU
+                          - img [ref=e401]
+                      - listitem [ref=e403]:
+                        - img [ref=e406]
+                        - generic [ref=e408]:
+                          - text: Compute sizes up to 56 CU
+                          - img [ref=e411]
+                      - listitem [ref=e413]:
+                        - img [ref=e416]
+                        - generic [ref=e418]:
+                          - text: Configurable scale to zero
+                          - img [ref=e421]
+                      - listitem [ref=e423]:
+                        - img [ref=e426]
+                        - generic [ref=e428]: Up to 1000 projects
+                      - listitem [ref=e429]:
+                        - img [ref=e432]
+                        - generic [ref=e434]: Standard support
+                      - listitem [ref=e435]:
+                        - img [ref=e438]
+                        - generic [ref=e440]: Uptime SLA 99.95%
+                      - listitem [ref=e441]:
+                        - img [ref=e444]
+                        - generic [ref=e446]: Monitoring integration
+                      - listitem [ref=e447]:
+                        - img [ref=e450]
+                        - generic [ref=e452]: IP Allow
+                      - listitem [ref=e453]:
+                        - img [ref=e456]
+                        - generic [ref=e458]: Private networking
+                      - listitem [ref=e459]:
+                        - img [ref=e462]
+                        - generic [ref=e464]: SOC 2
+                      - listitem [ref=e465]:
+                        - img [ref=e468]
+                        - generic [ref=e470]: HIPAA
+                  - generic [ref=e471]:
+                    - heading "Per project:" [level=4] [ref=e472]
+                    - list [ref=e473]:
+                      - listitem [ref=e474]:
+                        - img [ref=e477]
+                        - generic [ref=e479]:
+                          - text: Includes 25 branches
+                          - img [ref=e482]
+                      - listitem [ref=e484]:
+                        - img [ref=e487]
+                        - generic [ref=e489]:
+                          - text: 100 GB public network transfer
+                          - img [ref=e492]
+      - tablist [ref=e497]:
+        - tab "Upgrade plan" [selected] [ref=e498] [cursor=pointer]
