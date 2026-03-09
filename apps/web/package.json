@@ -16,7 +16,8 @@
     "db:push": "drizzle-kit push",
     "db:seed": "tsx server/db/seed.ts",
     "db:studio": "drizzle-kit studio",
-    "clean": "rm -rf .output .vinxi dist node_modules"
+    "clean": "rm -rf .output .vinxi dist node_modules",
+    "instagram:sync": "tsx scripts/instagram-sync.ts"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.5.4",

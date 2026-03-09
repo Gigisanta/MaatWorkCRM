@@ -17,3 +17,4 @@ export * from "./benchmarks";
 export * from "./reports";
 export * from "./contact-enhancements";
 export * from "./alert-policies";
+export * from "./instagram";

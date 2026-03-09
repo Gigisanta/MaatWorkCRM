@@ -13,7 +13,9 @@ export default defineConfig({
     tanstackStart({
       srcDirectory: "app",
     }),
-    viteReact(),
+    viteReact({
+      jsxImportSource: "react",
+    }),
   ],
   build: {
     target: "esnext",
