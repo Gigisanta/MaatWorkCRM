@@ -13,8 +13,8 @@ import {
 } from "lucide-react";
 import { Badge } from "~/components/ui/Badge";
 import { Button } from "~/components/ui/Button";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/Card";
 import { CalendarWidget } from "~/components/ui/CalendarWidget";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/Card";
 import { Container, Grid, Stack } from "~/components/ui/Layout";
 import { SectionHeader, StatCard } from "~/components/ui/LayoutCards";
 import { useDashboardMetrics, useGoogleCalendarEvents, usePipelineSummary, useTasks } from "~/lib/hooks/use-crm";
@@ -46,9 +46,7 @@ function QuickAction({
         >
           <Icon className="w-3.5 h-3.5" />
         </div>
-        <span className="font-medium text-[#F5F5F5] text-sm">
-          {label}
-        </span>
+        <span className="font-medium text-[#F5F5F5] text-sm">{label}</span>
       </div>
       <ChevronRight className="w-3.5 h-3.5 text-[#737373] group-hover:text-[#8B5CF6] group-hover:translate-x-0.5 transition-all" />
     </a>
@@ -57,7 +55,7 @@ function QuickAction({
 
 function TodayTasks({ tasks }: { tasks: any[] }) {
   const pendingTasks = tasks?.filter((t: any) => t.status === "pending" || t.status === "in_progress") || [];
-  
+
   return (
     <Card variant="elevated" className="h-full border-white/5">
       <CardHeader className="pb-2 px-4 pt-4">
@@ -66,7 +64,9 @@ function TodayTasks({ tasks }: { tasks: any[] }) {
             <CheckSquare className="w-4 h-4 text-amber-500" />
             Tareas de Hoy
           </CardTitle>
-          <Badge variant="secondary" className="text-[10px]">{pendingTasks.length} pendientes</Badge>
+          <Badge variant="secondary" className="text-[10px]">
+            {pendingTasks.length} pendientes
+          </Badge>
         </div>
       </CardHeader>
       <CardContent className="px-4 pb-4 pt-0 space-y-2">
@@ -74,16 +74,27 @@ function TodayTasks({ tasks }: { tasks: any[] }) {
           <p className="text-xs text-[#737373] py-4 text-center">¡Todo al día! 🎉</p>
         ) : (
           pendingTasks.slice(0, 5).map((task: any) => (
-            <div key={task.id} className="flex items-center gap-2 p-2 rounded-lg bg-[#18181B]/50 hover:bg-[#18181B] transition-colors">
-              <div className={cn(
-                "w-2 h-2 rounded-full",
-                task.priority === "urgent" ? "bg-red-500" :
-                task.priority === "high" ? "bg-orange-500" :
-                task.priority === "medium" ? "bg-yellow-500" : "bg-green-500"
-              )} />
+            <div
+              key={task.id}
+              className="flex items-center gap-2 p-2 rounded-lg bg-[#18181B]/50 hover:bg-[#18181B] transition-colors"
+            >
+              <div
+                className={cn(
+                  "w-2 h-2 rounded-full",
+                  task.priority === "urgent"
+                    ? "bg-red-500"
+                    : task.priority === "high"
+                      ? "bg-orange-500"
+                      : task.priority === "medium"
+                        ? "bg-yellow-500"
+                        : "bg-green-500",
+                )}
+              />
               <span className="flex-1 text-sm text-[#F5F5F5] truncate">{task.title}</span>
               <span className="text-[10px] text-[#737373]">
-                {task.dueDate ? new Date(task.dueDate).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }) : ""}
+                {task.dueDate
+                  ? new Date(task.dueDate).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })
+                  : ""}
               </span>
             </div>
           ))
@@ -188,7 +199,7 @@ function DashboardPage() {
             <QuickAction label="Ver Pipeline" icon={TrendingUp} to="/pipeline" />
             <QuickAction label="Equipos" icon={Users} to="/teams" color="secondary" />
           </Stack>
-          
+
           <TodayTasks tasks={tasks} />
         </div>
 

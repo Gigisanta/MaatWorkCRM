@@ -12,7 +12,8 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
     const variantClasses = {
       outlined: "border border-border bg-surface",
       elevated: "border border-border bg-surface shadow-lg",
-      interactive: "border border-border bg-surface hover:border-border-hover hover:shadow-md transition-all duration-150 cursor-pointer hover:scale-[1.005]",
+      interactive:
+        "border border-border bg-surface hover:border-border-hover hover:shadow-md transition-all duration-150 cursor-pointer hover:scale-[1.005]",
       highlight: "border-l-2 border-l-primary border border-border bg-surface",
       solid: "bg-surface border border-border",
     };

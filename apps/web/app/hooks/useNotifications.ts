@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 
 // Notification types and priorities
@@ -27,9 +27,7 @@ type ActionPayload = {
 const actionSchema = z.object({
   type: z.enum(["markRead", "dismiss", "snooze"]),
   id: z.string().min(1),
-  payload: z
-    .object({ minutes: z.number().int().positive() })
-    .optional(),
+  payload: z.object({ minutes: z.number().int().positive() }).optional(),
 });
 
 const STORAGE_KEY = "maatwork_notifications_v1";
@@ -73,17 +71,17 @@ export function useNotifications() {
         return Array.isArray(data) ? data : defaultSeed();
       }
     } catch {
-// ignore parse errors
+      // ignore parse errors
     }
     return defaultSeed();
   });
 
-// Persist changes
+  // Persist changes
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
     } catch {
-// no-op
+      // no-op
     }
   }, [notifications]);
 
@@ -114,30 +112,33 @@ export function useNotifications() {
     setNotifications([]);
   }, []);
 
-// Expose a minimal memoized view to compute visible items (respect snooze)
+  // Expose a minimal memoized view to compute visible items (respect snooze)
   const visibleNotifications = useMemo(() => {
     const now = Date.now();
     return notifications.filter((n) => !n.snoozeUntil || n.snoozeUntil <= now);
   }, [notifications]);
 
-// Simple typed action dispatcher with validation (for UI layer use)
-  const dispatchAction = useCallback((action: ActionPayload) => {
-    const parsed = actionSchema.safeParse({ type: action.type, id: action.id, payload: action.payload });
-    if (!parsed.success) {
-// ignore invalid actions here; UI layer can show a toast
-      return false;
-    }
-    const { type, id, payload } = parsed.data;
-    if (type === "markRead") {
-      updateNotification(id, { read: true });
-    } else if (type === "dismiss") {
-      removeNotification(id);
-    } else if (type === "snooze") {
-      const minutes = payload?.minutes ?? 10;
-      updateNotification(id, { snoozeUntil: Date.now() + minutes * 60 * 1000 });
-    }
-    return true;
-  }, [updateNotification, removeNotification]);
+  // Simple typed action dispatcher with validation (for UI layer use)
+  const dispatchAction = useCallback(
+    (action: ActionPayload) => {
+      const parsed = actionSchema.safeParse({ type: action.type, id: action.id, payload: action.payload });
+      if (!parsed.success) {
+        // ignore invalid actions here; UI layer can show a toast
+        return false;
+      }
+      const { type, id, payload } = parsed.data;
+      if (type === "markRead") {
+        updateNotification(id, { read: true });
+      } else if (type === "dismiss") {
+        removeNotification(id);
+      } else if (type === "snooze") {
+        const minutes = payload?.minutes ?? 10;
+        updateNotification(id, { snoozeUntil: Date.now() + minutes * 60 * 1000 });
+      }
+      return true;
+    },
+    [updateNotification, removeNotification],
+  );
 
   return {
     notifications,

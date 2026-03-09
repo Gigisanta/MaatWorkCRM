@@ -2,13 +2,13 @@
 // MaatWork CRM — Google Calendar Event API Route (by ID)
 // ============================================================
 
-import { createFileRoute } from "@tanstack/react-router";
 import { auth } from "@server/auth";
 import {
+  deleteGoogleCalendarEvent,
   getGoogleCalendarEvent,
   updateGoogleCalendarEvent,
-  deleteGoogleCalendarEvent,
 } from "@server/functions/google/calendar";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/google/calendar/events/$eventId")({
   server: {
@@ -37,7 +37,7 @@ export const Route = createFileRoute("/api/google/calendar/events/$eventId")({
         } catch (error) {
           return new Response(
             JSON.stringify({ error: error instanceof Error ? error.message : "Failed to fetch event" }),
-            { status: 500, headers: { "Content-Type": "application/json" } }
+            { status: 500, headers: { "Content-Type": "application/json" } },
           );
         }
       },
@@ -60,7 +60,7 @@ export const Route = createFileRoute("/api/google/calendar/events/$eventId")({
         } catch (error) {
           return new Response(
             JSON.stringify({ error: error instanceof Error ? error.message : "Failed to update event" }),
-            { status: 500, headers: { "Content-Type": "application/json" } }
+            { status: 500, headers: { "Content-Type": "application/json" } },
           );
         }
       },
@@ -82,7 +82,7 @@ export const Route = createFileRoute("/api/google/calendar/events/$eventId")({
         } catch (error) {
           return new Response(
             JSON.stringify({ error: error instanceof Error ? error.message : "Failed to delete event" }),
-            { status: 500, headers: { "Content-Type": "application/json" } }
+            { status: 500, headers: { "Content-Type": "application/json" } },
           );
         }
       },

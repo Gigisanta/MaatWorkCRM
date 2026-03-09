@@ -2,14 +2,14 @@
 // MaatWork CRM — Google Calendar API Routes
 // ============================================================
 
-import { createFileRoute } from "@tanstack/react-router";
 import { auth } from "@server/auth";
 import {
-  getGoogleCalendarEvents,
   createGoogleCalendarEvent,
-  updateGoogleCalendarEvent,
   deleteGoogleCalendarEvent,
+  getGoogleCalendarEvents,
+  updateGoogleCalendarEvent,
 } from "@server/functions/google/calendar";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/google/calendar/events")({
   server: {
@@ -36,7 +36,7 @@ export const Route = createFileRoute("/api/google/calendar/events")({
         } catch (error) {
           return new Response(
             JSON.stringify({ error: error instanceof Error ? error.message : "Failed to fetch events" }),
-            { status: 500, headers: { "Content-Type": "application/json" } }
+            { status: 500, headers: { "Content-Type": "application/json" } },
           );
         }
       },
@@ -59,7 +59,7 @@ export const Route = createFileRoute("/api/google/calendar/events")({
         } catch (error) {
           return new Response(
             JSON.stringify({ error: error instanceof Error ? error.message : "Failed to create event" }),
-            { status: 500, headers: { "Content-Type": "application/json" } }
+            { status: 500, headers: { "Content-Type": "application/json" } },
           );
         }
       },

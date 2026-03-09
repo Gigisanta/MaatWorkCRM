@@ -1,4 +1,4 @@
-import { pgTable, text, boolean, timestamp, date, numeric, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
+import { boolean, date, jsonb, numeric, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 
 export const instruments = pgTable(
   "instruments",
@@ -18,7 +18,7 @@ export const instruments = pgTable(
   },
   (table) => ({
     instrumentSymbolUnique: uniqueIndex("instruments_symbol_unique").on(table.symbol),
-  })
+  }),
 );
 
 export const instrumentAliases = pgTable(
@@ -32,12 +32,8 @@ export const instrumentAliases = pgTable(
     code: text("code").notNull(),
   },
   (table) => ({
-    instrumentAliasUnique: uniqueIndex("instrument_aliases_unique").on(
-      table.instrumentId,
-      table.broker,
-      table.code
-    ),
-  })
+    instrumentAliasUnique: uniqueIndex("instrument_aliases_unique").on(table.instrumentId, table.broker, table.code),
+  }),
 );
 
 export type Instrument = typeof instruments.$inferSelect;

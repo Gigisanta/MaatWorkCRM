@@ -2,29 +2,29 @@
 // MaatWork CRM — Google Drive Browser Component
 // ============================================================
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
+  ChevronRight,
+  Download,
+  FileIcon,
+  FileText,
   Folder,
   FolderOpen,
-  FileText,
-  Image,
-  Download,
-  Upload,
-  Plus,
-  ChevronRight,
   Home,
-  RefreshCw,
-  Trash2,
-  Search,
-  FileIcon,
+  Image,
+  Plus,
   Presentation,
+  RefreshCw,
+  Search,
   Table,
+  Trash2,
+  Upload,
 } from "lucide-react";
+import { useState } from "react";
+import { Badge } from "~/components/ui/Badge";
 import { Button } from "~/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/Card";
 import { Input } from "~/components/ui/Input";
-import { Badge } from "~/components/ui/Badge";
 import { Stack } from "~/components/ui/Layout";
 import { cn } from "~/lib/utils";
 
@@ -81,13 +81,15 @@ const getFileColor = (mimeType: string) => {
 
 export function DriveBrowser({ className }: DriveBrowserProps) {
   const [currentFolder, setCurrentFolder] = useState<string | null>(null);
-  const [breadcrumb, setBreadcrumb] = useState<{ id: string | null; name: string }[]>([
-    { id: null, name: "My Drive" },
-  ]);
+  const [breadcrumb, setBreadcrumb] = useState<{ id: string | null; name: string }[]>([{ id: null, name: "My Drive" }]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
 
-  const { data: files, isLoading, refetch } = useQuery({
+  const {
+    data: files,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["google-drive-files", currentFolder, isSearching ? searchQuery : null],
     queryFn: async () => {
       const url = new URL("/api/google/drive/files", window.location.origin);
@@ -178,10 +180,7 @@ export function DriveBrowser({ className }: DriveBrowserProps) {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigateToBreadcrumb(index)}
-                className={cn(
-                  "h-7 px-2",
-                  index === breadcrumb.length - 1 && "text-primary font-medium"
-                )}
+                className={cn("h-7 px-2", index === breadcrumb.length - 1 && "text-primary font-medium")}
               >
                 {item.name}
               </Button>
@@ -194,9 +193,7 @@ export function DriveBrowser({ className }: DriveBrowserProps) {
             <RefreshCw className="w-6 h-6 animate-spin text-primary" />
           </div>
         ) : isSearching ? (
-          <div className="text-sm text-text-muted mb-2">
-            Search results for "{searchQuery}"
-          </div>
+          <div className="text-sm text-text-muted mb-2">Search results for "{searchQuery}"</div>
         ) : null}
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -239,9 +236,7 @@ export function DriveBrowser({ className }: DriveBrowserProps) {
                 </div>
                 <p className="mt-2 text-sm font-medium text-text truncate">{file.name}</p>
                 {file.modifiedTime && (
-                  <p className="text-xs text-text-muted mt-1">
-                    {new Date(file.modifiedTime).toLocaleDateString()}
-                  </p>
+                  <p className="text-xs text-text-muted mt-1">{new Date(file.modifiedTime).toLocaleDateString()}</p>
                 )}
               </div>
             );

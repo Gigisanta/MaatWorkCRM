@@ -1,5 +1,5 @@
-import React from "react";
 import { Mail, Phone } from "lucide-react";
+import type React from "react";
 import { cn } from "~/lib/utils";
 
 export interface Contact {
@@ -68,12 +68,7 @@ function getTagStyle(index: number): { bg: string; text: string } {
   };
 }
 
-export function ContactCard({
-  contact,
-  stage,
-  onDragStart,
-  className,
-}: ContactCardProps) {
+export function ContactCard({ contact, stage, onDragStart, className }: ContactCardProps) {
   const handleDragStart = (e: React.DragEvent) => {
     if (onDragStart) {
       onDragStart(e, contact);
@@ -95,18 +90,13 @@ export function ContactCard({
         "transition-all duration-150",
         "hover:border-border-hover hover:shadow-md hover:scale-[1.005]",
         "hover:ring-1 hover:ring-primary/20",
-        className
+        className,
       )}
     >
-      <div
-        className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full"
-        style={{ backgroundColor: stageColor }}
-      />
+      <div className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full" style={{ backgroundColor: stageColor }} />
 
       <div className="pl-3">
-        <h4 className="font-display text-sm font-semibold text-text truncate">
-          {contact.name}
-        </h4>
+        <h4 className="font-display text-sm font-semibold text-text truncate">{contact.name}</h4>
 
         <div className="mt-2 space-y-1">
           {contact.email && (

@@ -3,8 +3,8 @@ import { ChevronLeft, ChevronRight, Clock, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "~/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/Card";
-import { Modal, ModalContent, ModalFooter, ModalHeader, ModalTitle } from "~/components/ui/Modal";
 import { Input } from "~/components/ui/Input";
+import { Modal, ModalContent, ModalFooter, ModalHeader, ModalTitle } from "~/components/ui/Modal";
 
 interface CalendarEvent {
   id: string;
@@ -50,7 +50,7 @@ export function CalendarWidget({
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const days: (number | null)[] = [];
-    
+
     for (let i = 0; i < firstDay.getDay(); i++) {
       days.push(null);
     }
@@ -62,32 +62,45 @@ export function CalendarWidget({
 
   const getEventsForDay = (day: number) => {
     const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    
+
     const local = localEvents.filter((e) => {
       const eventDate = new Date(e.startAt).toISOString().split("T")[0];
       return eventDate === dateStr;
     });
-    
+
     const google = googleEvents.filter((e) => {
       const eventDate = e.start?.date || e.start?.dateTime?.split("T")[0];
       return eventDate === dateStr;
     });
-    
+
     return { local, google };
   };
 
   const handleCreateEvent = () => {
     if (!newEvent.title || !newEvent.date || !newEvent.startTime || !newEvent.endTime) return;
-    
+
     const start = `${newEvent.date}T${newEvent.startTime}:00`;
     const end = `${newEvent.date}T${newEvent.endTime}:00`;
-    
+
     onCreateEvent?.({ title: newEvent.title, start, end, description: newEvent.description });
     setShowNewEventModal(false);
     setNewEvent({ title: "", date: "", startTime: "", endTime: "", description: "" });
   };
 
-  const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+  const monthNames = [
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre",
+  ];
   const dayNames = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
   const today = new Date();
@@ -102,13 +115,23 @@ export function CalendarWidget({
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-bold">{title}</CardTitle>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))}
+            >
               <ChevronLeft size={16} />
             </Button>
             <span className="text-sm font-medium min-w-[100px] text-center">
               {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
             </span>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))}
+            >
               <ChevronRight size={16} />
             </Button>
           </div>
@@ -132,10 +155,10 @@ export function CalendarWidget({
             if (day === null) {
               return <div key={idx} className="h-10" />;
             }
-            
+
             const { local, google } = getEventsForDay(day);
             const hasEvents = local.length > 0 || google.length > 0;
-            
+
             return (
               <motion.div
                 key={idx}
@@ -166,7 +189,12 @@ export function CalendarWidget({
                 <div className="flex items-center gap-2 mt-1">
                   <Clock size={12} className="text-[#8B5CF6]" />
                   <span className="text-xs text-[#A3A3A3]">
-                    {new Date(event.startAt).toLocaleDateString("es-AR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                    {new Date(event.startAt).toLocaleDateString("es-AR", {
+                      day: "numeric",
+                      month: "short",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </span>
                 </div>
               </div>
@@ -208,8 +236,12 @@ export function CalendarWidget({
           </div>
         </ModalContent>
         <ModalFooter>
-          <Button variant="ghost" onClick={() => setShowNewEventModal(false)}>Cancelar</Button>
-          <Button variant="primary" onClick={handleCreateEvent}>Crear</Button>
+          <Button variant="ghost" onClick={() => setShowNewEventModal(false)}>
+            Cancelar
+          </Button>
+          <Button variant="primary" onClick={handleCreateEvent}>
+            Crear
+          </Button>
         </ModalFooter>
       </Modal>
     </Card>

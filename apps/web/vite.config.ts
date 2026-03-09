@@ -41,11 +41,6 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: [
-      "react",
-      "react-dom",
-      "@tanstack/react-router",
-      "@tanstack/react-query",
-    ],
+    include: ["react", "react-dom", "@tanstack/react-router", "@tanstack/react-query"],
   },
 });

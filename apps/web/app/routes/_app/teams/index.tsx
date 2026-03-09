@@ -59,7 +59,7 @@ function TeamDetailView({ teamId }: { teamId: string }) {
             </Button>
           </Stack>
 
-                        <Stack direction="col" gap="xs">
+          <Stack direction="col" gap="xs">
             <h2 className="text-2xl font-bold text-text font-display">{team.name}</h2>
             <p className="text-text-secondary text-sm max-w-2xl">
               {team.description || "Sin descripción proporcionada."}
@@ -125,7 +125,7 @@ function TeamDetailView({ teamId }: { teamId: string }) {
                   <Card key={goal.id} variant="elevated">
                     <CardContent className="p-5 space-y-4">
                       <Stack direction="row" align="center" justify="between">
-          <Stack direction="col" gap="xs">
+                        <Stack direction="col" gap="xs">
                           <h4 className="font-bold text-text">{goal.title}</h4>
                           <p className="text-xs text-text-muted">
                             Finaliza el {new Date(goal.endDate).toLocaleDateString()}
@@ -173,11 +173,7 @@ function TeamDetailView({ teamId }: { teamId: string }) {
           </div>
 
           <div className="mt-6">
-            <CalendarWidget
-              localEvents={teamEvents || []}
-              title={`Calendario: ${team.name}`}
-              showActions={true}
-            />
+            <CalendarWidget localEvents={teamEvents || []} title={`Calendario: ${team.name}`} showActions={true} />
           </div>
         </div>
       </Grid>

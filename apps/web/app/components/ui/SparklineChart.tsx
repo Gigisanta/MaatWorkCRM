@@ -1,5 +1,5 @@
 import React from "react";
-import { LineChart, Line, ResponsiveContainer } from "recharts";
+import { Line, LineChart, ResponsiveContainer } from "recharts";
 
 interface SparklineChartProps {
   data: number[];

@@ -57,40 +57,52 @@ function ContactsPage() {
     return [...(pipelineStages || [])].sort((a, b) => a.order - b.order);
   }, [pipelineStages]);
 
-  const getNextStage = useCallback((currentStageId: string | null | undefined) => {
-    if (!currentStageId) return sortedStages[0] || null;
-    const currentIndex = sortedStages.findIndex(s => s.id === currentStageId);
-    if (currentIndex === -1 || currentIndex >= sortedStages.length - 1) return null;
-    return sortedStages[currentIndex + 1];
-  }, [sortedStages]);
+  const getNextStage = useCallback(
+    (currentStageId: string | null | undefined) => {
+      if (!currentStageId) return sortedStages[0] || null;
+      const currentIndex = sortedStages.findIndex((s) => s.id === currentStageId);
+      if (currentIndex === -1 || currentIndex >= sortedStages.length - 1) return null;
+      return sortedStages[currentIndex + 1];
+    },
+    [sortedStages],
+  );
 
-  const handleStageChange = useCallback(async (contactId: string, newStageId: string) => {
-    try {
-      await updateContactMutation.mutateAsync({ id: contactId, data: { pipelineStageId: newStageId } });
-      setOpenDropdownId(null);
-    } catch (err) {
-      console.error("Failed to update stage:", err);
-    }
-  }, [updateContactMutation]);
+  const handleStageChange = useCallback(
+    async (contactId: string, newStageId: string) => {
+      try {
+        await updateContactMutation.mutateAsync({ id: contactId, data: { pipelineStageId: newStageId } });
+        setOpenDropdownId(null);
+      } catch (err) {
+        console.error("Failed to update stage:", err);
+      }
+    },
+    [updateContactMutation],
+  );
 
-  const handleNextStage = useCallback(async (contactId: string, currentStageId: string | null | undefined) => {
-    const nextStage = getNextStage(currentStageId);
-    if (nextStage) {
-      await handleStageChange(contactId, nextStage.id);
-    }
-  }, [getNextStage, handleStageChange]);
+  const handleNextStage = useCallback(
+    async (contactId: string, currentStageId: string | null | undefined) => {
+      const nextStage = getNextStage(currentStageId);
+      if (nextStage) {
+        await handleStageChange(contactId, nextStage.id);
+      }
+    },
+    [getNextStage, handleStageChange],
+  );
 
-  const getStageInfo = useCallback((stageId: string | null | undefined) => {
-    if (!stageId) return { label: "Sin etapa", color: "bg-slate-50 text-slate-600 border-slate-200" };
-    const stage = pipelineStages?.find(s => s.id === stageId);
-    if (stage) {
-      return { 
-        label: stage.name, 
-        color: stageColors[stage.name.toLowerCase()] || "bg-slate-50 text-slate-600 border-slate-200" 
-      };
-    }
-    return { label: stageId, color: "bg-slate-50 text-slate-600 border-slate-200" };
-  }, [pipelineStages]);
+  const getStageInfo = useCallback(
+    (stageId: string | null | undefined) => {
+      if (!stageId) return { label: "Sin etapa", color: "bg-slate-50 text-slate-600 border-slate-200" };
+      const stage = pipelineStages?.find((s) => s.id === stageId);
+      if (stage) {
+        return {
+          label: stage.name,
+          color: stageColors[stage.name.toLowerCase()] || "bg-slate-50 text-slate-600 border-slate-200",
+        };
+      }
+      return { label: stageId, color: "bg-slate-50 text-slate-600 border-slate-200" };
+    },
+    [pipelineStages],
+  );
 
   const createContactMutation = useCreateContactMutation();
 
@@ -112,6 +124,19 @@ function ContactsPage() {
       console.error("Failed to create contact:", err);
     }
   };
+
+  const tableMeta = useMemo(
+    () => ({
+      openDropdownId,
+      setOpenDropdownId,
+      sortedStages,
+      handleStageChange,
+      handleNextStage,
+      getStageInfo,
+      getNextStage,
+    }),
+    [openDropdownId, sortedStages, handleStageChange, handleNextStage, getStageInfo, getNextStage],
+  );
 
   const columns = useMemo(
     () => [
@@ -161,21 +186,22 @@ function ContactsPage() {
         cell: (info: any) => {
           const contact = info.row.original;
           const stageId = contact.pipelineStageId;
-          const { label, color } = getStageInfo(stageId);
-          const nextStage = getNextStage(stageId);
-          const isOpen = openDropdownId === contact.id;
-          
+          const meta = info.table.options.meta;
+          const { label, color } = meta.getStageInfo(stageId);
+          const nextStage = meta.getNextStage(stageId);
+          const isOpen = meta.openDropdownId === contact.id;
+
           return (
             <div className="relative flex items-center gap-2">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setOpenDropdownId(isOpen ? null : contact.id);
+                  meta.setOpenDropdownId(isOpen ? null : contact.id);
                 }}
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-bold uppercase tracking-wider transition-all",
                   color,
-                  "hover:opacity-80"
+                  "hover:opacity-80",
                 )}
               >
                 {label}
@@ -183,12 +209,12 @@ function ContactsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              
+
               {nextStage && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleNextStage(contact.id, stageId);
+                    meta.handleNextStage(contact.id, stageId);
                   }}
                   className="p-1.5 rounded-md bg-[#8B5CF6]/10 text-[#8B5CF6] hover:bg-[#8B5CF6] hover:text-white transition-colors"
                   title={`Avanzar a ${nextStage.name}`}
@@ -204,25 +230,25 @@ function ContactsPage() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleStageChange(contact.id, "");
+                      meta.handleStageChange(contact.id, "");
                     }}
                     className={cn(
                       "w-full text-left px-3 py-2 text-xs font-medium hover:bg-white/5 transition-colors",
-                      !stageId ? "text-[#8B5CF6]" : "text-[#A3A3A3]"
+                      !stageId ? "text-[#8B5CF6]" : "text-[#A3A3A3]",
                     )}
                   >
                     Sin etapa
                   </button>
-                  {sortedStages.map((stage) => (
+                  {meta.sortedStages.map((stage: any) => (
                     <button
                       key={stage.id}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleStageChange(contact.id, stage.id);
+                        meta.handleStageChange(contact.id, stage.id);
                       }}
                       className={cn(
                         "w-full text-left px-3 py-2 text-xs font-medium hover:bg-white/5 transition-colors flex items-center gap-2",
-                        stageId === stage.id ? "text-[#8B5CF6]" : "text-[#A3A3A3]"
+                        stageId === stage.id ? "text-[#8B5CF6]" : "text-[#A3A3A3]",
                       )}
                     >
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: stage.color }} />
@@ -246,7 +272,7 @@ function ContactsPage() {
         ),
       },
     ],
-    [openDropdownId, sortedStages, pipelineStages, handleStageChange, handleNextStage],
+    [],
   );
 
   if (isLoading && !contacts) {
@@ -289,11 +315,7 @@ function ContactsPage() {
             onClick={() => setShowNewContactModal(true)}
             className="shadow-lg rounded-lg h-14 px-8 font-black uppercase tracking-widest text-[12px] group bg-[#8B5CF6] hover:bg-[#7C3AED]"
           >
-            <Icon
-              name="Plus"
-              className="mr-3 group-hover:rotate-90 transition-transform duration-500"
-              size={18}
-            />
+            <Icon name="Plus" className="mr-3 group-hover:rotate-90 transition-transform duration-500" size={18} />
             Nuevo Registro
           </Button>
         </div>
@@ -369,7 +391,7 @@ function ContactsPage() {
             icon={<Users className="text-[#8B5CF6]/20" size={48} />}
           />
         ) : (
-          <DataTable columns={columns} data={contacts || []} onRowClick={setSelectedContact} />
+          <DataTable columns={columns} data={contacts || []} onRowClick={setSelectedContact} meta={tableMeta} />
         )}
       </motion.div>
 
@@ -384,11 +406,7 @@ function ContactsPage() {
         <ModalContent className="p-8 space-y-10 bg-[#0F0F0F]">
           <div className="flex flex-col md:flex-row gap-10 items-center md:items-start">
             <div className="w-32 h-32 rounded-[2rem] bg-[#18181B] border-2 border-dashed border-white/10 flex flex-col items-center justify-center text-[#737373] hover:border-[#8B5CF6]/40 hover:text-[#8B5CF6] cursor-pointer transition-all duration-500 group/avatar overflow-hidden relative">
-              <Icon
-                name="User"
-                size={48}
-                className="group-hover/avatar:scale-110 transition-transform duration-500"
-              />
+              <Icon name="User" size={48} className="group-hover/avatar:scale-110 transition-transform duration-500" />
               <span className="text-[10px] font-black uppercase tracking-[0.2em] mt-3">Subir</span>
               <div className="absolute inset-0 bg-[#8B5CF6]/5 opacity-0 group-hover/avatar:opacity-100 transition-opacity" />
             </div>
@@ -435,7 +453,9 @@ function ContactsPage() {
                 >
                   <option value="">Seleccionar etapa...</option>
                   {pipelineStages?.map((stage) => (
-                    <option key={stage.id} value={stage.id}>{stage.name}</option>
+                    <option key={stage.id} value={stage.id}>
+                      {stage.name}
+                    </option>
                   ))}
                 </select>
                 <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-[#737373] group-hover:text-[#8B5CF6] transition-colors">
@@ -444,7 +464,6 @@ function ContactsPage() {
               </div>
             </div>
           </div>
-
         </ModalContent>
         <ModalFooter className="p-8 border-t border-white/5 bg-[#18181B] gap-6">
           <Button
@@ -486,7 +505,12 @@ function ContactsPage() {
                 </div>
                 <div>
                   <h3 className="text-2xl font-black text-[#F5F5F5]">{selectedContact.name}</h3>
-                  <Badge className={cn("mt-2 px-3 py-1 font-black text-[10px] uppercase tracking-wider", getStageInfo(selectedContact.pipelineStageId).color)}>
+                  <Badge
+                    className={cn(
+                      "mt-2 px-3 py-1 font-black text-[10px] uppercase tracking-wider",
+                      getStageInfo(selectedContact.pipelineStageId).color,
+                    )}
+                  >
                     {getStageInfo(selectedContact.pipelineStageId).label}
                   </Badge>
                 </div>
@@ -515,7 +539,10 @@ function ContactsPage() {
                   <p className="text-[10px] font-black text-[#737373] uppercase tracking-wider">Etiquetas</p>
                   <div className="flex flex-wrap gap-2">
                     {selectedContact.tags.map((tag: string) => (
-                      <span key={tag} className="px-3 py-1 bg-[#8B5CF6]/20 text-[#8B5CF6] text-xs font-semibold rounded-full">
+                      <span
+                        key={tag}
+                        className="px-3 py-1 bg-[#8B5CF6]/20 text-[#8B5CF6] text-xs font-semibold rounded-full"
+                      >
                         {tag}
                       </span>
                     ))}

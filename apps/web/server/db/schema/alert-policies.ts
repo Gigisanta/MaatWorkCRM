@@ -26,9 +26,7 @@ export const alertPolicies = pgTable("alert_policies", {
     .references(() => organizations.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   description: text("description"),
-  scope: text("scope", { enum: ALERT_POLICY_SCOPES })
-    .notNull()
-    .default("global"),
+  scope: text("scope", { enum: ALERT_POLICY_SCOPES }).notNull().default("global"),
   scopeId: text("scope_id"), // userId or teamId depending on scope
   // For user-scoped policies
   userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),

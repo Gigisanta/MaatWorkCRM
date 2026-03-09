@@ -48,7 +48,9 @@ export const teamGoals = pgTable("team_goals", {
   description: text("description"),
   type: text("type", {
     enum: ["new_aum", "new_clients", "meetings", "revenue", "custom"],
-  }).notNull().default("custom"),
+  })
+    .notNull()
+    .default("custom"),
   targetValue: real("target_value").notNull(),
   currentValue: real("current_value").notNull().default(0),
   unit: text("unit").notNull().default("count"),

@@ -93,7 +93,13 @@ export const ModalHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDi
 ModalHeader.displayName = "ModalHeader";
 
 export const ModalFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 p-4 border-t border-border", className)} {...props} />
+  <div
+    className={cn(
+      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 p-4 border-t border-border",
+      className,
+    )}
+    {...props}
+  />
 );
 
 ModalFooter.displayName = "ModalFooter";

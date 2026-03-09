@@ -1,5 +1,5 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import React from "react";
+import type React from "react";
 import { cn } from "~/lib/utils";
 
 export interface DrawerProps {

@@ -65,7 +65,7 @@ function AutomationsPage() {
       <Stack gap={4}>
         {automations.map((automation, idx) => {
           const Icon = triggerIcons[automation.triggerType] || Zap;
-          
+
           return (
             <motion.div
               key={automation.id}
@@ -76,30 +76,35 @@ function AutomationsPage() {
               <Card className="p-6 bg-[#0F0F0F] border-white/5 hover:border-[#8B5CF6]/30 transition-all">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4">
-                    <div className={`p-3 rounded-xl ${automation.enabled ? "bg-[#8B5CF6]/10 text-[#8B5CF6]" : "bg-[#18181B] text-[#737373]"}`}>
+                    <div
+                      className={`p-3 rounded-xl ${automation.enabled ? "bg-[#8B5CF6]/10 text-[#8B5CF6]" : "bg-[#18181B] text-[#737373]"}`}
+                    >
                       <Icon className="w-5 h-5" />
                     </div>
                     <div>
                       <div className="flex items-center gap-3 mb-1">
                         <h3 className="text-lg font-bold text-[#F5F5F5]">{automation.displayName}</h3>
-                        <Badge className={automation.enabled 
-                          ? "bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20" 
-                          : "bg-[#737373]/10 text-[#737373] border-[#737373]/20"
-                        }>
+                        <Badge
+                          className={
+                            automation.enabled
+                              ? "bg-[#10B981]/10 text-[#10B981] border-[#10B981]/20"
+                              : "bg-[#737373]/10 text-[#737373] border-[#737373]/20"
+                          }
+                        >
                           {automation.enabled ? "Activa" : "Inactiva"}
                         </Badge>
                       </div>
                       <p className="text-sm text-[#737373]">{automation.description}</p>
-                      <p className="text-xs text-[#525252] mt-2 font-mono">
-                        Trigger: {automation.triggerType}
-                      </p>
+                      <p className="text-xs text-[#525252] mt-2 font-mono">Trigger: {automation.triggerType}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button className="p-2 rounded-lg hover:bg-white/5 text-[#737373] hover:text-[#8B5CF6] transition-colors">
                       <Settings className="w-5 h-5" />
                     </button>
-                    <button className={`p-2 rounded-lg transition-colors ${automation.enabled ? "text-[#10B981]" : "text-[#737373] hover:text-[#10B981]"}`}>
+                    <button
+                      className={`p-2 rounded-lg transition-colors ${automation.enabled ? "text-[#10B981]" : "text-[#737373] hover:text-[#10B981]"}`}
+                    >
                       <ToggleLeft className="w-5 h-5" />
                     </button>
                   </div>
@@ -117,9 +122,7 @@ function AutomationsPage() {
           </div>
           <div className="flex-1">
             <h3 className="text-lg font-bold text-[#F5F5F5]">¿Necesitas más automatizaciones?</h3>
-            <p className="text-sm text-[#737373] mt-1">
-              Integra con Inngest para crear flujos de trabajo complejos
-            </p>
+            <p className="text-sm text-[#737373] mt-1">Integra con Inngest para crear flujos de trabajo complejos</p>
           </div>
           <Button variant="outline">Ver Documentación</Button>
         </div>
