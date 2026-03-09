@@ -17,6 +17,7 @@ export const contacts = pgTable("contacts", {
   name: text("name").notNull(),
   email: text("email"),
   phone: text("phone"),
+  emoji: text("emoji").default("👤"),
   pipelineStageId: text("pipeline_stage_id").references(() => pipelineStages.id),
   tags: jsonb("tags").$type<string[]>().default([]),
   segment: text("segment"),
