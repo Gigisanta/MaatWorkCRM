@@ -23,7 +23,7 @@ CRM profesional para asesores financieros. Gestiona clientes, pipeline de ventas
 
 1. **Dashboard** — KPIs, actividad reciente, acciones rápidas, resumen pipeline, **calendario personal Google**
 2. **Contactos** — CRUD, búsqueda, filtros, tags, segmentos, panel de detalles (drawer)
-3. **Pipeline** — Kanban drag-and-drop, deals con valor/probabilidad, 5 etapas
+3. **Pipeline** — Kanban drag-and-drop, deals con valor/probabilidad, **8 etapas** (Prospecto → Cliente → Caido → Cuenta vacia)
 4. **Tareas** — Prioridades, vencimientos, recurrencia, asignación
 5. **Equipos** — Miembros, líderes, objetivos mensuales con progreso, **calendario del equipo**
 6. **Calendario** — Vista mensual, eventos compartidos del equipo, sincronización Google Calendar
@@ -155,7 +155,7 @@ El seed incluye:
 - **Organización**: MaatWork Demo
 - **Usuarios**: Carlos Admin (admin), Ana García (senior), Pedro Ruiz (junior)
 - **Contactos**: María López, Juan Martínez, Lucía Fernández, Roberto Sánchez, Elena Torres
-- **Pipeline**: 5 etapas + 4 deals con valores
+- **Pipeline**: 8 etapas + deals con valores
 - **Tareas**: 5 tareas con prioridades y vencimientos
 - **Equipo Alfa**: 2 miembros + 2 objetivos mensuales
 - **Logs de auditoría**: Historial de acciones del sistema
@@ -165,20 +165,31 @@ El seed incluye:
 ### Vercel (recomendado)
 
 ```bash
-# Instalar Vercel CLI
-pnpm add -g vercel
+# Deploy automáticamente desde GitHub
+# El proyecto usa pnpm como package manager
 
-# Deploy
+# O localmente:
 cd apps/web
+pnpm build
 vercel --prod
 ```
 
-Variables necesarias en Vercel:
+### Variables necesarias en Vercel:
 
 - `DATABASE_URL`
 - `BETTER_AUTH_SECRET`
 - `BETTER_AUTH_URL` (tu dominio)
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
+
+### Optimizaciones de Performance
+
+El proyecto incluye optimizaciones listas para producción:
+
+- **Code Splitting**: chunks separados para vendor-ui, vendor-motion, vendor-router
+- **Query Client**: staleTime 5min, gcTime 30min, prefetch disabled
+- **Router**: defaultPreload intent, zero preloadStaleTime
+- **Build**: tsconfig incremental, tree-shaking, target esnext
+- **Headers**: Cache-Control immutable para assets, security headers
 
 ## Documentación Adicional
 

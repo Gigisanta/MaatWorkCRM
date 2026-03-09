@@ -7,26 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2025-03-08
+
 ### Added
 
-- Financial profiles database schema with comprehensive client financial data
-- Portfolio management system with allocations and transactions
-- AUM (Assets Under Management) tracking and reporting
-- Commission records tracking for advisors
-- Financial profile display component with organized sections
+- **Pipeline Kanban** - Drag-and-drop con 8 etapas (Prospecto → Cliente → Caido → Cuenta vacia)
+- **Dashboard** con métricas, Google Calendar personal
+- **Contact Drawer** - Panel lateral con detalles completos al hacer click
+- **Team Calendar** - Calendario del equipo con eventos
+- **Google Calendar Integration** - Sincronización bidireccional
+- **Drawer Component** - Componente UI reutilizable
+
+### Performance
+
+- Vite code splitting: vendor-ui, vendor-motion, vendor-router chunks
+- QueryClient: staleTime 5min, gcTime 30min
+- Router: defaultPreload intent, zero preloadStaleTime
+- tsconfig incremental build enabled
+- vercel.json con headers de cache y seguridad
 
 ### Fixed
 
-- Contact action buttons not working (documented)
-- AI suggestion button not working (documented)
-- AI Copilot 404 page (documented)
+- Contactos no cargaban - Faltaba columna pipeline_stage_id
+- Dropdown de etapas no se abría en contactos
+- Panel de contacto no funcionaba
 
-### Documentation
+### Database
 
-- Complete testing report with 100% feature coverage
-- Bug tracking and improvement roadmap
-- Implementation progress documentation
-- Architecture analysis and comparison with ERP.MaatWork
+- Migración para agregar pipeline_stage_id a contacts
+- 8 pipeline stages en seed
+
+---
 
 ## [1.0.0] - 2024-03-07
 
