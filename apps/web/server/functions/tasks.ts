@@ -54,14 +54,19 @@ export const getTasksWithContacts = createServerFn({ method: "GET" })
 export const createTask = createServerFn({ method: "POST" })
   .inputValidator((input: { orgId: string; data: Record<string, unknown> }) => input)
   .handler(async ({ data }) => {
+    // 🛡️ Sentinel: Prevent Mass Assignment vulnerability
+    // Remove sensitive fields that should never be set directly via input data.
+    const { id: _id, organizationId: _orgId, ...safeData } = data.data;
+
     const id = crypto.randomUUID();
     await db.insert(tasks).values({
+      ...safeData,
       id,
       organizationId: data.orgId,
-      ...(data.data as any),
     });
     return { id };
   });
+// UI/UX REFINED BY JULES v2
 
 export const updateTask = createServerFn({ method: "POST" })
   .inputValidator((input: { id: string; data: Record<string, unknown> }) => input)

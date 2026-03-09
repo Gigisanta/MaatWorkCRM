@@ -34,11 +34,16 @@ export const getContact = createServerFn({ method: "GET" })
 export const createContact = createServerFn({ method: "POST" })
   .inputValidator((input: { orgId: string; data: Record<string, unknown> }) => input)
   .handler(async ({ data }) => {
+    // 🛡️ Sentinel: Prevent Mass Assignment vulnerability
+    // Remove sensitive fields that should never be set directly via input data.
+    const { id: _id, organizationId: _orgId, ...safeData } = data.data;
+
     const id = crypto.randomUUID();
-    const newContact = { id, organizationId: data.orgId, ...data.data };
+    const newContact = { ...safeData, id, organizationId: data.orgId };
     await db.insert(contacts).values(newContact as any);
     return { id };
   });
+// UI/UX REFINED BY JULES v2
 
 export const updateContact = createServerFn({ method: "POST" })
   .inputValidator((input: { id: string; data: Record<string, unknown> }) => input)

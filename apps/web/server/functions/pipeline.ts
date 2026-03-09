@@ -54,14 +54,19 @@ export const moveDeal = createServerFn({ method: "POST" })
 export const createDeal = createServerFn({ method: "POST" })
   .inputValidator((input: { orgId: string; data: Record<string, unknown> }) => input)
   .handler(async ({ data }) => {
+    // 🛡️ Sentinel: Prevent Mass Assignment vulnerability
+    // Remove sensitive fields that should never be set directly via input data.
+    const { id: _id, organizationId: _orgId, ...safeData } = data.data;
+
     const id = crypto.randomUUID();
     await db.insert(deals).values({
+      ...safeData,
       id,
       organizationId: data.orgId,
-      ...(data.data as any),
     });
     return { id };
   });
+// UI/UX REFINED BY JULES v2
 
 export const createStage = createServerFn({ method: "POST" })
   .inputValidator((input: { orgId: string; name: string; color: string; order: number; description?: string; wipLimit?: number; slaHours?: number }) => input)
