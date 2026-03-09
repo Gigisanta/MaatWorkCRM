@@ -5,9 +5,11 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { Check, Mail, MoreVertical, Phone, Search, Sparkles, Users, X } from "lucide-react";
+import { Check, Mail, MoreVertical, Phone, Search, Sparkles, Tag, TrendingUp, Users, X, BarChart3 } from "lucide-react";
+import * as Popover from "@radix-ui/react-popover";
 import { useCallback, useMemo, useState } from "react";
 import { Badge } from "~/components/ui/Badge";
+import { AvatarPicker } from "~/components/ui/AvatarPicker";
 import { Button } from "~/components/ui/Button";
 import { Drawer } from "~/components/ui/Drawer";
 import { EmptyState } from "~/components/ui/EmptyState";
@@ -17,9 +19,13 @@ import { Container } from "~/components/ui/Layout";
 import { Modal, ModalContent, ModalFooter, ModalHeader, ModalTitle } from "~/components/ui/Modal";
 import { DataTable } from "~/components/ui/Table";
 import {
+  useAddTagToContactMutation,
+  useContactTags,
   useContacts,
   useCreateContactMutation,
   usePipelineStages,
+  useRemoveTagFromContactMutation,
+  useTags,
   useUpdateContactMutation,
 } from "~/lib/hooks/use-crm";
 import { cn } from "~/lib/utils";
@@ -33,6 +39,7 @@ function ContactsPage() {
   const [stageFilter, setStageFilter] = useState<string | undefined>(undefined);
   const [selectedContact, setSelectedContact] = useState<any>(null);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [showTagPicker, setShowTagPicker] = useState(false);
 
   const {
     data: contacts,
@@ -44,7 +51,21 @@ function ContactsPage() {
   });
 
   const { data: pipelineStages } = usePipelineStages();
+  const { data: allTags } = useTags("contact");
+  const { data: contactTagData, refetch: refetchContactTags } = useContactTags(selectedContact?.id || "");
   const updateContactMutation = useUpdateContactMutation();
+  const addTagMutation = useAddTagToContactMutation();
+  const removeTagMutation = useRemoveTagFromContactMutation();
+  const [editingEmojiId, setEditingEmojiId] = useState<string | null>(null);
+
+  const handleEmojiChange = useCallback(async (contactId: string, emoji: string) => {
+    try {
+      await updateContactMutation.mutateAsync({ id: contactId, data: { emoji } });
+      setEditingEmojiId(null);
+    } catch (err) {
+      console.error("Failed to update emoji:", err);
+    }
+  }, [updateContactMutation]);
 
   const stageColors: Record<string, string> = {
     lead: "bg-blue-50 text-blue-700 border-blue-200",
@@ -120,12 +141,24 @@ function ContactsPage() {
         header: "Contacto",
         cell: (info: any) => {
           const contact = info.row.original;
+          const isEditingEmoji = editingEmojiId === contact.id;
           return (
             <div className="flex items-center gap-4">
               <div className="relative">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8B5CF6]/30 to-transparent flex items-center justify-center text-white font-black text-lg border border-white/10">
-                  {contact.name.charAt(0)}
-                </div>
+                {isEditingEmoji ? (
+                  <AvatarPicker
+                    value={contact.emoji || "👤"}
+                    onChange={(emoji) => handleEmojiChange(contact.id, emoji)}
+                    size="md"
+                  />
+                ) : (
+                  <button
+                    onClick={() => setEditingEmojiId(contact.id)}
+                    className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8B5CF6]/30 to-transparent flex items-center justify-center text-white font-black text-lg border border-white/10 hover:from-[#8B5CF6]/50 transition-all cursor-pointer"
+                  >
+                    {contact.emoji || contact.name.charAt(0)}
+                  </button>
+                )}
                 {contact.pipelineStageId && (
                   <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#22C55E] border-2 border-[#0F0F0F] flex items-center justify-center">
                     <Check size={8} className="text-white" strokeWidth={4} />
@@ -236,6 +269,35 @@ function ContactsPage() {
         },
       },
       {
+        id: "tags",
+        header: "Etiquetas",
+        cell: (info: any) => {
+          const contact = info.row.original;
+          return (
+            <div className="flex flex-wrap gap-1.5">
+              {contact.tags?.slice(0, 3).map((tag: any) => (
+                <span
+                  key={tag.id}
+                  className="px-2 py-0.5 rounded-md text-[10px] font-bold border"
+                  style={{
+                    backgroundColor: `${tag.color}15`,
+                    borderColor: `${tag.color}30`,
+                    color: tag.color,
+                  }}
+                >
+                  {tag.name}
+                </span>
+              ))}
+              {(contact.tags?.length || 0) > 3 && (
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-white/5 text-[#737373] border border-white/10">
+                  +{contact.tags.length - 3}
+                </span>
+              )}
+            </div>
+          );
+        },
+      },
+      {
         id: "actions",
         cell: () => (
           <div className="flex justify-end pr-4">
@@ -318,6 +380,71 @@ function ContactsPage() {
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-16 pr-6 h-full bg-[#18181B] border-2 border-transparent rounded-[1.25rem] focus:border-[#8B5CF6]/30 focus:bg-white/5 focus:outline-none text-sm font-bold placeholder:text-[#737373] transition-all shadow-inner text-[#F5F5F5]"
           />
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-12 px-5 border-white/5 bg-[#18181B] text-[#A3A3A3] hover:text-[#8B5CF6] hover:border-[#8B5CF6]/30 rounded-xl"
+          >
+            <BarChart3 className="w-4 h-4 mr-2" />
+            Métricas
+          </Button>
+
+          <Popover.Root open={showTagPicker} onOpenChange={setShowTagPicker}>
+            <Popover.Trigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-12 px-5 border-white/5 bg-[#18181B] text-[#A3A3A3] hover:text-[#8B5CF6] hover:border-[#8B5CF6]/30 rounded-xl"
+              >
+                <Tag className="w-4 h-4 mr-2" />
+                Etiquetas
+              </Button>
+            </Popover.Trigger>
+            <Popover.Portal>
+              <Popover.Content 
+                className="w-72 bg-[#18181B] border border-white/10 rounded-xl p-4 shadow-xl z-50"
+                sideOffset={8}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs font-black text-[#F5F5F5] uppercase tracking-wider">Etiquetas de Producto</p>
+                  <Popover.Close className="text-[#737373] hover:text-[#F5F5F5]">
+                    <X className="w-4 h-4" />
+                  </Popover.Close>
+                </div>
+                <div className="space-y-1.5 max-h-64 overflow-y-auto">
+                  {allTags?.map((tag) => (
+                    <button
+                      key={tag.id}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm hover:bg-white/5 transition-colors"
+                    >
+                      <span 
+                        className="w-2.5 h-2.5 rounded-full shrink-0" 
+                        style={{ backgroundColor: tag.color }}
+                      />
+                      <span className="text-[#F5F5F5] font-medium">{tag.name}</span>
+                    </button>
+                  ))}
+                  {(!allTags || allTags.length === 0) && (
+                    <p className="text-xs text-[#737373] text-center py-4">No hay etiquetas disponibles</p>
+                  )}
+                </div>
+                <Popover.Arrow className="fill-white/10" />
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover.Root>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-12 px-5 border-white/5 bg-[#18181B] text-[#A3A3A3] hover:text-[#8B5CF6] hover:border-[#8B5CF6]/30 rounded-xl"
+            onClick={() => window.location.href = "/pipeline"}
+          >
+            <TrendingUp className="w-4 h-4 mr-2" />
+            Pipeline
+          </Button>
         </div>
 
         <div className="flex items-center gap-2 p-1.5 bg-[#18181B] rounded-lg border border-white/5 shadow-inner">
@@ -510,18 +637,82 @@ function ContactsPage() {
                 </div>
               </div>
 
-              {selectedContact.tags && selectedContact.tags.length > 0 && (
-                <div className="space-y-3">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
                   <p className="text-[10px] font-black text-[#737373] uppercase tracking-wider">Etiquetas</p>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedContact.tags.map((tag: string) => (
-                      <span key={tag} className="px-3 py-1 bg-[#8B5CF6]/20 text-[#8B5CF6] text-xs font-semibold rounded-full">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+                  <button
+                    onClick={() => setShowTagPicker(!showTagPicker)}
+                    className="text-[10px] font-bold text-[#8B5CF6] hover:text-[#A78BFA] uppercase tracking-wider"
+                  >
+                    + Añadir
+                  </button>
                 </div>
-              )}
+                
+                {showTagPicker && allTags && (
+                  <div className="p-3 bg-[#18181B] rounded-xl border border-white/5 space-y-2">
+                    {allTags.map((tag: any) => {
+                      const isAssigned = contactTagData?.some((ct: any) => ct.tagId === tag.id);
+                      return (
+                        <button
+                          key={tag.id}
+                          onClick={async () => {
+                            if (isAssigned) {
+                              await removeTagMutation.mutateAsync({ contactId: selectedContact.id, tagId: tag.id });
+                            } else {
+                              await addTagMutation.mutateAsync({ contactId: selectedContact.id, tagId: tag.id });
+                            }
+                            refetchContactTags();
+                          }}
+                          className={cn(
+                            "w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors",
+                            isAssigned ? "bg-[#8B5CF6]/20 text-[#8B5CF6]" : "text-[#A3A3A3] hover:bg-white/5"
+                          )}
+                        >
+                          <span className="flex items-center gap-2">
+                            {tag.icon && <span>{tag.icon}</span>}
+                            <span>{tag.name}</span>
+                          </span>
+                          {isAssigned && <Check size={14} />}
+                        </button>
+                      );
+                    })}
+                    {allTags.length === 0 && (
+                      <p className="text-xs text-[#737373]">No hay etiquetas disponibles</p>
+                    )}
+                  </div>
+                )}
+
+                {contactTagData && contactTagData.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {contactTagData.map((ct: any) => {
+                      const tag = allTags?.find((t: any) => t.id === ct.tagId);
+                      return tag ? (
+                        <span
+                          key={ct.id}
+                          className="px-3 py-1 text-xs font-semibold rounded-full flex items-center gap-1"
+                          style={{ backgroundColor: `${tag.color}20`, color: tag.color }}
+                        >
+                          {tag.icon && <span>{tag.icon}</span>}
+                          {tag.name}
+                          <button
+                            onClick={async () => {
+                              await removeTagMutation.mutateAsync({ contactId: selectedContact.id, tagId: tag.id });
+                              refetchContactTags();
+                            }}
+                            className="ml-1 hover:opacity-70"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ) : null;
+                    })}
+                  </div>
+                )}
+
+                {(!contactTagData || contactTagData.length === 0) && !showTagPicker && (
+                  <p className="text-xs text-[#737373]">Sin etiquetas asignadas</p>
+                )}
+              </div>
 
               {selectedContact.notes && (
                 <div className="space-y-3">
