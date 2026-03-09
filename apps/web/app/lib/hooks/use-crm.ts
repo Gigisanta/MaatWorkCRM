@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "~/lib/auth-client";
-import { getDashboardMetrics, getPipelineByStage, getRecentActivity } from "../../../server/functions/analytics";
+import { getDashboardMetrics, getRecentActivity, getContactsByStage, getBottleneckAnalysis, getConversionFunnel, getUserProductivityMetrics } from "../../../server/functions/analytics";
 import { createCalendarEvent, deleteCalendarEvent, getCalendarEvents, updateCalendarEvent } from "../../../server/functions/calendar";
 import { createContact, deleteContact, getContacts, updateContact } from "../../../server/functions/contacts";
 import { createDeal, createStage, getDealsWithContacts, getStages, moveDeal } from "../../../server/functions/pipeline";
@@ -13,12 +13,12 @@ import {
   updateGoalProgress,
   updateTeam,
 } from "../../../server/functions/teams";
-import {
-  createFinancialProfile,
+import { createFinancialProfile,
   deleteFinancialProfile,
   getFinancialProfile,
   updateFinancialProfile,
 } from "../../../server/functions/financial-profiles";
+import { addTagToContact, createTag, deleteTag, getContactTags, getTags, removeTagFromContact } from "../../../server/functions/tags";
 
 // AI_DECISION: Centralized CRM hooks for live data integration
 // Justificación: Synchronizes frontend state with backend server functions using TanStack Query
@@ -45,7 +45,7 @@ export function usePipelineSummary() {
 
   return useQuery({
     queryKey: ["pipeline-summary", orgId],
-    queryFn: () => getPipelineByStage({ data: { orgId: orgId! } }),
+    queryFn: () => getContactsByStage({ data: { orgId: orgId! } }),
     enabled: !!orgId,
   });
 }
@@ -68,6 +68,54 @@ export function useRecentActivity(limit = 10) {
   return useQuery({
     queryKey: ["recent-activity", orgId, limit],
     queryFn: () => getRecentActivity({ data: { orgId: orgId!, limit } }),
+    enabled: !!orgId,
+  });
+}
+
+/**
+ * Pipeline Analytics - Contact counts and bottleneck detection
+ */
+export function useContactsByStage() {
+  const { data: session } = useSession();
+  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+
+  return useQuery({
+    queryKey: ["contacts-by-stage", orgId],
+    queryFn: () => getContactsByStage({ data: { orgId: orgId! } }),
+    enabled: !!orgId,
+  });
+}
+
+export function useBottleneckAnalysis() {
+  const { data: session } = useSession();
+  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+
+  return useQuery({
+    queryKey: ["bottleneck-analysis", orgId],
+    queryFn: () => getBottleneckAnalysis({ data: { orgId: orgId! } }),
+    enabled: !!orgId,
+  });
+}
+
+export function useConversionFunnel() {
+  const { data: session } = useSession();
+  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+
+  return useQuery({
+    queryKey: ["conversion-funnel", orgId],
+    queryFn: () => getConversionFunnel({ data: { orgId: orgId! } }),
+    enabled: !!orgId,
+  });
+}
+
+export function useUserProductivityMetrics(days = 30) {
+  const { data: session } = useSession();
+  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const userId = session?.user?.id;
+
+  return useQuery({
+    queryKey: ["user-productivity", orgId, userId, days],
+    queryFn: () => getUserProductivityMetrics({ data: { orgId: orgId!, userId, days } }),
     enabled: !!orgId,
   });
 }
@@ -250,6 +298,70 @@ export function useDeleteContactMutation() {
     mutationFn: (id: string) => deleteContact({ data: { id } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
+    },
+  });
+}
+
+export function useTags(scope?: string) {
+  const { data: session } = useSession();
+  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+
+  return useQuery({
+    queryKey: ["tags", orgId, scope],
+    queryFn: () => getTags({ data: { orgId: orgId!, scope } }),
+    enabled: !!orgId,
+  });
+}
+
+export function useContactTags(contactId: string) {
+  return useQuery({
+    queryKey: ["contact-tags", contactId],
+    queryFn: () => getContactTags({ data: { contactId } }),
+    enabled: !!contactId,
+  });
+}
+
+export function useCreateTagMutation() {
+  const queryClient = useQueryClient();
+  const { data: session } = useSession();
+  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+
+  return useMutation({
+    mutationFn: (data: any) => createTag({ data: { orgId: orgId!, data } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tags"] });
+    },
+  });
+}
+
+export function useDeleteTagMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteTag({ data: { id } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tags"] });
+    },
+  });
+}
+
+export function useAddTagToContactMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { contactId: string; tagId: string; monthlyPremium?: number; policyNumber?: string }) => 
+      addTagToContact({ data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contact-tags"] });
+    },
+  });
+}
+
+export function useRemoveTagFromContactMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { contactId: string; tagId: string }) => 
+      removeTagFromContact({ data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contact-tags"] });
     },
   });
 }

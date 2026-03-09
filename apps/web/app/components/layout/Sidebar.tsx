@@ -39,29 +39,78 @@ const mockUser = {
   careerProgress: 72,
 };
 
-// Career Progress Bar Component
+// Career Progress Bar Component - Enhanced with Commissions & Config
 function CareerProgressBar() {
+  const [showConfig, setShowConfig] = useState(false);
+  
+  // Mock data - replace with actual auth/commission data
+  const careerData = {
+    level: "Senior Advisor",
+    progress: 72,
+    commissions: 12500,
+    commissionTarget: 20000,
+    isAdmin: true, // Set based on user role
+  };
+
+  const progressPercent = Math.round((careerData.commissions / careerData.commissionTarget) * 100);
+
   return (
-    <button
+    <div
       onClick={() => window.location.href = "/career-plan"}
-      className="hidden lg:flex flex-col items-start gap-1.5 px-4 py-2 rounded-lg bg-surface-100/50 hover:bg-surface-100 border border-border/30 transition-all duration-150 group cursor-pointer min-w-[180px]"
+      className="hidden lg:flex flex-col items-start gap-1.5 px-4 py-2 rounded-lg bg-surface-100/50 hover:bg-surface-100 border border-border/30 transition-all duration-150 group cursor-pointer min-w-[200px]"
     >
       <div className="flex items-center justify-between w-full">
-        <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">
-          {mockUser.careerLevel}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">
+            {careerData.level}
+          </span>
+          {careerData.isAdmin && (
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowConfig(!showConfig);
+              }}
+              className="p-1 rounded hover:bg-surface-200 transition-colors cursor-pointer"
+            >
+              <Settings className="w-3 h-3 text-text-muted hover:text-primary" />
+            </span>
+          )}
+        </div>
         <Zap className="w-3 h-3 text-primary opacity-60 group-hover:opacity-100 transition-opacity" />
       </div>
       <div className="w-full flex items-center gap-2">
         <div className="flex-1 h-1.5 bg-surface rounded-full overflow-hidden">
           <div 
             className="h-full bg-primary rounded-full transition-all duration-150"
-            style={{ width: `${mockUser.careerProgress}%` }}
+            style={{ width: `${careerData.progress}%` }}
           />
         </div>
-        <span className="text-[10px] font-black text-primary">{mockUser.careerProgress}%</span>
+        <span className="text-[10px] font-black text-primary">{careerData.progress}%</span>
       </div>
-    </button>
+      {/* Commissions Bar */}
+      <div className="w-full flex items-center gap-2 mt-0.5">
+        <div className="flex-1 h-1 bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-emerald-500 rounded-full transition-all duration-150"
+            style={{ width: `${Math.min(progressPercent, 100)}%` }}
+          />
+        </div>
+        <span className="text-[9px] font-bold text-emerald-600">
+          ${careerData.commissions.toLocaleString()}
+        </span>
+      </div>
+      {showConfig && careerData.isAdmin && (
+        <div className="absolute top-full mt-2 left-4 right-4 bg-surface border border-border rounded-lg shadow-lg p-3 z-50">
+          <p className="text-[10px] font-bold text-text-muted uppercase mb-2">Configurar Plan de Carrera</p>
+          <button className="w-full text-left text-xs text-text hover:text-primary py-1 px-2 rounded hover:bg-surface-100 transition-colors">
+            Editar metas
+          </button>
+          <button className="w-full text-left text-xs text-text hover:text-primary py-1 px-2 rounded hover:bg-surface-100 transition-colors">
+            Ver histórico
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -392,7 +441,6 @@ const sections: { title?: string; items: NavItem[] }[] = [
       { to: "/pipeline", label: "Pipeline", icon: Kanban },
       { to: "/tasks", label: "Tareas", icon: CheckSquare },
       { to: "/teams", label: "Equipos", icon: UsersRound },
-      { to: "/career-plan", label: "Plan de Carrera", icon: Zap },
     ],
   },
   {
