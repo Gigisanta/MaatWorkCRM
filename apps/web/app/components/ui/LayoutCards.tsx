@@ -31,23 +31,23 @@ export function StatCard({
   };
 
   return (
-    <Card variant="cyber" className={cn("p-7 group", className)}>
+    <Card variant="elevated" className={cn("p-6 group", className)}>
       <div className="flex items-start justify-between">
         <div className="space-y-2 px-1 relative z-10">
           <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] opacity-70 group-hover:opacity-100 transition-opacity">
             {label}
           </p>
-          <p className="text-4xl font-black text-text tracking-tighter group-hover:text-primary transition-all duration-500">
+          <p className="text-3xl font-black text-text tracking-tighter group-hover:text-primary transition-all duration-150">
             {value}
           </p>
 
           {change && (
             <div
               className={cn(
-                "flex items-center gap-1.5 mt-4 text-[10px] font-black px-2.5 py-1 rounded-lg w-fit uppercase tracking-widest transition-all duration-500",
+                "flex items-center gap-1.5 mt-3 text-[10px] font-black px-2.5 py-1 rounded-md w-fit uppercase tracking-widest transition-all duration-150",
                 changeType === "up"
-                  ? "bg-success/10 text-success border border-success/20 group-hover:bg-success/20"
-                  : "bg-error/10 text-error border border-error/20 group-hover:bg-error/20",
+                  ? "bg-success/10 text-success border border-success/20"
+                  : "bg-error/10 text-error border border-error/20",
               )}
             >
               <span className="flex items-center gap-1">
@@ -59,12 +59,11 @@ export function StatCard({
 
         <div
           className={cn(
-            "p-4 rounded-2xl transition-all duration-700 group-hover:scale-110 group-hover:-rotate-12 shadow-sm relative z-10",
+            "p-3 rounded-lg transition-all duration-150 group-hover:scale-[1.005]",
             colors[variant],
           )}
         >
           <Icon className="w-6 h-6" strokeWidth={2.5} />
-          <div className="absolute inset-0 bg-current opacity-0 group-hover:opacity-10 blur-xl transition-opacity rounded-full" />
         </div>
       </div>
     </Card>
@@ -84,8 +83,8 @@ export function SectionHeader({ title, description, icon: Icon, actions, classNa
     <div className={cn("flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8", className)}>
       <div className="flex items-center gap-4">
         {Icon && (
-          <div className="w-12 h-12 rounded-2xl bg-surface-100 dark:bg-surface-800 flex items-center justify-center border border-border/50 text-primary">
-            <Icon className="w-6 h-6" />
+          <div className="w-10 h-10 rounded-lg bg-surface-100 dark:bg-surface-800 flex items-center justify-center border border-border/50 text-primary">
+            <Icon className="w-5 h-5" />
           </div>
         )}
         <div>

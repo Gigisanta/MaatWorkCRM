@@ -1,5 +1,5 @@
-import React from "react";
-import { useSpring, animated, useMotionValue } from "framer-motion";
+import React, { useEffect, useState } from "react";
+import { motion, useMotionValue, useTransform } from "framer-motion";
 
 interface AnimatedCounterProps {
   value: number;
@@ -7,15 +7,28 @@ interface AnimatedCounterProps {
 }
 
 export function AnimatedCounter({ value, duration = 1500 }: AnimatedCounterProps) {
-  const spring = useSpring(value, { duration, bounce: 0 });
-  const display = useMotionValue(value);
+  const motionValue = useMotionValue(0);
+  const display = useTransform(motionValue, (latest) => Math.floor(latest).toLocaleString());
+  const [displayValue, setDisplayValue] = useState("0");
+
+  useEffect(() => {
+    motionValue.set(0);
+    const id = setTimeout(() => {
+      motionValue.set(value);
+    }, 50);
+    return () => clearTimeout(id);
+  }, [value, motionValue]);
+
+  useEffect(() => {
+    const unsubscribe = display.on("change", (latest) => {
+      setDisplayValue(latest);
+    });
+    return () => unsubscribe();
+  }, [display]);
 
   return (
-    <animated.div
-      style={spring}
-      className="tabular-nums font-mono font-bold text-text"
-    >
-      {Math.floor(display.get()).toLocaleString()}
-    </animated.div>
+    <motion.div className="tabular-nums font-mono font-bold text-text">
+      {displayValue}
+    </motion.div>
   );
 }

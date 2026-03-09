@@ -9,16 +9,24 @@
 import { boolean, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 // ── Users ────────────────────────────────────────────────────
+// User roles: developer (full access), dueno (business functions), manager (team management), asesor (sales)
+export const USER_ROLES = ["developer", "dueno", "manager", "asesor"] as const;
+export type UserRole = (typeof USER_ROLES)[number];
+
+// Career levels for asesores
+export const CAREER_LEVELS = ["junior", "semi-senior", "senior", "lead"] as const;
+export type CareerLevel = (typeof CAREER_LEVELS)[number];
+
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false),
   image: text("image"),
-  role: text("role", { enum: ["asesor", "admin"] })
+  role: text("role", { enum: USER_ROLES })
     .notNull()
     .default("asesor"),
-  careerLevel: text("career_level", { enum: ["junior", "senior"] }).default("junior"),
+  careerLevel: text("career_level", { enum: CAREER_LEVELS }).default("junior"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

@@ -34,7 +34,7 @@ function SettingsPage() {
         </div>
         <Button
           variant="primary"
-          className="shadow-[0_0_15px_rgba(139,92,246,0.2)] hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] rounded-xl h-10 px-6 font-semibold text-sm bg-primary hover:bg-primary-hover transition-all"
+          className="shadow-md hover:shadow-lg rounded-lg h-10 px-6 font-semibold text-sm bg-primary hover:bg-primary-hover transition-all"
         >
           <Save className="w-4 h-4 mr-2" strokeWidth={2.5} /> Save Changes
         </Button>
@@ -44,7 +44,7 @@ function SettingsPage() {
         <Stack direction="col" gap="lg">
           {/* Profile */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <Card variant="glass" className="border-border bg-surface">
+            <Card variant="elevated" className="border-border bg-surface">
               <CardHeader className="border-b border-border/50 pb-4">
                 <h2 className="text-lg font-bold text-text flex items-center gap-2">
                   <User className="w-5 h-5 text-primary" /> Profile Information
@@ -86,7 +86,7 @@ function SettingsPage() {
 
           {/* Organization */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-            <Card variant="glass" className="border-border bg-surface">
+            <Card variant="elevated" className="border-border bg-surface">
               <CardHeader className="border-b border-border/50 pb-4">
                 <h2 className="text-lg font-bold text-text flex items-center gap-2">
                   <Building2 className="w-5 h-5 text-accent" /> Organization
@@ -112,7 +112,7 @@ function SettingsPage() {
         <Stack direction="col" gap="lg">
           {/* Notifications */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-            <Card variant="glass" className="border-border bg-surface">
+            <Card variant="elevated" className="border-border bg-surface">
               <CardHeader className="border-b border-border/50 pb-4">
                 <h2 className="text-lg font-bold text-text flex items-center gap-2">
                   <Bell className="w-5 h-5 text-warning" /> Notifications
@@ -152,7 +152,7 @@ function SettingsPage() {
 
           {/* Security */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-            <Card variant="cyber" className="border-border bg-surface relative overflow-hidden">
+            <Card variant="elevated" className="border-border bg-surface">
               <div className="absolute inset-0 bg-gradient-to-br from-error/5 to-transparent opacity-50" />
               <CardHeader className="border-b border-border/50 pb-4 relative z-10">
                 <h2 className="text-lg font-bold text-text flex items-center gap-2">

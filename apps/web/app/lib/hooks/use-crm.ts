@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "~/lib/auth-client";
 import { getDashboardMetrics, getPipelineByStage, getRecentActivity } from "../../../server/functions/analytics";
+import { createCalendarEvent, deleteCalendarEvent, getCalendarEvents, updateCalendarEvent } from "../../../server/functions/calendar";
 import { createContact, deleteContact, getContacts, updateContact } from "../../../server/functions/contacts";
 import { createDeal, createStage, getDealsWithContacts, getStages, moveDeal } from "../../../server/functions/pipeline";
-import { createTask, deleteTask, getTasks, updateTask } from "../../../server/functions/tasks";
+import { createTask, deleteTask, getTasks, getTasksWithContacts, updateTask } from "../../../server/functions/tasks";
 import {
   createTeam,
   getTeamGoals,
@@ -49,6 +50,17 @@ export function usePipelineSummary() {
   });
 }
 
+export function usePipelineStages() {
+  const { data: session } = useSession();
+  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+
+  return useQuery({
+    queryKey: ["pipeline-stages", orgId],
+    queryFn: () => getStages({ data: { orgId: orgId! } }),
+    enabled: !!orgId,
+  });
+}
+
 export function useRecentActivity(limit = 10) {
   const { data: session } = useSession();
   const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
@@ -70,6 +82,17 @@ export function useTasks(filters?: any) {
   return useQuery({
     queryKey: ["tasks", orgId, filters],
     queryFn: () => getTasks({ data: { ...filters, orgId: orgId! } }),
+    enabled: !!orgId,
+  });
+}
+
+export function useTasksWithContacts(filters?: any) {
+  const { data: session } = useSession();
+  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+
+  return useQuery({
+    queryKey: ["tasks-with-contacts", orgId, filters],
+    queryFn: () => getTasksWithContacts({ data: { ...filters, orgId: orgId! } }),
     enabled: !!orgId,
   });
 }
@@ -106,6 +129,79 @@ export function useDeleteTaskMutation() {
     mutationFn: (id: string) => deleteTask({ data: { id } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    },
+  });
+}
+
+/**
+ * Google Calendar (Personal User Calendar)
+ */
+export function useGoogleCalendarEvents(filters?: { timeMin?: string; timeMax?: string }) {
+  const { data: session } = useSession();
+  const userId = session?.user?.id;
+
+  return useQuery({
+    queryKey: ["google-calendar-events", userId, filters],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.timeMin) params.set("timeMin", filters.timeMin);
+      if (filters?.timeMax) params.set("timeMax", filters.timeMax);
+      
+      const res = await fetch(`/api/google/calendar/events?${params.toString()}`);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to fetch Google Calendar events");
+      }
+      return res.json();
+    },
+    enabled: !!userId,
+    retry: false,
+  });
+}
+
+/**
+ * Calendar Events (Local + Google Sync)
+ */
+export function useCalendarEvents(filters?: { teamId?: string; startDate?: string; endDate?: string }) {
+  const { data: session } = useSession();
+  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+
+  return useQuery({
+    queryKey: ["calendar-events", orgId, filters],
+    queryFn: () => getCalendarEvents({ data: { ...filters, orgId: orgId! } }),
+    enabled: !!orgId,
+  });
+}
+
+export function useCreateCalendarEventMutation() {
+  const queryClient = useQueryClient();
+  const { data: session } = useSession();
+  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+
+  return useMutation({
+    mutationFn: (data: { teamId?: string; data: any }) => createCalendarEvent({ data: { orgId: orgId!, ...data } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["calendar-events"] });
+    },
+  });
+}
+
+export function useUpdateCalendarEventMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => updateCalendarEvent({ data: { id, data } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["calendar-events"] });
+    },
+  });
+}
+
+export function useDeleteCalendarEventMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteCalendarEvent({ data: { id } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["calendar-events"] });
     },
   });
 }
@@ -159,10 +255,66 @@ export function useDeleteContactMutation() {
 }
 
 /**
+ * Contacts Pipeline (Kanban)
+ */
+export function useContactsByPipelineStage() {
+  const { data: session, isPending: sessionLoading } = useSession();
+  const orgId = (!sessionLoading && session?.session?.activeOrganizationId) || "org_maatwork_demo";
+
+  return useQuery({
+    queryKey: ["contacts-pipeline", orgId],
+    queryFn: async () => {
+      try {
+        const [stages, contacts] = await Promise.all([
+          getStages({ data: { orgId: orgId! } }),
+          getContacts({ data: { orgId: orgId! } }),
+        ]);
+
+        return stages.map((stage) => ({
+          ...stage,
+          contacts: contacts
+            .filter((c) => c.pipelineStageId === stage.id)
+            .map((c) => ({
+              ...c,
+              tags: c.tags ?? undefined,
+              email: c.email ?? undefined,
+              phone: c.phone ?? undefined,
+              pipelineStageId: c.pipelineStageId ?? undefined,
+              segment: c.segment ?? undefined,
+              source: c.source ?? undefined,
+              assignedTo: c.assignedTo ?? undefined,
+              notes: c.notes ?? undefined,
+            })),
+        }));
+      } catch (error) {
+        console.error("Contacts Pipeline Fetch Error:", error);
+        throw error;
+      }
+    },
+    enabled: true,
+  });
+}
+
+export function useMoveContactMutation() {
+  const queryClient = useQueryClient();
+  const { data: session } = useSession();
+  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+
+  return useMutation({
+    mutationFn: (params: { contactId: string; pipelineStageId: string }) =>
+      updateContact({ data: { id: params.contactId, data: { pipelineStageId: params.pipelineStageId } } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contacts-pipeline", orgId] });
+      queryClient.invalidateQueries({ queryKey: ["contacts", orgId] });
+    },
+  });
+}
+
+/**
  * Pipeline & Deals
  */
 export function usePipelineBoard() {
-  const { data: session, isLoading: sessionLoading } = useSession();
+  const { data: session, isPending: sessionLoading } = useSession();
   const orgId = (!sessionLoading && session?.session?.activeOrganizationId) || "org_maatwork_demo";
 
   return useQuery({

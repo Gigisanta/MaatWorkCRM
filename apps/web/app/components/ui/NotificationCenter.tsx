@@ -124,7 +124,7 @@ export const NotificationCenter: React.FC = () => {
     <Dialog.Root open={detailOpen} onOpenChange={setDetailOpen}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-black/60" />
-        <Dialog.Content className="fixed right-0 top-0 h-full w-96 bg-neutral-900/70 backdrop-blur-md shadow-2xl glass-card p-4 m-4 rounded-lg overflow-auto">
+        <Dialog.Content className="fixed right-0 top-0 h-full w-96 bg-neutral-900 shadow-lg p-4 m-4 rounded-lg overflow-auto">
           <div className="flex items-start justify-between mb-3">
             <div className="text-lg font-semibold">Notification Details</div>
             <Dialog.Close asChild>
@@ -161,7 +161,7 @@ export const NotificationCenter: React.FC = () => {
     <div className="inline-block">
       <Dialog.Root open={open} onOpenChange={setOpen}>
         <Dialog.Trigger asChild>
-          <button aria-label="Notifications" className="flex items-center gap-2 px-3 py-2 rounded-full bg-black/40 hover:bg-black/60 glass-card shadow-md">
+          <button aria-label="Notifications" className="flex items-center gap-2 px-3 py-2 rounded-full bg-black/40 hover:bg-black/60 shadow-md">
             <span className="text-neutral-200"><BellIcon /></span>
             <span className="hidden sm:inline text-sm font-semibold text-white">Notifications</span>
             {notifications.filter(n => !n.read).length > 0 && (
@@ -171,7 +171,7 @@ export const NotificationCenter: React.FC = () => {
         </Dialog.Trigger>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/60" />
-          <Dialog.Content className="fixed right-0 top-0 h-full w-96 bg-neutral-900/70 backdrop-blur-md shadow-2xl glass-card p-4 m-4 rounded-lg overflow-auto">
+<Dialog.Content className="fixed right-0 top-0 h-full w-96 bg-neutral-900 shadow-lg p-4 m-4 rounded-lg overflow-auto">
             <div className="flex items-center justify-between mb-3">
               <div className="text-xl font-bold">Notifications</div>
               <Dialog.Close asChild>

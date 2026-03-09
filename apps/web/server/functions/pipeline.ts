@@ -5,7 +5,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { asc, eq } from "drizzle-orm";
 import { db } from "../db";
-import { contacts, deals, pipelineStages } from "../db/schema";
+import { contacts, deals, pipelineStages, pipelineStageHistory } from "../db/schema";
 
 export const getStages = createServerFn({ method: "GET" })
   .inputValidator((input: { orgId: string }) => input)
@@ -31,8 +31,22 @@ export const getDealsWithContacts = createServerFn({ method: "GET" })
   });
 
 export const moveDeal = createServerFn({ method: "POST" })
-  .inputValidator((input: { dealId: string; stageId: string }) => input)
+  .inputValidator((input: { dealId: string; stageId: string; userId?: string; reason?: string }) => input)
   .handler(async ({ data }) => {
+    const currentDeal = await db.select().from(deals).where(eq(deals.id, data.dealId)).then(r => r[0]);
+    
+    if (currentDeal) {
+      await db.insert(pipelineStageHistory).values({
+        id: crypto.randomUUID(),
+        organizationId: currentDeal.organizationId,
+        contactId: currentDeal.contactId,
+        fromStageId: currentDeal.stageId,
+        toStageId: data.stageId,
+        reason: data.reason || null,
+        changedByUserId: data.userId || null,
+      });
+    }
+    
     await db.update(deals).set({ stageId: data.stageId, updatedAt: new Date() }).where(eq(deals.id, data.dealId));
     return { success: true };
   });
@@ -50,15 +64,36 @@ export const createDeal = createServerFn({ method: "POST" })
   });
 
 export const createStage = createServerFn({ method: "POST" })
-  .inputValidator((input: { orgId: string; name: string; color: string; order: number }) => input)
+  .inputValidator((input: { orgId: string; name: string; color: string; order: number; description?: string; wipLimit?: number; slaHours?: number }) => input)
   .handler(async ({ data }) => {
     const id = crypto.randomUUID();
     await db.insert(pipelineStages).values({
       id,
       organizationId: data.orgId,
       name: data.name,
+      description: data.description || null,
       color: data.color,
       order: data.order,
+      wipLimit: data.wipLimit || null,
+      slaHours: data.slaHours || null,
     });
     return { id };
+  });
+
+export const getStageHistory = createServerFn({ method: "GET" })
+  .inputValidator((input: { contactId: string }) => input)
+  .handler(async ({ data }) => {
+    return db
+      .select()
+      .from(pipelineStageHistory)
+      .where(eq(pipelineStageHistory.contactId, data.contactId))
+      .orderBy(pipelineStageHistory.changedAt);
+  });
+
+export const updateStage = createServerFn({ method: "POST" })
+  .inputValidator((input: { stageId: string; name?: string; description?: string; color?: string; wipLimit?: number; slaHours?: number; isActive?: boolean }) => input)
+  .handler(async ({ data }) => {
+    const { stageId, ...updates } = data;
+    await db.update(pipelineStages).set(updates).where(eq(pipelineStages.id, stageId));
+    return { success: true };
   });

@@ -127,7 +127,7 @@ function ResourcesPage() {
         </div>
         <Button
           variant="primary"
-          className="shadow-[0_0_15px_rgba(139,92,246,0.2)] hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] rounded-xl h-10 px-5 font-semibold text-sm bg-primary hover:bg-primary-hover transition-all"
+          className="rounded-lg h-10 px-5 font-semibold text-sm bg-primary hover:bg-primary-hover transition-all"
         >
           <Upload className="w-4 h-4 mr-2" strokeWidth={2.5} /> Upload Resource
         </Button>
@@ -145,9 +145,9 @@ function ResourcesPage() {
             key={cat}
             variant={i === 0 ? "primary" : "ghost"}
             className={cn(
-              "px-6 h-10 rounded-xl whitespace-nowrap transition-all duration-300 font-semibold text-sm",
+              "px-6 h-10 rounded-lg whitespace-nowrap transition-all duration-150 font-semibold text-sm",
               i === 0
-                ? "bg-surface-hover text-primary border border-primary/30 shadow-[0_0_15px_rgba(139,92,246,0.15)]"
+                ? "bg-surface-hover text-primary border border-primary/30"
                 : "bg-surface border border-border text-text-secondary hover:text-text hover:bg-surface-hover",
             )}
           >
@@ -169,7 +169,7 @@ function ResourcesPage() {
               key={resource.id}
             >
               <Card
-                variant="glass"
+                variant="outlined"
                 className="group hover:shadow-[0_8px_25px_rgba(0,0,0,0.2)] overflow-hidden border-border bg-surface transition-all duration-300 hover:-translate-y-1"
               >
                 <div className={cn("h-1.5 w-full opacity-80", config.color.split(" ")[1])} />
@@ -178,7 +178,7 @@ function ResourcesPage() {
                     <Stack direction="row" gap="md" align="start" className="w-full">
                       <div
                         className={cn(
-                          "p-3 rounded-xl shrink-0 shadow-inner border transition-transform duration-500 group-hover:scale-110",
+                          "p-3 rounded-lg shrink-0 border transition-transform duration-150 group-hover:scale-105",
                           config.color,
                         )}
                       >
@@ -227,7 +227,7 @@ function ResourcesPage() {
                         <Button
                           variant="primary"
                           size="sm"
-                          className="rounded-lg px-4 h-8 shadow-[0_0_10px_rgba(139,92,246,0.2)] bg-primary hover:bg-primary-hover font-semibold text-xs"
+                          className="rounded-lg px-4 h-8 bg-primary hover:bg-primary-hover font-semibold text-xs"
                         >
                           <Download size={12} className="mr-1.5" /> Download
                         </Button>
@@ -243,7 +243,7 @@ function ResourcesPage() {
 
       {/* Quick Access Section */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
-        <Card variant="cyber" className="bg-surface border-border relative overflow-hidden">
+        <Card variant="elevated" className="bg-surface border-border relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/5 to-transparent opacity-50" />
           <CardContent className="p-6 relative z-10">
             <Stack direction="col" gap="md">
@@ -256,28 +256,28 @@ function ResourcesPage() {
               <Grid cols={{ sm: 2, md: 4 }} gap={4}>
                 <Button
                   variant="ghost"
-                  className="h-auto py-4 px-4 flex-col gap-2 bg-surface-hover/50 border border-border hover:bg-surface-hover rounded-xl transition-all"
+                  className="h-auto py-4 px-4 flex-col gap-2 bg-surface-hover/50 border border-border hover:bg-surface-hover rounded-lg transition-all"
                 >
                   <Globe size={24} className="text-primary" />
                   <span className="text-xs font-bold text-text">BCRA Metrics</span>
                 </Button>
                 <Button
                   variant="ghost"
-                  className="h-auto py-4 px-4 flex-col gap-2 bg-surface-hover/50 border border-border hover:bg-surface-hover rounded-xl transition-all"
+                  className="h-auto py-4 px-4 flex-col gap-2 bg-surface-hover/50 border border-border hover:bg-surface-hover rounded-lg transition-all"
                 >
                   <TrendingUp size={24} className="text-success" />
                   <span className="text-xs font-bold text-text">Market Indices</span>
                 </Button>
                 <Button
                   variant="ghost"
-                  className="h-auto py-4 px-4 flex-col gap-2 bg-surface-hover/50 border border-border hover:bg-surface-hover rounded-xl transition-all"
+                  className="h-auto py-4 px-4 flex-col gap-2 bg-surface-hover/50 border border-border hover:bg-surface-hover rounded-lg transition-all"
                 >
                   <Wallet size={24} className="text-warning" />
                   <span className="text-xs font-bold text-text">Tax Portal</span>
                 </Button>
                 <Button
                   variant="ghost"
-                  className="h-auto py-4 px-4 flex-col gap-2 bg-surface-hover/50 border border-border hover:bg-surface-hover rounded-xl transition-all"
+                  className="h-auto py-4 px-4 flex-col gap-2 bg-surface-hover/50 border border-border hover:bg-surface-hover rounded-lg transition-all"
                 >
                   <Scale size={24} className="text-accent" />
                   <span className="text-xs font-bold text-text">Legal Forms</span>

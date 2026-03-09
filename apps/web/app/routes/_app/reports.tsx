@@ -56,7 +56,7 @@ function ReportsPage() {
           </Button>
           <Button
             variant="primary"
-            className="shadow-[0_0_15px_rgba(139,92,246,0.2)] hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] rounded-xl h-10 px-5 font-semibold text-sm bg-primary hover:bg-primary-hover transition-all"
+            className="rounded-lg h-10 px-5 font-semibold text-sm bg-primary hover:bg-primary-hover transition-all"
           >
             <Download className="w-4 h-4 mr-2" strokeWidth={2.5} /> Reporte PDF
           </Button>
@@ -65,7 +65,7 @@ function ReportsPage() {
 
       {/* AI Insights Card */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-        <Card variant="cyber" className="bg-surface border-border relative overflow-hidden">
+        <Card variant="elevated" className="bg-surface border-border relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-accent/5 to-transparent opacity-50" />
           <CardContent className="p-6 relative z-10 flex items-start gap-4">
             <div className="w-12 h-12 rounded-2xl bg-surface-hover border border-border flex items-center justify-center shrink-0 shadow-inner">
@@ -120,7 +120,7 @@ function ReportsPage() {
       <Grid cols={{ sm: 1, lg: 2 }} gap={6}>
         {/* Pipeline Chart - Bar */}
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
-          <Card variant="glass" className="p-6 border-border bg-surface h-full">
+          <Card variant="outlined" className="p-6 border-border bg-surface h-full">
             <h2 className="text-sm font-bold text-text uppercase tracking-wider mb-6 flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-primary" /> Pipeline por Etapa (Valor)
             </h2>
@@ -135,7 +135,7 @@ function ReportsPage() {
                       initial={{ width: 0 }}
                       animate={{ width: maxValue ? `${(d.value / maxValue) * 100}%` : "0%" }}
                       transition={{ duration: 1, ease: "easeOut" }}
-                      className="h-full rounded-md flex items-center px-3 shadow-[0_0_10px_rgba(0,0,0,0.2)]"
+                      className="h-full rounded-md flex items-center px-3"
                       style={{
                         backgroundColor: d.color,
                         minWidth: d.value > 0 ? "60px" : "0",
@@ -159,7 +159,7 @@ function ReportsPage() {
 
         {/* Monthly Trends */}
         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 }}>
-          <Card variant="glass" className="p-6 border-border bg-surface h-full">
+          <Card variant="outlined" className="p-6 border-border bg-surface h-full">
             <h2 className="text-sm font-bold text-text uppercase tracking-wider mb-6 flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-success" /> Tendencia Mensual
             </h2>
@@ -174,7 +174,7 @@ function ReportsPage() {
                       initial={{ height: 0 }}
                       animate={{ height: `${[40, 60, 80][i]}%` }}
                       transition={{ duration: 1, delay: 0.2 + i * 0.1 }}
-                      className="w-8 bg-gradient-to-t from-primary/20 to-primary rounded-t-md shadow-[0_0_15px_rgba(139,92,246,0.2)] group-hover:shadow-[0_0_20px_rgba(139,92,246,0.4)] transition-all"
+                      className="w-8 bg-gradient-to-t from-primary/20 to-primary rounded-t-md transition-all"
                     />
                   </div>
                   <p className="text-2xl font-black text-text tracking-tighter">{[3, 4, 5][i]}</p>

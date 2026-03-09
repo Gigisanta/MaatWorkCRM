@@ -56,7 +56,7 @@ export function AICopilot({ open, onClose }: AICopilotProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-background/20 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-background/60 z-50"
           />
 
           {/* Sidebar */}
@@ -65,12 +65,12 @@ export function AICopilot({ open, onClose }: AICopilotProps) {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: "100%", opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed top-0 right-0 h-full w-full sm:w-[400px] bg-surface/95 backdrop-blur-3xl border-l border-border shadow-[-20px_0_50px_rgba(0,0,0,0.3)] z-50 flex flex-col"
+            className="fixed top-0 right-0 h-full w-full sm:w-[400px] bg-surface border-l border-border shadow-lg z-50 flex flex-col"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-border/50 bg-surface-hover/50">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white shadow-[0_0_15px_rgba(139,92,246,0.3)]">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white">
                   <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
@@ -150,7 +150,7 @@ export function AICopilot({ open, onClose }: AICopilotProps) {
                 <button
                   type="submit"
                   disabled={!input.trim()}
-                  className="absolute right-2 w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-hover transition-colors shadow-[0_0_10px_rgba(139,92,246,0.3)]"
+                  className="absolute right-2 w-8 h-8 rounded-lg bg-primary text-white flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-hover transition-colors"
                 >
                   <Send className="w-4 h-4 ml-0.5" />
                 </button>

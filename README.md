@@ -21,12 +21,12 @@ CRM profesional para asesores financieros. Gestiona clientes, pipeline de ventas
 
 ## Módulos
 
-1. **Dashboard** — KPIs, actividad reciente, acciones rápidas, resumen pipeline
-2. **Contactos** — CRUD, búsqueda, filtros, tags, segmentos, estados
+1. **Dashboard** — KPIs, actividad reciente, acciones rápidas, resumen pipeline, **calendario personal Google**
+2. **Contactos** — CRUD, búsqueda, filtros, tags, segmentos, panel de detalles (drawer)
 3. **Pipeline** — Kanban drag-and-drop, deals con valor/probabilidad, 5 etapas
 4. **Tareas** — Prioridades, vencimientos, recurrencia, asignación
-5. **Equipos** — Miembros, líderes, objetivos mensuales con progreso
-6. **Calendario** — Vista mensual, eventos compartidos del equipo
+5. **Equipos** — Miembros, líderes, objetivos mensuales con progreso, **calendario del equipo**
+6. **Calendario** — Vista mensual, eventos compartidos del equipo, sincronización Google Calendar
 7. **Reportes** — Gráficos, métricas, tendencias, exportación CSV/PDF
 8. **Capacitación** — Material categorizado (guías, videos, documentos, cursos)
 9. **Configuración** — Perfil, organización, notificaciones
@@ -131,6 +131,22 @@ pnpm --filter web lint:fix      # Biome auto-fix
 | `onContactActivated` | Contact status → active | Enviar notificación de bienvenida |
 | `onTaskOverdue` | Cron diario | Detectar tareas vencidas y alertar |
 | `onGoalNearTarget` | Goal ≥ 80% progress | Notificar líder del equipo |
+
+## Google Calendar Integración
+
+El sistema soporta sincronización bidireccional con Google Calendar:
+
+- **Auth**: OAuth2 con scopes `calendar`, `calendar.events`
+- **Dashboard**: Calendario personal del usuario (solo lectura)
+- **Teams**: Calendario del equipo (CRUD eventos locales)
+- **API**: `/api/google/calendar/events` para operaciones
+
+### Variables de Entorno Requeridas
+
+```env
+GOOGLE_CLIENT_ID=tu-client-id
+GOOGLE_CLIENT_SECRET=tu-client-secret
+```
 
 ## Datos Demo (Seed)
 

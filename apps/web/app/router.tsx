@@ -3,13 +3,14 @@
 // ============================================================
 
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
-import { queryClient } from "~/lib/query-client";
+import { createQueryClient, queryClient } from "~/lib/query-client";
 import { routeTree } from "./routeTree.gen";
 
 export function createRouter() {
   return createTanStackRouter({
     routeTree,
     defaultPreload: "intent",
+    defaultPreloadStaleTime: 0,
     scrollRestoration: true,
     defaultNotFoundComponent: () => (
       <div className="flex items-center justify-center min-h-screen bg-background text-text">

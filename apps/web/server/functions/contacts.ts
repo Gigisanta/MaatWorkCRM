@@ -8,11 +8,11 @@ import { db } from "../db";
 import { contacts } from "../db/schema";
 
 export const getContacts = createServerFn({ method: "GET" })
-  .inputValidator((input: { orgId: string; search?: string; status?: string }) => input)
+  .inputValidator((input: { orgId: string; search?: string; pipelineStageId?: string }) => input)
   .handler(async ({ data }) => {
     const conditions = [eq(contacts.organizationId, data.orgId)];
-    if (data.status) {
-      conditions.push(eq(contacts.status, data.status as any));
+    if (data.pipelineStageId) {
+      conditions.push(eq(contacts.pipelineStageId, data.pipelineStageId));
     }
     if (data.search) {
       conditions.push(like(contacts.name, `%${data.search}%`));

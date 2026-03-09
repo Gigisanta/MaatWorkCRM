@@ -2,7 +2,6 @@ import React from "react";
 import { cn } from "~/lib/utils";
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  /** Visual style variant */
   variant?:
     | "default"
     | "primary"
@@ -15,45 +14,38 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
     | "info"
     | "outline";
   size?: "sm" | "md" | "lg";
-  /** Enable pop animation on mount */
-  animated?: boolean;
   children: React.ReactNode;
   className?: string;
 }
 
-/**
- * Badge component with brand styling.
- */
 export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
-  ({ variant = "default", size = "md", animated = false, children, className, ...props }, ref) => {
+  ({ variant = "default", size = "md", children, className, ...props }, ref) => {
     const variantClasses = {
-      default: "bg-surface-800 text-surface-200",
-      primary: "bg-brand-600/20 text-brand-400 border border-brand-600/10",
-      secondary: "bg-surface-700 text-surface-100 border border-surface-600/10",
-      accent: "bg-emerald-600/20 text-emerald-400 border border-emerald-600/10",
-      success: "bg-emerald-600/20 text-emerald-400 border border-emerald-600/10",
-      warning: "bg-amber-600/20 text-amber-400 border border-amber-600/10",
-      error: "bg-red-600/20 text-red-400 border border-red-600/10",
-      joy: "bg-orange-600/20 text-orange-400 border border-orange-600/10",
-      info: "bg-blue-600/20 text-blue-400 border border-blue-600/10",
-      outline: "bg-transparent border border-surface-700 text-surface-200",
+      default: "bg-surface-hover text-text-secondary",
+      primary: "bg-primary/10 text-primary border border-primary/20",
+      secondary: "bg-surface-hover text-text border border-border",
+      accent: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+      success: "bg-success/10 text-success border border-success/20",
+      warning: "bg-warning/10 text-warning border border-warning/20",
+      error: "bg-error/10 text-error border border-error/20",
+      joy: "bg-orange-500/10 text-orange-400 border border-orange-500/20",
+      info: "bg-info/10 text-info border border-info/20",
+      outline: "bg-transparent border border-border text-text-secondary",
     };
 
     const sizeClasses = {
       sm: "px-2 py-0.5 text-xs",
-      md: "px-2.5 py-1 text-sm",
-      lg: "px-3 py-1.5 text-base",
+      md: "px-2 py-1 text-xs",
+      lg: "px-2.5 py-1 text-sm",
     };
 
     return (
       <span
         ref={ref}
         className={cn(
-          "inline-flex items-center rounded-full font-medium font-body transition-all duration-300",
+          "inline-flex items-center rounded-md font-medium font-body transition-colors duration-150",
           variantClasses[variant],
           sizeClasses[size],
-          animated && "animate-in zoom-in-95 duration-500 ease-out",
-          !animated && "hover:scale-105 hover:shadow-md",
           className,
         )}
         {...props}

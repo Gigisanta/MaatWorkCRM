@@ -181,7 +181,7 @@ function CalendarPage() {
           </Button>
           <Button
             variant="primary"
-            className="shadow-[0_0_15px_rgba(139,92,246,0.2)] hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] rounded-xl h-10 px-5 font-semibold text-sm bg-primary hover:bg-primary-hover transition-all"
+            className="shadow-md hover:shadow-lg rounded-lg h-10 px-5 font-semibold text-sm bg-primary hover:bg-primary-hover transition-all"
           >
             <Plus className="w-4 h-4 mr-2" strokeWidth={2.5} /> New Event
           </Button>
@@ -191,7 +191,7 @@ function CalendarPage() {
       <Grid cols={{ sm: 1, lg: 4 }} gap={6}>
         {/* Calendar Main Grid */}
         <div className="lg:col-span-3 space-y-4">
-          <Card variant="glass" className="overflow-hidden border-border bg-surface">
+          <Card variant="elevated" className="overflow-hidden border-border bg-surface">
             <CardHeader className="bg-surface-hover border-b border-border px-6 py-4">
               <Stack direction="row" align="center" justify="between">
                 <h2 className="text-xl font-bold text-text capitalize tracking-tight">
@@ -259,14 +259,14 @@ function CalendarPage() {
                           className={cn(
                             "text-xs font-bold rounded-lg w-7 h-7 flex items-center justify-center transition-all",
                             isToday
-                              ? "bg-primary text-white shadow-[0_0_10px_rgba(139,92,246,0.5)] scale-110"
+                              ? "bg-primary text-white shadow-md scale-110"
                               : "text-text-secondary group-hover:text-text",
                           )}
                         >
                           {day}
                         </span>
                         {dayEvents.length > 0 && (
-                          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_5px_rgba(139,92,246,0.8)] mt-1 mr-1" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-md mt-1 mr-1" />
                         )}
                       </div>
 
@@ -348,9 +348,8 @@ function CalendarPage() {
             </div>
           </div>
 
-          <Card variant="cyber" className="bg-surface border-border relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-50" />
-            <CardContent className="p-5 space-y-5 relative z-10">
+          <Card variant="elevated" className="bg-surface border-border">
+            <CardContent className="p-5 space-y-5">
               <h3 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-2">
                 <Sparkles size={14} /> Weekly Summary
               </h3>

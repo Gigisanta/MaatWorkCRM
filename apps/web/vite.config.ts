@@ -15,4 +15,37 @@ export default defineConfig({
     }),
     viteReact(),
   ],
+  build: {
+    target: "esnext",
+    minify: "esbuild",
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (id.includes("@radix-ui")) return "vendor-ui";
+            if (id.includes("framer-motion")) return "vendor-motion";
+            if (id.includes("recharts")) return "vendor-charts";
+            if (id.includes("@tanstack")) return "vendor-router";
+            if (id.includes("better-auth")) return "vendor-auth";
+          }
+        },
+      },
+    },
+    chunkSizeWarningLimit: 500,
+    treeShaking: true,
+  },
+  resolve: {
+    alias: {
+      "~": "/app",
+    },
+  },
+  optimizeDeps: {
+    include: [
+      "react",
+      "react-dom",
+      "@tanstack/react-router",
+      "@tanstack/react-query",
+    ],
+  },
 });

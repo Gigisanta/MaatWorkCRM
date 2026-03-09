@@ -39,8 +39,8 @@ async function seed() {
         id: adminId,
         name: "Carlos Admin",
         email: "admin@maatwork.com",
-        role: "admin",
-        careerLevel: "senior",
+        role: "dueno",
+        careerLevel: "lead",
       },
       {
         id: asesor1Id,
@@ -72,17 +72,20 @@ async function seed() {
 
   // ── Pipeline Stages ──────────────────────────────────────
   const stages = [
-    { id: "stage_01", name: "Prospecto", order: 0, color: "#6366f1" },
-    { id: "stage_02", name: "Contactado", order: 1, color: "#8b5cf6" },
-    { id: "stage_03", name: "Reunión", order: 2, color: "#f59e0b" },
-    { id: "stage_04", name: "Propuesta", order: 3, color: "#3b82f6" },
-    { id: "stage_05", name: "Activo", order: 4, color: "#10b981" },
+    { id: "stage_01", name: "Prospecto", order: 0, color: "#6366f1", description: "Contacto nuevo sin contactar", wipLimit: null, slaHours: 48 },
+    { id: "stage_02", name: "Contactado", order: 1, color: "#8b5cf6", description: "Primer contacto realizado", wipLimit: 10, slaHours: 72 },
+    { id: "stage_03", name: "Primera reunion", order: 2, color: "#f59e0b", description: "Primera reunión programada", wipLimit: 8, slaHours: 168 },
+    { id: "stage_04", name: "Segunda reunion", order: 3, color: "#3b82f6", description: "Segunda reunión o follow-up", wipLimit: 5, slaHours: 72 },
+    { id: "stage_05", name: "Apertura", order: 4, color: "#10b981", description: "En proceso de apertura de cuenta", wipLimit: null, slaHours: null },
+    { id: "stage_06", name: "Cliente", order: 5, color: "#22c55e", description: "Cliente ganado", wipLimit: null, slaHours: null },
+    { id: "stage_07", name: "Caido", order: 6, color: "#ef4444", description: "Prospecto perdido", wipLimit: null, slaHours: null },
+    { id: "stage_08", name: "Cuenta vacia", order: 7, color: "#f97316", description: "Cuenta sin actividad", wipLimit: null, slaHours: null },
   ];
   await db
     .insert(schema.pipelineStages)
-    .values(stages.map((s) => ({ ...s, organizationId: orgId })))
+    .values(stages.map((s) => ({ ...s, organizationId: orgId, isDefault: true, isActive: true })))
     .onConflictDoNothing();
-  console.log("✅ Pipeline: 5 stages (Prospecto → Activo)");
+  console.log("✅ Pipeline: 8 stages (Prospecto → Cliente) - ERP.MaatWork");
 
   // ── Contacts ─────────────────────────────────────────────
   const contactsData = [
@@ -162,7 +165,7 @@ async function seed() {
         id: "deal_002",
         organizationId: orgId,
         contactId: "contact_002",
-        stageId: "stage_03",
+        stageId: "stage_04",
         title: "Asesoría Juan Martínez",
         value: 80000,
         probability: 60,
@@ -182,7 +185,7 @@ async function seed() {
         id: "deal_004",
         organizationId: orgId,
         contactId: "contact_004",
-        stageId: "stage_04",
+        stageId: "stage_03",
         title: "Plan corporativo Sánchez",
         value: 300000,
         probability: 75,
@@ -190,7 +193,7 @@ async function seed() {
       },
     ])
     .onConflictDoNothing();
-  console.log("✅ Deals: 4 across pipeline stages");
+  console.log("✅ Deals: 4 across 7-stage pipeline");
 
   // ── Tasks ────────────────────────────────────────────────
   const today = new Date();

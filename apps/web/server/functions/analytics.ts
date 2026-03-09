@@ -18,7 +18,7 @@ export const getDashboardMetrics = createServerFn({ method: "GET" })
     const [activeContacts] = await db
       .select({ count: count() })
       .from(contacts)
-      .where(and(eq(contacts.organizationId, data.orgId), eq(contacts.status, "active")));
+      .where(and(eq(contacts.organizationId, data.orgId), sql`${contacts.pipelineStageId} IS NOT NULL`));
 
     const [dealCount] = await db.select({ count: count() }).from(deals).where(eq(deals.organizationId, data.orgId));
 

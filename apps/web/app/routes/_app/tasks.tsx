@@ -116,15 +116,15 @@ function TasksPage() {
           variant="primary"
           size="lg"
           onClick={() => setShowNewTaskModal(true)}
-          className="shadow-xl shadow-primary/20 hover:shadow-primary/30 h-12 px-6 rounded-xl font-black uppercase tracking-widest text-[11px]"
+          className="shadow-md hover:shadow-lg h-12 px-6 rounded-lg font-black uppercase tracking-widest text-[11px]"
         >
-          <Icon name="Plus" className="mr-2" size={16} strokeWidth={3} />
+          <Icon name="Plus" className="mr-2" size={16} />
           Crear Tarea
         </Button>
       </div>
 
       {/* Filters & Actions bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-surface/30 p-2 rounded-2xl border border-border/20 backdrop-blur-sm">
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-surface p-2 rounded-lg border border-border/20">
         <div className="flex items-center gap-1">
           {[
             { id: undefined, label: "Todas" },
@@ -138,9 +138,9 @@ function TasksPage() {
               size="sm"
               onClick={() => setStatusFilter(f.id)}
               className={cn(
-                "rounded-xl px-5 h-9 font-bold text-xs uppercase tracking-wider transition-all",
+                "rounded-lg px-5 h-9 font-bold text-xs uppercase tracking-wider transition-all",
                 statusFilter === f.id
-                  ? "bg-primary text-white shadow-lg shadow-primary/20"
+                  ? "bg-primary text-white shadow-md"
                   : "text-text-muted hover:text-primary hover:bg-primary/5",
               )}
             >
@@ -174,7 +174,7 @@ function TasksPage() {
               <Card
                 key={task.id}
                 className={cn(
-                  "hover:shadow-xl transition-all duration-300 group overflow-hidden border-border/20 bg-surface/40 backdrop-blur-md rounded-2xl relative",
+                  "hover:shadow-lg transition-all duration-150 group overflow-hidden border-border/20 bg-surface rounded-lg relative",
                   task.status === "completed" ? "opacity-60 saturate-[0.8]" : "hover:border-primary/30",
                 )}
                 style={{ animationDelay: `${index * 50}ms` }}
@@ -196,7 +196,7 @@ function TasksPage() {
                         : "border-border hover:border-primary/50 bg-secondary/10",
                     )}
                   >
-                    {task.status === "completed" && <Icon name="Check" size={16} strokeWidth={3} />}
+                    {task.status === "completed" && <Icon name="Check" size={16} />}
                   </button>
 
                   <div className="flex-1 min-w-0">
@@ -243,7 +243,7 @@ function TasksPage() {
                         priority.color,
                       )}
                     >
-                      <Icon name={priority.icon} size={12} strokeWidth={2.5} />
+                      <Icon name={priority.icon} size={12} />
                       {priority.label}
                     </Badge>
 
@@ -262,7 +262,7 @@ function TasksPage() {
       </div>
 
       {/* New Task Modal */}
-      <Modal open={showNewTaskModal} onClose={() => setShowNewTaskModal(false)}>
+      <Modal open={showNewTaskModal} onOpenChange={(open) => setShowNewTaskModal(open)}>
         <ModalHeader className="border-b border-border/10 pb-4">
           <ModalTitle className="text-2xl font-black tracking-tight">Crear Nueva Tarea</ModalTitle>
         </ModalHeader>
@@ -333,7 +333,7 @@ function TasksPage() {
             size="lg"
             onClick={handleCreateTask}
             disabled={createTaskMutation.isPending || !newTaskForm.title}
-            className="px-8 font-black uppercase tracking-widest text-[11px] shadow-lg shadow-primary/20"
+            className="px-8 font-black uppercase tracking-widest text-[11px] shadow-md"
           >
             {createTaskMutation.isPending ? "Procesando..." : "Confirmar Tarea"}
           </Button>

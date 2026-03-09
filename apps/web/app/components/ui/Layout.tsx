@@ -95,8 +95,10 @@ Stack.displayName = "Stack";
 // --- Grid ---
 
 export interface GridProps extends React.HTMLAttributes<HTMLDivElement> {
-  cols?: number | { xs?: number; sm?: number; md?: number; lg?: number; xl?: number };
+  cols?: number | { xs?: number; sm?: number; md?: number; lg?: number; xl?: number; base?: number };
   gap?: number | string;
+  md?: number;
+  lg?: number;
 }
 
 const colMap: Record<number, string> = {
@@ -175,7 +177,7 @@ const xlColMap: Record<number, string> = {
 };
 
 export const Grid = React.forwardRef<HTMLDivElement, GridProps>(
-  ({ children, cols = 1, gap = 4, className, ...props }, ref) => {
+  ({ children, cols = 1, gap = 4, className, md, lg, ...props }, ref) => {
     const gapMap: Record<string | number, string> = {
       0: "gap-0",
       1: "gap-1",

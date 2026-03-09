@@ -147,7 +147,7 @@ function AuditLogsPage() {
 
       {/* Logs Table */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
-        <Card variant="glass" className="overflow-hidden border-border bg-surface">
+        <Card variant="elevated" className="overflow-hidden border-border bg-surface">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>

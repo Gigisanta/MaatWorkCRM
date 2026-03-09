@@ -15,7 +15,9 @@
     "paths": {
       "~/*": ["./app/*"],
       "@server/*": ["./server/*"]
-    }
+    },
+    "incremental": true,
+    "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo"
   },
   "include": ["app/**/*", "server/**/*", "app.config.ts"],
   "exclude": ["node_modules", "dist", ".output"]
