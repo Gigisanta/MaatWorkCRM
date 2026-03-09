@@ -4,6 +4,10 @@
   "installCommand": "npm install",
   "framework": null,
   "outputDirectory": ".output/public",
+  "github": {
+    "enabled": true,
+    "autoJobCancelation": true
+  },
   "headers": [
     {
       "source": "/(.*)",
