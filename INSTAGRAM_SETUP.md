@@ -175,13 +175,25 @@ apps/web/
 │   ├── instagram/
 │   │   ├── client.ts             # API client
 │   │   ├── oauth.ts              # OAuth handlers
-│   │   └── index.ts              # Exports
+│   │   ├── index.ts              # Exports
+│   │   └── README.md             # Detailed API reference
 │   └── functions/
 │       └── instagram.ts          # Server functions
 ├── scripts/
 │   └── instagram-sync.ts         # CLI sync script
 └── package.json                   # npm scripts
 ```
+
+## Documentación Detallada
+
+Para referencia completa de API, debugging y troubleshooting, ver:
+`apps/web/server/instagram/README.md`
+
+Incluye:
+- Documentación de cada función y método
+- Esquema de base de datos completo
+- Guía de debugging con queries SQL
+- Casos de error comunes y soluciones
 
 ## Next Steps
 
