@@ -96,10 +96,16 @@ function AutomationsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button className="p-2 rounded-lg hover:bg-white/5 text-[#737373] hover:text-[#8B5CF6] transition-colors">
+                    <button
+                      aria-label={`Configurar automatización ${automation.name}`}
+                      className="p-2 rounded-lg hover:bg-white/5 text-[#737373] hover:text-[#8B5CF6] transition-colors"
+                    >
                       <Settings className="w-5 h-5" />
                     </button>
-                    <button className={`p-2 rounded-lg transition-colors ${automation.enabled ? "text-[#10B981]" : "text-[#737373] hover:text-[#10B981]"}`}>
+                    <button
+                      aria-label={automation.enabled ? `Desactivar automatización ${automation.name}` : `Activar automatización ${automation.name}`}
+                      className={`p-2 rounded-lg transition-colors ${automation.enabled ? "text-[#10B981]" : "text-[#737373] hover:text-[#10B981]"}`}
+                    >
                       <ToggleLeft className="w-5 h-5" />
                     </button>
                   </div>
