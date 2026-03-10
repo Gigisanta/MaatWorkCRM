@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 
 type OverlayProps = {
   highlightRect: { top: number; left: number; width: number; height: number } | null;

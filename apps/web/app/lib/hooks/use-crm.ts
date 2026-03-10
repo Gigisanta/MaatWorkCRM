@@ -1,9 +1,35 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSession } from "~/lib/auth-client";
-import { getDashboardMetrics, getRecentActivity, getContactsByStage, getBottleneckAnalysis, getConversionFunnel, getUserProductivityMetrics } from "../../../server/functions/analytics";
-import { createCalendarEvent, deleteCalendarEvent, getCalendarEvents, updateCalendarEvent } from "../../../server/functions/calendar";
+import {
+  getBottleneckAnalysis,
+  getContactsByStage,
+  getConversionFunnel,
+  getDashboardMetrics,
+  getRecentActivity,
+  getUserProductivityMetrics,
+} from "../../../server/functions/analytics";
+import {
+  createCalendarEvent,
+  deleteCalendarEvent,
+  getCalendarEvents,
+  updateCalendarEvent,
+} from "../../../server/functions/calendar";
 import { createContact, deleteContact, getContacts, updateContact } from "../../../server/functions/contacts";
+import {
+  createFinancialProfile,
+  deleteFinancialProfile,
+  getFinancialProfile,
+  updateFinancialProfile,
+} from "../../../server/functions/financial-profiles";
 import { createDeal, createStage, getDealsWithContacts, getStages, moveDeal } from "../../../server/functions/pipeline";
+import {
+  addTagToContact,
+  createTag,
+  deleteTag,
+  getContactTags,
+  getTags,
+  removeTagFromContact,
+} from "../../../server/functions/tags";
 import { createTask, deleteTask, getTasks, getTasksWithContacts, updateTask } from "../../../server/functions/tasks";
 import {
   createTeam,
@@ -13,12 +39,6 @@ import {
   updateGoalProgress,
   updateTeam,
 } from "../../../server/functions/teams";
-import { createFinancialProfile,
-  deleteFinancialProfile,
-  getFinancialProfile,
-  updateFinancialProfile,
-} from "../../../server/functions/financial-profiles";
-import { addTagToContact, createTag, deleteTag, getContactTags, getTags, removeTagFromContact } from "../../../server/functions/tags";
 
 // AI_DECISION: Centralized CRM hooks for live data integration
 // Justificación: Synchronizes frontend state with backend server functions using TanStack Query
@@ -194,7 +214,7 @@ export function useGoogleCalendarEvents(filters?: { timeMin?: string; timeMax?: 
       const params = new URLSearchParams();
       if (filters?.timeMin) params.set("timeMin", filters.timeMin);
       if (filters?.timeMax) params.set("timeMax", filters.timeMax);
-      
+
       const res = await fetch(`/api/google/calendar/events?${params.toString()}`);
       if (!res.ok) {
         const err = await res.json();
@@ -347,7 +367,7 @@ export function useDeleteTagMutation() {
 export function useAddTagToContactMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: { contactId: string; tagId: string; monthlyPremium?: number; policyNumber?: string }) => 
+    mutationFn: (data: { contactId: string; tagId: string; monthlyPremium?: number; policyNumber?: string }) =>
       addTagToContact({ data }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contact-tags"] });
@@ -358,8 +378,7 @@ export function useAddTagToContactMutation() {
 export function useRemoveTagFromContactMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: { contactId: string; tagId: string }) => 
-      removeTagFromContact({ data }),
+    mutationFn: (data: { contactId: string; tagId: string }) => removeTagFromContact({ data }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contact-tags"] });
     },

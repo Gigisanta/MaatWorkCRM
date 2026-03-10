@@ -39,7 +39,11 @@ export function DataTable<TData, TValue>({ columns, data, onRowClick }: DataTabl
                 <tr
                   key={row.id}
                   onClick={() => onRowClick?.(row.original)}
-                  className={onRowClick ? "hover:bg-white/5 transition-colors cursor-pointer group" : "hover:bg-white/5 transition-colors group"}
+                  className={
+                    onRowClick
+                      ? "hover:bg-white/5 transition-colors cursor-pointer group"
+                      : "hover:bg-white/5 transition-colors group"
+                  }
                 >
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="py-2 px-3 align-middle text-[#F5F5F5] group-hover:text-white">

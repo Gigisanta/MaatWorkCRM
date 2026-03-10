@@ -58,9 +58,7 @@ function SegmentsPage() {
                 >
                   <Users className="w-6 h-6" style={{ color: segment.color }} />
                 </div>
-                <Badge className="bg-white/5 text-[#737373] border-0">
-                  {segment.count} contactos
-                </Badge>
+                <Badge className="bg-white/5 text-[#737373] border-0">{segment.count} contactos</Badge>
               </div>
               <h3 className="text-lg font-bold text-[#F5F5F5] mb-1 group-hover:text-[#8B5CF6] transition-colors">
                 {segment.name}
@@ -75,9 +73,7 @@ function SegmentsPage() {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-bold text-[#F5F5F5]">Segmentos Dinámicos</h3>
-            <p className="text-sm text-[#737373] mt-1">
-              Crea reglas automáticas paraSegmentar contactos
-            </p>
+            <p className="text-sm text-[#737373] mt-1">Crea reglas automáticas paraSegmentar contactos</p>
           </div>
           <Button variant="outline">
             <Plus className="w-4 h-4 mr-2" />

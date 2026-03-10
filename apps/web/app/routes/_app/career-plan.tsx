@@ -1,13 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import {
-  TrendingUp,
-  Award,
-  Target,
-  DollarSign,
-  CheckCircle,
-  Lock,
-} from "lucide-react";
+import { Award, CheckCircle, DollarSign, Lock, Target, TrendingUp } from "lucide-react";
 import { Card } from "~/components/ui/Card";
 import { Container, Grid, Stack } from "~/components/ui/Layout";
 import { SectionHeader } from "~/components/ui/LayoutCards";
@@ -31,7 +24,7 @@ const mockLevels = [
   { level: "Senior Advisor", min: 60000, max: 100000, commission: 12 },
   { level: "Lead Advisor", min: 100000, max: 150000, commission: 15 },
   { level: "Manager", min: 150000, max: 250000, commission: 18 },
-  { level: "Director", min: 250000, max: Infinity, commission: 20 },
+  { level: "Director", min: 250000, max: Number.POSITIVE_INFINITY, commission: 20 },
 ];
 
 function CareerPlanPage() {
@@ -46,7 +39,11 @@ function CareerPlanPage() {
       </motion.div>
 
       <Grid cols={{ sm: 1, md: 2, lg: 4 }} gap={6}>
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1 }}
+        >
           <Card variant="elevated" className="p-6 text-center">
             <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
               <Award className="w-6 h-6 text-primary" />
@@ -56,7 +53,11 @@ function CareerPlanPage() {
           </Card>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2 }}
+        >
           <Card variant="elevated" className="p-6 text-center">
             <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
               <TrendingUp className="w-6 h-6 text-emerald-500" />
@@ -66,7 +67,11 @@ function CareerPlanPage() {
           </Card>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }}>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3 }}
+        >
           <Card variant="elevated" className="p-6 text-center">
             <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-amber-500/10 flex items-center justify-center">
               <DollarSign className="w-6 h-6 text-amber-500" />
@@ -76,7 +81,11 @@ function CareerPlanPage() {
           </Card>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 }}>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.4 }}
+        >
           <Card variant="elevated" className="p-6 text-center">
             <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-violet-500/10 flex items-center justify-center">
               <Target className="w-6 h-6 text-violet-500" />
@@ -128,10 +137,18 @@ function CareerPlanPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border/50">
-                  <th className="text-left py-3 px-4 text-xs font-bold text-text-muted uppercase tracking-wider">Nivel</th>
-                  <th className="text-left py-3 px-4 text-xs font-bold text-text-muted uppercase tracking-wider">Rango USD</th>
-                  <th className="text-right py-3 px-4 text-xs font-bold text-text-muted uppercase tracking-wider">Comisión</th>
-                  <th className="text-center py-3 px-4 text-xs font-bold text-text-muted uppercase tracking-wider">Estado</th>
+                  <th className="text-left py-3 px-4 text-xs font-bold text-text-muted uppercase tracking-wider">
+                    Nivel
+                  </th>
+                  <th className="text-left py-3 px-4 text-xs font-bold text-text-muted uppercase tracking-wider">
+                    Rango USD
+                  </th>
+                  <th className="text-right py-3 px-4 text-xs font-bold text-text-muted uppercase tracking-wider">
+                    Comisión
+                  </th>
+                  <th className="text-center py-3 px-4 text-xs font-bold text-text-muted uppercase tracking-wider">
+                    Estado
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -145,13 +162,16 @@ function CareerPlanPage() {
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-2">
                         {idx + 1 <= 3 && <Award className="w-4 h-4 text-amber-500" />}
-                        <span className={`font-bold ${lvl.level === mockUserProgress.currentLevel ? "text-primary" : "text-text"}`}>
+                        <span
+                          className={`font-bold ${lvl.level === mockUserProgress.currentLevel ? "text-primary" : "text-text"}`}
+                        >
                           {lvl.level}
                         </span>
                       </div>
                     </td>
                     <td className="py-4 px-4 text-sm text-text-muted">
-                      ${lvl.min.toLocaleString()} - {lvl.max === Infinity ? "∞" : `$${lvl.max.toLocaleString()}`}
+                      ${lvl.min.toLocaleString()} -{" "}
+                      {lvl.max === Number.POSITIVE_INFINITY ? "∞" : `$${lvl.max.toLocaleString()}`}
                     </td>
                     <td className="py-4 px-4 text-right">
                       <span className="text-lg font-black text-emerald-500">{lvl.commission}%</span>

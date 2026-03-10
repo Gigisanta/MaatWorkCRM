@@ -57,12 +57,7 @@ export function StatCard({
           )}
         </div>
 
-        <div
-          className={cn(
-            "p-3 rounded-lg transition-all duration-150 group-hover:scale-[1.005]",
-            colors[variant],
-          )}
-        >
+        <div className={cn("p-3 rounded-lg transition-all duration-150 group-hover:scale-[1.005]", colors[variant])}>
           <Icon className="w-6 h-6" strokeWidth={2.5} />
         </div>
       </div>

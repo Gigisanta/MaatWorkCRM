@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
-import { DollarSign, TrendingUp, Users, Briefcase, FileText, Shield } from "lucide-react";
-import { FinancialProfileFormData } from "~/lib/validations/financial-profile";
+import { Briefcase, DollarSign, FileText, Shield, TrendingUp, Users } from "lucide-react";
 import { cn } from "~/lib/utils";
+import type { FinancialProfileFormData } from "~/lib/validations/financial-profile";
 
 interface FinancialProfileDisplayProps {
   profile: FinancialProfileFormData | null | undefined;
@@ -17,10 +17,7 @@ export function FinancialProfileDisplay({ profile, onEdit }: FinancialProfileDis
         </div>
         <p className="text-text-muted mb-4">No financial profile created yet</p>
         {onEdit && (
-          <button
-            onClick={onEdit}
-            className="text-primary hover:text-primary-hover font-semibold text-sm"
-          >
+          <button onClick={onEdit} className="text-primary hover:text-primary-hover font-semibold text-sm">
             Create Financial Profile
           </button>
         )}
@@ -54,17 +51,17 @@ export function FinancialProfileDisplay({ profile, onEdit }: FinancialProfileDis
       title: "Risk Profile",
       icon: TrendingUp,
       items: [
-        { 
-          label: "Risk Tolerance", 
-          value: profile.riskTolerance?.replace("_", " ") || "Not specified" 
+        {
+          label: "Risk Tolerance",
+          value: profile.riskTolerance?.replace("_", " ") || "Not specified",
         },
-        { 
-          label: "Investment Horizon", 
-          value: profile.investmentHorizon?.replace("_", " ") || "Not specified" 
+        {
+          label: "Investment Horizon",
+          value: profile.investmentHorizon?.replace("_", " ") || "Not specified",
         },
-        { 
-          label: "Experience Level", 
-          value: profile.investmentExperience || "Not specified" 
+        {
+          label: "Experience Level",
+          value: profile.investmentExperience || "Not specified",
         },
       ],
     },
@@ -72,12 +69,15 @@ export function FinancialProfileDisplay({ profile, onEdit }: FinancialProfileDis
       title: "Investment Goals",
       icon: TrendingUp,
       items: [
-        { 
-          label: "Primary Goal", 
-          value: profile.primaryGoal?.replace("_", " ") || "Not specified" 
+        {
+          label: "Primary Goal",
+          value: profile.primaryGoal?.replace("_", " ") || "Not specified",
         },
         { label: "Target Return", value: profile.targetReturn ? `${profile.targetReturn}%` : "Not specified" },
-        { label: "Time Horizon", value: profile.timeHorizonYears ? `${profile.timeHorizonYears} years` : "Not specified" },
+        {
+          label: "Time Horizon",
+          value: profile.timeHorizonYears ? `${profile.timeHorizonYears} years` : "Not specified",
+        },
       ],
     },
     {
@@ -132,13 +132,8 @@ export function FinancialProfileDisplay({ profile, onEdit }: FinancialProfileDis
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {section.items.map((item) => (
               <div key={item.label}>
-                <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">
-                  {item.label}
-                </p>
-                <p className={cn(
-                  "text-sm",
-                  item.value === "Not specified" ? "text-text-muted italic" : "text-text"
-                )}>
+                <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">{item.label}</p>
+                <p className={cn("text-sm", item.value === "Not specified" ? "text-text-muted italic" : "text-text")}>
                   {item.value}
                 </p>
               </div>
@@ -162,9 +157,7 @@ export function FinancialProfileDisplay({ profile, onEdit }: FinancialProfileDis
           </div>
           {profile.financialNotes && (
             <div className="mb-4">
-              <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
-                Financial Notes
-              </p>
+              <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Financial Notes</p>
               <p className="text-sm text-text">{profile.financialNotes}</p>
             </div>
           )}

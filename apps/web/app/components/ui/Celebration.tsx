@@ -1,10 +1,19 @@
 import React, { useEffect, useRef } from "react";
 
 const CelebrationBackdrop: React.FC = () => (
-  <div style={{ position: "fixed", inset: 0, background: "radial-gradient(circle at 30% 20%, rgba(139,92,246,0.25), rgba(0,0,0,0.7) 60%)" }} />
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "radial-gradient(circle at 30% 20%, rgba(139,92,246,0.25), rgba(0,0,0,0.7) 60%)",
+    }}
+  />
 );
 
-const ConfettiCanvas: React.FC<{ durationMs?: number; colors?: string[] }> = ({ durationMs = 1800, colors = ["#8B5CF6", "#FF4D99", "#4ADE80", "#F59E0B"] }) => {
+const ConfettiCanvas: React.FC<{ durationMs?: number; colors?: string[] }> = ({
+  durationMs = 1800,
+  colors = ["#8B5CF6", "#FF4D99", "#4ADE80", "#F59E0B"],
+}) => {
   const ref = useRef<HTMLCanvasElement | null>(null);
   React.useEffect(() => {
     const canvas = ref.current;
@@ -12,8 +21,8 @@ const ConfettiCanvas: React.FC<{ durationMs?: number; colors?: string[] }> = ({ 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const w = canvas.width = Math.floor(window.innerWidth * dpr);
-    const h = canvas.height = Math.floor(window.innerHeight * dpr);
+    const w = (canvas.width = Math.floor(window.innerWidth * dpr));
+    const h = (canvas.height = Math.floor(window.innerHeight * dpr));
     const pieces = Array.from({ length: 120 }).map(() => {
       return {
         x: Math.random() * w,
@@ -51,7 +60,12 @@ const ConfettiCanvas: React.FC<{ durationMs?: number; colors?: string[] }> = ({ 
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, [durationMs, colors]);
-  return <canvas ref={ref} style={{ position: "fixed", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 999999 }} />;
+  return (
+    <canvas
+      ref={ref}
+      style={{ position: "fixed", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 999999 }}
+    />
+  );
 };
 
 const Celebration: React.FC<{ onDone?: () => void }> = ({ onDone }) => {
@@ -64,7 +78,9 @@ const Celebration: React.FC<{ onDone?: () => void }> = ({ onDone }) => {
       <CelebrationBackdrop />
       <ConfettiCanvas durationMs={1800} />
       <div style={{ position: "fixed", bottom: 40, left: 0, right: 0, display: "flex", justifyContent: "center" }}>
-        <div style={{ padding: 12, borderRadius: 999, background: "rgba(0,0,0,0.5)", color: "white" }}>Congrats! You’re all set.</div>
+        <div style={{ padding: 12, borderRadius: 999, background: "rgba(0,0,0,0.5)", color: "white" }}>
+          Congrats! You’re all set.
+        </div>
       </div>
     </div>
   );

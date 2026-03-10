@@ -3,7 +3,7 @@
 // Financial advisor-specific contact information
 // ============================================================
 
-import { timestamp, pgTable, text, integer, numeric } from "drizzle-orm/pg-core";
+import { integer, numeric, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { contacts } from "./crm";
 
 export const financialProfiles = pgTable("financial_profiles", {

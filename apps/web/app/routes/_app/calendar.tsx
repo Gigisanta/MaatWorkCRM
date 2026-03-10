@@ -6,8 +6,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
-  Calendar as CalendarIcon,
   CalendarDays,
+  Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -21,12 +21,12 @@ import {
   Video,
 } from "lucide-react";
 import { useState } from "react";
-import { useSession } from "~/lib/auth-client";
 import { Badge } from "~/components/ui/Badge";
 import { Button } from "~/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/Card";
 import { Icon } from "~/components/ui/Icon";
 import { Container, Grid, Stack } from "~/components/ui/Layout";
+import { useSession } from "~/lib/auth-client";
 import { cn } from "~/lib/utils";
 
 export const Route = createFileRoute("/_app/calendar")({
@@ -155,7 +155,7 @@ function CalendarPage() {
             disabled={!session?.user}
             className={cn(
               "h-10 px-4 border-border bg-surface hover:bg-surface-hover transition-all",
-              showGoogleCalendar && "bg-primary hover:bg-primary-hover text-white"
+              showGoogleCalendar && "bg-primary hover:bg-primary-hover text-white",
             )}
           >
             <CalendarDays className="w-4 h-4 mr-2" />
@@ -271,32 +271,32 @@ function CalendarPage() {
                       </div>
 
                       <div className="mt-2 space-y-1.5 overflow-y-auto max-h-[80px] scrollbar-hide">
-                          {dayEvents.map((e) => (
-                            <motion.div
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                              key={e.id}
-                              className={cn(
-                                "text-[10px] px-2 py-1 rounded-md border font-semibold truncate transition-all cursor-pointer hover:brightness-110",
-                                colorMap[e.color],
-                              )}
-                            >
-                              {e.startAt} {e.title}
-                            </motion.div>
-                          ))}
-                          {googleDayEvents.map((e: any) => (
-                            <motion.div
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                              key={e.id}
-                              className="text-[10px] px-2 py-1 rounded-md border font-semibold truncate transition-all cursor-pointer hover:brightness-110 bg-info/10 border-info/20 text-info flex items-center gap-1"
-                              title={e.location || "Google Calendar Event"}
-                            >
-                              <ExternalLink size={8} />
-                              {e.startAt} {e.title}
-                            </motion.div>
-                          ))}
-                        </div>
+                        {dayEvents.map((e) => (
+                          <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            key={e.id}
+                            className={cn(
+                              "text-[10px] px-2 py-1 rounded-md border font-semibold truncate transition-all cursor-pointer hover:brightness-110",
+                              colorMap[e.color],
+                            )}
+                          >
+                            {e.startAt} {e.title}
+                          </motion.div>
+                        ))}
+                        {googleDayEvents.map((e: any) => (
+                          <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            key={e.id}
+                            className="text-[10px] px-2 py-1 rounded-md border font-semibold truncate transition-all cursor-pointer hover:brightness-110 bg-info/10 border-info/20 text-info flex items-center gap-1"
+                            title={e.location || "Google Calendar Event"}
+                          >
+                            <ExternalLink size={8} />
+                            {e.startAt} {e.title}
+                          </motion.div>
+                        ))}
+                      </div>
                     </div>
                   );
                 })}
@@ -310,41 +310,49 @@ function CalendarPage() {
           <div className="space-y-4">
             <h3 className="text-xs font-bold text-text-muted uppercase tracking-wider px-1">Upcoming Events</h3>
             <div className="space-y-3">
-              {(showGoogleCalendar ? [...DEMO_EVENTS, ...googleEventsTransformed] : DEMO_EVENTS).map((e: any, idx: number) => (
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                  key={e.id}
-                >
-                  <Card className={cn(
-                    "hover:shadow-[0_4px_15px_rgba(0,0,0,0.1)] border-border bg-surface hover:border-primary/30 transition-all duration-300 group",
-                    e.isGoogle && "border-info/30 hover:border-info/50"
-                  )}>
-                    <CardContent className="p-3.5">
-                      <Stack direction="row" gap="sm" align="start">
-                        <div
-                          className={cn(
-                            "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border transition-colors",
-                            e.isGoogle ? "bg-info/10 border-info/20" : colorMap[e.color],
-                          )}
-                        >
-                          {e.isGoogle ? <ExternalLink size={18} className="text-info" /> : <Icon name={typeIcons[e.type] as any} size={18} />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-bold text-text truncate group-hover:text-primary-light transition-colors">
-                            {e.title}
-                          </h4>
-                          <p className="text-[10px] font-medium text-text-muted mt-1 flex items-center gap-1">
-                            <Clock size={10} />
-                            {e.startAt} - {e.endAt} {e.location && `• ${e.location}`}
-                          </p>
-                        </div>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+              {(showGoogleCalendar ? [...DEMO_EVENTS, ...googleEventsTransformed] : DEMO_EVENTS).map(
+                (e: any, idx: number) => (
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    key={e.id}
+                  >
+                    <Card
+                      className={cn(
+                        "hover:shadow-[0_4px_15px_rgba(0,0,0,0.1)] border-border bg-surface hover:border-primary/30 transition-all duration-300 group",
+                        e.isGoogle && "border-info/30 hover:border-info/50",
+                      )}
+                    >
+                      <CardContent className="p-3.5">
+                        <Stack direction="row" gap="sm" align="start">
+                          <div
+                            className={cn(
+                              "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border transition-colors",
+                              e.isGoogle ? "bg-info/10 border-info/20" : colorMap[e.color],
+                            )}
+                          >
+                            {e.isGoogle ? (
+                              <ExternalLink size={18} className="text-info" />
+                            ) : (
+                              <Icon name={typeIcons[e.type] as any} size={18} />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-sm font-bold text-text truncate group-hover:text-primary-light transition-colors">
+                              {e.title}
+                            </h4>
+                            <p className="text-[10px] font-medium text-text-muted mt-1 flex items-center gap-1">
+                              <Clock size={10} />
+                              {e.startAt} - {e.endAt} {e.location && `• ${e.location}`}
+                            </p>
+                          </div>
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ),
+              )}
             </div>
           </div>
 

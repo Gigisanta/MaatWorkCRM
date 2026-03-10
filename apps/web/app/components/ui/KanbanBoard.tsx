@@ -5,13 +5,13 @@
 // ============================================================
 
 import { AnimatePresence, motion } from "framer-motion";
-import { GripVertical, Mail, Phone, User, Plus } from "lucide-react";
+import { GripVertical, Mail, Phone, Plus, User } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
-import { Badge } from "./Badge";
-import { Card, CardContent } from "./Card";
-import { Button } from "./Button";
 import { cn, formatCurrency } from "~/lib/utils";
+import { Badge } from "./Badge";
+import { Button } from "./Button";
+import { Card, CardContent } from "./Card";
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -98,7 +98,7 @@ function ContactCard({
           className="absolute top-0 left-0 w-full h-[3px] opacity-50 transition-opacity group-hover/card:opacity-100 rounded-t-lg"
           style={{ backgroundColor: stage.color }}
         />
-        
+
         <CardContent className="p-4 space-y-3">
           {/* Contact name */}
           <div className="flex items-start justify-between gap-2">
@@ -118,17 +118,13 @@ function ContactCard({
             {contact.email && (
               <div className="flex items-center gap-2 min-w-0">
                 <Mail className="w-3 h-3 text-[#8B5CF6] shrink-0" />
-                <span className="text-[11px] text-[#A3A3A3] font-medium truncate">
-                  {contact.email}
-                </span>
+                <span className="text-[11px] text-[#A3A3A3] font-medium truncate">{contact.email}</span>
               </div>
             )}
             {contact.phone && (
               <div className="flex items-center gap-2 min-w-0">
                 <Phone className="w-3 h-3 text-[#8B5CF6] shrink-0" />
-                <span className="text-[11px] text-[#A3A3A3] font-medium truncate">
-                  {contact.phone}
-                </span>
+                <span className="text-[11px] text-[#A3A3A3] font-medium truncate">{contact.phone}</span>
               </div>
             )}
           </div>
@@ -221,13 +217,8 @@ function StageColumn({
       {/* Stage header */}
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
-          <div
-            className="w-2.5 h-2.5 rounded-full"
-            style={{ backgroundColor: stage.color }}
-          />
-          <h3 className="font-black text-xs text-text uppercase tracking-wider">
-            {stage.name}
-          </h3>
+          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: stage.color }} />
+          <h3 className="font-black text-xs text-text uppercase tracking-wider">{stage.name}</h3>
           <span
             className={cn(
               "text-[10px] font-bold px-1.5 py-0.5 rounded-md border",
@@ -265,11 +256,9 @@ function StageColumn({
               Arrastra un contacto
             </motion.div>
           ) : (
-            contacts.map((contact) => (
+            contacts.map((contact) =>
               renderContactCard ? (
-                <div key={contact.id}>
-                  {renderContactCard(contact, stage)}
-                </div>
+                <div key={contact.id}>{renderContactCard(contact, stage)}</div>
               ) : (
                 <ContactCard
                   key={contact.id}
@@ -280,8 +269,8 @@ function StageColumn({
                   isDragging={draggingContactId === contact.id}
                   onClick={() => onContactClick?.(contact)}
                 />
-              )
-            ))
+              ),
+            )
           )}
         </AnimatePresence>
       </div>
@@ -343,9 +332,7 @@ export function KanbanBoard({
     if (!contactId || !targetStageId) return;
 
     // Find current stage for the contact to prevent redundant moves
-    const currentStage = stages.find((s) =>
-      contacts.some((c) => c.id === contactId && c.pipelineStageId === s.id),
-    );
+    const currentStage = stages.find((s) => contacts.some((c) => c.id === contactId && c.pipelineStageId === s.id));
     if (currentStage?.id === targetStageId) return;
 
     // Trigger the move callback
@@ -366,10 +353,7 @@ export function KanbanBoard({
     return (
       <div className="flex gap-4 overflow-x-auto pb-4 pt-2 px-1">
         {stages.map((stage) => (
-          <div
-            key={stage.id}
-            className="flex-shrink-0 w-72 rounded-lg bg-surface-100 border border-border/30 p-3"
-          >
+          <div key={stage.id} className="flex-shrink-0 w-72 rounded-lg bg-surface-100 border border-border/30 p-3">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ backgroundColor: stage.color }} />
               <div className="h-3 w-20 bg-[#18181B] rounded animate-pulse" />
@@ -421,13 +405,8 @@ export function KanbanBoard({
               {/* Stage header */}
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
-                  <div
-                    className="w-2.5 h-2.5 rounded-full"
-                    style={{ backgroundColor: stage.color }}
-                  />
-                  <h3 className="font-black text-xs text-text uppercase tracking-wider">
-                    {stage.name}
-                  </h3>
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: stage.color }} />
+                  <h3 className="font-black text-xs text-text uppercase tracking-wider">{stage.name}</h3>
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md border text-text-muted bg-surface-100 border-border/30">
                     {contactsByStage[stage.id]?.length || 0}
                   </span>

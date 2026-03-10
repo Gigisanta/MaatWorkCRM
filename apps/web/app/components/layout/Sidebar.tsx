@@ -1,6 +1,6 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import * as Popover from "@radix-ui/react-popover";
 import * as Dialog from "@radix-ui/react-dialog";
+import * as Popover from "@radix-ui/react-popover";
+import { Link, useRouterState } from "@tanstack/react-router";
 import {
   BarChart3,
   Bell,
@@ -13,19 +13,19 @@ import {
   Kanban,
   LayoutDashboard,
   Lightbulb,
+  LogOut,
   Menu,
+  MessageSquare,
   Settings,
   Shield,
   Sparkles,
   User,
-  LogOut,
-  MessageSquare,
-  X,
   Users,
   UsersRound,
+  X,
   Zap,
 } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { cn } from "~/lib/utils";
 import { useNotifications } from "../../hooks/useNotifications";
 
@@ -42,7 +42,7 @@ const mockUser = {
 // Career Progress Bar Component - Enhanced with Commissions & Config
 function CareerProgressBar() {
   const [showConfig, setShowConfig] = useState(false);
-  
+
   // Mock data - replace with actual auth/commission data
   const careerData = {
     level: "Senior Advisor",
@@ -56,14 +56,12 @@ function CareerProgressBar() {
 
   return (
     <div
-      onClick={() => window.location.href = "/career-plan"}
+      onClick={() => (window.location.href = "/career-plan")}
       className="hidden lg:flex flex-col items-start gap-1.5 px-4 py-2 rounded-lg bg-surface-100/50 hover:bg-surface-100 border border-border/30 transition-all duration-150 group cursor-pointer min-w-[200px]"
     >
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">
-            {careerData.level}
-          </span>
+          <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">{careerData.level}</span>
           {careerData.isAdmin && (
             <span
               onClick={(e) => {
@@ -80,7 +78,7 @@ function CareerProgressBar() {
       </div>
       <div className="w-full flex items-center gap-2">
         <div className="flex-1 h-1.5 bg-surface rounded-full overflow-hidden">
-          <div 
+          <div
             className="h-full bg-primary rounded-full transition-all duration-150"
             style={{ width: `${careerData.progress}%` }}
           />
@@ -90,14 +88,12 @@ function CareerProgressBar() {
       {/* Commissions Bar */}
       <div className="w-full flex items-center gap-2 mt-0.5">
         <div className="flex-1 h-1 bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full overflow-hidden">
-          <div 
+          <div
             className="h-full bg-emerald-500 rounded-full transition-all duration-150"
             style={{ width: `${Math.min(progressPercent, 100)}%` }}
           />
         </div>
-        <span className="text-[9px] font-bold text-emerald-600">
-          ${careerData.commissions.toLocaleString()}
-        </span>
+        <span className="text-[9px] font-bold text-emerald-600">${careerData.commissions.toLocaleString()}</span>
       </div>
       {showConfig && careerData.isAdmin && (
         <div className="absolute top-full mt-2 left-4 right-4 bg-surface border border-border rounded-lg shadow-lg p-3 z-50">
@@ -117,7 +113,7 @@ function CareerProgressBar() {
 // Notification Button with Popover
 function NotificationButton() {
   const { notifications } = useNotifications();
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
   const [open, setOpen] = useState(false);
   const [detailNotification, setDetailNotification] = useState<any>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -144,7 +140,7 @@ function NotificationButton() {
           </button>
         </Popover.Trigger>
         <Popover.Portal>
-          <Popover.Content 
+          <Popover.Content
             className="w-80 bg-surface border border-border/50 rounded-lg shadow-lg p-4 z-50"
             sideOffset={8}
             align="end"
@@ -160,27 +156,29 @@ function NotificationButton() {
                 <p className="text-xs text-text-muted text-center py-4">No hay notificaciones</p>
               ) : (
                 recentNotifications.map((n) => (
-                  <div 
+                  <div
                     key={n.id}
                     onClick={() => openDetail(n)}
                     className={cn(
                       "p-3 rounded-lg cursor-pointer transition-all hover:bg-surface-hover",
-                      n.read ? "opacity-60" : "bg-surface-100"
+                      n.read ? "opacity-60" : "bg-surface-100",
                     )}
                   >
                     <div className="flex items-start gap-2">
-                      <span className={cn(
-                        "w-2 h-2 mt-1.5 rounded-full shrink-0",
-                        n.priority === "high" ? "bg-error" : n.priority === "medium" ? "bg-warning" : "bg-info"
-                      )} />
+                      <span
+                        className={cn(
+                          "w-2 h-2 mt-1.5 rounded-full shrink-0",
+                          n.priority === "high" ? "bg-error" : n.priority === "medium" ? "bg-warning" : "bg-info",
+                        )}
+                      />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium text-text truncate">{n.message}</p>
                         <p className="text-[10px] text-text-muted mt-0.5">
-                          {new Date(n.timestamp).toLocaleString("es-ES", { 
-                            day: "numeric", 
-                            month: "short", 
-                            hour: "2-digit", 
-                            minute: "2-digit" 
+                          {new Date(n.timestamp).toLocaleString("es-ES", {
+                            day: "numeric",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
                           })}
                         </p>
                       </div>
@@ -189,8 +187,8 @@ function NotificationButton() {
                 ))
               )}
             </div>
-            <Link 
-              to="/tasks" 
+            <Link
+              to="/tasks"
               className="block mt-3 text-center text-xs font-bold text-primary hover:text-primary-light transition-colors"
             >
               Ver todas las notificaciones
@@ -213,12 +211,16 @@ function NotificationButton() {
             {detailNotification && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <span className={cn(
-                    "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
-                    detailNotification.priority === "high" ? "bg-error/20 text-error" : 
-                    detailNotification.priority === "medium" ? "bg-warning/20 text-warning" : 
-                    "bg-info/20 text-info"
-                  )}>
+                  <span
+                    className={cn(
+                      "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
+                      detailNotification.priority === "high"
+                        ? "bg-error/20 text-error"
+                        : detailNotification.priority === "medium"
+                          ? "bg-warning/20 text-warning"
+                          : "bg-info/20 text-info",
+                    )}
+                  >
                     {detailNotification.priority}
                   </span>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-surface-100 text-text-muted">
@@ -259,7 +261,7 @@ function ProfileDropdown() {
         </button>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content 
+        <Popover.Content
           className="w-56 bg-surface border border-border/50 rounded-lg shadow-lg p-2 z-50"
           sideOffset={8}
           align="end"
@@ -282,7 +284,7 @@ function ProfileDropdown() {
             ))}
           </div>
           <div className="mt-2 pt-2 border-t border-border/30">
-              <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-error hover:bg-error/10 transition-all group">
+            <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-error hover:bg-error/10 transition-all group">
               <LogOut className="w-4 h-4" />
               <span className="text-sm font-medium">Cerrar sesión</span>
             </button>
@@ -305,13 +307,13 @@ function FeedbackModal() {
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
-    
+
     // Simulate submission
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     setSubmitting(false);
     setSubmitted(true);
-    
+
     // Reset after showing success
     setTimeout(() => {
       setOpen(false);
@@ -330,8 +332,8 @@ function FeedbackModal() {
         </button>
       </Dialog.Trigger>
       <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/60 z-50" />
-          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-surface border border-border/50 rounded-lg shadow-xl p-6 z-50">
+        <Dialog.Overlay className="fixed inset-0 bg-black/60 z-50" />
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-surface border border-border/50 rounded-lg shadow-xl p-6 z-50">
           <div className="flex items-center justify-between mb-6">
             <Dialog.Title className="text-lg font-bold text-text flex items-center gap-2">
               <MessageSquare className="w-5 h-5 text-accent" />
@@ -341,7 +343,7 @@ function FeedbackModal() {
               <X className="w-5 h-5" />
             </Dialog.Close>
           </div>
-          
+
           {submitted ? (
             <div className="text-center py-8">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-success/20 flex items-center justify-center">
@@ -361,20 +363,37 @@ function FeedbackModal() {
                       type="button"
                       onClick={() => setType(t)}
                       className={cn(
-                         "flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all",
-                         type === t 
-                           ? t === "bug" ? "bg-error text-white" 
-                             : t === "feature" ? "bg-primary text-white"
-                             : "bg-accent text-white"
-                           : "bg-surface-100 text-text-muted hover:bg-surface-hover"
-                       )}
+                        "flex-1 py-2 px-3 rounded-lg text-xs font-bold transition-all",
+                        type === t
+                          ? t === "bug"
+                            ? "bg-error text-white"
+                            : t === "feature"
+                              ? "bg-primary text-white"
+                              : "bg-accent text-white"
+                          : "bg-surface-100 text-text-muted hover:bg-surface-hover",
+                      )}
                     >
-                      {t === "bug" ? <><Bug className="w-3 h-3 mr-1" />Bug</> : t === "feature" ? <><Sparkles className="w-3 h-3 mr-1" />Feature</> : <><Lightbulb className="w-3 h-3 mr-1" />Mejora</>}
+                      {t === "bug" ? (
+                        <>
+                          <Bug className="w-3 h-3 mr-1" />
+                          Bug
+                        </>
+                      ) : t === "feature" ? (
+                        <>
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          Feature
+                        </>
+                      ) : (
+                        <>
+                          <Lightbulb className="w-3 h-3 mr-1" />
+                          Mejora
+                        </>
+                      )}
                     </button>
                   ))}
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <label className="text-xs font-bold text-text-muted uppercase tracking-wider">Título</label>
                 <input
@@ -386,7 +405,7 @@ function FeedbackModal() {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <label className="text-xs font-bold text-text-muted uppercase tracking-wider">Descripción</label>
                 <textarea
@@ -398,7 +417,7 @@ function FeedbackModal() {
                   required
                 />
               </div>
-              
+
               <button
                 type="submit"
                 disabled={submitting}
@@ -547,10 +566,7 @@ export function Sidebar({ collapsed, setCollapsed }: { collapsed: boolean; setCo
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 lg:hidden flex">
-          <div
-            className="fixed inset-0 bg-secondary/60 transition-opacity"
-            onClick={() => setMobileMenuOpen(false)}
-          />
+          <div className="fixed inset-0 bg-secondary/60 transition-opacity" onClick={() => setMobileMenuOpen(false)} />
           <div className="relative w-[320px] max-w-[85vw] bg-surface h-full flex flex-col shadow-xl">
             <div className="flex items-center justify-between p-6 border-b border-border/50 shrink-0">
               <div className="flex items-center gap-3">
@@ -622,9 +638,7 @@ function NavContent({
                 "relative flex items-center rounded-lg transition-all duration-150 min-w-0 font-body group active:scale-[0.98]",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
                 collapsed ? "justify-center w-14 h-14 mx-auto" : "gap-3 px-4 py-3 w-full",
-                isActive
-                  ? "bg-primary text-white"
-                  : "text-text-secondary hover:text-primary hover:bg-primary/5",
+                isActive ? "bg-primary text-white" : "text-text-secondary hover:text-primary hover:bg-primary/5",
               );
 
               const content = (

@@ -4,7 +4,7 @@
 // ============================================================
 
 import { createFileRoute } from "@tanstack/react-router";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Chrome, Eye, EyeOff, Lock, Mail, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { signIn } from "~/lib/auth-client";
@@ -72,12 +72,12 @@ function LoginPage() {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
           animate={{ opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
           className="absolute -top-[30%] -left-[15%] w-[60%] h-[60%] rounded-full bg-gradient-to-br from-primary/20 via-primary/5 to-accent/10 blur-[150px]"
         />
         <motion.div
           animate={{ scale: [1, 1.05, 1] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 6, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
           className="absolute -bottom-[25%] -right-[10%] w-[50%] h-[50%] rounded-full bg-gradient-to-tr from-accent/15 via-accent/5 to-primary/10 blur-[120px]"
         />
         <div className="absolute inset-0 bg-gradient-to-br from-background/0 via-transparent to-background/40" />
@@ -119,10 +119,7 @@ function LoginPage() {
             onClick={handleGoogleLogin}
             className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-surface hover:bg-surface-hover border border-border rounded-lg text-text font-medium transition-all mb-6 shadow-sm hover:shadow-md hover:border-border-hover group/oauth"
           >
-            <motion.div
-              whileHover={{ rotate: 360 }}
-              transition={{ duration: 0.6, ease: "linear" }}
-            >
+            <motion.div whileHover={{ rotate: 360 }} transition={{ duration: 0.6, ease: "linear" }}>
               <Chrome className="w-5 h-5 text-text-secondary" />
             </motion.div>
             <span className="group-hover/oauth:ml-2 transition-all">Continue with Google</span>
@@ -159,7 +156,10 @@ function LoginPage() {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between ml-1">
                 <label className="block text-sm font-medium text-text-secondary">Password</label>
-                <a href="/forgot-password" className="text-xs text-primary hover:text-primary-light transition-colors hover:underline">
+                <a
+                  href="/forgot-password"
+                  className="text-xs text-primary hover:text-primary-light transition-colors hover:underline"
+                >
                   Forgot password?
                 </a>
               </div>
@@ -181,11 +181,12 @@ function LoginPage() {
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-text-muted hover:text-primary hover:bg-primary/5 rounded-lg transition-all group/toggle:active:scale-95"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  <motion.div
-                    animate={{ rotate: showPassword ? 180 : 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" strokeWidth={2} /> : <Eye className="w-4 h-4" strokeWidth={2} />}
+                  <motion.div animate={{ rotate: showPassword ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                    {showPassword ? (
+                      <EyeOff className="w-4 h-4" strokeWidth={2} />
+                    ) : (
+                      <Eye className="w-4 h-4" strokeWidth={2} />
+                    )}
                   </motion.div>
                 </button>
               </div>
@@ -201,7 +202,7 @@ function LoginPage() {
               {isLoading ? (
                 <motion.div
                   animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
                   className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
                 />
               ) : (

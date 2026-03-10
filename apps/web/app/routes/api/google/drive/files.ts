@@ -2,17 +2,17 @@
 // MaatWork CRM — Google Drive API Routes
 // ============================================================
 
-import { createFileRoute } from "@tanstack/react-router";
 import { auth } from "@server/auth";
 import {
-  listGoogleDriveFiles,
-  getGoogleDriveFile,
-  downloadGoogleDriveFile,
-  uploadGoogleDriveFile,
   createGoogleDriveFolder,
   deleteGoogleDriveFile,
+  downloadGoogleDriveFile,
+  getGoogleDriveFile,
+  listGoogleDriveFiles,
   searchGoogleDriveFiles,
+  uploadGoogleDriveFile,
 } from "@server/functions/google/drive";
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/google/drive/files")({
   server: {
@@ -44,7 +44,7 @@ export const Route = createFileRoute("/api/google/drive/files")({
         } catch (error) {
           return new Response(
             JSON.stringify({ error: error instanceof Error ? error.message : "Failed to fetch files" }),
-            { status: 500, headers: { "Content-Type": "application/json" } }
+            { status: 500, headers: { "Content-Type": "application/json" } },
           );
         }
       },
@@ -59,13 +59,9 @@ export const Route = createFileRoute("/api/google/drive/files")({
 
         try {
           const body = await request.json();
-          
+
           if (body.type === "folder") {
-            const folder = await createGoogleDriveFolder(
-              session.user.id,
-              body.name,
-              body.parentFolderId
-            );
+            const folder = await createGoogleDriveFolder(session.user.id, body.name, body.parentFolderId);
             return new Response(JSON.stringify(folder), {
               status: 201,
               headers: { "Content-Type": "application/json" },
@@ -85,7 +81,7 @@ export const Route = createFileRoute("/api/google/drive/files")({
         } catch (error) {
           return new Response(
             JSON.stringify({ error: error instanceof Error ? error.message : "Failed to create file/folder" }),
-            { status: 500, headers: { "Content-Type": "application/json" } }
+            { status: 500, headers: { "Content-Type": "application/json" } },
           );
         }
       },
@@ -117,7 +113,7 @@ export const Route = createFileRoute("/api/google/drive/files")({
         } catch (error) {
           return new Response(
             JSON.stringify({ error: error instanceof Error ? error.message : "Failed to delete file" }),
-            { status: 500, headers: { "Content-Type": "application/json" } }
+            { status: 500, headers: { "Content-Type": "application/json" } },
           );
         }
       },

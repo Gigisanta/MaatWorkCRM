@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
 import { motion, useMotionValue, useTransform } from "framer-motion";
+import React, { useEffect, useState } from "react";
 
 interface AnimatedCounterProps {
   value: number;
@@ -26,9 +26,5 @@ export function AnimatedCounter({ value, duration = 1500 }: AnimatedCounterProps
     return () => unsubscribe();
   }, [display]);
 
-  return (
-    <motion.div className="tabular-nums font-mono font-bold text-text">
-      {displayValue}
-    </motion.div>
-  );
+  return <motion.div className="tabular-nums font-mono font-bold text-text">{displayValue}</motion.div>;
 }

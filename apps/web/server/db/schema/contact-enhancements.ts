@@ -5,18 +5,9 @@
 // Database: PostgreSQL (Neon)
 // ============================================================
 
-import {
-  boolean,
-  index,
-  integer,
-  pgTable,
-  real,
-  text,
-  timestamp,
-  uniqueIndex,
-} from "drizzle-orm/pg-core";
-import { contacts, pipelineStages } from "./crm";
+import { boolean, index, integer, pgTable, real, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { organizations, users } from "./auth";
+import { contacts, pipelineStages } from "./crm";
 
 /**
  * contactAliases
@@ -41,17 +32,10 @@ export const contactAliases = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
-    contactAliasesNormalizedIdx: index("idx_contact_aliases_normalized").on(
-      table.aliasNormalized
-    ),
-    contactAliasesContactIdx: index("idx_contact_aliases_contact").on(
-      table.contactId
-    ),
-    contactAliasesUnique: uniqueIndex("contact_aliases_unique").on(
-      table.contactId,
-      table.aliasNormalized
-    ),
-  })
+    contactAliasesNormalizedIdx: index("idx_contact_aliases_normalized").on(table.aliasNormalized),
+    contactAliasesContactIdx: index("idx_contact_aliases_contact").on(table.contactId),
+    contactAliasesUnique: uniqueIndex("contact_aliases_unique").on(table.contactId, table.aliasNormalized),
+  }),
 );
 
 /**
@@ -78,11 +62,8 @@ export const contactFieldHistory = pgTable(
     changedAt: timestamp("changed_at").defaultNow().notNull(),
   },
   (table) => ({
-    contactFieldHistoryIdx: index("idx_contact_field_history").on(
-      table.contactId,
-      table.changedAt
-    ),
-  })
+    contactFieldHistoryIdx: index("idx_contact_field_history").on(table.contactId, table.changedAt),
+  }),
 );
 
 /**
@@ -107,14 +88,8 @@ export const contactStageInteractions = pgTable(
     lastInteractionAt: timestamp("last_interaction_at").defaultNow().notNull(),
   },
   (table) => ({
-    contactStageUnique: uniqueIndex(
-      "contact_stage_interactions_unique"
-    ).on(table.contactId, table.pipelineStageId),
-    contactInteractionsIdx: index(
-      "idx_contact_stage_interactions_contact"
-    ).on(table.contactId),
-    stageInteractionsIdx: index(
-      "idx_contact_stage_interactions_stage"
-    ).on(table.pipelineStageId),
-  })
+    contactStageUnique: uniqueIndex("contact_stage_interactions_unique").on(table.contactId, table.pipelineStageId),
+    contactInteractionsIdx: index("idx_contact_stage_interactions_contact").on(table.contactId),
+    stageInteractionsIdx: index("idx_contact_stage_interactions_stage").on(table.pipelineStageId),
+  }),
 );

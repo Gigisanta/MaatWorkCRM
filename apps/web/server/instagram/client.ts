@@ -1,7 +1,7 @@
+import { randomUUID } from "crypto";
+import { desc, eq } from "drizzle-orm";
 import { db } from "../db";
 import { instagramAccounts, instagramConversations, instagramMessages } from "../db/schema/instagram";
-import { eq, desc } from "drizzle-orm";
-import { randomUUID } from "crypto";
 
 const INSTAGRAM_GRAPH_API_BASE = "https://graph.instagram.com";
 
@@ -58,18 +58,17 @@ export class InstagramClient {
   }
 
   async getConversations(): Promise<InstagramConversation[]> {
-    const data = await this.request<{ data: InstagramConversation[] }>(
-      `/${this.pageId}/conversations`,
-      { fields: "id,participants,updated_time" }
-    );
+    const data = await this.request<{ data: InstagramConversation[] }>(`/${this.pageId}/conversations`, {
+      fields: "id,participants,updated_time",
+    });
     return data.data;
   }
 
   async getMessages(conversationId: string): Promise<InstagramMessage[]> {
-    const data = await this.request<{ data: InstagramMessage[] }>(
-      `/${conversationId}/messages`,
-      { fields: "id,from,to,message,created_at", limit: "50" }
-    );
+    const data = await this.request<{ data: InstagramMessage[] }>(`/${conversationId}/messages`, {
+      fields: "id,from,to,message,created_at",
+      limit: "50",
+    });
     return data.data;
   }
 
@@ -95,7 +94,7 @@ export async function getInstagramAccountByOrg(orgId: string) {
 
 export async function syncInstagramConversations(
   accountId: string,
-  config?: InstagramConfig
+  config?: InstagramConfig,
 ): Promise<{ synced: number; errors: string[] }> {
   const account = await db
     .select()
@@ -133,7 +132,7 @@ export async function syncInstagramConversations(
         if (existingConv) {
           const messages = await client.getMessages(conv.id);
           const lastMsg = messages[0];
-          
+
           await db
             .update(instagramConversations)
             .set({
@@ -195,10 +194,7 @@ export async function syncInstagramConversations(
   }
 }
 
-export async function linkConversationToContact(
-  conversationId: string,
-  contactId: string
-) {
+export async function linkConversationToContact(conversationId: string, contactId: string) {
   return db
     .update(instagramConversations)
     .set({ contactId, updatedAt: new Date() as any } as any)

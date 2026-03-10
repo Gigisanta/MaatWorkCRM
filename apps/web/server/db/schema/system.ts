@@ -122,10 +122,14 @@ export const feedback = pgTable("feedback", {
   description: text("description").notNull(),
   status: text("status", {
     enum: ["pending", "in_progress", "completed", "rejected"],
-  }).notNull().default("pending"),
+  })
+    .notNull()
+    .default("pending"),
   priority: text("priority", {
     enum: ["low", "medium", "high"],
-  }).notNull().default("medium"),
+  })
+    .notNull()
+    .default("medium"),
   resolvedAt: timestamp("resolved_at"),
   resolvedBy: text("resolved_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),

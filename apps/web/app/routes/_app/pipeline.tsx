@@ -5,22 +5,15 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import {
-  AlertTriangle,
-  Calendar,
-  Filter,
-  Layers,
-  Plus,
-  User,
-} from "lucide-react";
+import { AlertTriangle, Calendar, Filter, Layers, Plus, User } from "lucide-react";
 import { useState } from "react";
 import { Button } from "~/components/ui/Button";
 import { EmptyState } from "~/components/ui/EmptyState";
 import { Input } from "~/components/ui/Input";
+import { KanbanBoard } from "~/components/ui/KanbanBoard";
 import { Container } from "~/components/ui/Layout";
 import { SectionHeader, StatCard } from "~/components/ui/LayoutCards";
 import { Modal, ModalContent, ModalFooter, ModalHeader, ModalTitle } from "~/components/ui/Modal";
-import { KanbanBoard } from "~/components/ui/KanbanBoard";
 import {
   useContactsByPipelineStage,
   useCreateContactMutation,
@@ -111,7 +104,7 @@ function PipelinePage() {
 
   // Extract stages and all contacts from board
   const stages = board || [];
-  const allContacts = stages.flatMap(stage => stage.contacts || []);
+  const allContacts = stages.flatMap((stage) => stage.contacts || []);
   const totalContacts = allContacts.length;
 
   return (
@@ -124,16 +117,15 @@ function PipelinePage() {
           icon={Layers}
           actions={
             <div className="flex gap-3">
-              <Button variant="outline" size="sm" className="border-border/30 text-text-muted hover:text-primary hover:border-primary/30">
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-border/30 text-text-muted hover:text-primary hover:border-primary/30"
+              >
                 <Filter className="w-4 h-4 mr-2" />
                 Filtrar
               </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => openNewContactModal()}
-                className="rounded-lg"
-              >
+              <Button variant="primary" size="sm" onClick={() => openNewContactModal()} className="rounded-lg">
                 <Plus className="mr-2 w-4 h-4" />
                 Nuevo Contacto
               </Button>
@@ -149,30 +141,10 @@ function PipelinePage() {
         transition={{ delay: 0.1 }}
         className="grid grid-cols-2 lg:grid-cols-4 gap-3"
       >
-        <StatCard
-          label="Contactos"
-          value={totalContacts.toString()}
-          variant="brand"
-          icon={User}
-        />
-        <StatCard 
-          label="Etapas" 
-          value={stages.length.toString()} 
-          variant="violet" 
-          icon={Layers} 
-        />
-        <StatCard 
-          label="Conversión" 
-          value="68%" 
-          variant="emerald" 
-          icon={Calendar} 
-        />
-        <StatCard 
-          label="Meta Mensual" 
-          value="$1.2M" 
-          variant="amber" 
-          icon={Calendar} 
-        />
+        <StatCard label="Contactos" value={totalContacts.toString()} variant="brand" icon={User} />
+        <StatCard label="Etapas" value={stages.length.toString()} variant="violet" icon={Layers} />
+        <StatCard label="Conversión" value="68%" variant="emerald" icon={Calendar} />
+        <StatCard label="Meta Mensual" value="$1.2M" variant="amber" icon={Calendar} />
       </motion.div>
 
       {/* Kanban Board */}
@@ -201,9 +173,7 @@ function PipelinePage() {
       <Modal open={showNewContactModal} onOpenChange={setShowNewContactModal}>
         <ModalHeader className="px-6 pt-6 pb-4 border-b border-border/20">
           <ModalTitle className="text-xl font-bold text-text">Nuevo Contacto</ModalTitle>
-          <p className="text-xs text-text-muted mt-1">
-            Agrega un nuevo contacto al pipeline
-          </p>
+          <p className="text-xs text-text-muted mt-1">Agrega un nuevo contacto al pipeline</p>
         </ModalHeader>
         <ModalContent className="p-6 space-y-4">
           <Input
@@ -230,9 +200,7 @@ function PipelinePage() {
             className="h-11"
           />
           <div className="space-y-2">
-            <label className="text-xs font-medium text-text-muted uppercase tracking-wider">
-              Etapa
-            </label>
+            <label className="text-xs font-medium text-text-muted uppercase tracking-wider">Etapa</label>
             <select
               className="w-full h-11 px-4 rounded-lg border border-border/30 bg-surface focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
               value={selectedStageId || ""}
@@ -248,11 +216,7 @@ function PipelinePage() {
           </div>
         </ModalContent>
         <ModalFooter className="p-4 border-t border-border/20 gap-3">
-          <Button
-            variant="ghost"
-            onClick={() => setShowNewContactModal(false)}
-            className="rounded-lg"
-          >
+          <Button variant="ghost" onClick={() => setShowNewContactModal(false)} className="rounded-lg">
             Cancelar
           </Button>
           <Button
@@ -270,9 +234,7 @@ function PipelinePage() {
       <Modal open={showNewStageModal} onOpenChange={setShowNewStageModal}>
         <ModalHeader className="px-6 pt-6 pb-4 border-b border-border/20">
           <ModalTitle className="text-xl font-bold text-text">Nueva Etapa</ModalTitle>
-          <p className="text-xs text-text-muted mt-1">
-            Personaliza tu flujo de trabajo
-          </p>
+          <p className="text-xs text-text-muted mt-1">Personaliza tu flujo de trabajo</p>
         </ModalHeader>
         <ModalContent className="p-6 space-y-4">
           <Input
@@ -283,9 +245,7 @@ function PipelinePage() {
             className="h-11"
           />
           <div className="space-y-2">
-            <label className="text-xs font-medium text-text-muted uppercase tracking-wider">
-              Color
-            </label>
+            <label className="text-xs font-medium text-text-muted uppercase tracking-wider">Color</label>
             <div className="flex gap-2 flex-wrap">
               {["#8B5CF6", "#C026D3", "#22C55E", "#3B82F6", "#F59E0B", "#EF4444", "#EC4899", "#06B6D4"].map((color) => (
                 <button
@@ -304,11 +264,7 @@ function PipelinePage() {
           </div>
         </ModalContent>
         <ModalFooter className="p-4 border-t border-border/20 gap-3">
-          <Button
-            variant="ghost"
-            onClick={() => setShowNewStageModal(false)}
-            className="rounded-lg"
-          >
+          <Button variant="ghost" onClick={() => setShowNewStageModal(false)} className="rounded-lg">
             Cancelar
           </Button>
           <Button

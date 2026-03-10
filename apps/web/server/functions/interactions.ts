@@ -18,7 +18,7 @@ export const recordContactInteraction = createServerFn({ method: "POST" })
   .inputValidator((input: InteractionInput) => input)
   .handler(async ({ data }) => {
     const id = crypto.randomUUID();
-    
+
     await db.insert(contactInteractions).values({
       id,
       organizationId: data.orgId,
@@ -30,20 +30,16 @@ export const recordContactInteraction = createServerFn({ method: "POST" })
       outcome: data.outcome,
       nextAction: data.nextAction,
     } as any);
-    
+
     await incrementDailyMetric(data.orgId, data.userId, data.type);
-    
+
     return { id, success: true };
   });
 
-async function incrementDailyMetric(
-  orgId: string,
-  userId: string,
-  type: string
-): Promise<void> {
+async function incrementDailyMetric(orgId: string, userId: string, type: string): Promise<void> {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   const existing = await db
     .select()
     .from(dailyUserMetrics)
@@ -51,16 +47,16 @@ async function incrementDailyMetric(
       and(
         eq(dailyUserMetrics.organizationId, orgId),
         eq(dailyUserMetrics.userId, userId),
-        eq(dailyUserMetrics.date, today)
-      )
+        eq(dailyUserMetrics.date, today),
+      ),
     );
-  
+
   if (existing.length > 0) {
     const current = existing[0];
     const updateObj: Record<string, unknown> = {
       totalInteractions: (current.totalInteractions || 0) + 1,
     };
-    
+
     switch (type) {
       case "call":
         updateObj.callsCompleted = (current.callsCompleted || 0) + 1;
@@ -81,7 +77,7 @@ async function incrementDailyMetric(
         updateObj.tasksCompleted = (current.tasksCompleted || 0) + 1;
         break;
     }
-    
+
     await db
       .update(dailyUserMetrics)
       .set(updateObj as any)
@@ -106,7 +102,7 @@ async function incrementDailyMetric(
       contactsMovedForward: 0,
       contactsMovedBackward: 0,
     };
-    
+
     switch (type) {
       case "call":
         base.callsCompleted = 1;
@@ -127,7 +123,7 @@ async function incrementDailyMetric(
         base.tasksCompleted = 1;
         break;
     }
-    
+
     await db.insert(dailyUserMetrics).values(base as any);
   }
 }
@@ -148,7 +144,7 @@ export const getUserInteractions = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     const startDate = data.startDate ? new Date(data.startDate) : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const endDate = data.endDate ? new Date(data.endDate) : new Date();
-    
+
     return db
       .select()
       .from(contactInteractions)
@@ -157,8 +153,8 @@ export const getUserInteractions = createServerFn({ method: "GET" })
           eq(contactInteractions.organizationId, data.orgId),
           eq(contactInteractions.userId, data.userId),
           gte(contactInteractions.createdAt, startDate),
-          lt(contactInteractions.createdAt, endDate)
-        )
+          lt(contactInteractions.createdAt, endDate),
+        ),
       )
       .orderBy(desc(contactInteractions.createdAt));
   });
@@ -175,7 +171,7 @@ export const getInteractionSummary = createServerFn({ method: "GET" })
       .from(contactInteractions)
       .where(eq(contactInteractions.contactId, data.contactId))
       .groupBy(contactInteractions.type);
-    
+
     return interactions.map((row) => ({
       type: row.type,
       count: Number(row.count),

@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { Sparkles, UserPlus, Clock, ChartLine } from "lucide-react";
-import TourOverlay from "./TourOverlay";
-import StepIndicator from "./StepIndicator";
-import TourTooltip from "./TourTooltip";
+import { ChartLine, Clock, Sparkles, UserPlus } from "lucide-react";
+import type React from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Celebration from "./Celebration";
+import StepIndicator from "./StepIndicator";
+import TourOverlay from "./TourOverlay";
+import TourTooltip from "./TourTooltip";
 
 export type OnboardingStep = {
   id: string;
@@ -25,8 +26,7 @@ const STEPS: OnboardingStep[] = [
   {
     id: "step-welcome",
     title: "Welcome to MaatWork CRM",
-    description:
-      "This guided tour will introduce key features as you first login.",
+    description: "This guided tour will introduce key features as you first login.",
     selector: "body",
     action: "scrollIntoView",
     illustration: <Sparkles size={18} />,
@@ -34,8 +34,7 @@ const STEPS: OnboardingStep[] = [
   {
     id: "step-new-client",
     title: "Create your first client",
-    description:
-      "Use the New Client button to add a contact quickly.",
+    description: "Use the New Client button to add a contact quickly.",
     selector: "#new-client-btn",
     action: "scrollIntoView",
     illustration: <UserPlus size={18} />,
@@ -43,8 +42,7 @@ const STEPS: OnboardingStep[] = [
   {
     id: "step-tasks",
     title: "Plan your day",
-    description:
-      "Access tasks and reminders from the left panel to stay organized.",
+    description: "Access tasks and reminders from the left panel to stay organized.",
     selector: "#left-panel-tills",
     action: "scrollIntoView",
     illustration: <Clock size={18} />,
@@ -97,7 +95,7 @@ const OnboardingTour: React.FC<{ onFinish?: () => void }> = ({ onFinish }) => {
   useEffect(() => {
     if (!open) return;
     const step = STEPS[index];
-    const el = step?.selector ? document.querySelector(step.selector) as HTMLElement | null : null;
+    const el = step?.selector ? (document.querySelector(step.selector) as HTMLElement | null) : null;
     if (el) {
       const r = el.getBoundingClientRect();
       const top = r.top + window.scrollY - 6;
@@ -107,7 +105,12 @@ const OnboardingTour: React.FC<{ onFinish?: () => void }> = ({ onFinish }) => {
       setHighlight({ top, left, width: w, height: h });
     } else {
       // Fallback to center spotlight
-      setHighlight({ top: window.innerHeight * 0.4, left: window.innerWidth * 0.2, width: window.innerWidth * 0.6, height: 120 });
+      setHighlight({
+        top: window.innerHeight * 0.4,
+        left: window.innerWidth * 0.2,
+        width: window.innerWidth * 0.6,
+        height: 120,
+      });
     }
   }, [open, index]);
 
@@ -141,7 +144,12 @@ const OnboardingTour: React.FC<{ onFinish?: () => void }> = ({ onFinish }) => {
   // If user chose not to show again, hide component
   if (!open || celebrate) {
     return celebrate ? (
-      <Celebration onDone={() => { setCelebrate(false); close(); }} />
+      <Celebration
+        onDone={() => {
+          setCelebrate(false);
+          close();
+        }}
+      />
     ) : null;
   }
 
@@ -150,9 +158,7 @@ const OnboardingTour: React.FC<{ onFinish?: () => void }> = ({ onFinish }) => {
   return (
     <>
       <TourOverlay highlightRect={highlight} />
-      {highlight && currentStep && (
-        <TourTooltip step={currentStep} targetRect={highlight} />
-      )}
+      {highlight && currentStep && <TourTooltip step={currentStep} targetRect={highlight} />}
       <div
         ref={cardRef}
         aria-label="onboarding-tour"
@@ -164,7 +170,9 @@ const OnboardingTour: React.FC<{ onFinish?: () => void }> = ({ onFinish }) => {
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full flex items-center justify-center bg-violet-900/60 ring-2 ring-violet-400/70">
-              <span className="text-xl font-semibold" style={{ color: '#8B5CF6' }}>{index + 1}</span>
+              <span className="text-xl font-semibold" style={{ color: "#8B5CF6" }}>
+                {index + 1}
+              </span>
             </div>
             <div>
               <div className="text-sm text-violet-100">Onboarding Tour</div>
@@ -203,7 +211,8 @@ const OnboardingTour: React.FC<{ onFinish?: () => void }> = ({ onFinish }) => {
             <span>Tip: You can press Right Arrow to continue</span>
           </div>
           <label className="flex items-center gap-2 text-xs text-violet-200">
-            <input type="checkbox" checked={dontShow} onChange={(e) => setDontShow(e.target.checked)} /> Don't show again
+            <input type="checkbox" checked={dontShow} onChange={(e) => setDontShow(e.target.checked)} /> Don't show
+            again
           </label>
         </div>
       </div>

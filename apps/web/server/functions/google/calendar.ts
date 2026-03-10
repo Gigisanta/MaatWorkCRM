@@ -2,10 +2,10 @@
 // MaatWork CRM — Google Calendar API Functions
 // ============================================================
 
-import { google, calendar_v3 } from "googleapis";
+import { and, eq } from "drizzle-orm";
+import { type calendar_v3, google } from "googleapis";
 import { db } from "../../db";
 import { accounts } from "../../db/schema/auth";
-import { eq, and } from "drizzle-orm";
 
 /**
  * Creates an authenticated OAuth2 client for Google API calls
@@ -13,10 +13,7 @@ import { eq, and } from "drizzle-orm";
  */
 async function getOAuth2Client(userId: string) {
   const account = await db.query.accounts.findFirst({
-    where: and(
-      eq(accounts.userId, userId),
-      eq(accounts.providerId, "google")
-    ),
+    where: and(eq(accounts.userId, userId), eq(accounts.providerId, "google")),
   });
 
   if (!account?.accessToken || !account?.refreshToken) {
@@ -26,7 +23,7 @@ async function getOAuth2Client(userId: string) {
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    `${process.env.BETTER_AUTH_URL}/api/auth/callback/google`
+    `${process.env.BETTER_AUTH_URL}/api/auth/callback/google`,
   );
 
   oauth2Client.setCredentials({
@@ -43,7 +40,7 @@ async function getOAuth2Client(userId: string) {
 export async function getGoogleCalendarEvents(
   userId: string,
   timeMin?: string,
-  timeMax?: string
+  timeMax?: string,
 ): Promise<calendar_v3.Schema$Event[]> {
   const oauth2Client = await getOAuth2Client(userId);
   const calendar = google.calendar({ version: "v3", auth: oauth2Client });
@@ -70,7 +67,7 @@ export async function createGoogleCalendarEvent(
     start: string;
     end: string;
     location?: string;
-  }
+  },
 ): Promise<calendar_v3.Schema$Event> {
   const oauth2Client = await getOAuth2Client(userId);
   const calendar = google.calendar({ version: "v3", auth: oauth2Client });
@@ -101,7 +98,7 @@ export async function updateGoogleCalendarEvent(
     start?: string;
     end?: string;
     location?: string;
-  }
+  },
 ): Promise<calendar_v3.Schema$Event> {
   const oauth2Client = await getOAuth2Client(userId);
   const calendar = google.calendar({ version: "v3", auth: oauth2Client });
@@ -126,10 +123,7 @@ export async function updateGoogleCalendarEvent(
 /**
  * Deletes an event from Google Calendar
  */
-export async function deleteGoogleCalendarEvent(
-  userId: string,
-  eventId: string
-): Promise<void> {
+export async function deleteGoogleCalendarEvent(userId: string, eventId: string): Promise<void> {
   const oauth2Client = await getOAuth2Client(userId);
   const calendar = google.calendar({ version: "v3", auth: oauth2Client });
 
@@ -144,7 +138,7 @@ export async function deleteGoogleCalendarEvent(
  */
 export async function getGoogleCalendarEvent(
   userId: string,
-  eventId: string
+  eventId: string,
 ): Promise<calendar_v3.Schema$Event | null> {
   const oauth2Client = await getOAuth2Client(userId);
   const calendar = google.calendar({ version: "v3", auth: oauth2Client });

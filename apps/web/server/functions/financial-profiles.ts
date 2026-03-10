@@ -10,10 +10,7 @@ import { financialProfiles } from "../db/schema";
 export const getFinancialProfile = createServerFn({ method: "GET" })
   .inputValidator((input: { contactId: string }) => input)
   .handler(async ({ data }) => {
-    const result = await db
-      .select()
-      .from(financialProfiles)
-      .where(eq(financialProfiles.contactId, data.contactId));
+    const result = await db.select().from(financialProfiles).where(eq(financialProfiles.contactId, data.contactId));
     return result[0] ?? null;
   });
 

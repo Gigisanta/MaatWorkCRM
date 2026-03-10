@@ -2,8 +2,8 @@
 // AvatarPicker Component - Emoji/Initial avatar selector
 // ============================================================
 
-import { useState } from "react";
 import { motion } from "framer-motion";
+import { useState } from "react";
 
 interface AvatarPickerProps {
   value: string;
@@ -12,12 +12,42 @@ interface AvatarPickerProps {
 }
 
 const EMOJI_OPTIONS = [
-  "👤", "👨", "👩", "🧑", "👨\u200d💼", "👩\u200d💼", "🧑\u200d💼",
-  "👨\u200d💻", "👩\u200d💻", "🧑\u200d💻", "👨\u200d🎓", "👩\u200d🎓",
-  "🦸", "🦹", "🧙", "🧝", "🧛", "🧟",
-  "🐶", "🐱", "🦊", "🐼", "🦁", "🐯",
-  "⭐", "🌟", "💫", "🔥", "💎", "🎯",
-  "🚀", "✈️", "⚡", "💡", "🎨", "🎭",
+  "👤",
+  "👨",
+  "👩",
+  "🧑",
+  "👨\u200d💼",
+  "👩\u200d💼",
+  "🧑\u200d💼",
+  "👨\u200d💻",
+  "👩\u200d💻",
+  "🧑\u200d💻",
+  "👨\u200d🎓",
+  "👩\u200d🎓",
+  "🦸",
+  "🦹",
+  "🧙",
+  "🧝",
+  "🧛",
+  "🧟",
+  "🐶",
+  "🐱",
+  "🦊",
+  "🐼",
+  "🦁",
+  "🐯",
+  "⭐",
+  "🌟",
+  "💫",
+  "🔥",
+  "💎",
+  "🎯",
+  "🚀",
+  "✈️",
+  "⚡",
+  "💡",
+  "🎨",
+  "🎭",
 ];
 
 export function AvatarPicker({ value, onChange, size = "md" }: AvatarPickerProps) {
@@ -78,7 +108,7 @@ interface AvatarProps {
 
 export function Avatar({ emoji, name, size = "md", showStatus }: AvatarProps) {
   const displayValue = emoji || name?.charAt(0) || "👤";
-  
+
   const sizeClasses = {
     sm: "w-8 h-8 text-sm",
     md: "w-10 h-10 text-lg",
@@ -87,7 +117,9 @@ export function Avatar({ emoji, name, size = "md", showStatus }: AvatarProps) {
 
   return (
     <div className="relative">
-      <div className={`${sizeClasses[size]} rounded-xl bg-gradient-to-br from-[#8B5CF6]/30 to-transparent flex items-center justify-center text-white font-black border border-white/10`}>
+      <div
+        className={`${sizeClasses[size]} rounded-xl bg-gradient-to-br from-[#8B5CF6]/30 to-transparent flex items-center justify-center text-white font-black border border-white/10`}
+      >
         {displayValue}
       </div>
       {showStatus && (

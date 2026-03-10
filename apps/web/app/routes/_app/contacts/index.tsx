@@ -3,13 +3,13 @@
 // UI/UX REFINED BY JULES v2
 // ============================================================
 
+import * as Popover from "@radix-ui/react-popover";
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { Check, Mail, MoreVertical, Phone, Search, Sparkles, Tag, TrendingUp, Users, X, BarChart3 } from "lucide-react";
-import * as Popover from "@radix-ui/react-popover";
+import { BarChart3, Check, Mail, MoreVertical, Phone, Search, Sparkles, Tag, TrendingUp, Users, X } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { Badge } from "~/components/ui/Badge";
 import { AvatarPicker } from "~/components/ui/AvatarPicker";
+import { Badge } from "~/components/ui/Badge";
 import { Button } from "~/components/ui/Button";
 import { Drawer } from "~/components/ui/Drawer";
 import { EmptyState } from "~/components/ui/EmptyState";
@@ -58,14 +58,17 @@ function ContactsPage() {
   const removeTagMutation = useRemoveTagFromContactMutation();
   const [editingEmojiId, setEditingEmojiId] = useState<string | null>(null);
 
-  const handleEmojiChange = useCallback(async (contactId: string, emoji: string) => {
-    try {
-      await updateContactMutation.mutateAsync({ id: contactId, data: { emoji } });
-      setEditingEmojiId(null);
-    } catch (err) {
-      console.error("Failed to update emoji:", err);
-    }
-  }, [updateContactMutation]);
+  const handleEmojiChange = useCallback(
+    async (contactId: string, emoji: string) => {
+      try {
+        await updateContactMutation.mutateAsync({ id: contactId, data: { emoji } });
+        setEditingEmojiId(null);
+      } catch (err) {
+        console.error("Failed to update emoji:", err);
+      }
+    },
+    [updateContactMutation],
+  );
 
   const stageColors: Record<string, string> = {
     lead: "bg-blue-50 text-blue-700 border-blue-200",
@@ -78,40 +81,52 @@ function ContactsPage() {
     return [...(pipelineStages || [])].sort((a, b) => a.order - b.order);
   }, [pipelineStages]);
 
-  const getNextStage = useCallback((currentStageId: string | null | undefined) => {
-    if (!currentStageId) return sortedStages[0] || null;
-    const currentIndex = sortedStages.findIndex(s => s.id === currentStageId);
-    if (currentIndex === -1 || currentIndex >= sortedStages.length - 1) return null;
-    return sortedStages[currentIndex + 1];
-  }, [sortedStages]);
+  const getNextStage = useCallback(
+    (currentStageId: string | null | undefined) => {
+      if (!currentStageId) return sortedStages[0] || null;
+      const currentIndex = sortedStages.findIndex((s) => s.id === currentStageId);
+      if (currentIndex === -1 || currentIndex >= sortedStages.length - 1) return null;
+      return sortedStages[currentIndex + 1];
+    },
+    [sortedStages],
+  );
 
-  const handleStageChange = useCallback(async (contactId: string, newStageId: string) => {
-    try {
-      await updateContactMutation.mutateAsync({ id: contactId, data: { pipelineStageId: newStageId } });
-      setOpenDropdownId(null);
-    } catch (err) {
-      console.error("Failed to update stage:", err);
-    }
-  }, [updateContactMutation]);
+  const handleStageChange = useCallback(
+    async (contactId: string, newStageId: string) => {
+      try {
+        await updateContactMutation.mutateAsync({ id: contactId, data: { pipelineStageId: newStageId } });
+        setOpenDropdownId(null);
+      } catch (err) {
+        console.error("Failed to update stage:", err);
+      }
+    },
+    [updateContactMutation],
+  );
 
-  const handleNextStage = useCallback(async (contactId: string, currentStageId: string | null | undefined) => {
-    const nextStage = getNextStage(currentStageId);
-    if (nextStage) {
-      await handleStageChange(contactId, nextStage.id);
-    }
-  }, [getNextStage, handleStageChange]);
+  const handleNextStage = useCallback(
+    async (contactId: string, currentStageId: string | null | undefined) => {
+      const nextStage = getNextStage(currentStageId);
+      if (nextStage) {
+        await handleStageChange(contactId, nextStage.id);
+      }
+    },
+    [getNextStage, handleStageChange],
+  );
 
-  const getStageInfo = useCallback((stageId: string | null | undefined) => {
-    if (!stageId) return { label: "Sin etapa", color: "bg-slate-50 text-slate-600 border-slate-200" };
-    const stage = pipelineStages?.find(s => s.id === stageId);
-    if (stage) {
-      return { 
-        label: stage.name, 
-        color: stageColors[stage.name.toLowerCase()] || "bg-slate-50 text-slate-600 border-slate-200" 
-      };
-    }
-    return { label: stageId, color: "bg-slate-50 text-slate-600 border-slate-200" };
-  }, [pipelineStages]);
+  const getStageInfo = useCallback(
+    (stageId: string | null | undefined) => {
+      if (!stageId) return { label: "Sin etapa", color: "bg-slate-50 text-slate-600 border-slate-200" };
+      const stage = pipelineStages?.find((s) => s.id === stageId);
+      if (stage) {
+        return {
+          label: stage.name,
+          color: stageColors[stage.name.toLowerCase()] || "bg-slate-50 text-slate-600 border-slate-200",
+        };
+      }
+      return { label: stageId, color: "bg-slate-50 text-slate-600 border-slate-200" };
+    },
+    [pipelineStages],
+  );
 
   const createContactMutation = useCreateContactMutation();
 
@@ -197,7 +212,7 @@ function ContactsPage() {
           const { label, color } = getStageInfo(stageId);
           const nextStage = getNextStage(stageId);
           const isOpen = openDropdownId === contact.id;
-          
+
           return (
             <div className="relative flex items-center gap-2">
               <button
@@ -208,7 +223,7 @@ function ContactsPage() {
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[10px] font-bold uppercase tracking-wider transition-all",
                   color,
-                  "hover:opacity-80"
+                  "hover:opacity-80",
                 )}
               >
                 {label}
@@ -216,7 +231,7 @@ function ContactsPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              
+
               {nextStage && (
                 <button
                   onClick={(e) => {
@@ -241,7 +256,7 @@ function ContactsPage() {
                     }}
                     className={cn(
                       "w-full text-left px-3 py-2 text-xs font-medium hover:bg-white/5 transition-colors",
-                      !stageId ? "text-[#8B5CF6]" : "text-[#A3A3A3]"
+                      !stageId ? "text-[#8B5CF6]" : "text-[#A3A3A3]",
                     )}
                   >
                     Sin etapa
@@ -255,7 +270,7 @@ function ContactsPage() {
                       }}
                       className={cn(
                         "w-full text-left px-3 py-2 text-xs font-medium hover:bg-white/5 transition-colors flex items-center gap-2",
-                        stageId === stage.id ? "text-[#8B5CF6]" : "text-[#A3A3A3]"
+                        stageId === stage.id ? "text-[#8B5CF6]" : "text-[#A3A3A3]",
                       )}
                     >
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: stage.color }} />
@@ -351,11 +366,7 @@ function ContactsPage() {
             onClick={() => setShowNewContactModal(true)}
             className="shadow-lg rounded-lg h-14 px-8 font-black uppercase tracking-widest text-[12px] group bg-[#8B5CF6] hover:bg-[#7C3AED]"
           >
-            <Icon
-              name="Plus"
-              className="mr-3 group-hover:rotate-90 transition-transform duration-500"
-              size={18}
-            />
+            <Icon name="Plus" className="mr-3 group-hover:rotate-90 transition-transform duration-500" size={18} />
             Nuevo Registro
           </Button>
         </div>
@@ -404,7 +415,7 @@ function ContactsPage() {
               </Button>
             </Popover.Trigger>
             <Popover.Portal>
-              <Popover.Content 
+              <Popover.Content
                 className="w-72 bg-[#18181B] border border-white/10 rounded-xl p-4 shadow-xl z-50"
                 sideOffset={8}
               >
@@ -420,10 +431,7 @@ function ContactsPage() {
                       key={tag.id}
                       className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm hover:bg-white/5 transition-colors"
                     >
-                      <span 
-                        className="w-2.5 h-2.5 rounded-full shrink-0" 
-                        style={{ backgroundColor: tag.color }}
-                      />
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />
                       <span className="text-[#F5F5F5] font-medium">{tag.name}</span>
                     </button>
                   ))}
@@ -435,12 +443,12 @@ function ContactsPage() {
               </Popover.Content>
             </Popover.Portal>
           </Popover.Root>
-          
+
           <Button
             variant="outline"
             size="sm"
             className="h-12 px-5 border-white/5 bg-[#18181B] text-[#A3A3A3] hover:text-[#8B5CF6] hover:border-[#8B5CF6]/30 rounded-xl"
-            onClick={() => window.location.href = "/pipeline"}
+            onClick={() => (window.location.href = "/pipeline")}
           >
             <TrendingUp className="w-4 h-4 mr-2" />
             Pipeline
@@ -511,11 +519,7 @@ function ContactsPage() {
         <ModalContent className="p-8 space-y-10 bg-[#0F0F0F]">
           <div className="flex flex-col md:flex-row gap-10 items-center md:items-start">
             <div className="w-32 h-32 rounded-[2rem] bg-[#18181B] border-2 border-dashed border-white/10 flex flex-col items-center justify-center text-[#737373] hover:border-[#8B5CF6]/40 hover:text-[#8B5CF6] cursor-pointer transition-all duration-500 group/avatar overflow-hidden relative">
-              <Icon
-                name="User"
-                size={48}
-                className="group-hover/avatar:scale-110 transition-transform duration-500"
-              />
+              <Icon name="User" size={48} className="group-hover/avatar:scale-110 transition-transform duration-500" />
               <span className="text-[10px] font-black uppercase tracking-[0.2em] mt-3">Subir</span>
               <div className="absolute inset-0 bg-[#8B5CF6]/5 opacity-0 group-hover/avatar:opacity-100 transition-opacity" />
             </div>
@@ -562,7 +566,9 @@ function ContactsPage() {
                 >
                   <option value="">Seleccionar etapa...</option>
                   {pipelineStages?.map((stage) => (
-                    <option key={stage.id} value={stage.id}>{stage.name}</option>
+                    <option key={stage.id} value={stage.id}>
+                      {stage.name}
+                    </option>
                   ))}
                 </select>
                 <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-[#737373] group-hover:text-[#8B5CF6] transition-colors">
@@ -571,7 +577,6 @@ function ContactsPage() {
               </div>
             </div>
           </div>
-
         </ModalContent>
         <ModalFooter className="p-8 border-t border-white/5 bg-[#18181B] gap-6">
           <Button
@@ -613,7 +618,12 @@ function ContactsPage() {
                 </div>
                 <div>
                   <h3 className="text-2xl font-black text-[#F5F5F5]">{selectedContact.name}</h3>
-                  <Badge className={cn("mt-2 px-3 py-1 font-black text-[10px] uppercase tracking-wider", getStageInfo(selectedContact.pipelineStageId).color)}>
+                  <Badge
+                    className={cn(
+                      "mt-2 px-3 py-1 font-black text-[10px] uppercase tracking-wider",
+                      getStageInfo(selectedContact.pipelineStageId).color,
+                    )}
+                  >
                     {getStageInfo(selectedContact.pipelineStageId).label}
                   </Badge>
                 </div>
@@ -647,7 +657,7 @@ function ContactsPage() {
                     + Añadir
                   </button>
                 </div>
-                
+
                 {showTagPicker && allTags && (
                   <div className="p-3 bg-[#18181B] rounded-xl border border-white/5 space-y-2">
                     {allTags.map((tag: any) => {
@@ -665,7 +675,7 @@ function ContactsPage() {
                           }}
                           className={cn(
                             "w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors",
-                            isAssigned ? "bg-[#8B5CF6]/20 text-[#8B5CF6]" : "text-[#A3A3A3] hover:bg-white/5"
+                            isAssigned ? "bg-[#8B5CF6]/20 text-[#8B5CF6]" : "text-[#A3A3A3] hover:bg-white/5",
                           )}
                         >
                           <span className="flex items-center gap-2">
@@ -676,9 +686,7 @@ function ContactsPage() {
                         </button>
                       );
                     })}
-                    {allTags.length === 0 && (
-                      <p className="text-xs text-[#737373]">No hay etiquetas disponibles</p>
-                    )}
+                    {allTags.length === 0 && <p className="text-xs text-[#737373]">No hay etiquetas disponibles</p>}
                   </div>
                 )}
 

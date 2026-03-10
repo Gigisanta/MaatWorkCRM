@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, date, numeric, uniqueIndex, index } from "drizzle-orm/pg-core";
+import { date, index, numeric, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { instruments } from "./instruments";
 
 export const priceSnapshots = pgTable(
@@ -17,11 +17,8 @@ export const priceSnapshots = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
-    priceSnapshotsInstrumentDate: uniqueIndex("price_snapshots_instrument_date").on(
-      table.instrumentId,
-      table.date
-    ),
-  })
+    priceSnapshotsInstrumentDate: uniqueIndex("price_snapshots_instrument_date").on(table.instrumentId, table.date),
+  }),
 );
 
 export const pricesDaily = pgTable(
@@ -41,11 +38,8 @@ export const pricesDaily = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
-    pricesDailyInstrumentDate: uniqueIndex("prices_daily_instrument_date").on(
-      table.instrumentId,
-      table.date
-    ),
-  })
+    pricesDailyInstrumentDate: uniqueIndex("prices_daily_instrument_date").on(table.instrumentId, table.date),
+  }),
 );
 
 export const pricesIntraday = pgTable(
@@ -67,16 +61,14 @@ export const pricesIntraday = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (table) => ({
-    pricesIntradayInstrumentTimestampInterval: uniqueIndex(
-      "prices_intraday_instrument_timestamp_interval"
-    ).on(table.instrumentId, table.timestamp, table.interval),
-    pricesIntradayInstrumentId: index("prices_intraday_instrument_id_idx").on(
-      table.instrumentId
+    pricesIntradayInstrumentTimestampInterval: uniqueIndex("prices_intraday_instrument_timestamp_interval").on(
+      table.instrumentId,
+      table.timestamp,
+      table.interval,
     ),
-    pricesIntradayTimestamp: index("prices_intraday_timestamp_idx").on(
-      table.timestamp
-    ),
-  })
+    pricesIntradayInstrumentId: index("prices_intraday_instrument_id_idx").on(table.instrumentId),
+    pricesIntradayTimestamp: index("prices_intraday_timestamp_idx").on(table.timestamp),
+  }),
 );
 
 export const metricDefinitions = pgTable(
@@ -93,10 +85,8 @@ export const metricDefinitions = pgTable(
   },
   (table) => ({
     metricDefinitionsName: uniqueIndex("metric_definitions_name").on(table.name),
-    metricDefinitionsCategory: index("metric_definitions_category_idx").on(
-      table.category
-    ),
-  })
+    metricDefinitionsCategory: index("metric_definitions_category_idx").on(table.category),
+  }),
 );
 
 export type PriceSnapshot = typeof priceSnapshots.$inferSelect;

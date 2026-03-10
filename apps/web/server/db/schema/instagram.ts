@@ -6,14 +6,7 @@
 // Database: PostgreSQL (Neon)
 // ============================================================
 
-import {
-  boolean,
-  integer,
-  pgTable,
-  text,
-  timestamp,
-  real,
-} from "drizzle-orm/pg-core";
+import { boolean, integer, pgTable, real, text, timestamp } from "drizzle-orm/pg-core";
 import { organizations, users } from "./auth";
 import { contacts } from "./crm";
 
@@ -27,21 +20,21 @@ export const instagramAccounts = pgTable("instagram_accounts", {
   userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  
+
   // Instagram Page/Account info
   pageId: text("page_id").notNull(),
   pageName: text("page_name").notNull(),
   instagramUserId: text("instagram_user_id").notNull(),
-  
+
   // OAuth tokens (stored encrypted in production)
   accessToken: text("access_token").notNull(),
   accessTokenExpiresAt: timestamp("access_token_expires_at"),
   refreshToken: text("refresh_token"),
-  
+
   // Status
   isActive: boolean("is_active").default(true),
   lastSyncedAt: timestamp("last_synced_at"),
-  
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -53,24 +46,24 @@ export const instagramConversations = pgTable("instagram_conversations", {
   accountId: text("account_id")
     .notNull()
     .references(() => instagramAccounts.id, { onDelete: "cascade" }),
-  
+
   // Instagram conversation ID
   igConversationId: text("ig_conversation_id").notNull().unique(),
-  
+
   // Linked contact (if exists in CRM)
   contactId: text("contact_id").references(() => contacts.id, { onDelete: "set null" }),
-  
+
   // Participant info
   participantIgId: text("participant_ig_id").notNull(),
   participantUsername: text("participant_username").notNull(),
   participantProfileUrl: text("participant_profile_url"),
   participantName: text("participant_name"),
-  
+
   // Conversation metadata
   lastMessageAt: timestamp("last_message_at"),
   lastMessagePreview: text("last_message_preview"),
   unreadCount: integer("unread_count").default(0),
-  
+
   // CRM tracking fields
   respondedToAd: boolean("responded_to_ad").default(false),
   respondedToStory: boolean("responded_to_story").default(false),
@@ -80,7 +73,7 @@ export const instagramConversations = pgTable("instagram_conversations", {
   lastIgMessageAt: timestamp("last_ig_message_at"),
   lastIgMessageContent: text("last_ig_message_content"),
   daysSinceLastContact: integer("days_since_last_contact"),
-  
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -92,21 +85,21 @@ export const instagramMessages = pgTable("instagram_messages", {
   conversationId: text("conversation_id")
     .notNull()
     .references(() => instagramConversations.id, { onDelete: "cascade" }),
-  
+
   // Instagram message ID
   igMessageId: text("ig_message_id").notNull().unique(),
-  
+
   // Message content
   content: text("content"),
   messageType: text("message_type"), // text, image, video, story_share, etc.
-  
+
   // Sender info
   fromIgUserId: text("from_ig_user_id").notNull(),
   fromMe: boolean("from_me").notNull().default(false),
-  
+
   // Attachments (JSON)
   attachments: text("attachments"), // JSON array of attachment objects
-  
+
   timestamp: timestamp("timestamp").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -118,7 +111,7 @@ export const instagramMessageTags = pgTable("instagram_message_tags", {
   conversationId: text("conversation_id")
     .notNull()
     .references(() => instagramConversations.id, { onDelete: "cascade" }),
-  
+
   tag: text("tag").notNull(), // e.g., "responded_to_ad", "hot_lead", "no_response"
   addedAt: timestamp("added_at").defaultNow().notNull(),
 });

@@ -2,10 +2,10 @@
 // MaatWork CRM — Google Drive API Functions
 // ============================================================
 
-import { google, drive_v3 } from "googleapis";
+import { and, eq } from "drizzle-orm";
+import { type drive_v3, google } from "googleapis";
 import { db } from "../../db";
 import { accounts } from "../../db/schema/auth";
-import { eq, and } from "drizzle-orm";
 
 /**
  * Creates an authenticated OAuth2 client for Google API calls
@@ -13,10 +13,7 @@ import { eq, and } from "drizzle-orm";
  */
 async function getOAuth2Client(userId: string) {
   const account = await db.query.accounts.findFirst({
-    where: and(
-      eq(accounts.userId, userId),
-      eq(accounts.providerId, "google")
-    ),
+    where: and(eq(accounts.userId, userId), eq(accounts.providerId, "google")),
   });
 
   if (!account?.accessToken || !account?.refreshToken) {
@@ -26,7 +23,7 @@ async function getOAuth2Client(userId: string) {
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    `${process.env.BETTER_AUTH_URL}/api/auth/callback/google`
+    `${process.env.BETTER_AUTH_URL}/api/auth/callback/google`,
   );
 
   oauth2Client.setCredentials({
@@ -40,16 +37,11 @@ async function getOAuth2Client(userId: string) {
 /**
  * Lists files in the user's Google Drive
  */
-export async function listGoogleDriveFiles(
-  userId: string,
-  folderId?: string
-): Promise<drive_v3.Schema$File[]> {
+export async function listGoogleDriveFiles(userId: string, folderId?: string): Promise<drive_v3.Schema$File[]> {
   const oauth2Client = await getOAuth2Client(userId);
   const drive = google.drive({ version: "v3", auth: oauth2Client });
 
-  const query = folderId
-    ? `'${folderId}' in parents and trashed = false`
-    : "'root' in parents and trashed = false";
+  const query = folderId ? `'${folderId}' in parents and trashed = false` : "'root' in parents and trashed = false";
 
   const response = await drive.files.list({
     q: query,
@@ -64,10 +56,7 @@ export async function listGoogleDriveFiles(
 /**
  * Gets metadata for a specific file
  */
-export async function getGoogleDriveFile(
-  userId: string,
-  fileId: string
-): Promise<drive_v3.Schema$File | null> {
+export async function getGoogleDriveFile(userId: string, fileId: string): Promise<drive_v3.Schema$File | null> {
   const oauth2Client = await getOAuth2Client(userId);
   const drive = google.drive({ version: "v3", auth: oauth2Client });
 
@@ -88,17 +77,11 @@ export async function getGoogleDriveFile(
 /**
  * Downloads file content from Google Drive
  */
-export async function downloadGoogleDriveFile(
-  userId: string,
-  fileId: string
-): Promise<Buffer> {
+export async function downloadGoogleDriveFile(userId: string, fileId: string): Promise<Buffer> {
   const oauth2Client = await getOAuth2Client(userId);
   const drive = google.drive({ version: "v3", auth: oauth2Client });
 
-  const response = await drive.files.get(
-    { fileId, alt: "media" },
-    { responseType: "arraybuffer" }
-  );
+  const response = await drive.files.get({ fileId, alt: "media" }, { responseType: "arraybuffer" });
 
   return Buffer.from(response.data as ArrayBuffer);
 }
@@ -113,7 +96,7 @@ export async function uploadGoogleDriveFile(
     mimeType: string;
     content: Buffer;
     parentFolderId?: string;
-  }
+  },
 ): Promise<drive_v3.Schema$File> {
   const oauth2Client = await getOAuth2Client(userId);
   const drive = google.drive({ version: "v3", auth: oauth2Client });
@@ -138,7 +121,7 @@ export async function uploadGoogleDriveFile(
 export async function createGoogleDriveFolder(
   userId: string,
   name: string,
-  parentFolderId?: string
+  parentFolderId?: string,
 ): Promise<drive_v3.Schema$File> {
   const oauth2Client = await getOAuth2Client(userId);
   const drive = google.drive({ version: "v3", auth: oauth2Client });
@@ -157,10 +140,7 @@ export async function createGoogleDriveFolder(
 /**
  * Deletes a file from Google Drive
  */
-export async function deleteGoogleDriveFile(
-  userId: string,
-  fileId: string
-): Promise<void> {
+export async function deleteGoogleDriveFile(userId: string, fileId: string): Promise<void> {
   const oauth2Client = await getOAuth2Client(userId);
   const drive = google.drive({ version: "v3", auth: oauth2Client });
 
@@ -170,9 +150,7 @@ export async function deleteGoogleDriveFile(
 /**
  * Gets the user's Drive storage quota information
  */
-export async function getGoogleDriveStorageQuota(
-  userId: string
-): Promise<drive_v3.Schema$About> {
+export async function getGoogleDriveStorageQuota(userId: string): Promise<drive_v3.Schema$About> {
   const oauth2Client = await getOAuth2Client(userId);
   const drive = google.drive({ version: "v3", auth: oauth2Client });
 
@@ -186,10 +164,7 @@ export async function getGoogleDriveStorageQuota(
 /**
  * Searches for files in Google Drive
  */
-export async function searchGoogleDriveFiles(
-  userId: string,
-  query: string
-): Promise<drive_v3.Schema$File[]> {
+export async function searchGoogleDriveFiles(userId: string, query: string): Promise<drive_v3.Schema$File[]> {
   const oauth2Client = await getOAuth2Client(userId);
   const drive = google.drive({ version: "v3", auth: oauth2Client });
 

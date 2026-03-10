@@ -23,9 +23,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false),
   image: text("image"),
-  role: text("role", { enum: USER_ROLES })
-    .notNull()
-    .default("asesor"),
+  role: text("role", { enum: USER_ROLES }).notNull().default("asesor"),
   careerLevel: text("career_level", { enum: CAREER_LEVELS }).default("junior"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

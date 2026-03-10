@@ -156,7 +156,9 @@ export const tags = pgTable("tags", {
     .references(() => organizations.id, { onDelete: "cascade" }),
   scope: text("scope", {
     enum: ["contact", "meeting", "note"],
-  }).notNull().default("contact"),
+  })
+    .notNull()
+    .default("contact"),
   name: text("name").notNull(),
   color: text("color").notNull().default("#6366f1"),
   icon: text("icon"),
@@ -176,7 +178,9 @@ export const tagRules = pgTable("tag_rules", {
   organizationId: text("organization_id")
     .notNull()
     .references(() => organizations.id, { onDelete: "cascade" }),
-  tagId: text("tag_id").notNull().references(() => tags.id, { onDelete: "cascade" }),
+  tagId: text("tag_id")
+    .notNull()
+    .references(() => tags.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   conditions: jsonb("conditions").notNull(),
   isActive: boolean("is_active").default(true),

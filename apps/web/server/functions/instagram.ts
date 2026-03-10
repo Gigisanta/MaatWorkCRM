@@ -1,10 +1,10 @@
 // MaatWork CRM — Server Functions: Instagram
 
 import { createServerFn } from "@tanstack/react-start";
-import { eq, desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { db } from "../db";
 import { instagramAccounts, instagramConversations, instagramMessages } from "../db/schema";
-import { syncInstagramConversations, getInstagramAccountByOrg } from "../instagram/client";
+import { getInstagramAccountByOrg, syncInstagramConversations } from "../instagram/client";
 
 export const getInstagramAccounts = createServerFn({ method: "GET" })
   .inputValidator((input: { orgId: string }) => input)
@@ -17,14 +17,16 @@ export const getInstagramAccounts = createServerFn({ method: "GET" })
   });
 
 export const connectInstagramAccount = createServerFn({ method: "POST" })
-  .inputValidator((input: {
-    orgId: string;
-    userId: string;
-    pageId: string;
-    pageName: string;
-    accessToken: string;
-    instagramUserId: string;
-  }) => input)
+  .inputValidator(
+    (input: {
+      orgId: string;
+      userId: string;
+      pageId: string;
+      pageName: string;
+      accessToken: string;
+      instagramUserId: string;
+    }) => input,
+  )
   .handler(async ({ data }) => {
     const [account] = await db
       .insert(instagramAccounts)
@@ -49,18 +51,16 @@ export const connectInstagramAccount = createServerFn({ method: "POST" })
         } as any,
       })
       .returning();
-    
+
     await syncInstagramConversations(account.id);
-    
+
     return account;
   });
 
 export const disconnectInstagramAccount = createServerFn({ method: "POST" })
   .inputValidator((input: { accountId: string }) => input)
   .handler(async ({ data }) => {
-    await db
-      .delete(instagramAccounts)
-      .where(eq(instagramAccounts.id, data.accountId));
+    await db.delete(instagramAccounts).where(eq(instagramAccounts.id, data.accountId));
     return { success: true };
   });
 
@@ -96,11 +96,11 @@ export const syncInstagramAccount = createServerFn({ method: "POST" })
       .from(instagramAccounts)
       .where(eq(instagramAccounts.id, data.accountId))
       .limit(1);
-    
+
     if (!account) {
       throw new Error("Instagram account not found");
     }
-    
+
     await syncInstagramConversations(account.id);
     return { success: true };
   });
@@ -110,13 +110,13 @@ export const getInstagramAccountWithConversations = createServerFn({ method: "GE
   .handler(async ({ data }) => {
     const account = await getInstagramAccountByOrg(data.orgId);
     if (!account) return null;
-    
+
     const conversations = await db
       .select()
       .from(instagramConversations)
       .where(eq(instagramConversations.accountId, account.id))
       .orderBy(desc(instagramConversations.updatedAt))
       .limit(20);
-    
+
     return { account, conversations };
   });

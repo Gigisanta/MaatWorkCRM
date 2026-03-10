@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import {
+  Activity,
+  BarChart3,
   Calendar,
   CheckSquare,
   ChevronRight,
@@ -9,17 +11,23 @@ import {
   Target,
   TrendingUp,
   Users,
-  Activity,
   Zap,
-  BarChart3,
 } from "lucide-react";
 import { Badge } from "~/components/ui/Badge";
 import { Button } from "~/components/ui/Button";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/Card";
 import { CalendarWidget } from "~/components/ui/CalendarWidget";
+import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/Card";
 import { Container, Grid, Stack } from "~/components/ui/Layout";
 import { StatCard } from "~/components/ui/LayoutCards";
-import { useDashboardMetrics, useGoogleCalendarEvents, usePipelineSummary, useTasks, useBottleneckAnalysis, useConversionFunnel, useUserProductivityMetrics } from "~/lib/hooks/use-crm";
+import {
+  useBottleneckAnalysis,
+  useConversionFunnel,
+  useDashboardMetrics,
+  useGoogleCalendarEvents,
+  usePipelineSummary,
+  useTasks,
+  useUserProductivityMetrics,
+} from "~/lib/hooks/use-crm";
 import { cn, formatCurrency } from "~/lib/utils";
 
 export const Route = createFileRoute("/_app/dashboard")({
@@ -52,7 +60,7 @@ function QuickAction({
       whileTap={{ scale: 0.98 }}
       className={cn(
         "flex items-center justify-between p-3.5 px-4 rounded-xl bg-gradient-to-r border border-white/5 transition-all group relative overflow-hidden",
-        colorClasses[color]
+        colorClasses[color],
       )}
     >
       <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -63,15 +71,13 @@ function QuickAction({
             color === "primary"
               ? "bg-white/20 text-white"
               : color === "accent"
-              ? "bg-white/20 text-white"
-              : "bg-[#8B5CF6]/20 text-[#8B5CF6] group-hover:bg-[#8B5CF6]/30"
+                ? "bg-white/20 text-white"
+                : "bg-[#8B5CF6]/20 text-[#8B5CF6] group-hover:bg-[#8B5CF6]/30",
           )}
         >
           <Icon className="w-4 h-4" />
         </div>
-        <span className="font-semibold text-sm text-[#F5F5F5]">
-          {label}
-        </span>
+        <span className="font-semibold text-sm text-[#F5F5F5]">{label}</span>
       </div>
       <ChevronRight className="w-4 h-4 text-white/50 group-hover:text-white group-hover:translate-x-1 transition-all relative z-10" />
     </motion.a>
@@ -81,11 +87,11 @@ function QuickAction({
 function TodayTasks({ tasks }: { tasks?: any[] }) {
   const pendingTasks = tasks?.filter((t: any) => t.status === "pending" || t.status === "in_progress") || [];
   const completedTasks = tasks?.filter((t: any) => t.status === "completed") || [];
-  
+
   return (
     <Card variant="elevated" className="h-full border border-amber-500/20 relative overflow-hidden">
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500" />
-      
+
       <CardHeader className="pb-3 pt-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-bold flex items-center gap-2.5">
@@ -96,17 +102,21 @@ function TodayTasks({ tasks }: { tasks?: any[] }) {
           </CardTitle>
           <div className="flex items-center gap-2">
             {completedTasks.length > 0 && (
-              <Badge variant="success" className="text-[10px]">{completedTasks.length} completadas</Badge>
+              <Badge variant="success" className="text-[10px]">
+                {completedTasks.length} completadas
+              </Badge>
             )}
             {pendingTasks.length > 0 && (
-              <Badge variant="secondary" className="text-[10px]">{pendingTasks.length} pendientes</Badge>
+              <Badge variant="secondary" className="text-[10px]">
+                {pendingTasks.length} pendientes
+              </Badge>
             )}
           </div>
         </div>
       </CardHeader>
       <CardContent className="px-4 pb-4 pt-0 space-y-2">
         {pendingTasks.length === 0 && completedTasks.length === 0 ? (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             className="text-center py-8"
@@ -118,11 +128,7 @@ function TodayTasks({ tasks }: { tasks?: any[] }) {
             <p className="text-xs text-[#737373] mt-1">No tienes tareas pendientes</p>
           </motion.div>
         ) : (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="space-y-2"
-          >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
             {pendingTasks.slice(0, 5).map((task: any, idx: number) => (
               <motion.div
                 key={task.id}
@@ -131,26 +137,40 @@ function TodayTasks({ tasks }: { tasks?: any[] }) {
                 transition={{ delay: idx * 0.05 }}
                 className="flex items-center gap-3 p-3 rounded-xl bg-[#18181B]/60 hover:bg-[#18181B] border border-white/5 hover:border-amber-500/20 transition-all group"
               >
-                <div 
+                <div
                   className={cn(
                     "w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all",
-                    task.priority === "urgent" ? "border-red-500 bg-red-500/10" :
-                    task.priority === "high" ? "border-orange-500 bg-orange-500/10" :
-                    task.priority === "medium" ? "border-yellow-500 bg-yellow-500/10" : "border-emerald-500 bg-emerald-500/10"
+                    task.priority === "urgent"
+                      ? "border-red-500 bg-red-500/10"
+                      : task.priority === "high"
+                        ? "border-orange-500 bg-orange-500/10"
+                        : task.priority === "medium"
+                          ? "border-yellow-500 bg-yellow-500/10"
+                          : "border-emerald-500 bg-emerald-500/10",
                   )}
                 >
-                  <div className={cn(
-                    "w-2 h-2 rounded-full",
-                    task.priority === "urgent" ? "bg-red-500" :
-                    task.priority === "high" ? "bg-orange-500" :
-                    task.priority === "medium" ? "bg-yellow-500" : "bg-emerald-500"
-                  )} />
+                  <div
+                    className={cn(
+                      "w-2 h-2 rounded-full",
+                      task.priority === "urgent"
+                        ? "bg-red-500"
+                        : task.priority === "high"
+                          ? "bg-orange-500"
+                          : task.priority === "medium"
+                            ? "bg-yellow-500"
+                            : "bg-emerald-500",
+                    )}
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <span className={cn(
-                    "text-sm text-[#F5F5F5] truncate block",
-                    task.status === "completed" && "line-through text-[#737373]"
-                  )}>{task.title}</span>
+                  <span
+                    className={cn(
+                      "text-sm text-[#F5F5F5] truncate block",
+                      task.status === "completed" && "line-through text-[#737373]",
+                    )}
+                  >
+                    {task.title}
+                  </span>
                   {task.dueDate && (
                     <div className="flex items-center gap-1 mt-0.5">
                       <Clock className="w-3 h-3 text-[#737373]" />
@@ -175,37 +195,53 @@ function TodayTasks({ tasks }: { tasks?: any[] }) {
 function PipelineCard({ stage, index }: { stage: any; index: number }) {
   const getBottleneckColor = (level: string) => {
     switch (level) {
-      case "critical": return "text-red-400";
-      case "warning": return "text-orange-400";
-      case "moderate": return "text-yellow-400";
-      default: return "text-emerald-400";
+      case "critical":
+        return "text-red-400";
+      case "warning":
+        return "text-orange-400";
+      case "moderate":
+        return "text-yellow-400";
+      default:
+        return "text-emerald-400";
     }
   };
 
   const getBgGradient = (level: string) => {
     switch (level) {
-      case "critical": return "from-red-500/10 to-red-600/5";
-      case "warning": return "from-orange-500/10 to-orange-600/5";
-      case "moderate": return "from-yellow-500/10 to-yellow-600/5";
-      default: return "from-[#18181B] to-[#27272A]";
+      case "critical":
+        return "from-red-500/10 to-red-600/5";
+      case "warning":
+        return "from-orange-500/10 to-orange-600/5";
+      case "moderate":
+        return "from-yellow-500/10 to-yellow-600/5";
+      default:
+        return "from-[#18181B] to-[#27272A]";
     }
   };
 
   const getBorderColor = (level: string) => {
     switch (level) {
-      case "critical": return "border-red-500/30";
-      case "warning": return "border-orange-500/30";
-      case "moderate": return "border-yellow-500/30";
-      default: return "border-white/10";
+      case "critical":
+        return "border-red-500/30";
+      case "warning":
+        return "border-orange-500/30";
+      case "moderate":
+        return "border-yellow-500/30";
+      default:
+        return "border-white/10";
     }
   };
 
   const getGlowColor = (level: string) => {
     switch (level) {
-      case "critical": return "shadow-red-500/20";
-      case "warning": return "shadow-orange-500/20";
-      case "moderate": return "shadow-yellow-500/20";
-      default: return "shadow-purple-500/10";
+      case "critical":
+        return "shadow-red-500/20";
+      case "warning":
+        return "shadow-orange-500/20";
+      case "moderate":
+        return "shadow-yellow-500/20";
+      default:
+        return "shadow-purple-500/10";
     }
   };
 
@@ -222,18 +258,19 @@ function PipelineCard({ stage, index }: { stage: any; index: number }) {
         "p-4 rounded-2xl bg-gradient-to-br border transition-all cursor-pointer group hover:shadow-lg",
         getBgGradient(bottleneckLevel),
         getBorderColor(bottleneckLevel),
-        getGlowColor(bottleneckLevel)
+        getGlowColor(bottleneckLevel),
       )}
     >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: stage.stageColor, boxShadow: `0 0 8px ${stage.stageColor}40` }} />
+          <div
+            className="w-3 h-3 rounded-full"
+            style={{ backgroundColor: stage.stageColor, boxShadow: `0 0 8px ${stage.stageColor}40` }}
+          />
           <span className="text-[10px] font-medium text-[#737373] uppercase tracking-wider">Etapa</span>
         </div>
         {isOverLimit && (
-          <span className="text-[9px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 font-semibold">
-            WIP
-          </span>
+          <span className="text-[9px] px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 font-semibold">WIP</span>
         )}
       </div>
       <p className="text-sm font-bold text-[#F5F5F5] truncate mb-2">{stage.stageName}</p>
@@ -245,21 +282,23 @@ function PipelineCard({ stage, index }: { stage: any; index: number }) {
           <span className="text-[10px] text-[#737373] ml-1">contactos</span>
         </div>
         <div className={cn("text-right", getBottleneckColor(bottleneckLevel))}>
-          <span className="text-lg font-bold">
-            {stage.percentage ? `${Math.round(stage.percentage)}%` : ""}
-          </span>
+          <span className="text-lg font-bold">{stage.percentage ? `${Math.round(stage.percentage)}%` : ""}</span>
         </div>
       </div>
       <div className="mt-3 h-1 rounded-full bg-white/5 overflow-hidden">
-        <motion.div 
+        <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${stage.percentage || 0}%` }}
           transition={{ delay: index * 0.1, duration: 0.5 }}
           className={cn(
             "h-full rounded-full",
-            bottleneckLevel === "critical" ? "bg-red-500" :
-            bottleneckLevel === "warning" ? "bg-orange-500" :
-            bottleneckLevel === "moderate" ? "bg-yellow-500" : "bg-emerald-500"
+            bottleneckLevel === "critical"
+              ? "bg-red-500"
+              : bottleneckLevel === "warning"
+                ? "bg-orange-500"
+                : bottleneckLevel === "moderate"
+                  ? "bg-yellow-500"
+                  : "bg-emerald-500",
           )}
         />
       </div>
@@ -277,8 +316,8 @@ function DashboardPage() {
   const { data: tasks } = useTasks();
 
   // Merge bottleneck data with pipeline stages for bottleneck colors
-  const pipelineWithBottlenecks = pipeline?.map(stage => {
-    const bottleneck = bottleneckData?.stages?.find(b => b.stageName === stage.stageName);
+  const pipelineWithBottlenecks = pipeline?.map((stage) => {
+    const bottleneck = bottleneckData?.stages?.find((b) => b.stageName === stage.stageName);
     return {
       ...stage,
       bottleneckLevel: bottleneck?.bottleneckLevel || "healthy",
@@ -306,24 +345,27 @@ function DashboardPage() {
 
   return (
     <Container className="space-y-6" padding="lg">
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }} 
-        animate={{ opacity: 1, y: 0 }}
-        className="relative"
-      >
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="relative">
         <div className="absolute top-0 left-0 w-1 h-16 bg-gradient-to-b from-[#8B5CF6] to-transparent rounded-full" />
         <div className="flex items-center justify-between pl-4">
           <div>
-            <h1 className="text-3xl font-black text-[#F5F5F5] tracking-tight">
-              {getGreeting()}
-            </h1>
+            <h1 className="text-3xl font-black text-[#F5F5F5] tracking-tight">{getGreeting()}</h1>
             <p className="text-sm text-[#737373] mt-1 flex items-center gap-2">
               <Calendar className="w-4 h-4" />
-              {new Date().toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+              {new Date().toLocaleDateString("es-AR", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
             </p>
           </div>
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Button variant="primary" size="sm" className="rounded-xl h-10 px-5 bg-gradient-to-r from-[#8B5CF6] to-[#7C3AED] shadow-lg shadow-[#8B5CF6]/25">
+            <Button
+              variant="primary"
+              size="sm"
+              className="rounded-xl h-10 px-5 bg-gradient-to-r from-[#8B5CF6] to-[#7C3AED] shadow-lg shadow-[#8B5CF6]/25"
+            >
               <TrendingUp className="w-4 h-4 mr-2" />
               Ver Pipeline
             </Button>
@@ -331,11 +373,7 @@ function DashboardPage() {
         </div>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-      >
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
         <Grid cols={{ sm: 2, lg: 4 }} gap={3}>
           <StatCard
             label="Contactos"
@@ -377,7 +415,7 @@ function DashboardPage() {
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        <motion.div 
+        <motion.div
           className="lg:col-span-3 space-y-4"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -393,11 +431,11 @@ function DashboardPage() {
             <QuickAction label="Ver Pipeline" icon={TrendingUp} to="/pipeline" color="primary" />
             <QuickAction label="Equipos" icon={Users} to="/teams" color="secondary" />
           </Stack>
-          
+
           <div className="mt-6">
             <TodayTasks tasks={tasks} />
           </div>
-          
+
           <div className="mt-6">
             <Card variant="elevated" className="border-white/5">
               <CardHeader className="pb-3">
@@ -428,7 +466,7 @@ function DashboardPage() {
           </div>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           className="lg:col-span-6 space-y-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -441,7 +479,7 @@ function DashboardPage() {
           />
         </motion.div>
 
-        <motion.div 
+        <motion.div
           className="lg:col-span-3 space-y-4"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}

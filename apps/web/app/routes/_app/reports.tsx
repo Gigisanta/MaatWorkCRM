@@ -79,8 +79,9 @@ function ReportsPage() {
                 </span>
               </h3>
               <p className="text-sm text-text-secondary font-medium leading-relaxed">
-                Tu equipo está <strong className="text-primary">23% por encima del objetivo</strong> este mes. La etapa "Propuesta"
-                tiene el mayor cuello de botella. Considera dar seguimiento a los 3 deals estancados ahí por más de 7 días.
+                Tu equipo está <strong className="text-primary">23% por encima del objetivo</strong> este mes. La etapa
+                "Propuesta" tiene el mayor cuello de botella. Considera dar seguimiento a los 3 deals estancados ahí por
+                más de 7 días.
               </p>
             </div>
           </CardContent>

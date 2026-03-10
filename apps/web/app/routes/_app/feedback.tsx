@@ -1,21 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import {
-  MessageSquare,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Bug,
-  Sparkles,
-  Lightbulb,
-  Filter,
-} from "lucide-react";
+import { Bug, CheckCircle, Clock, Filter, Lightbulb, MessageSquare, Sparkles, XCircle } from "lucide-react";
+import { useState } from "react";
+import { Badge } from "~/components/ui/Badge";
+import { Button } from "~/components/ui/Button";
 import { Card } from "~/components/ui/Card";
 import { Container, Stack } from "~/components/ui/Layout";
 import { SectionHeader } from "~/components/ui/LayoutCards";
-import { Badge } from "~/components/ui/Badge";
-import { Button } from "~/components/ui/Button";
-import { useState } from "react";
 import { cn } from "~/lib/utils";
 
 export const Route = createFileRoute("/_app/feedback")({
@@ -41,7 +32,8 @@ const mockFeedback: FeedbackItem[] = [
   {
     id: "1",
     title: "El pipeline no muestra los nombres de las etapas",
-    description: "Las etapas del pipeline aparecen sin nombres, solo con colores. Necesitamos que muestre Prospecto, Contactado, etc.",
+    description:
+      "Las etapas del pipeline aparecen sin nombres, solo con colores. Necesitamos que muestre Prospecto, Contactado, etc.",
     type: "bug",
     status: "in_progress",
     priority: "high",
@@ -143,9 +135,7 @@ function FeedbackPage() {
             onClick={() => setFilter(f)}
             className={cn(
               "px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all",
-              filter === f
-                ? "bg-primary text-white"
-                : "bg-surface-100 text-text-muted hover:bg-surface-hover"
+              filter === f ? "bg-primary text-white" : "bg-surface-100 text-text-muted hover:bg-surface-hover",
             )}
           >
             {f === "all" ? "Todos" : f === "in_progress" ? "En Progreso" : f.charAt(0).toUpperCase() + f.slice(1)}
@@ -171,12 +161,16 @@ function FeedbackPage() {
                   <div className="flex items-center gap-2 mb-2">
                     <TypeBadge type={item.type} />
                     <StatusBadge status={item.status} />
-                    <span className={cn(
-                      "px-2 py-1 rounded-full text-xs font-bold",
-                      item.priority === "high" ? "bg-error/20 text-error" :
-                      item.priority === "medium" ? "bg-amber-500/20 text-amber-500" :
-                      "bg-surface-100 text-text-muted"
-                    )}>
+                    <span
+                      className={cn(
+                        "px-2 py-1 rounded-full text-xs font-bold",
+                        item.priority === "high"
+                          ? "bg-error/20 text-error"
+                          : item.priority === "medium"
+                            ? "bg-amber-500/20 text-amber-500"
+                            : "bg-surface-100 text-text-muted",
+                      )}
+                    >
                       {item.priority === "high" ? "🔴 Alta" : item.priority === "medium" ? "🟡 Media" : "🟢 Baja"}
                     </span>
                   </div>
@@ -198,7 +192,9 @@ function FeedbackPage() {
                 >
                   <p className="text-sm text-text mb-4">{item.description}</p>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Actualizar estado:</span>
+                    <span className="text-xs font-bold text-text-muted uppercase tracking-wider">
+                      Actualizar estado:
+                    </span>
                     {(["pending", "in_progress", "completed", "rejected"] as FeedbackStatus[]).map((status) => (
                       <Button
                         key={status}
@@ -209,7 +205,13 @@ function FeedbackPage() {
                           handleUpdateStatus(item.id, status);
                         }}
                       >
-                        {status === "pending" ? "Pendiente" : status === "in_progress" ? "En Progreso" : status === "completed" ? "Completar" : "Rechazar"}
+                        {status === "pending"
+                          ? "Pendiente"
+                          : status === "in_progress"
+                            ? "En Progreso"
+                            : status === "completed"
+                              ? "Completar"
+                              : "Rechazar"}
                       </Button>
                     ))}
                   </div>

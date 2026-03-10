@@ -5,21 +5,21 @@
 // Database: PostgreSQL (Neon)
 // ============================================================
 
-import { integer, pgTable, text, timestamp, real } from "drizzle-orm/pg-core";
+import { integer, pgTable, real, text, timestamp } from "drizzle-orm/pg-core";
 import { organizations, users } from "./auth";
 import { contacts, pipelineStages } from "./crm";
 
 // ── Interaction Types ──────────────────────────────────────────
 export const interactionTypes = [
-  "call",           // Phone call
-  "email",          // Email sent/received
-  "meeting",        // In-person or video meeting
-  "note",           // Note added
-  "whatsapp",      // WhatsApp message
+  "call", // Phone call
+  "email", // Email sent/received
+  "meeting", // In-person or video meeting
+  "note", // Note added
+  "whatsapp", // WhatsApp message
   "task_completed", // Task completed for contact
 ] as const;
 
-export type InteractionType = typeof interactionTypes[number];
+export type InteractionType = (typeof interactionTypes)[number];
 
 // ── Contact Interactions ───────────────────────────────────────
 // Track every interaction with a contact
@@ -35,10 +35,10 @@ export const contactInteractions = pgTable("contact_interactions", {
     .notNull()
     .references(() => users.id),
   type: text("type", { enum: interactionTypes }).notNull(),
-  content: text("content"),           // Summary or notes
-  duration: integer("duration"),       // Duration in minutes (for calls/meetings)
-  outcome: text("outcome"),             // Result: positive, neutral, negative
-  nextAction: text("next_action"),     // What to do next
+  content: text("content"), // Summary or notes
+  duration: integer("duration"), // Duration in minutes (for calls/meetings)
+  outcome: text("outcome"), // Result: positive, neutral, negative
+  nextAction: text("next_action"), // What to do next
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -52,13 +52,13 @@ export const dailyUserMetrics = pgTable("daily_user_metrics", {
   userId: text("user_id")
     .notNull()
     .references(() => users.id),
-  teamId: text("team_id"),             // Optional team association
-  date: timestamp("date").notNull(),    // Day (normalized to midnight)
-  
+  teamId: text("team_id"), // Optional team association
+  date: timestamp("date").notNull(), // Day (normalized to midnight)
+
   // Contact metrics
   contactsCreated: integer("contacts_created").default(0),
-  contactsTouched: integer("contacts_touched").default(0),  // Contacts with interactions
-  
+  contactsTouched: integer("contacts_touched").default(0), // Contacts with interactions
+
   // Interaction metrics
   totalInteractions: integer("total_interactions").default(0),
   callsCompleted: integer("calls_completed").default(0),
@@ -66,15 +66,15 @@ export const dailyUserMetrics = pgTable("daily_user_metrics", {
   meetingsHeld: integer("meetings_held").default(0),
   notesAdded: integer("notes_added").default(0),
   whatsappSent: integer("whatsapp_sent").default(0),
-  
+
   // Task metrics
   tasksCreated: integer("tasks_created").default(0),
   tasksCompleted: integer("tasks_completed").default(0),
-  
+
   // Pipeline metrics
   contactsMovedForward: integer("contacts_moved_forward").default(0),
   contactsMovedBackward: integer("contacts_moved_backward").default(0),
-  
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -86,25 +86,25 @@ export const pipelineFunnelMetrics = pgTable("pipeline_funnel_metrics", {
   organizationId: text("organization_id")
     .notNull()
     .references(() => organizations.id, { onDelete: "cascade" }),
-  
-  period: text("period").notNull(),    // "daily", "weekly", "monthly"
+
+  period: text("period").notNull(), // "daily", "weekly", "monthly"
   periodStart: timestamp("period_start").notNull(),
   periodEnd: timestamp("period_end").notNull(),
-  
+
   stageId: text("stage_id")
     .notNull()
     .references(() => pipelineStages.id),
-  
+
   // Funnel data for this stage in this period
-  contactsAtStart: integer("contacts_at_start").default(0),  // Contacts in stage at period start
-  contactsEntered: integer("contacts_entered").default(0),   // New contacts entering stage
-  contactsExited: integer("contacts_exited").default(0),     // Contacts leaving stage
-  contactsAtEnd: integer("contacts_at_end").default(0),      // Contacts in stage at period end
-  
+  contactsAtStart: integer("contacts_at_start").default(0), // Contacts in stage at period start
+  contactsEntered: integer("contacts_entered").default(0), // New contacts entering stage
+  contactsExited: integer("contacts_exited").default(0), // Contacts leaving stage
+  contactsAtEnd: integer("contacts_at_end").default(0), // Contacts in stage at period end
+
   // Conversion metrics
-  conversionRateIn: real("conversion_rate_in"),    // % of contacts that entered vs total
-  conversionRateOut: real("conversion_rate_out"),  // % of contacts that exited vs total
-  
+  conversionRateIn: real("conversion_rate_in"), // % of contacts that entered vs total
+  conversionRateOut: real("conversion_rate_out"), // % of contacts that exited vs total
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -122,8 +122,8 @@ export const contactStageHistory = pgTable("contact_stage_history", {
   toStageId: text("to_stage_id").references(() => pipelineStages.id),
   reason: text("reason"),
   changedByUserId: text("changed_by_user_id").references(() => users.id),
-  enteredAt: timestamp("entered_at").notNull(),  // When contact entered current stage
-  exitedAt: timestamp("exited_at"),             // When contact left (null if still in stage)
+  enteredAt: timestamp("entered_at").notNull(), // When contact entered current stage
+  exitedAt: timestamp("exited_at"), // When contact left (null if still in stage)
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

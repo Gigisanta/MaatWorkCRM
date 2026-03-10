@@ -3,14 +3,14 @@
 // UI/UX REFINED BY JULES v2
 // ============================================================
 
-import { Outlet, createFileRoute, useLocation, redirect } from "@tanstack/react-router";
+import { auth } from "@server/auth";
+import { Outlet, createFileRoute, redirect, useLocation } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { Sidebar } from "~/components/layout/Sidebar";
 import { AICopilot } from "~/components/ui/AICopilot";
 import { CommandPalette } from "~/components/ui/CommandPalette";
 import { cn } from "~/lib/utils";
-import { auth } from "@server/auth";
 
 // ============================================================
 // Auth check - redirect to login if not authenticated
