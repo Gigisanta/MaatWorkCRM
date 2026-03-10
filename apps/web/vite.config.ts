@@ -6,10 +6,34 @@ import tsConfigPaths from "vite-tsconfig-paths";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 import path from "path";
 
+// Virtual module to fix stream-browserify/web import
+const streamBrowserifyWebVirtual = `
+export * from 'stream-browserify';
+`;
+
+function fixStreamBrowserifyWeb() {
+  return {
+    name: 'fix-stream-browserify-web',
+    resolveId(id: string) {
+      if (id === 'stream-browserify/web') {
+        return '\0stream-browserify-web';
+      }
+      return null;
+    },
+    load(id: string) {
+      if (id === '\0stream-browserify-web') {
+        return streamBrowserifyWebVirtual;
+      }
+      return null;
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
     tailwindcss(),
     tsConfigPaths(),
+    fixStreamBrowserifyWeb(),
     nodePolyfills({
       include: [
         'stream',
@@ -35,9 +59,9 @@ export default defineConfig({
   resolve: {
     alias: {
       "~": "/app",
-      // Redirect node:async_hooks to our browser shim
       "node:async_hooks": path.resolve(__dirname, "app/lib/polyfills/async-hooks.ts"),
       "async_hooks": path.resolve(__dirname, "app/lib/polyfills/async-hooks.ts"),
+      "stream-browserify/web": "stream-browserify",
     },
   },
   define: {
