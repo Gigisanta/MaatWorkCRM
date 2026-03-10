@@ -35,6 +35,11 @@ const streamBrowserifyWebVirtual = `
 export * from 'stream-browserify';
 `;
 
+// Virtual module for node:stream with Readable export
+const streamNodeVirtual = `
+export { Readable } from 'stream-browserify';
+`;
+
 export default defineConfig({
   plugins: [
     tailwindcss(),
@@ -65,6 +70,9 @@ export default defineConfig({
         if (id === 'node:async_hooks' || id === 'async_hooks') {
           return '\0async-hooks-virtual';
         }
+        if (id === 'node:stream') {
+          return '\0stream-node-virtual';
+        }
         return null;
       },
       load(id) {
@@ -73,6 +81,9 @@ export default defineConfig({
         }
         if (id === '\0async-hooks-virtual') {
           return asyncHooksVirtual;
+        }
+        if (id === '\0stream-node-virtual') {
+          return streamNodeVirtual;
         }
         return null;
       },
@@ -87,6 +98,7 @@ export default defineConfig({
       "stream-browserify/web": "\0stream-browserify-web",
       "node:async_hooks": "\0async-hooks-virtual",
       "async_hooks": "\0async-hooks-virtual",
+      "node:stream": "\0stream-node-virtual",
     },
   },
   optimizeDeps: {
