@@ -33,14 +33,30 @@ function LoginPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  const [error, setError] = useState<string | null>(null);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
-    setTimeout(() => {
+    try {
+      const result = await signIn.email({
+        email,
+        password,
+        callbackURL: "/dashboard",
+      });
+
+      if (result.error) {
+        setError(result.error.message || "Invalid credentials");
+        setIsLoading(false);
+      } else {
+        window.location.href = "/dashboard";
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
       setIsLoading(false);
-      window.location.href = "/dashboard";
-    }, 1800);
+    }
   };
 
   const handleGoogleLogin = async () => {

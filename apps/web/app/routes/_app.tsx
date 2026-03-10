@@ -3,20 +3,29 @@
 // UI/UX REFINED BY JULES v2
 // ============================================================
 
-import { Outlet, createFileRoute, useLocation } from "@tanstack/react-router";
+import { Outlet, createFileRoute, useLocation, redirect } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { Sidebar } from "~/components/layout/Sidebar";
 import { AICopilot } from "~/components/ui/AICopilot";
 import { CommandPalette } from "~/components/ui/CommandPalette";
 import { cn } from "~/lib/utils";
+import { auth } from "@server/auth";
 
 // ============================================================
-// MaatWork CRM — App Layout (Authenticated Shell)
-// UI/UX REFINED BY JULES v2
+// Auth check - redirect to login if not authenticated
 // ============================================================
-
 export const Route = createFileRoute("/_app")({
+  beforeLoad: async () => {
+    try {
+      const session = await auth.api.getSession();
+      if (!session) {
+        throw redirect({ to: "/login" });
+      }
+    } catch {
+      throw redirect({ to: "/login" });
+    }
+  },
   component: AppLayout,
 });
 

@@ -61,6 +61,7 @@
     "recharts": "^2.15.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "vite-plugin-node-polyfills": "^0.25.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -71,13 +72,17 @@
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.0",
+    "crypto-browserify": "^3.12.1",
     "drizzle-kit": "^0.31.4",
     "nitro": "3.0.1-alpha.2",
+    "node-stdlib-browser": "^1.3.1",
     "pg": "^8.20.0",
     "playwright": "^1.58.2",
+    "stream-browserify": "^3.0.0",
     "tailwindcss": "^4.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
+    "util": "^0.12.5",
     "vite": "^7.3.1",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^2.1.0"

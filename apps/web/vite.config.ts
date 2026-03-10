@@ -17,29 +17,16 @@ export default defineConfig({
       jsxImportSource: "react",
     }),
   ],
-  build: {
-    target: "esnext",
-    minify: "esbuild",
-    sourcemap: false,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes("node_modules")) {
-            if (id.includes("@radix-ui")) return "vendor-ui";
-            if (id.includes("framer-motion")) return "vendor-motion";
-            if (id.includes("recharts")) return "vendor-charts";
-            if (id.includes("@tanstack")) return "vendor-router";
-            if (id.includes("better-auth")) return "vendor-auth";
-          }
-        },
-      },
-    },
-    chunkSizeWarningLimit: 500,
-    treeShaking: true,
+  define: {
+    global: "globalThis",
+    "process.env": {},
   },
   resolve: {
     alias: {
       "~": "/app",
+      crypto: "crypto-browserify",
+      stream: "stream-browserify",
+      util: "util",
     },
   },
   optimizeDeps: {
@@ -48,6 +35,10 @@ export default defineConfig({
       "react-dom",
       "@tanstack/react-router",
       "@tanstack/react-query",
+      "crypto-browserify",
+      "stream-browserify",
+      "buffer",
+      "util",
     ],
   },
 });
