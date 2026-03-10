@@ -66,12 +66,15 @@ export const createContact = createServerFn({ method: "POST" })
   .inputValidator((input: { orgId: string; data: Record<string, unknown>; userId?: string }) => input)
   .handler(async ({ data }) => {
     const id = crypto.randomUUID();
+    // 🛡️ Sentinel: Prevent Mass Assignment vulnerability
+    // Remove sensitive fields that should never be set directly via input data.
+    const { id: _id, organizationId: _orgId, ...safeData } = data.data;
     const defaultStageId = "stage-prospecto";
     const newContact = { 
       id, 
       organizationId: data.orgId, 
       pipelineStageId: defaultStageId,
-      ...data.data 
+      ...safeData 
     };
     await db.insert(contacts).values(newContact as any);
     

@@ -55,10 +55,13 @@ export const createDeal = createServerFn({ method: "POST" })
   .inputValidator((input: { orgId: string; data: Record<string, unknown> }) => input)
   .handler(async ({ data }) => {
     const id = crypto.randomUUID();
+    // 🛡️ Sentinel: Prevent Mass Assignment vulnerability
+    // Remove sensitive fields that should never be set directly via input data.
+    const { id: _id, organizationId: _orgId, ...safeData } = data.data;
     await db.insert(deals).values({
       id,
       organizationId: data.orgId,
-      ...(data.data as any),
+      ...(safeData as any),
     });
     return { id };
   });
