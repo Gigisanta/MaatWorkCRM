@@ -5,25 +5,22 @@
 
 import { Outlet, createFileRoute, useLocation, redirect } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Sidebar } from "~/components/layout/Sidebar";
 import { AICopilot } from "~/components/ui/AICopilot";
 import { CommandPalette } from "~/components/ui/CommandPalette";
 import { cn } from "~/lib/utils";
-import { auth } from "@server/auth";
+import { getSession } from "@server/auth/auth.server";
 
-// ============================================================
-// Auth check - redirect to login if not authenticated
-// ============================================================
 export const Route = createFileRoute("/_app")({
-  beforeLoad: async () => {
+  beforeLoad: async ({ location }) => {
     try {
-      const session = await auth.api.getSession();
+      const session = await getSession();
       if (!session) {
-        throw redirect({ to: "/login" });
+        throw redirect({ to: "/login", search: { redirect: location.href } });
       }
     } catch {
-      throw redirect({ to: "/login" });
+      throw redirect({ to: "/login", search: { redirect: location.href } });
     }
   },
   component: AppLayout,

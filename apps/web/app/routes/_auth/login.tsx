@@ -3,17 +3,24 @@
 // UI/UX REFINED BY JULES v2
 // ============================================================
 
-import { createFileRoute } from "@tanstack/react-router";
-import { motion, AnimatePresence } from "framer-motion";
+import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { motion } from "framer-motion";
 import { ArrowRight, Chrome, Eye, EyeOff, Lock, Mail, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { signIn } from "~/lib/auth-client";
 
 export const Route = createFileRoute("/_auth/login")({
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      redirect: (search.redirect as string) || "/dashboard",
+    };
+  },
   component: LoginPage,
 });
 
 function LoginPage() {
+  const search = useSearch({ from: "/_auth/login" });
+  const redirect = search.redirect || "/dashboard";
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -44,14 +51,14 @@ function LoginPage() {
       const result = await signIn.email({
         email,
         password,
-        callbackURL: "/dashboard",
+        callbackURL: redirect,
       });
 
       if (result.error) {
         setError(result.error.message || "Invalid credentials");
         setIsLoading(false);
       } else {
-        window.location.href = "/dashboard";
+        window.location.href = redirect;
       }
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
