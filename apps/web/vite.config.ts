@@ -5,6 +5,7 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
+import { resolve } from "path";
 
 // Virtual module to provide AsyncLocalStorage
 const asyncHooksVirtual = `
@@ -37,7 +38,10 @@ export * from 'stream-browserify';
 
 // Virtual module for node:stream with Readable export
 const streamNodeVirtual = `
-export { Readable } from 'stream-browserify';
+export const Readable = class {
+  constructor() {}
+};
+export * from 'stream-browserify';
 `;
 
 export default defineConfig({
@@ -63,7 +67,7 @@ export default defineConfig({
     // Plugin to handle stream-browserify/web and node:async_hooks
     {
       name: 'fix-tanstack-deps',
-      resolveId(id) {
+      resolveId(id, importer) {
         if (id === 'stream-browserify/web') {
           return '\0stream-browserify-web';
         }
