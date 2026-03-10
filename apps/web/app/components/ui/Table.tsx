@@ -4,13 +4,15 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   onRowClick?: (row: TData) => void;
+  meta?: any;
 }
 
-export function DataTable<TData, TValue>({ columns, data, onRowClick }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({ columns, data, onRowClick, meta }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    meta,
   });
 
   return (
@@ -39,7 +41,11 @@ export function DataTable<TData, TValue>({ columns, data, onRowClick }: DataTabl
                 <tr
                   key={row.id}
                   onClick={() => onRowClick?.(row.original)}
-                  className={onRowClick ? "hover:bg-white/5 transition-colors cursor-pointer group" : "hover:bg-white/5 transition-colors group"}
+                  className={
+                    onRowClick
+                      ? "hover:bg-white/5 transition-colors cursor-pointer group"
+                      : "hover:bg-white/5 transition-colors group"
+                  }
                 >
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="py-2 px-3 align-middle text-[#F5F5F5] group-hover:text-white">
