@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import React, { useState } from "react";
 import { Badge } from "~/components/ui/Badge";
 import { Button } from "~/components/ui/Button";
+import { CalendarWidget } from "~/components/ui/CalendarWidget";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/Card";
 import { EmptyState } from "~/components/ui/EmptyState";
 import { Icon } from "~/components/ui/Icon";
@@ -9,6 +10,7 @@ import { Input } from "~/components/ui/Input";
 import { Container, Grid, Stack } from "~/components/ui/Layout";
 import { Modal, ModalContent, ModalFooter, ModalHeader, ModalTitle } from "~/components/ui/Modal";
 import {
+  useCalendarEvents,
   useCreateTeamMutation,
   useTeamDetails,
   useTeamGoals,
@@ -24,6 +26,7 @@ export const Route = createFileRoute("/_app/teams/")({
 function TeamDetailView({ teamId }: { teamId: string }) {
   const { data: details, isLoading: loadingDetails } = useTeamDetails(teamId);
   const { data: goals, isLoading: loadingGoals } = useTeamGoals(teamId);
+  const { data: teamEvents, isLoading: loadingEvents } = useCalendarEvents({ teamId });
   const updateGoalMutation = useUpdateGoalMutation();
 
   if (loadingDetails || loadingGoals) {
@@ -42,7 +45,7 @@ function TeamDetailView({ teamId }: { teamId: string }) {
   return (
     <div className="space-y-6 animate-enter">
       {/* Team Header Card */}
-      <Card variant="glass" className="overflow-hidden">
+      <Card variant="elevated" className="overflow-hidden">
         <div className="h-24 bg-gradient-to-r from-primary/20 to-violet-500/20" />
         <CardContent className="px-6 pb-6 -mt-12">
           <Stack direction="row" align="end" justify="between" className="mb-6">
@@ -56,7 +59,7 @@ function TeamDetailView({ teamId }: { teamId: string }) {
             </Button>
           </Stack>
 
-          <Stack direction="column" gap="xs">
+                        <Stack direction="col" gap="xs">
             <h2 className="text-2xl font-bold text-text font-display">{team.name}</h2>
             <p className="text-text-secondary text-sm max-w-2xl">
               {team.description || "Sin descripción proporcionada."}
@@ -65,7 +68,7 @@ function TeamDetailView({ teamId }: { teamId: string }) {
         </CardContent>
       </Card>
 
-      <Grid cols={1} lgCols={3} gap="lg">
+      <Grid cols={{ lg: 4 }} gap="lg">
         {/* Members List */}
         <div className="lg:col-span-1 space-y-4">
           <div className="flex items-center justify-between px-1">
@@ -76,7 +79,7 @@ function TeamDetailView({ teamId }: { teamId: string }) {
           </div>
           <div className="grid gap-2">
             {members.map((m: any) => (
-              <Card key={m.member.id} variant="default" className="hover-lift border-secondary/5 border">
+              <Card key={m.member.id} variant="outlined" className="hover-lift border-secondary/5 border">
                 <CardContent className="p-3 flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center font-bold text-primary">
                     {m.user?.name?.charAt(0) || "U"}
@@ -89,7 +92,7 @@ function TeamDetailView({ teamId }: { teamId: string }) {
                 </CardContent>
               </Card>
             ))}
-            <Button variant="dashed" className="w-full justify-start h-12 text-text-muted hover:text-primary">
+            <Button variant="outline" className="w-full justify-start h-12 text-text-muted hover:text-primary">
               <Icon name="Plus" size={16} className="mr-2" /> Invitar Miembro
             </Button>
           </div>
@@ -119,10 +122,10 @@ function TeamDetailView({ teamId }: { teamId: string }) {
                   100,
                 );
                 return (
-                  <Card key={goal.id} variant="glass">
+                  <Card key={goal.id} variant="elevated">
                     <CardContent className="p-5 space-y-4">
                       <Stack direction="row" align="center" justify="between">
-                        <Stack direction="column" gap="xs">
+          <Stack direction="col" gap="xs">
                           <h4 className="font-bold text-text">{goal.title}</h4>
                           <p className="text-xs text-text-muted">
                             Finaliza el {new Date(goal.endDate).toLocaleDateString()}
@@ -141,7 +144,7 @@ function TeamDetailView({ teamId }: { teamId: string }) {
                       <div className="relative h-3 rounded-full bg-secondary/10 overflow-hidden shadow-inner border border-secondary/5">
                         <div
                           className={cn(
-                            "h-full rounded-full transition-all duration-1000 ease-out shadow-lg",
+                            "h-full rounded-full transition-all duration-150 ease-out shadow-sm",
                             progress >= 90 ? "bg-emerald-500" : "bg-gradient-to-r from-primary to-violet-500",
                           )}
                           style={{ width: `${progress}%` }}
@@ -167,6 +170,14 @@ function TeamDetailView({ teamId }: { teamId: string }) {
                 );
               })
             )}
+          </div>
+
+          <div className="mt-6">
+            <CalendarWidget
+              localEvents={teamEvents || []}
+              title={`Calendario: ${team.name}`}
+              showActions={true}
+            />
           </div>
         </div>
       </Grid>
@@ -220,7 +231,7 @@ function TeamsPage() {
     <Container className="py-6 space-y-8">
       {/* Header */}
       <Stack direction="row" align="center" justify="between">
-        <Stack direction="column" gap="xs">
+        <Stack direction="col" gap="xs">
           <h1 className="text-4xl font-black text-text font-display tracking-tight">Equipos de Trabajo</h1>
           <p className="text-text-secondary">Gestión de alto rendimiento y colaboración estratégica.</p>
         </Stack>
@@ -237,7 +248,7 @@ function TeamsPage() {
             onClick={() => setSelectedTeamId(t.id)}
             className={cn(
               "px-6 rounded-full whitespace-nowrap transition-all",
-              activeTeamId === t.id && "bg-primary text-white hover:bg-primary/90 shadow-lg scale-105",
+              activeTeamId === t.id && "bg-primary text-white hover:bg-primary/90 shadow-md scale-[1.02]",
             )}
           >
             {t.name}
@@ -257,7 +268,7 @@ function TeamsPage() {
       )}
 
       {/* New Team Modal */}
-      <Modal open={showNewTeamModal} onClose={() => setShowNewTeamModal(false)}>
+      <Modal open={showNewTeamModal} onOpenChange={(open) => setShowNewTeamModal(open)}>
         <ModalHeader>
           <ModalTitle>Nuevo Equipo</ModalTitle>
         </ModalHeader>

@@ -37,10 +37,19 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/MaatWorkCRM.git
+git clone https://github.com/Gigisanta/MaatWorkCRM.git
+cd MaatWorkCRM
 
 # Install dependencies
 pnpm install
+
+# Copy environment variables
+cp .env.example apps/web/.env
+
+# Setup database
+cd apps/web
+pnpm db:push
+pnpm db:seed
 
 # Start development server
 pnpm dev
@@ -49,10 +58,11 @@ pnpm dev
 ## Coding Standards
 
 - Use TypeScript for all new code
-- Follow Biome linting rules
+- Follow Biome linting rules (`pnpm lint`)
 - Write meaningful commit messages
-- Add comments for complex logic
 - Keep functions small and focused
+- No comments unless absolutely necessary (complex algorithms, security)
+- No type suppression (`as any`, `@ts-ignore`)
 
 ## Testing
 
@@ -62,6 +72,10 @@ pnpm test
 
 # Run E2E tests
 pnpm test:e2e
+
+# Lint code
+pnpm lint
+pnpm lint:fix
 ```
 
 ## Commit Messages

@@ -21,6 +21,7 @@ import {
   Compass,
   Contact,
   Cpu,
+  Crown,
   DollarSign,
   Download,
   Edit,
@@ -132,7 +133,12 @@ export type IconName =
   | "PieChart"
   | "Target"
   | "Bell"
-  | "Cpu";
+  | "Cpu"
+  | "Plus"
+  | "Check"
+  | "Calendar"
+  | "Crown"
+  | "UserCheck";
 
 export interface IconProps {
   name: IconName;
@@ -212,6 +218,11 @@ export function Icon({ name, size = 16, className = "" }: IconProps) {
     Target,
     Bell,
     Cpu,
+    Plus,
+    Check,
+    Calendar,
+    Crown,
+    UserCheck: Users,
   };
 
   const IconComponent = iconMap[name] || AlertCircle;

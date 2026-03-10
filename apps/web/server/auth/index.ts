@@ -10,6 +10,7 @@ import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { db } from "../db";
 
 export const auth = betterAuth({
+  baseURL: process.env.BETTER_AUTH_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL || process.env.BETTER_AUTH_URL}` : undefined,
   database: drizzleAdapter(db, {
     provider: "pg",
   }),

@@ -4,6 +4,25 @@ import { queryClient } from "~/lib/query-client";
 
 import "../styles/globals.css";
 
+if (typeof window !== "undefined") {
+  (window as any).global = window;
+  (window as any).process = {
+    env: {},
+    version: "",
+  };
+  if (!(window as any).Buffer) {
+    (window as any).Buffer = {
+      isBuffer: () => false,
+      alloc: (size: number, fill?: string) => new Array(size).fill(fill || "\0").join(""),
+      allocUnsafe: (size: number) => new Array(size).fill(0).map(() => String.fromCharCode(Math.floor(Math.random() * 256))).join(""),
+      from: (str: string) => str.split("").map(c => c.charCodeAt(0)),
+      concat: (arr: Uint8Array[]) => arr,
+      byteLength: (str: string) => str.length,
+      isEncoding: () => true,
+    };
+  }
+}
+
 export const Route = createRootRoute({
   context: () => ({
     queryClient,

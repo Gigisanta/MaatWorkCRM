@@ -17,6 +17,8 @@ export const teams = pgTable("teams", {
   name: text("name").notNull(),
   description: text("description"),
   leaderId: text("leader_id").references(() => users.id),
+  calendarId: text("calendar_id"),
+  meetingRoomCalendarId: text("meeting_room_calendar_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -44,10 +46,15 @@ export const teamGoals = pgTable("team_goals", {
     .references(() => teams.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   description: text("description"),
+  type: text("type", {
+    enum: ["new_aum", "new_clients", "meetings", "revenue", "custom"],
+  }).notNull().default("custom"),
   targetValue: real("target_value").notNull(),
   currentValue: real("current_value").notNull().default(0),
   unit: text("unit").notNull().default("count"),
   period: text("period").notNull(),
+  month: integer("month"),
+  year: integer("year"),
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
   status: text("status", {

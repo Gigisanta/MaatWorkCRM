@@ -17,13 +17,8 @@ export const contacts = pgTable("contacts", {
   name: text("name").notNull(),
   email: text("email"),
   phone: text("phone"),
-  company: text("company"),
-  position: text("position"),
-  status: text("status", {
-    enum: ["lead", "prospect", "active", "inactive"],
-  })
-    .notNull()
-    .default("lead"),
+  emoji: text("emoji").default("👤"),
+  pipelineStageId: text("pipeline_stage_id").references(() => pipelineStages.id),
   tags: jsonb("tags").$type<string[]>().default([]),
   segment: text("segment"),
   source: text("source"),
@@ -40,10 +35,30 @@ export const pipelineStages = pgTable("pipeline_stages", {
     .notNull()
     .references(() => organizations.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
+  description: text("description"),
   order: integer("order").notNull().default(0),
   color: text("color").notNull().default("#6366f1"),
+  wipLimit: integer("wip_limit"),
+  slaHours: integer("sla_hours"),
   isDefault: boolean("is_default").default(false),
+  isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// ── Pipeline Stage History ─────────────────────────────────────
+export const pipelineStageHistory = pgTable("pipeline_stage_history", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  contactId: text("contact_id")
+    .notNull()
+    .references(() => contacts.id, { onDelete: "cascade" }),
+  fromStageId: text("from_stage_id").references(() => pipelineStages.id),
+  toStageId: text("to_stage_id").references(() => pipelineStages.id),
+  reason: text("reason"),
+  changedByUserId: text("changed_by_user_id").references(() => users.id),
+  changedAt: timestamp("changed_at").defaultNow().notNull(),
 });
 
 // ── Deals (contacts in pipeline stages) ──────────────────────
@@ -132,4 +147,71 @@ export const tasks = pgTable("tasks", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   completedAt: timestamp("completed_at"),
+});
+
+export const tags = pgTable("tags", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  scope: text("scope", {
+    enum: ["contact", "meeting", "note"],
+  }).notNull().default("contact"),
+  name: text("name").notNull(),
+  color: text("color").notNull().default("#6366f1"),
+  icon: text("icon"),
+  description: text("description"),
+  pipelineStageId: text("pipeline_stage_id").references(() => pipelineStages.id),
+  isAutoAssign: boolean("is_auto_assign").default(false),
+  businessLine: text("business_line", {
+    enum: ["inversiones", "zurich", "patrimonial"],
+  }),
+  isSystem: boolean("is_system").default(false),
+  createdByUserId: text("created_by_user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const tagRules = pgTable("tag_rules", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  tagId: text("tag_id").notNull().references(() => tags.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  conditions: jsonb("conditions").notNull(),
+  isActive: boolean("is_active").default(true),
+  lastEvaluatedAt: timestamp("last_evaluated_at"),
+  createdByUserId: text("created_by_user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const contactTags = pgTable("contact_tags", {
+  id: text("id").primaryKey(),
+  contactId: text("contact_id")
+    .notNull()
+    .references(() => contacts.id, { onDelete: "cascade" }),
+  tagId: text("tag_id")
+    .notNull()
+    .references(() => tags.id, { onDelete: "cascade" }),
+  monthlyPremium: integer("monthly_premium"),
+  policyNumber: text("policy_number"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const segments = pgTable("segments", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  filters: jsonb("filters").notNull(),
+  isDynamic: boolean("is_dynamic").default(true),
+  contactCount: integer("contact_count").default(0),
+  lastRefreshedAt: timestamp("last_refreshed_at"),
+  refreshSchedule: text("refresh_schedule"),
+  ownerId: text("owner_id").references(() => users.id),
+  isShared: boolean("is_shared").default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

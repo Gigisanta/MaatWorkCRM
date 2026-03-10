@@ -1,6 +1,7 @@
 import { timestamp, pgTable, text, integer, boolean, numeric } from "drizzle-orm/pg-core";
 import { contacts } from "./crm";
 import { users } from "./auth";
+import { instruments } from "./instruments";
 
 export const portfolios = pgTable("portfolios", {
   id: text("id").primaryKey(),
@@ -115,6 +116,80 @@ export const portfolioSnapshots = pgTable("portfolio_snapshots", {
   volatility: numeric("volatility", { precision: 6, scale: 3 }),
   
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const portfolioTemplates = pgTable("portfolio_templates", {
+  id: text("id").primaryKey(),
+  code: text("code").unique(),
+  name: text("name").notNull(),
+  description: text("description"),
+  createdByUserId: text("created_by_user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  deletedAt: timestamp("deleted_at"),
+});
+
+export const portfolioTemplateLines = pgTable("portfolio_template_lines", {
+  id: text("id").primaryKey(),
+  templateId: text("template_id")
+    .notNull()
+    .references(() => portfolioTemplates.id, { onDelete: "cascade" }),
+  targetType: text("target_type").notNull(),
+  assetClass: text("asset_class"),
+  instrumentId: text("instrument_id").references(() => instruments.id),
+  targetWeight: numeric("target_weight", { precision: 7, scale: 4 }).notNull(),
+});
+
+export const clientPortfolioAssignments = pgTable("client_portfolio_assignments", {
+  id: text("id").primaryKey(),
+  contactId: text("contact_id")
+    .notNull()
+    .references(() => contacts.id),
+  portfolioId: text("portfolio_id")
+    .notNull()
+    .references(() => portfolioTemplates.id),
+  status: text("status").notNull().default("active"),
+  startDate: text("start_date").notNull(),
+  endDate: text("end_date"),
+  notes: text("notes"),
+  createdByUserId: text("created_by_user_id")
+    .notNull()
+    .references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const clientPortfolioOverrides = pgTable("client_portfolio_overrides", {
+  id: text("id").primaryKey(),
+  assignmentId: text("assignment_id")
+    .notNull()
+    .references(() => clientPortfolioAssignments.id, { onDelete: "cascade" }),
+  targetType: text("target_type").notNull(),
+  assetClass: text("asset_class"),
+  instrumentId: text("instrument_id").references(() => instruments.id),
+  targetWeight: numeric("target_weight", { precision: 7, scale: 4 }).notNull(),
+});
+
+export const portfolioMonitoringSnapshot = pgTable("portfolio_monitoring_snapshot", {
+  id: text("id").primaryKey(),
+  contactId: text("contact_id")
+    .notNull()
+    .references(() => contacts.id),
+  asOfDate: text("as_of_date").notNull(),
+  totalDeviationPct: numeric("total_deviation_pct", { precision: 7, scale: 4 }).notNull(),
+  generatedAt: timestamp("generated_at").defaultNow().notNull(),
+});
+
+export const portfolioMonitoringDetails = pgTable("portfolio_monitoring_details", {
+  id: text("id").primaryKey(),
+  snapshotId: text("snapshot_id")
+    .notNull()
+    .references(() => portfolioMonitoringSnapshot.id, { onDelete: "cascade" }),
+  targetType: text("target_type").notNull(),
+  assetClass: text("asset_class"),
+  instrumentId: text("instrument_id").references(() => instruments.id),
+  targetWeight: numeric("target_weight", { precision: 7, scale: 4 }).notNull(),
+  actualWeight: numeric("actual_weight", { precision: 7, scale: 4 }).notNull(),
+  deviationPct: numeric("deviation_pct", { precision: 7, scale: 4 }).notNull(),
 });
 
 export type Portfolio = typeof portfolios.$inferSelect;

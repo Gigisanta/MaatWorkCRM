@@ -1,4 +1,4 @@
-import { timestamp, pgTable, text, integer } from "drizzle-orm/pg-core";
+import { timestamp, pgTable, text, integer, numeric, uniqueIndex } from "drizzle-orm/pg-core";
 import { users } from "./auth";
 import { contacts } from "./crm";
 
@@ -125,3 +125,18 @@ export type NewAumSnapshot = typeof aumSnapshots.$inferInsert;
 export type AumByClient = typeof aumByClient.$inferSelect;
 export type AdvisorMetrics = typeof advisorMetrics.$inferSelect;
 export type CommissionRecord = typeof commissionRecords.$inferSelect;
+
+export const aumContactSnapshots = pgTable(
+  "aum_contact_snapshots",
+  {
+    id: text("id").primaryKey(),
+    contactId: text("contact_id")
+      .notNull()
+      .references(() => contacts.id),
+    date: text("date").notNull(),
+    aumTotal: numeric("aum_total", { precision: 18, scale: 6 }).notNull(),
+  },
+  (table) => ({
+    aumContactSnapshotsUnique: uniqueIndex("aum_contact_snapshots_unique").on(table.contactId, table.date),
+  })
+);

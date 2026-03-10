@@ -8,6 +8,48 @@
       "when": 1772742934498,
       "tag": "0000_happy_black_bolt",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1772959352217,
+      "tag": "0001_broken_kate_bishop",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1772959991246,
+      "tag": "0002_equal_payback",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1772960151071,
+      "tag": "0003_quiet_blue_shield",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1772960273924,
+      "tag": "0004_gorgeous_beyonder",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1772960359789,
+      "tag": "0005_broken_elektra",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1772960400000,
+      "tag": "0006_add_pipeline_stage_id",
+      "breakpoints": true
     }
   ]
 }

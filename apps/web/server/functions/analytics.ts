@@ -3,9 +3,10 @@
 // ============================================================
 
 import { createServerFn } from "@tanstack/react-start";
-import { and, count, desc, eq, sql } from "drizzle-orm";
+import { and, count, desc, eq, sql, gte, lte, gt, lt } from "drizzle-orm";
 import { db } from "../db";
-import { auditLogs, contacts, deals, pipelineStages, tasks, teamGoals } from "../db/schema";
+import { auditLogs, contacts, deals, pipelineStages, tasks, teamGoals, pipelineStageHistory } from "../db/schema";
+import { contactInteractions, dailyUserMetrics } from "../db/schema/metrics";
 
 export const getDashboardMetrics = createServerFn({ method: "GET" })
   .inputValidator((input: { orgId: string }) => input)
@@ -18,14 +19,7 @@ export const getDashboardMetrics = createServerFn({ method: "GET" })
     const [activeContacts] = await db
       .select({ count: count() })
       .from(contacts)
-      .where(and(eq(contacts.organizationId, data.orgId), eq(contacts.status, "active")));
-
-    const [dealCount] = await db.select({ count: count() }).from(deals).where(eq(deals.organizationId, data.orgId));
-
-    const [pipelineValue] = await db
-      .select({ total: sql<number>`COALESCE(SUM(${deals.value}), 0)` })
-      .from(deals)
-      .where(eq(deals.organizationId, data.orgId));
+      .where(and(eq(contacts.organizationId, data.orgId), sql`${contacts.pipelineStageId} IS NOT NULL`));
 
     const [pendingTasks] = await db
       .select({ count: count() })
@@ -40,28 +34,160 @@ export const getDashboardMetrics = createServerFn({ method: "GET" })
     return {
       totalContacts: contactCount.count,
       activeContacts: activeContacts.count,
-      totalDeals: dealCount.count,
-      pipelineValue: pipelineValue.total,
       pendingTasks: pendingTasks.count,
       completedTasks: completedTasks.count,
     };
   });
 
-export const getPipelineByStage = createServerFn({ method: "GET" })
+export const getContactsByStage = createServerFn({ method: "GET" })
   .inputValidator((input: { orgId: string }) => input)
   .handler(async ({ data }) => {
-    return db
+    const stagesWithCounts = await db
       .select({
+        stageId: pipelineStages.id,
         stageName: pipelineStages.name,
         stageColor: pipelineStages.color,
-        dealCount: count(deals.id),
-        totalValue: sql<number>`COALESCE(SUM(${deals.value}), 0)`,
+        stageOrder: pipelineStages.order,
+        wipLimit: pipelineStages.wipLimit,
+        slaHours: pipelineStages.slaHours,
+        contactCount: sql<number>`COUNT(${contacts.id})`,
       })
       .from(pipelineStages)
-      .leftJoin(deals, eq(pipelineStages.id, deals.stageId))
+      .leftJoin(contacts, and(
+        eq(pipelineStages.id, contacts.pipelineStageId),
+        eq(contacts.organizationId, data.orgId)
+      ))
       .where(eq(pipelineStages.organizationId, data.orgId))
-      .groupBy(pipelineStages.id, pipelineStages.name, pipelineStages.color, pipelineStages.order)
+      .groupBy(pipelineStages.id, pipelineStages.name, pipelineStages.color, pipelineStages.order, pipelineStages.wipLimit, pipelineStages.slaHours)
       .orderBy(pipelineStages.order);
+
+    const totalContacts = stagesWithCounts.reduce((sum, s) => sum + Number(s.contactCount), 0);
+
+    return stagesWithCounts.map(stage => ({
+      stageId: stage.stageId,
+      stageName: stage.stageName,
+      stageColor: stage.stageColor,
+      stageOrder: stage.stageOrder,
+      wipLimit: stage.wipLimit,
+      slaHours: stage.slaHours,
+      contactCount: Number(stage.contactCount),
+      percentage: totalContacts > 0 ? (Number(stage.contactCount) / totalContacts) * 100 : 0,
+    }));
+  });
+
+export const getBottleneckAnalysis = createServerFn({ method: "GET" })
+  .inputValidator((input: { orgId: string }) => input)
+  .handler(async ({ data }) => {
+    const stages = await getContactsByStage({ data: { orgId: data.orgId } });
+    const totalContacts = stages.reduce((sum, s) => sum + s.contactCount, 0);
+
+    return {
+      totalContacts,
+      stages: stages.map(stage => ({
+        ...stage,
+        isBottleneck: stage.percentage > 40,
+        isOverWipLimit: stage.wipLimit ? stage.contactCount > stage.wipLimit : false,
+        bottleneckLevel: stage.percentage > 60 ? "critical" : stage.percentage > 40 ? "warning" : stage.percentage > 20 ? "moderate" : "healthy",
+      })),
+    };
+  });
+
+export const getConversionFunnel = createServerFn({ method: "GET" })
+  .inputValidator((input: { orgId: string }) => input)
+  .handler(async ({ data }) => {
+    const stages = await db
+      .select({
+        stageId: pipelineStages.id,
+        stageName: pipelineStages.name,
+        stageOrder: pipelineStages.order,
+      })
+      .from(pipelineStages)
+      .where(eq(pipelineStages.organizationId, data.orgId))
+      .orderBy(pipelineStages.order);
+
+    const contactsPerStage = await Promise.all(
+      stages.map(async (stage) => {
+        const [countResult] = await db
+          .select({ count: count() })
+          .from(contacts)
+          .where(and(
+            eq(contacts.organizationId, data.orgId),
+            eq(contacts.pipelineStageId, stage.stageId)
+          ));
+        return { stageId: stage.stageId, stageName: stage.stageName, stageOrder: stage.stageOrder, count: countResult.count };
+      })
+    );
+
+    const totalContacts = contactsPerStage.reduce((sum, s) => sum + s.count, 0);
+    const clientStage = stages.find(s => s.stageName.toLowerCase().includes("cliente"));
+    const clientCount = clientStage ? contactsPerStage.find(s => s.stageId === clientStage.stageId)?.count || 0 : 0;
+
+    const funnelData = contactsPerStage.map((stage, idx) => {
+      const nextStage = contactsPerStage[idx + 1];
+      const stageInfo = stages.find(s => s.stageId === stage.stageId);
+      return {
+        stageId: stage.stageId,
+        stageName: stage.stageName,
+        count: stage.count,
+        percentage: totalContacts > 0 ? (stage.count / totalContacts) * 100 : 0,
+        conversionToNext: nextStage && nextStage.count > 0 ? (Math.min(stage.count, nextStage.count) / stage.count) * 100 : 0,
+      };
+    });
+
+    return {
+      funnel: funnelData,
+      totalContacts,
+      overallConversionRate: totalContacts > 0 ? (clientCount / totalContacts) * 100 : 0,
+    };
+  });
+
+export const getUserProductivityMetrics = createServerFn({ method: "GET" })
+  .inputValidator((input: { orgId: string; userId?: string; days?: number }) => input)
+  .handler(async ({ data }) => {
+    const days = data.days || 30;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const queryConditions = [
+      eq(dailyUserMetrics.organizationId, data.orgId),
+      gte(dailyUserMetrics.date, startDate),
+    ];
+
+    if (data.userId) {
+      queryConditions.push(eq(dailyUserMetrics.userId, data.userId));
+    }
+
+    const metrics = await db
+      .select()
+      .from(dailyUserMetrics)
+      .where(and(...queryConditions))
+      .orderBy(desc(dailyUserMetrics.date));
+
+    const totals = metrics.reduce((acc, m) => ({
+      contactsCreated: acc.contactsCreated + (m.contactsCreated || 0),
+      contactsTouched: acc.contactsTouched + (m.contactsTouched || 0),
+      totalInteractions: acc.totalInteractions + (m.totalInteractions || 0),
+      callsCompleted: acc.callsCompleted + (m.callsCompleted || 0),
+      emailsSent: acc.emailsSent + (m.emailsSent || 0),
+      meetingsHeld: acc.meetingsHeld + (m.meetingsHeld || 0),
+      notesAdded: acc.notesAdded + (m.notesAdded || 0),
+      tasksCompleted: acc.tasksCompleted + (m.tasksCompleted || 0),
+    }), {
+      contactsCreated: 0,
+      contactsTouched: 0,
+      totalInteractions: 0,
+      callsCompleted: 0,
+      emailsSent: 0,
+      meetingsHeld: 0,
+      notesAdded: 0,
+      tasksCompleted: 0,
+    });
+
+    return {
+      dailyMetrics: metrics,
+      totals,
+      periodDays: days,
+    };
   });
 
 export const getRecentActivity = createServerFn({ method: "GET" })

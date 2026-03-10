@@ -62,7 +62,7 @@ function TrainingPage() {
     <Container className="py-6 space-y-8 animate-enter">
       {/* Header */}
       <Stack direction="row" align="center" justify="between">
-        <Stack direction="column" gap="xs">
+        <Stack direction="col" gap="xs">
           <h1 className="text-4xl font-black text-text font-display tracking-tight">Capacitación y Recursos</h1>
           <p className="text-text-secondary">
             Potencia tus habilidades con nuestra librería de conocimiento exclusivo.
@@ -86,17 +86,17 @@ function TrainingPage() {
         ))}
       </div>
 
-      <Grid cols={1} mdCols={2} gap="lg">
+      <Grid cols={{ md: 2 }} gap="lg">
         {MATERIALS.map((mat) => {
           const config = categoryConfig[mat.category] ?? categoryConfig.document;
           return (
-            <Card key={mat.id} variant="glass" className="group hover-lift overflow-hidden border-secondary/10">
+            <Card key={mat.id} variant="elevated" className="group overflow-hidden border-secondary/10">
               <div className={cn("h-2 w-full", `bg-${config.color}-500/40`)} />
               <CardContent className="p-6">
                 <Stack direction="row" gap="md" align="start">
                   <div
                     className={cn(
-                      "p-4 rounded-2xl shrink-0 shadow-inner border border-secondary/10 transition-transform group-hover:scale-110",
+                      "p-4 rounded-lg shrink-0 border border-secondary/10 transition-transform group-hover:scale-105",
                       `bg-${config.color}-500/10 text-${config.color}-500`,
                     )}
                   >
@@ -138,10 +138,10 @@ function TrainingPage() {
                         </Stack>
                       </Stack>
                       <Stack direction="row" gap="xs">
-                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-secondary/10">
+                        <Button variant="ghost" size="md" className="h-9 w-9 rounded-xl hover:bg-secondary/10">
                           <Download size={16} />
                         </Button>
-                        <Button variant="primary" size="sm" className="rounded-xl px-4 shadow-lg shadow-primary/20">
+                        <Button variant="primary" size="sm" className="rounded-lg px-4">
                           <Play size={14} className="mr-2 fill-current" /> Comenzar
                         </Button>
                       </Stack>
@@ -156,12 +156,12 @@ function TrainingPage() {
 
       {/* Professional Achievement Card */}
       <Card
-        variant="glass"
+        variant="elevated"
         className="bg-gradient-to-br from-primary/10 via-violet-500/5 to-transparent border-primary/20"
       >
         <CardContent className="p-8">
-          <Grid cols={1} lgCols={2} gap="lg" items="center">
-            <Stack direction="column" gap="md">
+          <Grid cols={{ lg: 2 }} gap="lg">
+            <Stack direction="col" gap="md">
               <Badge variant="primary" className="w-fit">
                 Estatus de Aprendizaje
               </Badge>
@@ -171,13 +171,12 @@ function TrainingPage() {
                 obligatoria para este trimestre. Te faltan solo 2 módulos para alcanzar el nivel Senior.
               </p>
               <div className="w-full h-3 bg-secondary/10 rounded-full overflow-hidden border border-secondary/5 shadow-inner">
-                <div className="h-full bg-gradient-to-r from-primary to-violet-500 rounded-full w-[64%] shadow-[0_0_15px_rgba(99,102,241,0.5)]" />
+                <div className="h-full bg-gradient-to-r from-primary to-violet-500 rounded-full w-[64%]" />
               </div>
             </Stack>
             <div className="relative flex justify-center lg:justify-end">
-              <div className="w-48 h-48 rounded-full bg-primary/20 blur-3xl absolute animate-pulse" />
-              <div className="relative z-10 w-32 h-32 rounded-3xl bg-background border-2 border-primary/20 flex items-center justify-center shadow-2xl rotate-3">
-                <Icon name="Trophy" size={64} className="text-primary" />
+              <div className="relative z-10 w-32 h-32 rounded-lg bg-background border-2 border-primary/20 flex items-center justify-center shadow-lg rotate-3">
+                <Icon name="Award" size={64} className="text-primary" />
               </div>
             </div>
           </Grid>

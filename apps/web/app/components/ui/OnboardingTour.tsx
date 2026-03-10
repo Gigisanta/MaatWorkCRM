@@ -156,7 +156,7 @@ const OnboardingTour: React.FC<{ onFinish?: () => void }> = ({ onFinish }) => {
       <div
         ref={cardRef}
         aria-label="onboarding-tour"
-        className="fixed z-40 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(680px,92%)] max-w-full rounded-2xl shadow-2xl border border-white/20 bg-gradient-to-br from-white/10 to-white/6 backdrop-blur-md p-5 text-white"
+        className="fixed z-40 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(680px,92%)] max-w-full rounded-lg shadow-lg border border-white/20 bg-neutral-900 p-5 text-white"
         style={{
           transition: "opacity 250ms ease, transform 250ms ease",
         }}

@@ -12,21 +12,25 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthApiSplatRouteImport } from './routes/auth-api/$'
 import { Route as ApiTestRouteImport } from './routes/api/test'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AppTrainingRouteImport } from './routes/_app/training'
 import { Route as AppTasksRouteImport } from './routes/_app/tasks'
+import { Route as AppSegmentsRouteImport } from './routes/_app/segments'
 import { Route as AppResourcesRouteImport } from './routes/_app/resources'
 import { Route as AppReportsRouteImport } from './routes/_app/reports'
 import { Route as AppPipelineRouteImport } from './routes/_app/pipeline'
+import { Route as AppFeedbackRouteImport } from './routes/_app/feedback'
 import { Route as AppDriveRouteImport } from './routes/_app/drive'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
+import { Route as AppCareerPlanRouteImport } from './routes/_app/career-plan'
 import { Route as AppCalendarRouteImport } from './routes/_app/calendar'
+import { Route as AppAutomationsRouteImport } from './routes/_app/automations'
 import { Route as AppTeamsIndexRouteImport } from './routes/_app/teams/index'
 import { Route as AppSettingsIndexRouteImport } from './routes/_app/settings/index'
 import { Route as AppContactsIndexRouteImport } from './routes/_app/contacts/index'
 import { Route as ApiTestWildcardSplatRouteImport } from './routes/api/test-wildcard/$'
+import { Route as ApiBetterauthSplatRouteImport } from './routes/api/betterauth/$'
 import { Route as AppSettingsAuditRouteImport } from './routes/_app/settings/audit'
 import { Route as ApiGoogleDriveFilesRouteImport } from './routes/api/google/drive/files'
 import { Route as ApiGoogleCalendarEventsRouteImport } from './routes/api/google/calendar/events'
@@ -43,11 +47,6 @@ const AppRoute = AppRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthApiSplatRoute = AuthApiSplatRouteImport.update({
-  id: '/auth-api/$',
-  path: '/auth-api/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTestRoute = ApiTestRouteImport.update({
@@ -70,6 +69,11 @@ const AppTasksRoute = AppTasksRouteImport.update({
   path: '/tasks',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSegmentsRoute = AppSegmentsRouteImport.update({
+  id: '/segments',
+  path: '/segments',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppResourcesRoute = AppResourcesRouteImport.update({
   id: '/resources',
   path: '/resources',
@@ -85,6 +89,11 @@ const AppPipelineRoute = AppPipelineRouteImport.update({
   path: '/pipeline',
   getParentRoute: () => AppRoute,
 } as any)
+const AppFeedbackRoute = AppFeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppDriveRoute = AppDriveRouteImport.update({
   id: '/drive',
   path: '/drive',
@@ -95,9 +104,19 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCareerPlanRoute = AppCareerPlanRouteImport.update({
+  id: '/career-plan',
+  path: '/career-plan',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppCalendarRoute = AppCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAutomationsRoute = AppAutomationsRouteImport.update({
+  id: '/automations',
+  path: '/automations',
   getParentRoute: () => AppRoute,
 } as any)
 const AppTeamsIndexRoute = AppTeamsIndexRouteImport.update({
@@ -118,6 +137,11 @@ const AppContactsIndexRoute = AppContactsIndexRouteImport.update({
 const ApiTestWildcardSplatRoute = ApiTestWildcardSplatRouteImport.update({
   id: '/api/test-wildcard/$',
   path: '/api/test-wildcard/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBetterauthSplatRoute = ApiBetterauthSplatRouteImport.update({
+  id: '/api/betterauth/$',
+  path: '/api/betterauth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppSettingsAuditRoute = AppSettingsAuditRouteImport.update({
@@ -144,18 +168,22 @@ const ApiGoogleCalendarEventsEventIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/automations': typeof AppAutomationsRoute
   '/calendar': typeof AppCalendarRoute
+  '/career-plan': typeof AppCareerPlanRoute
   '/dashboard': typeof AppDashboardRoute
   '/drive': typeof AppDriveRoute
+  '/feedback': typeof AppFeedbackRoute
   '/pipeline': typeof AppPipelineRoute
   '/reports': typeof AppReportsRoute
   '/resources': typeof AppResourcesRoute
+  '/segments': typeof AppSegmentsRoute
   '/tasks': typeof AppTasksRoute
   '/training': typeof AppTrainingRoute
   '/login': typeof AuthLoginRoute
   '/api/test': typeof ApiTestRoute
-  '/auth-api/$': typeof AuthApiSplatRoute
   '/settings/audit': typeof AppSettingsAuditRoute
+  '/api/betterauth/$': typeof ApiBetterauthSplatRoute
   '/api/test-wildcard/$': typeof ApiTestWildcardSplatRoute
   '/contacts/': typeof AppContactsIndexRoute
   '/settings/': typeof AppSettingsIndexRoute
@@ -166,18 +194,22 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/automations': typeof AppAutomationsRoute
   '/calendar': typeof AppCalendarRoute
+  '/career-plan': typeof AppCareerPlanRoute
   '/dashboard': typeof AppDashboardRoute
   '/drive': typeof AppDriveRoute
+  '/feedback': typeof AppFeedbackRoute
   '/pipeline': typeof AppPipelineRoute
   '/reports': typeof AppReportsRoute
   '/resources': typeof AppResourcesRoute
+  '/segments': typeof AppSegmentsRoute
   '/tasks': typeof AppTasksRoute
   '/training': typeof AppTrainingRoute
   '/login': typeof AuthLoginRoute
   '/api/test': typeof ApiTestRoute
-  '/auth-api/$': typeof AuthApiSplatRoute
   '/settings/audit': typeof AppSettingsAuditRoute
+  '/api/betterauth/$': typeof ApiBetterauthSplatRoute
   '/api/test-wildcard/$': typeof ApiTestWildcardSplatRoute
   '/contacts': typeof AppContactsIndexRoute
   '/settings': typeof AppSettingsIndexRoute
@@ -191,18 +223,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/_auth': typeof AuthRouteWithChildren
+  '/_app/automations': typeof AppAutomationsRoute
   '/_app/calendar': typeof AppCalendarRoute
+  '/_app/career-plan': typeof AppCareerPlanRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/drive': typeof AppDriveRoute
+  '/_app/feedback': typeof AppFeedbackRoute
   '/_app/pipeline': typeof AppPipelineRoute
   '/_app/reports': typeof AppReportsRoute
   '/_app/resources': typeof AppResourcesRoute
+  '/_app/segments': typeof AppSegmentsRoute
   '/_app/tasks': typeof AppTasksRoute
   '/_app/training': typeof AppTrainingRoute
   '/_auth/login': typeof AuthLoginRoute
   '/api/test': typeof ApiTestRoute
-  '/auth-api/$': typeof AuthApiSplatRoute
   '/_app/settings/audit': typeof AppSettingsAuditRoute
+  '/api/betterauth/$': typeof ApiBetterauthSplatRoute
   '/api/test-wildcard/$': typeof ApiTestWildcardSplatRoute
   '/_app/contacts/': typeof AppContactsIndexRoute
   '/_app/settings/': typeof AppSettingsIndexRoute
@@ -215,18 +251,22 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/automations'
     | '/calendar'
+    | '/career-plan'
     | '/dashboard'
     | '/drive'
+    | '/feedback'
     | '/pipeline'
     | '/reports'
     | '/resources'
+    | '/segments'
     | '/tasks'
     | '/training'
     | '/login'
     | '/api/test'
-    | '/auth-api/$'
     | '/settings/audit'
+    | '/api/betterauth/$'
     | '/api/test-wildcard/$'
     | '/contacts/'
     | '/settings/'
@@ -237,18 +277,22 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/automations'
     | '/calendar'
+    | '/career-plan'
     | '/dashboard'
     | '/drive'
+    | '/feedback'
     | '/pipeline'
     | '/reports'
     | '/resources'
+    | '/segments'
     | '/tasks'
     | '/training'
     | '/login'
     | '/api/test'
-    | '/auth-api/$'
     | '/settings/audit'
+    | '/api/betterauth/$'
     | '/api/test-wildcard/$'
     | '/contacts'
     | '/settings'
@@ -261,18 +305,22 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/_auth'
+    | '/_app/automations'
     | '/_app/calendar'
+    | '/_app/career-plan'
     | '/_app/dashboard'
     | '/_app/drive'
+    | '/_app/feedback'
     | '/_app/pipeline'
     | '/_app/reports'
     | '/_app/resources'
+    | '/_app/segments'
     | '/_app/tasks'
     | '/_app/training'
     | '/_auth/login'
     | '/api/test'
-    | '/auth-api/$'
     | '/_app/settings/audit'
+    | '/api/betterauth/$'
     | '/api/test-wildcard/$'
     | '/_app/contacts/'
     | '/_app/settings/'
@@ -287,7 +335,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
   ApiTestRoute: typeof ApiTestRoute
-  AuthApiSplatRoute: typeof AuthApiSplatRoute
+  ApiBetterauthSplatRoute: typeof ApiBetterauthSplatRoute
   ApiTestWildcardSplatRoute: typeof ApiTestWildcardSplatRoute
   ApiGoogleCalendarEventsRoute: typeof ApiGoogleCalendarEventsRouteWithChildren
   ApiGoogleDriveFilesRoute: typeof ApiGoogleDriveFilesRoute
@@ -314,13 +362,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth-api/$': {
-      id: '/auth-api/$'
-      path: '/auth-api/$'
-      fullPath: '/auth-api/$'
-      preLoaderRoute: typeof AuthApiSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/test': {
@@ -351,6 +392,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTasksRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/segments': {
+      id: '/_app/segments'
+      path: '/segments'
+      fullPath: '/segments'
+      preLoaderRoute: typeof AppSegmentsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/resources': {
       id: '/_app/resources'
       path: '/resources'
@@ -372,6 +420,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPipelineRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/feedback': {
+      id: '/_app/feedback'
+      path: '/feedback'
+      fullPath: '/feedback'
+      preLoaderRoute: typeof AppFeedbackRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/drive': {
       id: '/_app/drive'
       path: '/drive'
@@ -386,11 +441,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/career-plan': {
+      id: '/_app/career-plan'
+      path: '/career-plan'
+      fullPath: '/career-plan'
+      preLoaderRoute: typeof AppCareerPlanRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/calendar': {
       id: '/_app/calendar'
       path: '/calendar'
       fullPath: '/calendar'
       preLoaderRoute: typeof AppCalendarRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/automations': {
+      id: '/_app/automations'
+      path: '/automations'
+      fullPath: '/automations'
+      preLoaderRoute: typeof AppAutomationsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/teams/': {
@@ -419,6 +488,13 @@ declare module '@tanstack/react-router' {
       path: '/api/test-wildcard/$'
       fullPath: '/api/test-wildcard/$'
       preLoaderRoute: typeof ApiTestWildcardSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/betterauth/$': {
+      id: '/api/betterauth/$'
+      path: '/api/betterauth/$'
+      fullPath: '/api/betterauth/$'
+      preLoaderRoute: typeof ApiBetterauthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/settings/audit': {
@@ -453,12 +529,16 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppAutomationsRoute: typeof AppAutomationsRoute
   AppCalendarRoute: typeof AppCalendarRoute
+  AppCareerPlanRoute: typeof AppCareerPlanRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDriveRoute: typeof AppDriveRoute
+  AppFeedbackRoute: typeof AppFeedbackRoute
   AppPipelineRoute: typeof AppPipelineRoute
   AppReportsRoute: typeof AppReportsRoute
   AppResourcesRoute: typeof AppResourcesRoute
+  AppSegmentsRoute: typeof AppSegmentsRoute
   AppTasksRoute: typeof AppTasksRoute
   AppTrainingRoute: typeof AppTrainingRoute
   AppSettingsAuditRoute: typeof AppSettingsAuditRoute
@@ -468,12 +548,16 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAutomationsRoute: AppAutomationsRoute,
   AppCalendarRoute: AppCalendarRoute,
+  AppCareerPlanRoute: AppCareerPlanRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDriveRoute: AppDriveRoute,
+  AppFeedbackRoute: AppFeedbackRoute,
   AppPipelineRoute: AppPipelineRoute,
   AppReportsRoute: AppReportsRoute,
   AppResourcesRoute: AppResourcesRoute,
+  AppSegmentsRoute: AppSegmentsRoute,
   AppTasksRoute: AppTasksRoute,
   AppTrainingRoute: AppTrainingRoute,
   AppSettingsAuditRoute: AppSettingsAuditRoute,
@@ -513,7 +597,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
   ApiTestRoute: ApiTestRoute,
-  AuthApiSplatRoute: AuthApiSplatRoute,
+  ApiBetterauthSplatRoute: ApiBetterauthSplatRoute,
   ApiTestWildcardSplatRoute: ApiTestWildcardSplatRoute,
   ApiGoogleCalendarEventsRoute: ApiGoogleCalendarEventsRouteWithChildren,
   ApiGoogleDriveFilesRoute: ApiGoogleDriveFilesRoute,

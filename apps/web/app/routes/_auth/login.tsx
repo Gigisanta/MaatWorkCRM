@@ -4,7 +4,7 @@
 // ============================================================
 
 import { createFileRoute } from "@tanstack/react-router";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowRight, Chrome, Eye, EyeOff, Lock, Mail, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { signIn } from "~/lib/auth-client";
@@ -14,6 +14,8 @@ export const Route = createFileRoute("/_auth/login")({
 });
 
 function LoginPage() {
+  const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const redirect = searchParams?.get("redirect") || "/dashboard";
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,21 +35,40 @@ function LoginPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  const [error, setError] = useState<string | null>(null);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
-    setTimeout(() => {
+    try {
+      const result = await signIn.email({
+        email,
+        password,
+      });
+
+      if (result.error) {
+        setError(result.error.message || "Invalid credentials");
+        setIsLoading(false);
+      } else {
+        window.location.href = redirect;
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
       setIsLoading(false);
-      window.location.href = "/dashboard";
-    }, 1800);
+    }
   };
 
   const handleGoogleLogin = async () => {
     try {
-      await signIn.google();
+      await signIn.social({
+        provider: "google",
+        callbackURL: redirect,
+      });
     } catch (error) {
       console.error("Google sign in error:", error);
+      setError("Failed to sign in with Google. Please try again.");
     }
   };
 
@@ -83,7 +104,7 @@ function LoginPage() {
             animate={{ scale: 1, opacity: 1, rotate: 0 }}
             transition={{ delay: 0.15, duration: 0.8, type: "spring", stiffness: 200, damping: 15 }}
             whileHover={{ rotate: 5, scale: 1.05 }}
-            className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-3xl mx-auto mb-6 shadow-[0_0_30px_rgba(139,92,246,0.3)] border border-white/10 cursor-pointer"
+            className="w-20 h-20 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-bold text-3xl mx-auto mb-6 border border-white/10 cursor-pointer"
           >
             <Sparkles className="w-8 h-8" strokeWidth={2.5} />
           </motion.div>
@@ -97,7 +118,7 @@ function LoginPage() {
           </motion.div>
         </div>
 
-        <div className="glass-card p-8 relative overflow-hidden group">
+        <div className="p-8 relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/8 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
           <div className="absolute inset-0 border border-white/5 rounded-[inherit] group-hover:border-primary/30 transition-all duration-500 pointer-events-none" />
 
@@ -105,7 +126,7 @@ function LoginPage() {
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleGoogleLogin}
-            className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-surface hover:bg-surface-hover border border-border rounded-xl text-text font-medium transition-all mb-6 shadow-sm hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] hover:border-border-hover group/oauth"
+            className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-surface hover:bg-surface-hover border border-border rounded-lg text-text font-medium transition-all mb-6 shadow-sm hover:shadow-md hover:border-border-hover group/oauth"
           >
             <motion.div
               whileHover={{ rotate: 360 }}
@@ -132,7 +153,7 @@ function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@company.com"
-                  className="w-full pl-10 pr-4 py-3 bg-surface/50 border border-border rounded-xl text-text placeholder:text-text-muted focus:outline-none focus:border-primary/50 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.2)] transition-all shadow-inner"
+                  className="w-full pl-10 pr-4 py-3 bg-surface/50 border border-border rounded-lg text-text placeholder:text-text-muted focus:outline-none focus:border-primary/50 transition-all"
                   required
                   autoComplete="email"
                 />
@@ -158,7 +179,7 @@ function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="•••••"
-                  className="w-full pl-10 pr-12 py-3 bg-surface/50 border border-border rounded-xl text-text placeholder:text-text-muted focus:outline-none focus:border-primary/50 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.2)] transition-all shadow-inner"
+                  className="w-full pl-10 pr-12 py-3 bg-surface/50 border border-border rounded-lg text-text placeholder:text-text-muted focus:outline-none focus:border-primary/50 transition-all"
                   required
                   autoComplete="current-password"
                 />
@@ -184,7 +205,7 @@ function LoginPage() {
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 mt-2 bg-primary hover:bg-primary-hover text-white rounded-xl font-medium transition-all shadow-[0_0_20px_rgba(139,92,246,0.2)] hover:shadow-[0_0_25px_rgba(139,92,246,0.3)] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full py-3 mt-2 bg-primary hover:bg-primary-hover text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <motion.div

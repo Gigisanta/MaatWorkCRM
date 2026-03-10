@@ -28,9 +28,9 @@ export function CommandPalette() {
     <Command.Dialog
       open={open}
       onOpenChange={setOpen}
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh] bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh] bg-black/60"
     >
-      <div className="w-full max-w-2xl bg-[#0F0F0F] rounded-2xl border border-white/5 shadow-[0_0_40px_rgba(139,92,246,0.15)] overflow-hidden">
+      <div className="w-full max-w-2xl bg-[#0F0F0F] rounded-lg border border-white/5 shadow-lg overflow-hidden">
         <div className="flex items-center px-4 border-b border-white/5">
           <Search className="w-5 h-5 text-[#A3A3A3] mr-3" />
           <Command.Input
@@ -45,21 +45,21 @@ export function CommandPalette() {
           <Command.Group heading="Navigation" className="text-xs font-bold uppercase tracking-wider text-[#A3A3A3] p-2">
             <Command.Item
               onSelect={() => handleSelect("/dashboard")}
-              className="flex items-center px-4 py-3 rounded-xl cursor-pointer text-[#F5F5F5] data-[selected=true]:bg-[#8B5CF6]/10 data-[selected=true]:text-[#8B5CF6] transition-colors"
+              className="flex items-center px-4 py-3 rounded-lg cursor-pointer text-[#F5F5F5] data-[selected=true]:bg-[#8B5CF6]/10 data-[selected=true]:text-[#8B5CF6] transition-colors"
             >
               <LayoutDashboard className="w-5 h-5 mr-3" />
               Go to Dashboard
             </Command.Item>
             <Command.Item
               onSelect={() => handleSelect("/contacts")}
-              className="flex items-center px-4 py-3 rounded-xl cursor-pointer text-[#F5F5F5] data-[selected=true]:bg-[#8B5CF6]/10 data-[selected=true]:text-[#8B5CF6] transition-colors"
+              className="flex items-center px-4 py-3 rounded-lg cursor-pointer text-[#F5F5F5] data-[selected=true]:bg-[#8B5CF6]/10 data-[selected=true]:text-[#8B5CF6] transition-colors"
             >
               <Users className="w-5 h-5 mr-3" />
               Go to Contacts
             </Command.Item>
             <Command.Item
               onSelect={() => handleSelect("/pipeline")}
-              className="flex items-center px-4 py-3 rounded-xl cursor-pointer text-[#F5F5F5] data-[selected=true]:bg-[#8B5CF6]/10 data-[selected=true]:text-[#8B5CF6] transition-colors"
+              className="flex items-center px-4 py-3 rounded-lg cursor-pointer text-[#F5F5F5] data-[selected=true]:bg-[#8B5CF6]/10 data-[selected=true]:text-[#8B5CF6] transition-colors"
             >
               <Kanban className="w-5 h-5 mr-3" />
               Go to Pipeline
@@ -69,7 +69,7 @@ export function CommandPalette() {
           <Command.Group heading="Settings" className="text-xs font-bold uppercase tracking-wider text-[#A3A3A3] p-2">
             <Command.Item
               onSelect={() => handleSelect("/settings")}
-              className="flex items-center px-4 py-3 rounded-xl cursor-pointer text-[#F5F5F5] data-[selected=true]:bg-[#8B5CF6]/10 data-[selected=true]:text-[#8B5CF6] transition-colors"
+              className="flex items-center px-4 py-3 rounded-lg cursor-pointer text-[#F5F5F5] data-[selected=true]:bg-[#8B5CF6]/10 data-[selected=true]:text-[#8B5CF6] transition-colors"
             >
               <Settings className="w-5 h-5 mr-3" />
               Global Settings
