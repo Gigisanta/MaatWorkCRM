@@ -4,36 +4,50 @@ import viteReact from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
 
-// Virtual module to provide stream/web exports
-const streamWebVirtual = `
-export const ReadableStream = globalThis.ReadableStream;
-export const TransformStream = globalThis.TransformStream;
-export const ByteLengthQueuingStrategy = globalThis.ByteLengthQueuingStrategy;
-export const CountQueuingStrategy = globalThis.CountQueuingStrategy;
-export const TextEncoderStream = globalThis.TextEncoderStream;
-export const TextDecoderStream = globalThis.TextDecoderStream;
-`;
-
+// Virtual module to provide AsyncLocalStorage
 const asyncHooksVirtual = `
-export const AsyncLocalStorage = class AsyncLocalStorage {
-  getStore() { return null; }
-  run(store, callback, ...args) { return callback(...args); }
-  exit(callback, ...args) { return callback(...args); }
-};
+export class AsyncLocalStorage {
+  constructor() {
+    this._store = null;
+  }
+  getStore() { 
+    return this._store;
+  }
+  run(store, callback, ...args) { 
+    const prevStore = this._store;
+    this._store = store;
+    try {
+      return callback(...args);
+    } finally {
+      this._store = prevStore;
+    }
+  }
+  exit(callback, ...args) { 
+    return callback(...args);
+  }
+}
 `;
 
-const streamBrowserifyVirtual = `
-import * as stream from 'stream-browserify';
-export default stream;
-export const ReadableStream = globalThis.ReadableStream;
-export const TransformStream = globalThis.TransformStream;
+// Virtual module for stream-browserify/web
+const streamBrowserifyWebVirtual = `
+export * from 'stream-browserify';
 `;
 
 export default defineConfig({
   plugins: [
     tailwindcss(),
     tsConfigPaths(),
+    nodePolyfills({
+      include: ['crypto', 'stream', 'buffer', 'util'],
+      globals: {
+        Buffer: true,
+        global: true,
+        process: true,
+      },
+      protocolImports: true,
+    }),
     nitro(),
     tanstackStart({
       srcDirectory: "app",
@@ -41,22 +55,23 @@ export default defineConfig({
     viteReact({
       jsxImportSource: "react",
     }),
+    // Plugin to handle stream-browserify/web and node:async_hooks
     {
-      name: "stream-web-virtual",
+      name: 'fix-tanstack-deps',
       resolveId(id) {
-        if (id === "stream-web" || id === "node:stream/web" || id === "stream-browserify/web") {
-          return "\0stream-web-virtual";
+        if (id === 'stream-browserify/web') {
+          return '\0stream-browserify-web';
         }
-        if (id === "node:async_hooks") {
-          return "\0async-hooks-virtual";
+        if (id === 'node:async_hooks' || id === 'async_hooks') {
+          return '\0async-hooks-virtual';
         }
         return null;
       },
       load(id) {
-        if (id === "\0stream-web-virtual") {
-          return streamWebVirtual;
+        if (id === '\0stream-browserify-web') {
+          return streamBrowserifyWebVirtual;
         }
-        if (id === "\0async-hooks-virtual") {
+        if (id === '\0async-hooks-virtual') {
           return asyncHooksVirtual;
         }
         return null;
@@ -69,13 +84,9 @@ export default defineConfig({
   resolve: {
     alias: {
       "~": "/app",
-      crypto: "crypto-browserify",
-      stream: "stream-browserify",
-      "node:stream": "stream-browserify",
-      "node:stream/web": "\0stream-web-virtual",
-      "stream-browserify/web": "\0stream-web-virtual",
+      "stream-browserify/web": "\0stream-browserify-web",
       "node:async_hooks": "\0async-hooks-virtual",
-      util: "util",
+      "async_hooks": "\0async-hooks-virtual",
     },
   },
   optimizeDeps: {
@@ -84,13 +95,10 @@ export default defineConfig({
       "react-dom",
       "@tanstack/react-router",
       "@tanstack/react-query",
-      "crypto-browserify",
-      "stream-browserify",
-      "buffer",
-      "util",
     ],
   },
   ssr: {
-    external: ["pg", "@neondatabase/serverless", "node:stream", "node:stream/web"],
+    noExternal: ["crypto-browserify"],
+    external: ["pg", "@neondatabase/serverless"],
   },
 });

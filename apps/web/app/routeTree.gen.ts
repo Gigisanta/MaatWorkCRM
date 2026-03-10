@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthApiSplatRouteImport } from './routes/auth-api/$'
 import { Route as ApiTestRouteImport } from './routes/api/test'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AppTrainingRouteImport } from './routes/_app/training'
@@ -31,6 +30,7 @@ import { Route as AppTeamsIndexRouteImport } from './routes/_app/teams/index'
 import { Route as AppSettingsIndexRouteImport } from './routes/_app/settings/index'
 import { Route as AppContactsIndexRouteImport } from './routes/_app/contacts/index'
 import { Route as ApiTestWildcardSplatRouteImport } from './routes/api/test-wildcard/$'
+import { Route as ApiBetterauthSplatRouteImport } from './routes/api/betterauth/$'
 import { Route as AppSettingsAuditRouteImport } from './routes/_app/settings/audit'
 import { Route as ApiGoogleDriveFilesRouteImport } from './routes/api/google/drive/files'
 import { Route as ApiGoogleCalendarEventsRouteImport } from './routes/api/google/calendar/events'
@@ -47,11 +47,6 @@ const AppRoute = AppRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthApiSplatRoute = AuthApiSplatRouteImport.update({
-  id: '/auth-api/$',
-  path: '/auth-api/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTestRoute = ApiTestRouteImport.update({
@@ -144,6 +139,11 @@ const ApiTestWildcardSplatRoute = ApiTestWildcardSplatRouteImport.update({
   path: '/api/test-wildcard/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiBetterauthSplatRoute = ApiBetterauthSplatRouteImport.update({
+  id: '/api/betterauth/$',
+  path: '/api/betterauth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppSettingsAuditRoute = AppSettingsAuditRouteImport.update({
   id: '/settings/audit',
   path: '/settings/audit',
@@ -182,8 +182,8 @@ export interface FileRoutesByFullPath {
   '/training': typeof AppTrainingRoute
   '/login': typeof AuthLoginRoute
   '/api/test': typeof ApiTestRoute
-  '/auth-api/$': typeof AuthApiSplatRoute
   '/settings/audit': typeof AppSettingsAuditRoute
+  '/api/betterauth/$': typeof ApiBetterauthSplatRoute
   '/api/test-wildcard/$': typeof ApiTestWildcardSplatRoute
   '/contacts/': typeof AppContactsIndexRoute
   '/settings/': typeof AppSettingsIndexRoute
@@ -208,8 +208,8 @@ export interface FileRoutesByTo {
   '/training': typeof AppTrainingRoute
   '/login': typeof AuthLoginRoute
   '/api/test': typeof ApiTestRoute
-  '/auth-api/$': typeof AuthApiSplatRoute
   '/settings/audit': typeof AppSettingsAuditRoute
+  '/api/betterauth/$': typeof ApiBetterauthSplatRoute
   '/api/test-wildcard/$': typeof ApiTestWildcardSplatRoute
   '/contacts': typeof AppContactsIndexRoute
   '/settings': typeof AppSettingsIndexRoute
@@ -237,8 +237,8 @@ export interface FileRoutesById {
   '/_app/training': typeof AppTrainingRoute
   '/_auth/login': typeof AuthLoginRoute
   '/api/test': typeof ApiTestRoute
-  '/auth-api/$': typeof AuthApiSplatRoute
   '/_app/settings/audit': typeof AppSettingsAuditRoute
+  '/api/betterauth/$': typeof ApiBetterauthSplatRoute
   '/api/test-wildcard/$': typeof ApiTestWildcardSplatRoute
   '/_app/contacts/': typeof AppContactsIndexRoute
   '/_app/settings/': typeof AppSettingsIndexRoute
@@ -265,8 +265,8 @@ export interface FileRouteTypes {
     | '/training'
     | '/login'
     | '/api/test'
-    | '/auth-api/$'
     | '/settings/audit'
+    | '/api/betterauth/$'
     | '/api/test-wildcard/$'
     | '/contacts/'
     | '/settings/'
@@ -291,8 +291,8 @@ export interface FileRouteTypes {
     | '/training'
     | '/login'
     | '/api/test'
-    | '/auth-api/$'
     | '/settings/audit'
+    | '/api/betterauth/$'
     | '/api/test-wildcard/$'
     | '/contacts'
     | '/settings'
@@ -319,8 +319,8 @@ export interface FileRouteTypes {
     | '/_app/training'
     | '/_auth/login'
     | '/api/test'
-    | '/auth-api/$'
     | '/_app/settings/audit'
+    | '/api/betterauth/$'
     | '/api/test-wildcard/$'
     | '/_app/contacts/'
     | '/_app/settings/'
@@ -335,7 +335,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
   ApiTestRoute: typeof ApiTestRoute
-  AuthApiSplatRoute: typeof AuthApiSplatRoute
+  ApiBetterauthSplatRoute: typeof ApiBetterauthSplatRoute
   ApiTestWildcardSplatRoute: typeof ApiTestWildcardSplatRoute
   ApiGoogleCalendarEventsRoute: typeof ApiGoogleCalendarEventsRouteWithChildren
   ApiGoogleDriveFilesRoute: typeof ApiGoogleDriveFilesRoute
@@ -362,13 +362,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth-api/$': {
-      id: '/auth-api/$'
-      path: '/auth-api/$'
-      fullPath: '/auth-api/$'
-      preLoaderRoute: typeof AuthApiSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/test': {
@@ -497,6 +490,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTestWildcardSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/betterauth/$': {
+      id: '/api/betterauth/$'
+      path: '/api/betterauth/$'
+      fullPath: '/api/betterauth/$'
+      preLoaderRoute: typeof ApiBetterauthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_app/settings/audit': {
       id: '/_app/settings/audit'
       path: '/settings/audit'
@@ -597,7 +597,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
   ApiTestRoute: ApiTestRoute,
-  AuthApiSplatRoute: AuthApiSplatRoute,
+  ApiBetterauthSplatRoute: ApiBetterauthSplatRoute,
   ApiTestWildcardSplatRoute: ApiTestWildcardSplatRoute,
   ApiGoogleCalendarEventsRoute: ApiGoogleCalendarEventsRouteWithChildren,
   ApiGoogleDriveFilesRoute: ApiGoogleDriveFilesRoute,

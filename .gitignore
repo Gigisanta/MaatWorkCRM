@@ -44,3 +44,5 @@ npm-debug.log*
 # Worktrees (isolated development)
 .worktrees/
 .vercel
+maat-work-crm-web
+apps/web/package-lock.json

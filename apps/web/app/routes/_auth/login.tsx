@@ -61,7 +61,15 @@ function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
-    window.location.href = "/auth-api/sign-in/google";
+    try {
+      await signIn.social({
+        provider: "google",
+        callbackURL: redirect,
+      });
+    } catch (error) {
+      console.error("Google sign in error:", error);
+      setError("Failed to sign in with Google. Please try again.");
+    }
   };
 
   if (!mounted) {

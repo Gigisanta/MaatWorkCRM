@@ -28,6 +28,7 @@ import {
 import { useEffect, useState, useCallback } from "react";
 import { cn } from "~/lib/utils";
 import { useNotifications } from "../../hooks/useNotifications";
+import { signOut } from "~/lib/auth-client";
 
 // Mock user data (replace with actual auth data when available)
 const mockUser = {
@@ -282,7 +283,10 @@ function ProfileDropdown() {
             ))}
           </div>
           <div className="mt-2 pt-2 border-t border-border/30">
-              <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-error hover:bg-error/10 transition-all group">
+            <button 
+              onClick={() => signOut()}
+              className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-error hover:bg-error/10 transition-all group"
+            >
               <LogOut className="w-4 h-4" />
               <span className="text-sm font-medium">Cerrar sesión</span>
             </button>

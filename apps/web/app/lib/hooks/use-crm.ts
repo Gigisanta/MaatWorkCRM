@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useSession } from "~/lib/auth-client";
+import { authClient, useSession } from "~/lib/auth-client";
 import { getDashboardMetrics, getRecentActivity, getContactsByStage, getBottleneckAnalysis, getConversionFunnel, getUserProductivityMetrics } from "../../../server/functions/analytics";
 import { createCalendarEvent, deleteCalendarEvent, getCalendarEvents, updateCalendarEvent } from "../../../server/functions/calendar";
 import { createContact, deleteContact, getContacts, updateContact } from "../../../server/functions/contacts";
@@ -25,11 +25,39 @@ import { addTagToContact, createTag, deleteTag, getContactTags, getTags, removeT
 // Impacto: High performance, cached results, and automatic invalidation patterns
 
 /**
+ * Hook para obtener el organizationId del usuario actual.
+ * Si hay una organización activa, la usa.
+ * Si no, usa la primera organización del usuario.
+ * Si el usuario no tiene organizaciones, retorna null.
+ */
+function useCurrentOrganizationId() {
+  const { data: session, isPending: sessionLoading } = useSession();
+  const { data: organizations } = authClient.useListOrganizations();
+
+  // Si está cargando la sesión, retornar null
+  if (sessionLoading || !session) {
+    return null;
+  }
+
+  // Si hay una organización activa en la sesión, usarla
+  if (session.session?.activeOrganizationId) {
+    return session.session.activeOrganizationId;
+  }
+
+  // Si hay organizaciones del usuario, usar la primera
+  if (organizations && organizations.length > 0) {
+    return organizations[0].id;
+  }
+
+  // No hay organización disponible
+  return null;
+}
+
+/**
  * Dashboard & Analytics
  */
 export function useDashboardMetrics() {
-  const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const orgId = useCurrentOrganizationId();
 
   return useQuery({
     queryKey: ["dashboard-metrics", orgId],
@@ -40,8 +68,7 @@ export function useDashboardMetrics() {
 }
 
 export function usePipelineSummary() {
-  const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const orgId = useCurrentOrganizationId();
 
   return useQuery({
     queryKey: ["pipeline-summary", orgId],
@@ -51,8 +78,7 @@ export function usePipelineSummary() {
 }
 
 export function usePipelineStages() {
-  const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const orgId = useCurrentOrganizationId();
 
   return useQuery({
     queryKey: ["pipeline-stages", orgId],
@@ -62,8 +88,7 @@ export function usePipelineStages() {
 }
 
 export function useRecentActivity(limit = 10) {
-  const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const orgId = useCurrentOrganizationId();
 
   return useQuery({
     queryKey: ["recent-activity", orgId, limit],
@@ -76,8 +101,7 @@ export function useRecentActivity(limit = 10) {
  * Pipeline Analytics - Contact counts and bottleneck detection
  */
 export function useContactsByStage() {
-  const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const orgId = useCurrentOrganizationId();
 
   return useQuery({
     queryKey: ["contacts-by-stage", orgId],
@@ -87,8 +111,7 @@ export function useContactsByStage() {
 }
 
 export function useBottleneckAnalysis() {
-  const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const orgId = useCurrentOrganizationId();
 
   return useQuery({
     queryKey: ["bottleneck-analysis", orgId],
@@ -98,8 +121,7 @@ export function useBottleneckAnalysis() {
 }
 
 export function useConversionFunnel() {
-  const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const orgId = useCurrentOrganizationId();
 
   return useQuery({
     queryKey: ["conversion-funnel", orgId],
@@ -109,8 +131,8 @@ export function useConversionFunnel() {
 }
 
 export function useUserProductivityMetrics(days = 30) {
+  const orgId = useCurrentOrganizationId();
   const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
   const userId = session?.user?.id;
 
   return useQuery({
@@ -124,8 +146,7 @@ export function useUserProductivityMetrics(days = 30) {
  * Tasks logic
  */
 export function useTasks(filters?: any) {
-  const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const orgId = useCurrentOrganizationId();
 
   return useQuery({
     queryKey: ["tasks", orgId, filters],
@@ -135,8 +156,7 @@ export function useTasks(filters?: any) {
 }
 
 export function useTasksWithContacts(filters?: any) {
-  const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const orgId = useCurrentOrganizationId();
 
   return useQuery({
     queryKey: ["tasks-with-contacts", orgId, filters],
@@ -149,8 +169,7 @@ export { useTasks as useUserTasks };
 
 export function useCreateTaskMutation() {
   const queryClient = useQueryClient();
-  const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const orgId = useCurrentOrganizationId();
 
   return useMutation({
     mutationFn: (data: any) => createTask({ data: { orgId: orgId!, data } }),
@@ -211,8 +230,7 @@ export function useGoogleCalendarEvents(filters?: { timeMin?: string; timeMax?: 
  * Calendar Events (Local + Google Sync)
  */
 export function useCalendarEvents(filters?: { teamId?: string; startDate?: string; endDate?: string }) {
-  const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const orgId = useCurrentOrganizationId();
 
   return useQuery({
     queryKey: ["calendar-events", orgId, filters],
@@ -223,8 +241,7 @@ export function useCalendarEvents(filters?: { teamId?: string; startDate?: strin
 
 export function useCreateCalendarEventMutation() {
   const queryClient = useQueryClient();
-  const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const orgId = useCurrentOrganizationId();
 
   return useMutation({
     mutationFn: (data: { teamId?: string; data: any }) => createCalendarEvent({ data: { orgId: orgId!, ...data } }),
@@ -258,8 +275,7 @@ export function useDeleteCalendarEventMutation() {
  * Contacts
  */
 export function useContacts(filters?: any) {
-  const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const orgId = useCurrentOrganizationId();
 
   return useQuery({
     queryKey: ["contacts", orgId, filters],
@@ -270,8 +286,7 @@ export function useContacts(filters?: any) {
 
 export function useCreateContactMutation() {
   const queryClient = useQueryClient();
-  const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const orgId = useCurrentOrganizationId();
 
   return useMutation({
     mutationFn: (data: any) => createContact({ data: { orgId: orgId!, data } }),
@@ -303,8 +318,7 @@ export function useDeleteContactMutation() {
 }
 
 export function useTags(scope?: string) {
-  const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const orgId = useCurrentOrganizationId();
 
   return useQuery({
     queryKey: ["tags", orgId, scope],
@@ -323,8 +337,7 @@ export function useContactTags(contactId: string) {
 
 export function useCreateTagMutation() {
   const queryClient = useQueryClient();
-  const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const orgId = useCurrentOrganizationId();
 
   return useMutation({
     mutationFn: (data: any) => createTag({ data: { orgId: orgId!, data } }),
@@ -409,8 +422,7 @@ export function useContactsByPipelineStage() {
 
 export function useMoveContactMutation() {
   const queryClient = useQueryClient();
-  const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const orgId = useCurrentOrganizationId();
 
   return useMutation({
     mutationFn: (params: { contactId: string; pipelineStageId: string }) =>
@@ -453,8 +465,7 @@ export function usePipelineBoard() {
 
 export function useMoveDealMutation() {
   const queryClient = useQueryClient();
-  const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const orgId = useCurrentOrganizationId();
 
   return useMutation({
     mutationFn: (params: { dealId: string; stageId: string }) => moveDeal({ data: params }),
@@ -467,8 +478,7 @@ export function useMoveDealMutation() {
 
 export function useCreateDealMutation() {
   const queryClient = useQueryClient();
-  const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const orgId = useCurrentOrganizationId();
 
   return useMutation({
     mutationFn: (data: any) => createDeal({ data: { orgId: orgId!, data } }),
@@ -481,8 +491,7 @@ export function useCreateDealMutation() {
 
 export function useCreateStageMutation() {
   const queryClient = useQueryClient();
-  const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const orgId = useCurrentOrganizationId();
 
   return useMutation({
     mutationFn: (data: { name: string; color: string; order: number }) =>
@@ -497,8 +506,7 @@ export function useCreateStageMutation() {
  * Teams & Collaboration
  */
 export function useTeams() {
-  const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const orgId = useCurrentOrganizationId();
 
   return useQuery({
     queryKey: ["teams", orgId],
@@ -535,8 +543,7 @@ export function useUpdateGoalMutation() {
 
 export function useCreateTeamMutation() {
   const queryClient = useQueryClient();
-  const { data: session } = useSession();
-  const orgId = session?.session?.activeOrganizationId || "org_maatwork_demo";
+  const orgId = useCurrentOrganizationId();
 
   return useMutation({
     mutationFn: (data: { name: string; description?: string; leaderId?: string }) =>
