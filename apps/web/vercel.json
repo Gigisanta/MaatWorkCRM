@@ -7,6 +7,12 @@
     "enabled": true,
     "autoJobCancelation": true
   },
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/server"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
