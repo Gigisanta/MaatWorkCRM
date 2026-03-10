@@ -3,7 +3,7 @@
   "framework": null,
   "buildCommand": "NODE_OPTIONS='--max-old-space-size=4096' npm run build",
   "installCommand": "npm install",
-  "outputDirectory": ".output/public",
+  "outputDirectory": ".output",
   "github": {
     "enabled": true,
     "autoJobCancelation": true
