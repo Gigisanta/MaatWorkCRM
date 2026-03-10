@@ -5,7 +5,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { and, desc, eq, inArray, like } from "drizzle-orm";
 import { db } from "../db";
-import { contacts, contactTags, tags } from "../db/schema";
+import { contactTags, contacts, tags } from "../db/schema";
 import { recordContactInteraction } from "./interactions";
 
 export const getContacts = createServerFn({ method: "GET" })
@@ -23,10 +23,10 @@ export const getContacts = createServerFn({ method: "GET" })
       .from(contacts)
       .where(and(...conditions))
       .orderBy(desc(contacts.createdAt));
-    
-    const contactIds = contactList.map(c => c.id);
+
+    const contactIds = contactList.map((c) => c.id);
     if (contactIds.length === 0) return contactList;
-    
+
     const contactTagsList = await db
       .select({
         id: contactTags.id,
@@ -38,8 +38,8 @@ export const getContacts = createServerFn({ method: "GET" })
       .from(contactTags)
       .leftJoin(tags, eq(contactTags.tagId, tags.id))
       .where(inArray(contactTags.contactId, contactIds));
-    
-    const tagsMap = new Map<string, Array<{id: string; name: string; color: string}>>();
+
+    const tagsMap = new Map<string, Array<{ id: string; name: string; color: string }>>();
     for (const ct of contactTagsList) {
       if (!tagsMap.has(ct.contactId)) {
         tagsMap.set(ct.contactId, []);
@@ -48,8 +48,8 @@ export const getContacts = createServerFn({ method: "GET" })
         tagsMap.get(ct.contactId)!.push({ id: ct.tagId, name: ct.tagName, color: ct.tagColor });
       }
     }
-    
-    return contactList.map(contact => ({
+
+    return contactList.map((contact) => ({
       ...contact,
       tags: tagsMap.get(contact.id) || [],
     }));
@@ -67,14 +67,17 @@ export const createContact = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const id = crypto.randomUUID();
     const defaultStageId = "stage-prospecto";
-    const newContact = { 
-      id, 
-      organizationId: data.orgId, 
+    // 🛡️ Sentinel: Prevent Mass Assignment vulnerability
+    const { id: _id, organizationId: _orgId, pipelineStageId: _stageId, ...safeData } = data.data;
+
+    const newContact = {
+      id,
+      organizationId: data.orgId,
       pipelineStageId: defaultStageId,
-      ...data.data 
+      ...safeData,
     };
     await db.insert(contacts).values(newContact as any);
-    
+
     if (data.userId) {
       await recordContactInteraction({
         data: {
@@ -86,7 +89,7 @@ export const createContact = createServerFn({ method: "POST" })
         },
       });
     }
-    
+
     return { id };
   });
 

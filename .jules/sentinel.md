@@ -1,0 +1,4 @@
+## 2024-03-10 - Mass Assignment in TanStack Start Server Functions
+**Vulnerability:** Mass Assignment in Drizzle ORM `.insert().values()` operations where user-provided input (`data.data`) is directly spread into the insertion object. This allows malicious actors to overwrite sensitive fields such as `id`, `organizationId`, or `pipelineStageId` during record creation (e.g., in `createContact`, `createDeal`, `createTask`).
+**Learning:** This occurred because input validation only ensured the overall payload was an object, but didn't restrict the object keys being spread into the Drizzle values object. Spreading untrusted data before or after trusted fields can lead to unauthorized field manipulation.
+**Prevention:** To prevent mass assignment vulnerabilities, always explicitly destructure and remove sensitive fields from the input payload before passing them to `.set()` or `.insert().values()`. Avoid spreading untrusted data blindly.

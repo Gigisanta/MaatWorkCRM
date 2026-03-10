@@ -5,7 +5,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { asc, eq } from "drizzle-orm";
 import { db } from "../db";
-import { contacts, deals, pipelineStages, pipelineStageHistory } from "../db/schema";
+import { contacts, deals, pipelineStageHistory, pipelineStages } from "../db/schema";
 
 export const getStages = createServerFn({ method: "GET" })
   .inputValidator((input: { orgId: string }) => input)
@@ -33,8 +33,12 @@ export const getDealsWithContacts = createServerFn({ method: "GET" })
 export const moveDeal = createServerFn({ method: "POST" })
   .inputValidator((input: { dealId: string; stageId: string; userId?: string; reason?: string }) => input)
   .handler(async ({ data }) => {
-    const currentDeal = await db.select().from(deals).where(eq(deals.id, data.dealId)).then(r => r[0]);
-    
+    const currentDeal = await db
+      .select()
+      .from(deals)
+      .where(eq(deals.id, data.dealId))
+      .then((r) => r[0]);
+
     if (currentDeal) {
       await db.insert(pipelineStageHistory).values({
         id: crypto.randomUUID(),
@@ -46,7 +50,7 @@ export const moveDeal = createServerFn({ method: "POST" })
         changedByUserId: data.userId || null,
       });
     }
-    
+
     await db.update(deals).set({ stageId: data.stageId, updatedAt: new Date() }).where(eq(deals.id, data.dealId));
     return { success: true };
   });
@@ -55,16 +59,29 @@ export const createDeal = createServerFn({ method: "POST" })
   .inputValidator((input: { orgId: string; data: Record<string, unknown> }) => input)
   .handler(async ({ data }) => {
     const id = crypto.randomUUID();
+    // 🛡️ Sentinel: Prevent Mass Assignment vulnerability
+    const { id: _id, organizationId: _orgId, ...safeData } = data.data;
+
     await db.insert(deals).values({
       id,
       organizationId: data.orgId,
-      ...(data.data as any),
+      ...(safeData as any),
     });
     return { id };
   });
 
 export const createStage = createServerFn({ method: "POST" })
-  .inputValidator((input: { orgId: string; name: string; color: string; order: number; description?: string; wipLimit?: number; slaHours?: number }) => input)
+  .inputValidator(
+    (input: {
+      orgId: string;
+      name: string;
+      color: string;
+      order: number;
+      description?: string;
+      wipLimit?: number;
+      slaHours?: number;
+    }) => input,
+  )
   .handler(async ({ data }) => {
     const id = crypto.randomUUID();
     await db.insert(pipelineStages).values({
@@ -91,7 +108,17 @@ export const getStageHistory = createServerFn({ method: "GET" })
   });
 
 export const updateStage = createServerFn({ method: "POST" })
-  .inputValidator((input: { stageId: string; name?: string; description?: string; color?: string; wipLimit?: number; slaHours?: number; isActive?: boolean }) => input)
+  .inputValidator(
+    (input: {
+      stageId: string;
+      name?: string;
+      description?: string;
+      color?: string;
+      wipLimit?: number;
+      slaHours?: number;
+      isActive?: boolean;
+    }) => input,
+  )
   .handler(async ({ data }) => {
     const { stageId, ...updates } = data;
     await db.update(pipelineStages).set(updates).where(eq(pipelineStages.id, stageId));
