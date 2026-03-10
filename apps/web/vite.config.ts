@@ -5,7 +5,6 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
-import { resolve } from "path";
 
 // Virtual module to provide AsyncLocalStorage
 const asyncHooksVirtual = `
@@ -44,8 +43,46 @@ export const Readable = class {
 export * from 'stream-browserify';
 `;
 
+// Plugin to handle TanStack Router dependencies that don't exist
+const fixTanstackDeps = () => ({
+  name: 'fix-tanstack-deps',
+  enforce: 'pre',
+  config() {
+    return {
+      resolve: {
+        alias: {
+          'stream-browserify/web': 'stream-browserify',
+          'node:stream': 'stream-browserify',
+          'node:stream/web': 'stream-browserify',
+          'node:async_hooks': '\0async-hooks-virtual',
+          'async_hooks': '\0async-hooks-virtual',
+        },
+      },
+    };
+  },
+  resolveId(id) {
+    if (id === '\0async-hooks-virtual') {
+      return id;
+    }
+    return null;
+  },
+  load(id) {
+    if (id === '\0async-hooks-virtual') {
+      return asyncHooksVirtual;
+    }
+    if (id === '\0stream-node-virtual') {
+      return streamNodeVirtual;
+    }
+    if (id === '\0stream-browserify-web') {
+      return streamBrowserifyWebVirtual;
+    }
+    return null;
+  },
+});
+
 export default defineConfig({
   plugins: [
+    fixTanstackDeps(),
     tailwindcss(),
     tsConfigPaths(),
     nodePolyfills({
@@ -64,46 +101,9 @@ export default defineConfig({
     viteReact({
       jsxImportSource: "react",
     }),
-    // Plugin to handle stream-browserify/web and node:async_hooks
-    {
-      name: 'fix-tanstack-deps',
-      resolveId(id, importer) {
-        if (id === 'stream-browserify/web') {
-          return '\0stream-browserify-web';
-        }
-        if (id === 'node:async_hooks' || id === 'async_hooks') {
-          return '\0async-hooks-virtual';
-        }
-        if (id === 'node:stream') {
-          return '\0stream-node-virtual';
-        }
-        return null;
-      },
-      load(id) {
-        if (id === '\0stream-browserify-web') {
-          return streamBrowserifyWebVirtual;
-        }
-        if (id === '\0async-hooks-virtual') {
-          return asyncHooksVirtual;
-        }
-        if (id === '\0stream-node-virtual') {
-          return streamNodeVirtual;
-        }
-        return null;
-      },
-    },
   ],
   define: {
     global: "globalThis",
-  },
-  resolve: {
-    alias: {
-      "~": "/app",
-      "stream-browserify/web": "\0stream-browserify-web",
-      "node:async_hooks": "\0async-hooks-virtual",
-      "async_hooks": "\0async-hooks-virtual",
-      "node:stream": "\0stream-node-virtual",
-    },
   },
   optimizeDeps: {
     include: [
