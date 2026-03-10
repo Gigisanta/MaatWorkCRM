@@ -18,7 +18,7 @@
     "db:studio": "drizzle-kit studio",
     "clean": "rm -rf .output .vinxi dist node_modules",
     "instagram:sync": "tsx scripts/instagram-sync.ts",
-    "postinstall": "node scripts/create-stream-browserify-web.js"
+    "postinstall": "node scripts/create-stream-browserify-web.cjs"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.5.4",
