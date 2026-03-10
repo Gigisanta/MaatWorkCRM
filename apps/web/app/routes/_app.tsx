@@ -10,11 +10,11 @@ import { Sidebar } from "~/components/layout/Sidebar";
 import { AICopilot } from "~/components/ui/AICopilot";
 import { CommandPalette } from "~/components/ui/CommandPalette";
 import { cn } from "~/lib/utils";
-import { getSession } from "@server/auth/auth.server";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: async ({ location }) => {
     try {
+      const { getSession } = await import("@server/auth/auth");
       const session = await getSession();
       if (!session) {
         throw redirect({ to: "/login", search: { redirect: location.href } });
