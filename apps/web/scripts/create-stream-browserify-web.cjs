@@ -1,10 +1,9 @@
 const { writeFileSync, mkdirSync, existsSync } = require('fs');
-const { join, dirname } = require('path');
-const { fileURLToPath } = require('url');
+const { join } = require('path');
 
 // Find stream-browserify in node_modules
 const findStreamBrowserify = () => {
-  const path = join(fileURLToPath(import.meta.url), '..', 'node_modules');
+  const path = join(__dirname, '..', 'node_modules');
   
   // Try to find in pnpm store
   const pnpmPath = join(path, '.pnpm', 'stream-browserify@3.0.0');
