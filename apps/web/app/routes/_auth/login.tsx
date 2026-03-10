@@ -3,24 +3,19 @@
 // UI/UX REFINED BY JULES v2
 // ============================================================
 
-import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { ArrowRight, Chrome, Eye, EyeOff, Lock, Mail, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { signIn } from "~/lib/auth-client";
 
 export const Route = createFileRoute("/_auth/login")({
-  validateSearch: (search: Record<string, unknown>) => {
-    return {
-      redirect: (search.redirect as string) || "/dashboard",
-    };
-  },
   component: LoginPage,
 });
 
 function LoginPage() {
-  const search = useSearch({ from: "/_auth/login" });
-  const redirect = search.redirect || "/dashboard";
+  const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const redirect = searchParams?.get("redirect") || "/dashboard";
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
