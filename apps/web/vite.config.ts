@@ -4,6 +4,7 @@ import viteReact from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
+import { nitro } from "nitro/vite";
 import path from "path";
 
 // Virtual module to fix stream-browserify/web import
@@ -51,6 +52,9 @@ export default defineConfig({
     }),
     tanstackStart({
       srcDirectory: "app",
+    }),
+    nitro({
+      preset: 'vercel',
     }),
     viteReact({
       jsxImportSource: "react",
