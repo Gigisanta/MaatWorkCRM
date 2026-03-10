@@ -46,7 +46,6 @@ function LoginPage() {
       const result = await signIn.email({
         email,
         password,
-        callbackURL: redirect,
       });
 
       if (result.error) {
