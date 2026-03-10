@@ -1,92 +1,23 @@
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
-import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
-
-// Virtual module to provide AsyncLocalStorage
-const asyncHooksVirtual = `
-export class AsyncLocalStorage {
-  constructor() {
-    this._store = null;
-  }
-  getStore() { 
-    return this._store;
-  }
-  run(store, callback, ...args) { 
-    const prevStore = this._store;
-    this._store = store;
-    try {
-      return callback(...args);
-    } finally {
-      this._store = prevStore;
-    }
-  }
-  exit(callback, ...args) { 
-    return callback(...args);
-  }
-}
-`;
-
-// Virtual module for stream-browserify/web
-const streamBrowserifyWebVirtual = `
-export * from 'stream-browserify';
-`;
-
-// Virtual module for node:stream with Readable export
-const streamNodeVirtual = `
-export const Readable = class {
-  constructor() {}
-};
-export * from 'stream-browserify';
-`;
-
-// Plugin to handle TanStack Router dependencies that don't exist
-const fixTanstackDeps = () => ({
-  name: 'fix-tanstack-deps',
-  enforce: 'pre',
-  config() {
-    return {
-      resolve: {
-        alias: {
-          'stream-browserify/web': 'stream-browserify',
-          'node:stream': 'stream-browserify',
-          'node:stream/web': 'stream-browserify',
-          'node:async_hooks': '\0async-hooks-virtual',
-          'async_hooks': '\0async-hooks-virtual',
-        },
-      },
-    };
-  },
-  resolveId(id) {
-    if (id === '\0async-hooks-virtual') {
-      return id;
-    }
-    return null;
-  },
-  load(id) {
-    if (id === '\0async-hooks-virtual') {
-      return asyncHooksVirtual;
-    }
-    if (id === '\0stream-node-virtual') {
-      return streamNodeVirtual;
-    }
-    if (id === '\0stream-browserify-web') {
-      return streamBrowserifyWebVirtual;
-    }
-    return null;
-  },
-});
+import path from "path";
 
 export default defineConfig({
   plugins: [
-    fixTanstackDeps(),
     tailwindcss(),
     tsConfigPaths(),
     nodePolyfills({
-      include: ['crypto', 'stream', 'buffer', 'util'],
+      include: [
+        'stream',
+        'stream-browserify',
+        'buffer', 
+        'util', 
+        'crypto',
+      ],
       globals: {
         Buffer: true,
         global: true,
@@ -94,7 +25,6 @@ export default defineConfig({
       },
       protocolImports: true,
     }),
-    nitro(),
     tanstackStart({
       srcDirectory: "app",
     }),
@@ -102,6 +32,14 @@ export default defineConfig({
       jsxImportSource: "react",
     }),
   ],
+  resolve: {
+    alias: {
+      "~": "/app",
+      // Redirect node:async_hooks to our browser shim
+      "node:async_hooks": path.resolve(__dirname, "app/lib/polyfills/async-hooks.ts"),
+      "async_hooks": path.resolve(__dirname, "app/lib/polyfills/async-hooks.ts"),
+    },
+  },
   define: {
     global: "globalThis",
   },
@@ -111,10 +49,24 @@ export default defineConfig({
       "react-dom",
       "@tanstack/react-router",
       "@tanstack/react-query",
+      "stream-browserify",
     ],
+    esbuildOptions: {
+      define: {
+        global: "globalThis",
+      },
+    },
   },
   ssr: {
-    noExternal: ["crypto-browserify"],
-    external: ["pg", "@neondatabase/serverless"],
+    noExternal: [
+      "@tanstack/react-router",
+      "@tanstack/router-core",
+      "@tanstack/start-server-core",
+      "@tanstack/start-storage-context",
+    ],
+    external: [
+      "pg",
+      "@neondatabase/serverless",
+    ],
   },
 });
