@@ -46,3 +46,4 @@ npm-debug.log*
 .vercel
 maat-work-crm-web
 apps/web/package-lock.json
+SECRETS_LOCAL.txt

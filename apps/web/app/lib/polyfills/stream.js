@@ -24,3 +24,13 @@ export function pipeline(...args) {
 }
 
 export const finished = Promise.resolve();
+
+export default {
+  Readable,
+  Writable,
+  Transform,
+  Duplex,
+  PassThrough,
+  pipeline,
+  finished,
+};
