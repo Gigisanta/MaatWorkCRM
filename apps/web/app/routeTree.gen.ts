@@ -14,6 +14,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiTestRouteImport } from './routes/api/test'
 import { Route as ApiSimpleTestRouteImport } from './routes/api/simple-test'
+import { Route as ApiSplatRouteImport } from './routes/api/$'
 import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AppTrainingRouteImport } from './routes/_app/training'
@@ -61,6 +62,11 @@ const ApiTestRoute = ApiTestRouteImport.update({
 const ApiSimpleTestRoute = ApiSimpleTestRouteImport.update({
   id: '/api/simple-test',
   path: '/api/simple-test',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSplatRoute = ApiSplatRouteImport.update({
+  id: '/api/$',
+  path: '/api/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRegisterRoute = AuthRegisterRouteImport.update({
@@ -207,6 +213,7 @@ export interface FileRoutesByFullPath {
   '/training': typeof AppTrainingRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
+  '/api/$': typeof ApiSplatRoute
   '/api/simple-test': typeof ApiSimpleTestRoute
   '/api/test': typeof ApiTestRoute
   '/settings/audit': typeof AppSettingsAuditRoute
@@ -237,6 +244,7 @@ export interface FileRoutesByTo {
   '/training': typeof AppTrainingRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
+  '/api/$': typeof ApiSplatRoute
   '/api/simple-test': typeof ApiSimpleTestRoute
   '/api/test': typeof ApiTestRoute
   '/settings/audit': typeof AppSettingsAuditRoute
@@ -270,6 +278,7 @@ export interface FileRoutesById {
   '/_app/training': typeof AppTrainingRoute
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/register': typeof AuthRegisterRoute
+  '/api/$': typeof ApiSplatRoute
   '/api/simple-test': typeof ApiSimpleTestRoute
   '/api/test': typeof ApiTestRoute
   '/_app/settings/audit': typeof AppSettingsAuditRoute
@@ -302,6 +311,7 @@ export interface FileRouteTypes {
     | '/training'
     | '/login'
     | '/register'
+    | '/api/$'
     | '/api/simple-test'
     | '/api/test'
     | '/settings/audit'
@@ -332,6 +342,7 @@ export interface FileRouteTypes {
     | '/training'
     | '/login'
     | '/register'
+    | '/api/$'
     | '/api/simple-test'
     | '/api/test'
     | '/settings/audit'
@@ -364,6 +375,7 @@ export interface FileRouteTypes {
     | '/_app/training'
     | '/_auth/login'
     | '/_auth/register'
+    | '/api/$'
     | '/api/simple-test'
     | '/api/test'
     | '/_app/settings/audit'
@@ -383,6 +395,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
+  ApiSplatRoute: typeof ApiSplatRoute
   ApiSimpleTestRoute: typeof ApiSimpleTestRoute
   ApiTestRoute: typeof ApiTestRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -428,6 +441,13 @@ declare module '@tanstack/react-router' {
       path: '/api/simple-test'
       fullPath: '/api/simple-test'
       preLoaderRoute: typeof ApiSimpleTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/$': {
+      id: '/api/$'
+      path: '/api/$'
+      fullPath: '/api/$'
+      preLoaderRoute: typeof ApiSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth/register': {
@@ -678,6 +698,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
+  ApiSplatRoute: ApiSplatRoute,
   ApiSimpleTestRoute: ApiSimpleTestRoute,
   ApiTestRoute: ApiTestRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,

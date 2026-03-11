@@ -4,32 +4,31 @@
 // ============================================================
 
 import { readFileSync } from "node:fs";
+import path from "node:path";
 import { db } from "@server/db";
 import * as schema from "@server/db/schema";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { organization } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
+import { loadEnv } from "vite";
 import { logAuth, logger } from "~/lib/logger";
 
-const loadEnvFile = () => {
+const loadEnvFile = (mode: string) => {
+  const cwd = process.cwd();
+  const isAppsWeb = cwd.endsWith("/apps/web") || cwd.endsWith("\\apps\\web");
+  const envPath = isAppsWeb ? path.join(cwd, ".env") : path.join(cwd, "apps/web/.env");
+
   try {
-    const envFile = readFileSync(".env", "utf-8");
-    for (const line of envFile.split("\n")) {
-      const match = line.match(/^([^=]+)=(.*)$/);
-      if (match) {
-        const key = match[1].trim();
-        let value = match[2].trim();
-        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-          value = value.slice(1, -1);
-        }
-        process.env[key] = value;
-      }
-    }
-  } catch (e) {}
+    const envConfig = loadEnv(mode, cwd, "");
+    Object.assign(process.env, envConfig);
+    console.log("[AUTH] Loaded env for mode:", mode);
+  } catch (e) {
+    console.log("[AUTH] Error loading env:", e);
+  }
 };
 
-loadEnvFile();
+loadEnvFile(process.env.NODE_ENV || "development");
 
 logAuth("init", { databaseUrl: process.env.DATABASE_URL?.substring(0, 50) + "..." });
 

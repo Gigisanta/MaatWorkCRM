@@ -5,9 +5,26 @@
 // Creates demo org, admin user, contacts, pipeline, tasks, goals
 // ============================================================
 
-import pg from "pg";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { drizzle } from "drizzle-orm/node-postgres";
+import pg from "pg";
 import * as schema from "./schema";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const envPath = path.join(__dirname, "../../.env");
+try {
+  const content = fs.readFileSync(envPath, "utf-8");
+  for (const line of content.split("\n")) {
+    const match = line.match(/^([^=]+)=(.*)$/);
+    if (match) {
+      process.env[match[1].trim()] = match[2].trim();
+    }
+  }
+} catch {}
 
 const { Pool } = pg;
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
@@ -73,14 +90,78 @@ async function seed() {
 
   // ── Pipeline Stages ──────────────────────────────────────
   const stages = [
-    { id: "stage_01", name: "Prospecto", order: 0, color: "#6366f1", description: "Contacto nuevo sin contactar", wipLimit: null, slaHours: 48 },
-    { id: "stage_02", name: "Contactado", order: 1, color: "#8b5cf6", description: "Primer contacto realizado", wipLimit: 10, slaHours: 72 },
-    { id: "stage_03", name: "Primera reunion", order: 2, color: "#f59e0b", description: "Primera reunión programada", wipLimit: 8, slaHours: 168 },
-    { id: "stage_04", name: "Segunda reunion", order: 3, color: "#3b82f6", description: "Segunda reunión o follow-up", wipLimit: 5, slaHours: 72 },
-    { id: "stage_05", name: "Apertura", order: 4, color: "#10b981", description: "En proceso de apertura de cuenta", wipLimit: null, slaHours: null },
-    { id: "stage_06", name: "Cliente", order: 5, color: "#22c55e", description: "Cliente ganado", wipLimit: null, slaHours: null },
-    { id: "stage_07", name: "Caido", order: 6, color: "#ef4444", description: "Prospecto perdido", wipLimit: null, slaHours: null },
-    { id: "stage_08", name: "Cuenta vacia", order: 7, color: "#f97316", description: "Cuenta sin actividad", wipLimit: null, slaHours: null },
+    {
+      id: "stage_01",
+      name: "Prospecto",
+      order: 0,
+      color: "#6366f1",
+      description: "Contacto nuevo sin contactar",
+      wipLimit: null,
+      slaHours: 48,
+    },
+    {
+      id: "stage_02",
+      name: "Contactado",
+      order: 1,
+      color: "#8b5cf6",
+      description: "Primer contacto realizado",
+      wipLimit: 10,
+      slaHours: 72,
+    },
+    {
+      id: "stage_03",
+      name: "Primera reunion",
+      order: 2,
+      color: "#f59e0b",
+      description: "Primera reunión programada",
+      wipLimit: 8,
+      slaHours: 168,
+    },
+    {
+      id: "stage_04",
+      name: "Segunda reunion",
+      order: 3,
+      color: "#3b82f6",
+      description: "Segunda reunión o follow-up",
+      wipLimit: 5,
+      slaHours: 72,
+    },
+    {
+      id: "stage_05",
+      name: "Apertura",
+      order: 4,
+      color: "#10b981",
+      description: "En proceso de apertura de cuenta",
+      wipLimit: null,
+      slaHours: null,
+    },
+    {
+      id: "stage_06",
+      name: "Cliente",
+      order: 5,
+      color: "#22c55e",
+      description: "Cliente ganado",
+      wipLimit: null,
+      slaHours: null,
+    },
+    {
+      id: "stage_07",
+      name: "Caido",
+      order: 6,
+      color: "#ef4444",
+      description: "Prospecto perdido",
+      wipLimit: null,
+      slaHours: null,
+    },
+    {
+      id: "stage_08",
+      name: "Cuenta vacia",
+      order: 7,
+      color: "#f97316",
+      description: "Cuenta sin actividad",
+      wipLimit: null,
+      slaHours: null,
+    },
   ];
   await db
     .insert(schema.pipelineStages)

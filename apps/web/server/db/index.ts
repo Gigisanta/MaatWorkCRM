@@ -3,27 +3,28 @@
 // ============================================================
 
 import { readFileSync } from "node:fs";
+import path from "node:path";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
+import { loadEnv } from "vite";
 import { logDB, logError, logger } from "~/lib/logger";
 
-const loadEnvFile = () => {
+const loadEnvFile = (mode: string) => {
+  const cwd = process.cwd();
+  const isAppsWeb = cwd.endsWith("/apps/web") || cwd.endsWith("\\apps\\web");
+  const envPath = isAppsWeb ? path.join(cwd, ".env") : path.join(cwd, "apps/web/.env");
+
   try {
-    const envFile = readFileSync(".env", "utf-8");
-    for (const line of envFile.split("\n")) {
-      const match = line.match(/^([^=]+)=(.*)$/);
-      if (match) {
-        const key = match[1].trim();
-        const value = match[2].trim();
-        process.env[key] = value;
-      }
-    }
+    const envConfig = loadEnv(mode, cwd, "");
+    Object.assign(process.env, envConfig);
+    console.log("[DB] Loaded env for mode:", mode);
+    console.log("[DB] DATABASE_URL:", process.env.DATABASE_URL ? "SET" : "NOT SET");
   } catch (e) {
-    // Ignore if .env doesn't exist
+    console.log("[DB] Error loading env:", e);
   }
 };
 
-loadEnvFile();
+loadEnvFile(process.env.NODE_ENV || "development");
 
 let pool: Pool | undefined;
 let _db: ReturnType<typeof drizzle> | undefined;

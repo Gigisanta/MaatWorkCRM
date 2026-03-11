@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
@@ -8,8 +9,32 @@ import tsConfigPaths from "vite-tsconfig-paths";
 
 const polyfillsDir = path.resolve(__dirname, "app/lib/polyfills");
 
+function loadAppEnv() {
+  const envPath = path.resolve(__dirname, ".env");
+  const env: Record<string, string> = {};
+  try {
+    const content = fs.readFileSync(envPath, "utf-8");
+    for (const line of content.split("\n")) {
+      const match = line.match(/^([^=]+)=(.*)$/);
+      if (match) {
+        env[match[1].trim()] = match[2].trim();
+      }
+    }
+  } catch {}
+  return env;
+}
+
+const appEnv = loadAppEnv();
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
+  const mergedEnv = { ...env, ...appEnv };
+
+  for (const [key, value] of Object.entries(mergedEnv)) {
+    if (!key.startsWith("VITE_")) {
+      process.env[key] = value;
+    }
+  }
 
   return {
     plugins: [
