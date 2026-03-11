@@ -10,6 +10,8 @@ export const Route = createFileRoute("/api/betterauth/$")({
     handlers: {
       GET: async ({ request }: { request: Request }) => {
         try {
+          const url = new URL(request.url);
+          console.log("[AUTH] GET:", url.pathname, url.search);
           return await auth.handler(request);
         } catch (error) {
           console.error("Auth API GET error:", error);
@@ -21,6 +23,7 @@ export const Route = createFileRoute("/api/betterauth/$")({
       },
       POST: async ({ request }: { request: Request }) => {
         try {
+          console.log("[AUTH] POST:", request.url);
           return await auth.handler(request);
         } catch (error) {
           console.error("Auth API POST error:", error);
