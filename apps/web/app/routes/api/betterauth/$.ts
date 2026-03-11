@@ -10,8 +10,6 @@ export const Route = createFileRoute("/api/betterauth/$")({
     handlers: {
       GET: async ({ request }: { request: Request }) => {
         try {
-          // Pass request directly to auth.handler - no URL rewriting needed
-          // better-auth handles path matching internally based on its basePath config
           return await auth.handler(request);
         } catch (error) {
           console.error("Auth API GET error:", error);
@@ -23,8 +21,6 @@ export const Route = createFileRoute("/api/betterauth/$")({
       },
       POST: async ({ request }: { request: Request }) => {
         try {
-          // Pass request directly to auth.handler - no URL rewriting needed
-          // better-auth handles path matching internally based on its basePath config
           return await auth.handler(request);
         } catch (error) {
           console.error("Auth API POST error:", error);

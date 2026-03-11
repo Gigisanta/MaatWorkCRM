@@ -3,68 +3,117 @@
 // UI/UX REFINED BY JULES v2
 // ============================================================
 
-import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { betterAuth } from "better-auth";
 import { organization } from "better-auth/plugins";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
-import { db } from "../db";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { db } from "@server/db";
+import * as schema from "@server/db/schema";
+import { readFileSync } from "node:fs";
 
-export const auth = betterAuth({
-  baseURL: process.env.BETTER_AUTH_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL || process.env.BETTER_AUTH_URL}` : undefined,
-  database: drizzleAdapter(db, {
-    provider: "pg",
-  }),
+const loadEnvFile = () => {
+  try {
+    const envFile = readFileSync(".env", "utf-8");
+    for (const line of envFile.split("\n")) {
+      const match = line.match(/^([^=]+)=(.*)$/);
+      if (match) {
+        const key = match[1].trim();
+        let value = match[2].trim();
+        if ((value.startsWith('"') && value.endsWith('"')) || 
+            (value.startsWith("'") && value.endsWith("'"))) {
+          value = value.slice(1, -1);
+        }
+        process.env[key] = value;
+      }
+    }
+  } catch (e) {}
+};
 
-  emailAndPassword: {
-    enabled: true,
-    minPasswordLength: 8,
-  },
+loadEnvFile();
 
-  socialProviders: {
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-      prompt: "consent",
-      accessType: "offline",
-      scopes: [
-        "openid",
-        "https://www.googleapis.com/auth/userinfo.profile",
-        "https://www.googleapis.com/auth/userinfo.email",
-        "https://www.googleapis.com/auth/calendar",
-        "https://www.googleapis.com/auth/calendar.events",
-        "https://www.googleapis.com/auth/drive",
-        "https://www.googleapis.com/auth/drive.file",
-      ],
-    },
-  },
+console.log("[AUTH] DATABASE_URL from env:", process.env.DATABASE_URL?.substring(0, 50) + "...");
 
-  plugins: [
-    tanstackStartCookies(),
-    organization({
-      allowUserToCreateOrganization: true,
+function createAuth() {
+  const vercelUrl = process.env.VERCEL_URL;
+  const productionUrl = process.env.BETTER_AUTH_URL || (vercelUrl ? `https://${vercelUrl}` : undefined);
+  
+  console.log("[AUTH] BETTER_AUTH_URL:", process.env.BETTER_AUTH_URL);
+  console.log("[AUTH] VERCEL_URL:", vercelUrl);
+  console.log("[AUTH] Final baseURL:", productionUrl);
+
+  const trustedOrigins = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "https://crm.maat.work",
+    ...(vercelUrl ? [`https://${vercelUrl}`] : []),
+  ].filter(Boolean) as string[];
+
+  console.log("[AUTH] trustedOrigins:", trustedOrigins);
+
+  return betterAuth({
+    baseURL: productionUrl,
+    basePath: "/api/betterauth",
+    trustedOrigins,
+    database: drizzleAdapter(db, {
+      schema: {
+        users: schema.users,
+        sessions: schema.sessions,
+        accounts: schema.accounts,
+        verifications: schema.verifications,
+        organizations: schema.organizations,
+        members: schema.members,
+      },
+      usePlural: true,
     }),
-  ],
-
-  session: {
-    expiresIn: 60 * 60 * 24 * 7, // 7 days
-    updateAge: 60 * 60 * 24, // 1 day
-  },
-
-  user: {
-    additionalFields: {
-      role: {
-        type: "string",
-        required: false,
-        defaultValue: "asesor",
-      },
-      careerLevel: {
-        type: "string",
-        required: false,
-        defaultValue: "junior",
+    emailAndPassword: {
+      enabled: true,
+      minPasswordLength: 8,
+    },
+    socialProviders: {
+      google: {
+        clientId: process.env.GOOGLE_CLIENT_ID || "",
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+        prompt: "consent",
+        accessType: "offline",
+        scopes: [
+          "openid",
+          "https://www.googleapis.com/auth/userinfo.profile",
+          "https://www.googleapis.com/auth/userinfo.email",
+          "https://www.googleapis.com/auth/calendar",
+          "https://www.googleapis.com/auth/calendar.events",
+          "https://www.googleapis.com/auth/drive",
+          "https://www.googleapis.com/auth/drive.file",
+        ],
       },
     },
-  },
-});
+    plugins: [
+      organization({
+        allowUserToCreateOrganization: true,
+      }),
+      tanstackStartCookies(),
+    ],
+    session: {
+      expiresIn: 60 * 60 * 24 * 7,
+      updateAge: 60 * 60 * 24,
+    },
+    user: {
+      additionalFields: {
+        role: {
+          type: "string",
+          required: false,
+          defaultValue: "asesor",
+        },
+        careerLevel: {
+          type: "string",
+          required: false,
+          defaultValue: "junior",
+        },
+      },
+    },
+  });
+}
+
+export const auth = createAuth();
 
 export type Session = typeof auth.$Infer.Session;
 export type User = typeof auth.$Infer.Session.user;
