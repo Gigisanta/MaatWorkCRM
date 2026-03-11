@@ -33,12 +33,11 @@ import { Route as AppSettingsIndexRouteImport } from './routes/_app/settings/ind
 import { Route as AppContactsIndexRouteImport } from './routes/_app/contacts/index'
 import { Route as ApiTestWildcardSplatRouteImport } from './routes/api/test-wildcard/$'
 import { Route as ApiDebugSessionRouteImport } from './routes/api/debug/session'
-import { Route as ApiAuthTestRouteImport } from './routes/api/auth/test'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AppSettingsAuditRouteImport } from './routes/_app/settings/audit'
 import { Route as ApiGoogleDriveFilesRouteImport } from './routes/api/google/drive/files'
 import { Route as ApiGoogleCalendarEventsRouteImport } from './routes/api/google/calendar/events'
-import { Route as ApiAuthCallbackSplatRouteImport } from './routes/api/auth/callback/$'
+import { Route as ApiAuthCallbackGoogleIndexRouteImport } from './routes/api/auth/callback/google/index'
 import { Route as ApiGoogleCalendarEventsEventIdRouteImport } from './routes/api/google/calendar/events/$eventId'
 
 const AuthRoute = AuthRouteImport.update({
@@ -159,11 +158,6 @@ const ApiDebugSessionRoute = ApiDebugSessionRouteImport.update({
   path: '/api/debug/session',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAuthTestRoute = ApiAuthTestRouteImport.update({
-  id: '/api/auth/test',
-  path: '/api/auth/test',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -184,11 +178,12 @@ const ApiGoogleCalendarEventsRoute = ApiGoogleCalendarEventsRouteImport.update({
   path: '/api/google/calendar/events',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAuthCallbackSplatRoute = ApiAuthCallbackSplatRouteImport.update({
-  id: '/api/auth/callback/$',
-  path: '/api/auth/callback/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const ApiAuthCallbackGoogleIndexRoute =
+  ApiAuthCallbackGoogleIndexRouteImport.update({
+    id: '/api/auth/callback/google/',
+    path: '/api/auth/callback/google/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiGoogleCalendarEventsEventIdRoute =
   ApiGoogleCalendarEventsEventIdRouteImport.update({
     id: '/$eventId',
@@ -216,16 +211,15 @@ export interface FileRoutesByFullPath {
   '/api/test': typeof ApiTestRoute
   '/settings/audit': typeof AppSettingsAuditRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/auth/test': typeof ApiAuthTestRoute
   '/api/debug/session': typeof ApiDebugSessionRoute
   '/api/test-wildcard/$': typeof ApiTestWildcardSplatRoute
   '/contacts/': typeof AppContactsIndexRoute
   '/settings/': typeof AppSettingsIndexRoute
   '/teams/': typeof AppTeamsIndexRoute
-  '/api/auth/callback/$': typeof ApiAuthCallbackSplatRoute
   '/api/google/calendar/events': typeof ApiGoogleCalendarEventsRouteWithChildren
   '/api/google/drive/files': typeof ApiGoogleDriveFilesRoute
   '/api/google/calendar/events/$eventId': typeof ApiGoogleCalendarEventsEventIdRoute
+  '/api/auth/callback/google/': typeof ApiAuthCallbackGoogleIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -247,16 +241,15 @@ export interface FileRoutesByTo {
   '/api/test': typeof ApiTestRoute
   '/settings/audit': typeof AppSettingsAuditRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/auth/test': typeof ApiAuthTestRoute
   '/api/debug/session': typeof ApiDebugSessionRoute
   '/api/test-wildcard/$': typeof ApiTestWildcardSplatRoute
   '/contacts': typeof AppContactsIndexRoute
   '/settings': typeof AppSettingsIndexRoute
   '/teams': typeof AppTeamsIndexRoute
-  '/api/auth/callback/$': typeof ApiAuthCallbackSplatRoute
   '/api/google/calendar/events': typeof ApiGoogleCalendarEventsRouteWithChildren
   '/api/google/drive/files': typeof ApiGoogleDriveFilesRoute
   '/api/google/calendar/events/$eventId': typeof ApiGoogleCalendarEventsEventIdRoute
+  '/api/auth/callback/google': typeof ApiAuthCallbackGoogleIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -281,16 +274,15 @@ export interface FileRoutesById {
   '/api/test': typeof ApiTestRoute
   '/_app/settings/audit': typeof AppSettingsAuditRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/auth/test': typeof ApiAuthTestRoute
   '/api/debug/session': typeof ApiDebugSessionRoute
   '/api/test-wildcard/$': typeof ApiTestWildcardSplatRoute
   '/_app/contacts/': typeof AppContactsIndexRoute
   '/_app/settings/': typeof AppSettingsIndexRoute
   '/_app/teams/': typeof AppTeamsIndexRoute
-  '/api/auth/callback/$': typeof ApiAuthCallbackSplatRoute
   '/api/google/calendar/events': typeof ApiGoogleCalendarEventsRouteWithChildren
   '/api/google/drive/files': typeof ApiGoogleDriveFilesRoute
   '/api/google/calendar/events/$eventId': typeof ApiGoogleCalendarEventsEventIdRoute
+  '/api/auth/callback/google/': typeof ApiAuthCallbackGoogleIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -314,16 +306,15 @@ export interface FileRouteTypes {
     | '/api/test'
     | '/settings/audit'
     | '/api/auth/$'
-    | '/api/auth/test'
     | '/api/debug/session'
     | '/api/test-wildcard/$'
     | '/contacts/'
     | '/settings/'
     | '/teams/'
-    | '/api/auth/callback/$'
     | '/api/google/calendar/events'
     | '/api/google/drive/files'
     | '/api/google/calendar/events/$eventId'
+    | '/api/auth/callback/google/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -345,16 +336,15 @@ export interface FileRouteTypes {
     | '/api/test'
     | '/settings/audit'
     | '/api/auth/$'
-    | '/api/auth/test'
     | '/api/debug/session'
     | '/api/test-wildcard/$'
     | '/contacts'
     | '/settings'
     | '/teams'
-    | '/api/auth/callback/$'
     | '/api/google/calendar/events'
     | '/api/google/drive/files'
     | '/api/google/calendar/events/$eventId'
+    | '/api/auth/callback/google'
   id:
     | '__root__'
     | '/'
@@ -378,16 +368,15 @@ export interface FileRouteTypes {
     | '/api/test'
     | '/_app/settings/audit'
     | '/api/auth/$'
-    | '/api/auth/test'
     | '/api/debug/session'
     | '/api/test-wildcard/$'
     | '/_app/contacts/'
     | '/_app/settings/'
     | '/_app/teams/'
-    | '/api/auth/callback/$'
     | '/api/google/calendar/events'
     | '/api/google/drive/files'
     | '/api/google/calendar/events/$eventId'
+    | '/api/auth/callback/google/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -397,12 +386,11 @@ export interface RootRouteChildren {
   ApiSimpleTestRoute: typeof ApiSimpleTestRoute
   ApiTestRoute: typeof ApiTestRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
-  ApiAuthTestRoute: typeof ApiAuthTestRoute
   ApiDebugSessionRoute: typeof ApiDebugSessionRoute
   ApiTestWildcardSplatRoute: typeof ApiTestWildcardSplatRoute
-  ApiAuthCallbackSplatRoute: typeof ApiAuthCallbackSplatRoute
   ApiGoogleCalendarEventsRoute: typeof ApiGoogleCalendarEventsRouteWithChildren
   ApiGoogleDriveFilesRoute: typeof ApiGoogleDriveFilesRoute
+  ApiAuthCallbackGoogleIndexRoute: typeof ApiAuthCallbackGoogleIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -575,13 +563,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiDebugSessionRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/auth/test': {
-      id: '/api/auth/test'
-      path: '/api/auth/test'
-      fullPath: '/api/auth/test'
-      preLoaderRoute: typeof ApiAuthTestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -610,11 +591,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGoogleCalendarEventsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/auth/callback/$': {
-      id: '/api/auth/callback/$'
-      path: '/api/auth/callback/$'
-      fullPath: '/api/auth/callback/$'
-      preLoaderRoute: typeof ApiAuthCallbackSplatRouteImport
+    '/api/auth/callback/google/': {
+      id: '/api/auth/callback/google/'
+      path: '/api/auth/callback/google'
+      fullPath: '/api/auth/callback/google/'
+      preLoaderRoute: typeof ApiAuthCallbackGoogleIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/google/calendar/events/$eventId': {
@@ -700,12 +681,11 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSimpleTestRoute: ApiSimpleTestRoute,
   ApiTestRoute: ApiTestRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
-  ApiAuthTestRoute: ApiAuthTestRoute,
   ApiDebugSessionRoute: ApiDebugSessionRoute,
   ApiTestWildcardSplatRoute: ApiTestWildcardSplatRoute,
-  ApiAuthCallbackSplatRoute: ApiAuthCallbackSplatRoute,
   ApiGoogleCalendarEventsRoute: ApiGoogleCalendarEventsRouteWithChildren,
   ApiGoogleDriveFilesRoute: ApiGoogleDriveFilesRoute,
+  ApiAuthCallbackGoogleIndexRoute: ApiAuthCallbackGoogleIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

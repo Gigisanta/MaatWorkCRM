@@ -5,19 +5,16 @@
 import { auth } from "@server/auth";
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/api/auth/callback/$")({
+export const Route = createFileRoute("/api/auth/callback/google/")({
   server: {
     handlers: {
       GET: async ({ request }: { request: Request }) => {
         try {
-          const url = new URL(request.url);
-          console.log("[AUTH-CALLBACK] GET received:", url.pathname, url.search);
-          const response = await auth.handler(request);
-          console.log("[AUTH-CALLBACK] Response status:", response.status);
-          return response;
+          console.log("[AUTH-CB] Google callback received");
+          return await auth.handler(request);
         } catch (error) {
-          console.error("[AUTH-CALLBACK] Error:", error);
-          return new Response(JSON.stringify({ error: "Callback error", details: String(error) }), {
+          console.error("[AUTH-CB] Error:", error);
+          return new Response(JSON.stringify({ error: String(error) }), {
             status: 500,
             headers: { "Content-Type": "application/json" },
           });
