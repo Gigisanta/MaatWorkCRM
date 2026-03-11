@@ -3,13 +3,14 @@
 // UI/UX REFINED BY JULES v2
 // ============================================================
 
-import { betterAuth } from "better-auth";
-import { organization } from "better-auth/plugins";
-import { tanstackStartCookies } from "better-auth/tanstack-start";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { readFileSync } from "node:fs";
 import { db } from "@server/db";
 import * as schema from "@server/db/schema";
-import { readFileSync } from "node:fs";
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { organization } from "better-auth/plugins";
+import { tanstackStartCookies } from "better-auth/tanstack-start";
+import { logAuth, logger } from "~/lib/logger";
 
 const loadEnvFile = () => {
   try {
@@ -19,8 +20,7 @@ const loadEnvFile = () => {
       if (match) {
         const key = match[1].trim();
         let value = match[2].trim();
-        if ((value.startsWith('"') && value.endsWith('"')) || 
-            (value.startsWith("'") && value.endsWith("'"))) {
+        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
           value = value.slice(1, -1);
         }
         process.env[key] = value;
@@ -31,15 +31,11 @@ const loadEnvFile = () => {
 
 loadEnvFile();
 
-console.log("[AUTH] DATABASE_URL from env:", process.env.DATABASE_URL?.substring(0, 50) + "...");
+logAuth("init", { databaseUrl: process.env.DATABASE_URL?.substring(0, 50) + "..." });
 
 function createAuth() {
   const vercelUrl = process.env.VERCEL_URL;
   const productionUrl = process.env.BETTER_AUTH_URL || (vercelUrl ? `https://${vercelUrl}` : undefined);
-  
-  console.log("[AUTH] BETTER_AUTH_URL:", process.env.BETTER_AUTH_URL);
-  console.log("[AUTH] VERCEL_URL:", vercelUrl);
-  console.log("[AUTH] Final baseURL:", productionUrl);
 
   const trustedOrigins = [
     "http://localhost:3000",
@@ -48,7 +44,12 @@ function createAuth() {
     ...(vercelUrl ? [`https://${vercelUrl}`] : []),
   ].filter(Boolean) as string[];
 
-  console.log("[AUTH] trustedOrigins:", trustedOrigins);
+  logAuth("config", {
+    betterAuthUrl: process.env.BETTER_AUTH_URL,
+    vercelUrl: vercelUrl,
+    productionUrl: productionUrl,
+    trustedOrigins,
+  });
 
   return betterAuth({
     baseURL: productionUrl,

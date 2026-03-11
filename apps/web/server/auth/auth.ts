@@ -2,22 +2,23 @@
 // Server Auth Helpers for TanStack Start
 // ============================================================
 
+import { logError, logger } from "~/lib/logger";
 import { auth } from "./index";
 
 export async function getSession() {
   try {
     const { getRequestHeaders } = await import("@tanstack/react-start/server");
     const headers = getRequestHeaders();
-    
+
     if (!headers || Object.keys(headers).length === 0) {
       return null;
     }
-    
+
     return await auth.api.getSession({
       headers,
     });
   } catch (error) {
-    console.error("[getSession] Error:", error);
+    logError(error, "getSession");
     return null;
   }
 }

@@ -4,6 +4,7 @@
 
 import { auth } from "@server/auth";
 import { createFileRoute } from "@tanstack/react-router";
+import { logError, logger, logRequest } from "~/lib/logger";
 
 export const Route = createFileRoute("/api/auth/$")({
   server: {
@@ -11,10 +12,10 @@ export const Route = createFileRoute("/api/auth/$")({
       GET: async ({ request }: { request: Request }) => {
         try {
           const url = new URL(request.url);
-          console.log("[AUTH] GET:", url.pathname);
+          logRequest({ method: "GET", url: url.pathname, headers: Object.fromEntries(request.headers) });
           return await auth.handler(request);
         } catch (error) {
-          console.error("[AUTH] GET Error:", error);
+          logError(error, "auth-get");
           return new Response(JSON.stringify({ error: String(error) }), {
             status: 500,
             headers: { "Content-Type": "application/json" },
@@ -24,10 +25,10 @@ export const Route = createFileRoute("/api/auth/$")({
       POST: async ({ request }: { request: Request }) => {
         try {
           const url = new URL(request.url);
-          console.log("[AUTH] POST:", url.pathname);
+          logRequest({ method: "POST", url: url.pathname, headers: Object.fromEntries(request.headers) });
           return await auth.handler(request);
         } catch (error) {
-          console.error("[AUTH] POST Error:", error);
+          logError(error, "auth-post");
           return new Response(JSON.stringify({ error: String(error) }), {
             status: 500,
             headers: { "Content-Type": "application/json" },
