@@ -1,3 +1,3 @@
-## 2025-03-10 - Optimizing DataTable columns rendering
-**Learning:** Wrapping `@tanstack/react-table` column definitions in `useMemo` with an empty array `[]` prevents unnecessary component re-renders of the table structure. Handlers and dynamic state should be passed via the `meta` object to `<DataTable />` and accessed through `info.table.options.meta` in the `cell` renderer, instead of passing them directly as dependencies to `useMemo`.
-**Action:** When creating tables with `@tanstack/react-table`, always memoize columns with `[]` and pass any dynamic data or handlers through the `meta` prop.
+## 2024-05-15 - React re-renders in CalendarWidget
+**Learning:** `getEventsForDay` in CalendarWidget is called repeatedly within the map loop for `daysInMonth`, which causes performance bottlenecks (O(N*M) where N is days in month and M is number of events).
+**Action:** Memoize the events-by-day mapping outside the loop to reduce computation.
