@@ -2,9 +2,10 @@
 // MaatWork CRM — Database Connection (Neon PostgreSQL)
 // ============================================================
 
+import { readFileSync } from "node:fs";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import { readFileSync } from "node:fs";
+import { logDB, logError, logger } from "~/lib/logger";
 
 const loadEnvFile = () => {
   try {
@@ -30,17 +31,17 @@ let _db: ReturnType<typeof drizzle> | undefined;
 export function getDb() {
   if (!_db) {
     const connectionString = process.env.DATABASE_URL;
-    
-    console.log("[DB] DATABASE_URL:", connectionString);
-    
+
+    logDB("connect", { hasUrl: !!connectionString });
+
     if (!connectionString) {
-      console.error("[DB] DATABASE_URL not set");
+      logger.error({ context: "db" }, "DATABASE_URL not set");
       return null;
     }
-    
+
     try {
-      console.log("[DB] Creating pool with options:", {
-        connectionString: connectionString.substring(0, 50) + "...",
+      logDB("create-pool", {
+        connectionString: `${connectionString.substring(0, 50)}...`,
         ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
       });
       pool = new Pool({
@@ -48,9 +49,9 @@ export function getDb() {
         ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
       });
       _db = drizzle(pool);
-      console.log("[DB] Database initialized successfully");
+      logDB("init-success", { hasPool: !!pool });
     } catch (error) {
-      console.error("[DB] Failed to initialize database:", error);
+      logError(error, "db-init");
       return null;
     }
   }
