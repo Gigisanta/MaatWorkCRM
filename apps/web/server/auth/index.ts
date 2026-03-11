@@ -22,15 +22,14 @@ const loadEnvFile = (mode: string) => {
   try {
     const envConfig = loadEnv(mode, cwd, "");
     Object.assign(process.env, envConfig);
-    console.log("[AUTH] Loaded env for mode:", mode);
-  } catch (e) {
-    console.log("[AUTH] Error loading env:", e);
+  } catch {
+    // Ignore env loading errors
   }
 };
 
 loadEnvFile(process.env.NODE_ENV || "development");
 
-logAuth("init", { databaseUrl: process.env.DATABASE_URL?.substring(0, 50) + "..." });
+logAuth("init", { databaseUrl: process.env.DATABASE_URL ? "SET" : "NOT SET" });
 
 function createAuth() {
   const vercelUrl = process.env.VERCEL_URL;

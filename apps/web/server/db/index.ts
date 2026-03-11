@@ -17,10 +17,8 @@ const loadEnvFile = (mode: string) => {
   try {
     const envConfig = loadEnv(mode, cwd, "");
     Object.assign(process.env, envConfig);
-    console.log("[DB] Loaded env for mode:", mode);
-    console.log("[DB] DATABASE_URL:", process.env.DATABASE_URL ? "SET" : "NOT SET");
-  } catch (e) {
-    console.log("[DB] Error loading env:", e);
+  } catch {
+    // Ignore env loading errors
   }
 };
 

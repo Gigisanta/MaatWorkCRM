@@ -47,6 +47,7 @@ async function seed() {
 
   // ── Users ────────────────────────────────────────────────
   const adminId = "user_admin_001";
+  const developerId = "user_developer_001";
   const asesor1Id = "user_asesor_001";
   const asesor2Id = "user_asesor_002";
 
@@ -57,6 +58,13 @@ async function seed() {
         id: adminId,
         name: "Carlos Admin",
         email: "admin@maatwork.com",
+        role: "dueno",
+        careerLevel: "lead",
+      },
+      {
+        id: developerId,
+        name: "Gio Livo",
+        email: "giolivosantarelli@gmail.com",
         role: "dueno",
         careerLevel: "lead",
       },
@@ -76,17 +84,35 @@ async function seed() {
       },
     ])
     .onConflictDoNothing();
-  console.log("✅ Users: Carlos Admin, Ana García, Pedro Ruiz");
+  console.log("✅ Users: Gio Livo (developer), Carlos Admin, Ana García, Pedro Ruiz");
 
-  // ── Members ──────────────────────────────────────────────
+  // ── Members ──────────────────────────────────────────
   await db
     .insert(schema.members)
     .values([
       { id: "mem_001", userId: adminId, organizationId: orgId, role: "owner" },
+      { id: "mem_dev", userId: developerId, organizationId: orgId, role: "owner" },
       { id: "mem_002", userId: asesor1Id, organizationId: orgId, role: "admin" },
       { id: "mem_003", userId: asesor2Id, organizationId: orgId, role: "member" },
     ])
     .onConflictDoNothing();
+  console.log("✅ Members: Carlos Admin, Gio Livo, Ana García, Pedro Ruiz");
+
+  // ── Create better-auth accounts for login ───────────────────
+  const { hash } = await import("@node-rs/argon2");
+  const passwordHash = await hash("Gigieltrap$6");
+
+  await db
+    .insert(schema.accounts)
+    .values({
+      id: "acc_dev_001",
+      userId: developerId,
+      accountId: "giolivosantarelli@gmail.com",
+      providerId: "credential",
+      credentials: JSON.stringify({ password: passwordHash }),
+    })
+    .onConflictDoNothing();
+  console.log("✅ Account created for giolivosantarelli@gmail.com");
 
   // ── Pipeline Stages ──────────────────────────────────────
   const stages = [
