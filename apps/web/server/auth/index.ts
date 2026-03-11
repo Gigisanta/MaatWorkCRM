@@ -52,7 +52,7 @@ function createAuth() {
 
   return betterAuth({
     baseURL: productionUrl,
-    basePath: "/api/betterauth",
+    basePath: "/api/auth",
     trustedOrigins,
     database: drizzleAdapter(db, {
       schema: {

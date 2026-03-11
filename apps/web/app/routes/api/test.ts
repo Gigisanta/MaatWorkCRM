@@ -8,9 +8,16 @@ export const Route = createFileRoute("/api/test")({
   server: {
     handlers: {
       GET: async () => {
-        return new Response("Test endpoint works!", {
-          headers: { "Content-Type": "text/plain" },
-        });
+        try {
+          return new Response("Test endpoint works!", {
+            headers: { "Content-Type": "text/plain" },
+          });
+        } catch (error) {
+          return new Response(`Error: ${error}`, {
+            status: 500,
+            headers: { "Content-Type": "text/plain" },
+          });
+        }
       },
     },
   },

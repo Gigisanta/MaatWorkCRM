@@ -5,17 +5,21 @@
 import { auth } from "./index";
 
 export async function getSession() {
-  const { getRequest } = await import("@tanstack/react-start/server");
-  const request = getRequest();
-  const headers = request?.headers;
-  
-  if (!headers) {
+  try {
+    const { getRequestHeaders } = await import("@tanstack/react-start/server");
+    const headers = getRequestHeaders();
+    
+    if (!headers || Object.keys(headers).length === 0) {
+      return null;
+    }
+    
+    return await auth.api.getSession({
+      headers,
+    });
+  } catch (error) {
+    console.error("[getSession] Error:", error);
     return null;
   }
-  
-  return await auth.api.getSession({
-    headers,
-  });
 }
 
 /**

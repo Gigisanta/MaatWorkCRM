@@ -31,7 +31,6 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// ── Sessions (better-auth managed) ───────────────────────────
 export const sessions = pgTable("sessions", {
   id: text("id").primaryKey(),
   userId: text("user_id")
@@ -45,7 +44,6 @@ export const sessions = pgTable("sessions", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// ── Accounts (OAuth providers — better-auth managed) ─────────
 export const accounts = pgTable("accounts", {
   id: text("id").primaryKey(),
   userId: text("user_id")
@@ -64,7 +62,6 @@ export const accounts = pgTable("accounts", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// ── Verifications (email verification tokens) ────────────────
 export const verifications = pgTable("verifications", {
   id: text("id").primaryKey(),
   identifier: text("identifier").notNull(),
@@ -74,7 +71,6 @@ export const verifications = pgTable("verifications", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// ── Organizations (multi-tenant) ─────────────────────────────
 export const organizations = pgTable("organizations", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -84,7 +80,6 @@ export const organizations = pgTable("organizations", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// ── Members (org memberships) ────────────────────────────────
 export const members = pgTable("members", {
   id: text("id").primaryKey(),
   userId: text("user_id")
@@ -98,3 +93,5 @@ export const members = pgTable("members", {
     .default("member"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+

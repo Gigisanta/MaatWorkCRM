@@ -13,6 +13,8 @@ import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiTestRouteImport } from './routes/api/test'
+import { Route as ApiSimpleTestRouteImport } from './routes/api/simple-test'
+import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AppTrainingRouteImport } from './routes/_app/training'
 import { Route as AppTasksRouteImport } from './routes/_app/tasks'
@@ -30,10 +32,13 @@ import { Route as AppTeamsIndexRouteImport } from './routes/_app/teams/index'
 import { Route as AppSettingsIndexRouteImport } from './routes/_app/settings/index'
 import { Route as AppContactsIndexRouteImport } from './routes/_app/contacts/index'
 import { Route as ApiTestWildcardSplatRouteImport } from './routes/api/test-wildcard/$'
-import { Route as ApiBetterauthSplatRouteImport } from './routes/api/betterauth/$'
+import { Route as ApiDebugSessionRouteImport } from './routes/api/debug/session'
+import { Route as ApiAuthTestRouteImport } from './routes/api/auth/test'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AppSettingsAuditRouteImport } from './routes/_app/settings/audit'
 import { Route as ApiGoogleDriveFilesRouteImport } from './routes/api/google/drive/files'
 import { Route as ApiGoogleCalendarEventsRouteImport } from './routes/api/google/calendar/events'
+import { Route as ApiAuthCallbackSplatRouteImport } from './routes/api/auth/callback/$'
 import { Route as ApiGoogleCalendarEventsEventIdRouteImport } from './routes/api/google/calendar/events/$eventId'
 
 const AuthRoute = AuthRouteImport.update({
@@ -53,6 +58,16 @@ const ApiTestRoute = ApiTestRouteImport.update({
   id: '/api/test',
   path: '/api/test',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSimpleTestRoute = ApiSimpleTestRouteImport.update({
+  id: '/api/simple-test',
+  path: '/api/simple-test',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRegisterRoute = AuthRegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => AuthRoute,
 } as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/login',
@@ -139,9 +154,19 @@ const ApiTestWildcardSplatRoute = ApiTestWildcardSplatRouteImport.update({
   path: '/api/test-wildcard/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiBetterauthSplatRoute = ApiBetterauthSplatRouteImport.update({
-  id: '/api/betterauth/$',
-  path: '/api/betterauth/$',
+const ApiDebugSessionRoute = ApiDebugSessionRouteImport.update({
+  id: '/api/debug/session',
+  path: '/api/debug/session',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthTestRoute = ApiAuthTestRouteImport.update({
+  id: '/api/auth/test',
+  path: '/api/auth/test',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppSettingsAuditRoute = AppSettingsAuditRouteImport.update({
@@ -157,6 +182,11 @@ const ApiGoogleDriveFilesRoute = ApiGoogleDriveFilesRouteImport.update({
 const ApiGoogleCalendarEventsRoute = ApiGoogleCalendarEventsRouteImport.update({
   id: '/api/google/calendar/events',
   path: '/api/google/calendar/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthCallbackSplatRoute = ApiAuthCallbackSplatRouteImport.update({
+  id: '/api/auth/callback/$',
+  path: '/api/auth/callback/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiGoogleCalendarEventsEventIdRoute =
@@ -181,13 +211,18 @@ export interface FileRoutesByFullPath {
   '/tasks': typeof AppTasksRoute
   '/training': typeof AppTrainingRoute
   '/login': typeof AuthLoginRoute
+  '/register': typeof AuthRegisterRoute
+  '/api/simple-test': typeof ApiSimpleTestRoute
   '/api/test': typeof ApiTestRoute
   '/settings/audit': typeof AppSettingsAuditRoute
-  '/api/betterauth/$': typeof ApiBetterauthSplatRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/auth/test': typeof ApiAuthTestRoute
+  '/api/debug/session': typeof ApiDebugSessionRoute
   '/api/test-wildcard/$': typeof ApiTestWildcardSplatRoute
   '/contacts/': typeof AppContactsIndexRoute
   '/settings/': typeof AppSettingsIndexRoute
   '/teams/': typeof AppTeamsIndexRoute
+  '/api/auth/callback/$': typeof ApiAuthCallbackSplatRoute
   '/api/google/calendar/events': typeof ApiGoogleCalendarEventsRouteWithChildren
   '/api/google/drive/files': typeof ApiGoogleDriveFilesRoute
   '/api/google/calendar/events/$eventId': typeof ApiGoogleCalendarEventsEventIdRoute
@@ -207,13 +242,18 @@ export interface FileRoutesByTo {
   '/tasks': typeof AppTasksRoute
   '/training': typeof AppTrainingRoute
   '/login': typeof AuthLoginRoute
+  '/register': typeof AuthRegisterRoute
+  '/api/simple-test': typeof ApiSimpleTestRoute
   '/api/test': typeof ApiTestRoute
   '/settings/audit': typeof AppSettingsAuditRoute
-  '/api/betterauth/$': typeof ApiBetterauthSplatRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/auth/test': typeof ApiAuthTestRoute
+  '/api/debug/session': typeof ApiDebugSessionRoute
   '/api/test-wildcard/$': typeof ApiTestWildcardSplatRoute
   '/contacts': typeof AppContactsIndexRoute
   '/settings': typeof AppSettingsIndexRoute
   '/teams': typeof AppTeamsIndexRoute
+  '/api/auth/callback/$': typeof ApiAuthCallbackSplatRoute
   '/api/google/calendar/events': typeof ApiGoogleCalendarEventsRouteWithChildren
   '/api/google/drive/files': typeof ApiGoogleDriveFilesRoute
   '/api/google/calendar/events/$eventId': typeof ApiGoogleCalendarEventsEventIdRoute
@@ -236,13 +276,18 @@ export interface FileRoutesById {
   '/_app/tasks': typeof AppTasksRoute
   '/_app/training': typeof AppTrainingRoute
   '/_auth/login': typeof AuthLoginRoute
+  '/_auth/register': typeof AuthRegisterRoute
+  '/api/simple-test': typeof ApiSimpleTestRoute
   '/api/test': typeof ApiTestRoute
   '/_app/settings/audit': typeof AppSettingsAuditRoute
-  '/api/betterauth/$': typeof ApiBetterauthSplatRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/auth/test': typeof ApiAuthTestRoute
+  '/api/debug/session': typeof ApiDebugSessionRoute
   '/api/test-wildcard/$': typeof ApiTestWildcardSplatRoute
   '/_app/contacts/': typeof AppContactsIndexRoute
   '/_app/settings/': typeof AppSettingsIndexRoute
   '/_app/teams/': typeof AppTeamsIndexRoute
+  '/api/auth/callback/$': typeof ApiAuthCallbackSplatRoute
   '/api/google/calendar/events': typeof ApiGoogleCalendarEventsRouteWithChildren
   '/api/google/drive/files': typeof ApiGoogleDriveFilesRoute
   '/api/google/calendar/events/$eventId': typeof ApiGoogleCalendarEventsEventIdRoute
@@ -264,13 +309,18 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/training'
     | '/login'
+    | '/register'
+    | '/api/simple-test'
     | '/api/test'
     | '/settings/audit'
-    | '/api/betterauth/$'
+    | '/api/auth/$'
+    | '/api/auth/test'
+    | '/api/debug/session'
     | '/api/test-wildcard/$'
     | '/contacts/'
     | '/settings/'
     | '/teams/'
+    | '/api/auth/callback/$'
     | '/api/google/calendar/events'
     | '/api/google/drive/files'
     | '/api/google/calendar/events/$eventId'
@@ -290,13 +340,18 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/training'
     | '/login'
+    | '/register'
+    | '/api/simple-test'
     | '/api/test'
     | '/settings/audit'
-    | '/api/betterauth/$'
+    | '/api/auth/$'
+    | '/api/auth/test'
+    | '/api/debug/session'
     | '/api/test-wildcard/$'
     | '/contacts'
     | '/settings'
     | '/teams'
+    | '/api/auth/callback/$'
     | '/api/google/calendar/events'
     | '/api/google/drive/files'
     | '/api/google/calendar/events/$eventId'
@@ -318,13 +373,18 @@ export interface FileRouteTypes {
     | '/_app/tasks'
     | '/_app/training'
     | '/_auth/login'
+    | '/_auth/register'
+    | '/api/simple-test'
     | '/api/test'
     | '/_app/settings/audit'
-    | '/api/betterauth/$'
+    | '/api/auth/$'
+    | '/api/auth/test'
+    | '/api/debug/session'
     | '/api/test-wildcard/$'
     | '/_app/contacts/'
     | '/_app/settings/'
     | '/_app/teams/'
+    | '/api/auth/callback/$'
     | '/api/google/calendar/events'
     | '/api/google/drive/files'
     | '/api/google/calendar/events/$eventId'
@@ -334,9 +394,13 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
+  ApiSimpleTestRoute: typeof ApiSimpleTestRoute
   ApiTestRoute: typeof ApiTestRoute
-  ApiBetterauthSplatRoute: typeof ApiBetterauthSplatRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiAuthTestRoute: typeof ApiAuthTestRoute
+  ApiDebugSessionRoute: typeof ApiDebugSessionRoute
   ApiTestWildcardSplatRoute: typeof ApiTestWildcardSplatRoute
+  ApiAuthCallbackSplatRoute: typeof ApiAuthCallbackSplatRoute
   ApiGoogleCalendarEventsRoute: typeof ApiGoogleCalendarEventsRouteWithChildren
   ApiGoogleDriveFilesRoute: typeof ApiGoogleDriveFilesRoute
 }
@@ -370,6 +434,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/test'
       preLoaderRoute: typeof ApiTestRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/simple-test': {
+      id: '/api/simple-test'
+      path: '/api/simple-test'
+      fullPath: '/api/simple-test'
+      preLoaderRoute: typeof ApiSimpleTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_auth/register': {
+      id: '/_auth/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof AuthRegisterRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/_auth/login': {
       id: '/_auth/login'
@@ -490,11 +568,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTestWildcardSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/betterauth/$': {
-      id: '/api/betterauth/$'
-      path: '/api/betterauth/$'
-      fullPath: '/api/betterauth/$'
-      preLoaderRoute: typeof ApiBetterauthSplatRouteImport
+    '/api/debug/session': {
+      id: '/api/debug/session'
+      path: '/api/debug/session'
+      fullPath: '/api/debug/session'
+      preLoaderRoute: typeof ApiDebugSessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/test': {
+      id: '/api/auth/test'
+      path: '/api/auth/test'
+      fullPath: '/api/auth/test'
+      preLoaderRoute: typeof ApiAuthTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/settings/audit': {
@@ -516,6 +608,13 @@ declare module '@tanstack/react-router' {
       path: '/api/google/calendar/events'
       fullPath: '/api/google/calendar/events'
       preLoaderRoute: typeof ApiGoogleCalendarEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/callback/$': {
+      id: '/api/auth/callback/$'
+      path: '/api/auth/callback/$'
+      fullPath: '/api/auth/callback/$'
+      preLoaderRoute: typeof ApiAuthCallbackSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/google/calendar/events/$eventId': {
@@ -570,10 +669,12 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface AuthRouteChildren {
   AuthLoginRoute: typeof AuthLoginRoute
+  AuthRegisterRoute: typeof AuthRegisterRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
   AuthLoginRoute: AuthLoginRoute,
+  AuthRegisterRoute: AuthRegisterRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
@@ -596,9 +697,13 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
+  ApiSimpleTestRoute: ApiSimpleTestRoute,
   ApiTestRoute: ApiTestRoute,
-  ApiBetterauthSplatRoute: ApiBetterauthSplatRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiAuthTestRoute: ApiAuthTestRoute,
+  ApiDebugSessionRoute: ApiDebugSessionRoute,
   ApiTestWildcardSplatRoute: ApiTestWildcardSplatRoute,
+  ApiAuthCallbackSplatRoute: ApiAuthCallbackSplatRoute,
   ApiGoogleCalendarEventsRoute: ApiGoogleCalendarEventsRouteWithChildren,
   ApiGoogleDriveFilesRoute: ApiGoogleDriveFilesRoute,
 }

@@ -1,100 +1,96 @@
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import tsConfigPaths from "vite-tsconfig-paths";
-import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { nitro } from "nitro/vite";
-import path from "path";
+import path from "node:path";
 
-// Virtual module to fix stream-browserify/web import
-const streamBrowserifyWebVirtual = `
-export * from 'stream-browserify';
-`;
+const polyfillsDir = path.resolve(__dirname, "app/lib/polyfills");
 
-function fixStreamBrowserifyWeb() {
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  
   return {
-    name: 'fix-stream-browserify-web',
-    resolveId(id: string) {
-      if (id === 'stream-browserify/web') {
-        return '\0stream-browserify-web';
-      }
-      return null;
+    plugins: [
+      tailwindcss(),
+      tsConfigPaths(),
+      tanstackStart({
+        srcDirectory: "app",
+      }),
+      {
+        name: 'force-polyfills',
+        resolveId(id) {
+          const polyfills = {
+            'stream-browserify': `${polyfillsDir}/stream.js`,
+            'stream': `${polyfillsDir}/stream.js`,
+            'crypto-browserify': `${polyfillsDir}/crypto-browserify.js`,
+            'crypto': `${polyfillsDir}/crypto-browserify.js`,
+            'readable-stream': `${polyfillsDir}/stream.js`,
+            'readable-stream/readable': `${polyfillsDir}/stream.js`,
+          };
+          if (polyfills[id]) {
+            return { id: polyfills[id], external: false };
+          }
+        },
+      },
+      nitro({
+        preset: 'vercel',
+      }),
+      viteReact({
+        jsxImportSource: "react",
+      }),
+    ],
+    resolve: {
+      alias: {
+        "~": "/app",
+        "node:async_hooks": `${polyfillsDir}/async-hooks.ts`,
+        "async_hooks": `${polyfillsDir}/async-hooks.ts`,
+        "stream-browserify": `${polyfillsDir}/stream.js`,
+        "stream": `${polyfillsDir}/stream.js`,
+        "crypto-browserify": `${polyfillsDir}/crypto-browserify.js`,
+        "crypto": `${polyfillsDir}/crypto-browserify.js`,
+        "readable-stream": `${polyfillsDir}/stream.js`,
+      },
     },
-    load(id: string) {
-      if (id === '\0stream-browserify-web') {
-        return streamBrowserifyWebVirtual;
-      }
-      return null;
+    define: {
+      global: "globalThis",
+      "process.env": {},
+      Buffer: "globalThis.Buffer",
+    },
+    optimizeDeps: {
+      include: [
+        "react",
+        "react-dom",
+        "@tanstack/react-router",
+        "@tanstack/react-query",
+      ],
+      exclude: [
+        "stream-browserify",
+        "stream",
+        "buffer",
+        "crypto",
+        "crypto-browserify",
+        "readable-stream",
+      ],
+      esbuildOptions: {
+        define: {
+          global: "globalThis",
+        },
+      },
+    },
+    ssr: {
+      noExternal: [
+        "@tanstack/react-router",
+        "@tanstack/router-core",
+        "@tanstack/start-server-core",
+        "@tanstack/start-storage-context",
+      ],
+      external: [
+        "pg",
+        "@neondatabase/serverless",
+        "better-auth",
+      ],
     },
   };
-}
-
-export default defineConfig({
-  plugins: [
-    tailwindcss(),
-    tsConfigPaths(),
-    fixStreamBrowserifyWeb(),
-    nodePolyfills({
-      include: [
-        'stream',
-        'stream-browserify',
-        'buffer', 
-        'util', 
-        'crypto',
-      ],
-      globals: {
-        Buffer: true,
-        global: true,
-        process: true,
-      },
-      protocolImports: true,
-    }),
-    tanstackStart({
-      srcDirectory: "app",
-    }),
-    nitro({
-      preset: 'vercel',
-    }),
-    viteReact({
-      jsxImportSource: "react",
-    }),
-  ],
-  resolve: {
-    alias: {
-      "~": "/app",
-      "node:async_hooks": path.resolve(__dirname, "app/lib/polyfills/async-hooks.ts"),
-      "async_hooks": path.resolve(__dirname, "app/lib/polyfills/async-hooks.ts"),
-      "stream-browserify/web": "stream-browserify",
-    },
-  },
-  define: {
-    global: "globalThis",
-  },
-  optimizeDeps: {
-    include: [
-      "react",
-      "react-dom",
-      "@tanstack/react-router",
-      "@tanstack/react-query",
-      "stream-browserify",
-    ],
-    esbuildOptions: {
-      define: {
-        global: "globalThis",
-      },
-    },
-  },
-  ssr: {
-    noExternal: [
-      "@tanstack/react-router",
-      "@tanstack/router-core",
-      "@tanstack/start-server-core",
-      "@tanstack/start-storage-context",
-    ],
-    external: [
-      "pg",
-      "@neondatabase/serverless",
-    ],
-  },
 });
