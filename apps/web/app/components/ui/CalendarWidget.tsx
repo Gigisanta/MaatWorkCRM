@@ -1,3 +1,4 @@
+// UI/UX REFINED BY JULES v2
 import { AnimatePresence, motion } from "framer-motion";
 import { Calendar, ChevronLeft, ChevronRight, Clock, GripVertical, List, Plus } from "lucide-react";
 import { useMemo, useState } from "react";

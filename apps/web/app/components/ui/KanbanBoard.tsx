@@ -1,4 +1,5 @@
 // ============================================================
+// UI/UX REFINED BY JULES v2
 // MaatWork CRM — KanbanBoard Component
 // Reusable Trello-like board for contacts organized by pipeline stages
 // UI/UX: Pastel Aesthetic + High Density
