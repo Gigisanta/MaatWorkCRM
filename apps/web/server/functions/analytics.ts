@@ -3,10 +3,10 @@
 // ============================================================
 
 import { createServerFn } from "@tanstack/react-start";
-import { and, count, desc, eq, sql, gte, lte, gt, lt } from "drizzle-orm";
+import { and, count, desc, eq, gte, sql } from "drizzle-orm";
 import { db } from "../db";
-import { auditLogs, contacts, deals, pipelineStages, tasks, teamGoals, pipelineStageHistory } from "../db/schema";
-import { contactInteractions, dailyUserMetrics } from "../db/schema/metrics";
+import { auditLogs, contacts, pipelineStages, tasks } from "../db/schema";
+import { dailyUserMetrics } from "../db/schema/metrics";
 
 export const getDashboardMetrics = createServerFn({ method: "GET" })
   .inputValidator((input: { orgId: string }) => input)
@@ -53,17 +53,21 @@ export const getContactsByStage = createServerFn({ method: "GET" })
         contactCount: sql<number>`COUNT(${contacts.id})`,
       })
       .from(pipelineStages)
-      .leftJoin(contacts, and(
-        eq(pipelineStages.id, contacts.pipelineStageId),
-        eq(contacts.organizationId, data.orgId)
-      ))
+      .leftJoin(contacts, and(eq(pipelineStages.id, contacts.pipelineStageId), eq(contacts.organizationId, data.orgId)))
       .where(eq(pipelineStages.organizationId, data.orgId))
-      .groupBy(pipelineStages.id, pipelineStages.name, pipelineStages.color, pipelineStages.order, pipelineStages.wipLimit, pipelineStages.slaHours)
+      .groupBy(
+        pipelineStages.id,
+        pipelineStages.name,
+        pipelineStages.color,
+        pipelineStages.order,
+        pipelineStages.wipLimit,
+        pipelineStages.slaHours,
+      )
       .orderBy(pipelineStages.order);
 
     const totalContacts = stagesWithCounts.reduce((sum, s) => sum + Number(s.contactCount), 0);
 
-    return stagesWithCounts.map(stage => ({
+    return stagesWithCounts.map((stage) => ({
       stageId: stage.stageId,
       stageName: stage.stageName,
       stageColor: stage.stageColor,
@@ -83,11 +87,18 @@ export const getBottleneckAnalysis = createServerFn({ method: "GET" })
 
     return {
       totalContacts,
-      stages: stages.map(stage => ({
+      stages: stages.map((stage) => ({
         ...stage,
         isBottleneck: stage.percentage > 40,
         isOverWipLimit: stage.wipLimit ? stage.contactCount > stage.wipLimit : false,
-        bottleneckLevel: stage.percentage > 60 ? "critical" : stage.percentage > 40 ? "warning" : stage.percentage > 20 ? "moderate" : "healthy",
+        bottleneckLevel:
+          stage.percentage > 60
+            ? "critical"
+            : stage.percentage > 40
+              ? "warning"
+              : stage.percentage > 20
+                ? "moderate"
+                : "healthy",
       })),
     };
   });
@@ -95,42 +106,41 @@ export const getBottleneckAnalysis = createServerFn({ method: "GET" })
 export const getConversionFunnel = createServerFn({ method: "GET" })
   .inputValidator((input: { orgId: string }) => input)
   .handler(async ({ data }) => {
-    const stages = await db
+    // UI/UX REFINED BY JULES v2
+    // Bolt: Replaced N+1 query loops with a single JOIN query to aggregate stage counts, reducing db queries from O(N) to O(1)
+    const contactsPerStageData = await db
       .select({
         stageId: pipelineStages.id,
         stageName: pipelineStages.name,
         stageOrder: pipelineStages.order,
+        count: sql<number>`COUNT(${contacts.id})`,
       })
       .from(pipelineStages)
+      .leftJoin(contacts, and(eq(pipelineStages.id, contacts.pipelineStageId), eq(contacts.organizationId, data.orgId)))
       .where(eq(pipelineStages.organizationId, data.orgId))
+      .groupBy(pipelineStages.id, pipelineStages.name, pipelineStages.order)
       .orderBy(pipelineStages.order);
 
-    const contactsPerStage = await Promise.all(
-      stages.map(async (stage) => {
-        const [countResult] = await db
-          .select({ count: count() })
-          .from(contacts)
-          .where(and(
-            eq(contacts.organizationId, data.orgId),
-            eq(contacts.pipelineStageId, stage.stageId)
-          ));
-        return { stageId: stage.stageId, stageName: stage.stageName, stageOrder: stage.stageOrder, count: countResult.count };
-      })
-    );
+    const contactsPerStage = contactsPerStageData.map((s) => ({
+      stageId: s.stageId,
+      stageName: s.stageName,
+      stageOrder: s.stageOrder,
+      count: Number(s.count),
+    }));
 
     const totalContacts = contactsPerStage.reduce((sum, s) => sum + s.count, 0);
-    const clientStage = stages.find(s => s.stageName.toLowerCase().includes("cliente"));
-    const clientCount = clientStage ? contactsPerStage.find(s => s.stageId === clientStage.stageId)?.count || 0 : 0;
+    const clientStage = contactsPerStage.find((s) => s.stageName.toLowerCase().includes("cliente"));
+    const clientCount = clientStage ? clientStage.count : 0;
 
     const funnelData = contactsPerStage.map((stage, idx) => {
       const nextStage = contactsPerStage[idx + 1];
-      const stageInfo = stages.find(s => s.stageId === stage.stageId);
       return {
         stageId: stage.stageId,
         stageName: stage.stageName,
         count: stage.count,
         percentage: totalContacts > 0 ? (stage.count / totalContacts) * 100 : 0,
-        conversionToNext: nextStage && nextStage.count > 0 ? (Math.min(stage.count, nextStage.count) / stage.count) * 100 : 0,
+        conversionToNext:
+          nextStage && nextStage.count > 0 ? (Math.min(stage.count, nextStage.count) / stage.count) * 100 : 0,
       };
     });
 
@@ -148,10 +158,7 @@ export const getUserProductivityMetrics = createServerFn({ method: "GET" })
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    const queryConditions = [
-      eq(dailyUserMetrics.organizationId, data.orgId),
-      gte(dailyUserMetrics.date, startDate),
-    ];
+    const queryConditions = [eq(dailyUserMetrics.organizationId, data.orgId), gte(dailyUserMetrics.date, startDate)];
 
     if (data.userId) {
       queryConditions.push(eq(dailyUserMetrics.userId, data.userId));
@@ -163,25 +170,28 @@ export const getUserProductivityMetrics = createServerFn({ method: "GET" })
       .where(and(...queryConditions))
       .orderBy(desc(dailyUserMetrics.date));
 
-    const totals = metrics.reduce((acc, m) => ({
-      contactsCreated: acc.contactsCreated + (m.contactsCreated || 0),
-      contactsTouched: acc.contactsTouched + (m.contactsTouched || 0),
-      totalInteractions: acc.totalInteractions + (m.totalInteractions || 0),
-      callsCompleted: acc.callsCompleted + (m.callsCompleted || 0),
-      emailsSent: acc.emailsSent + (m.emailsSent || 0),
-      meetingsHeld: acc.meetingsHeld + (m.meetingsHeld || 0),
-      notesAdded: acc.notesAdded + (m.notesAdded || 0),
-      tasksCompleted: acc.tasksCompleted + (m.tasksCompleted || 0),
-    }), {
-      contactsCreated: 0,
-      contactsTouched: 0,
-      totalInteractions: 0,
-      callsCompleted: 0,
-      emailsSent: 0,
-      meetingsHeld: 0,
-      notesAdded: 0,
-      tasksCompleted: 0,
-    });
+    const totals = metrics.reduce(
+      (acc, m) => ({
+        contactsCreated: acc.contactsCreated + (m.contactsCreated || 0),
+        contactsTouched: acc.contactsTouched + (m.contactsTouched || 0),
+        totalInteractions: acc.totalInteractions + (m.totalInteractions || 0),
+        callsCompleted: acc.callsCompleted + (m.callsCompleted || 0),
+        emailsSent: acc.emailsSent + (m.emailsSent || 0),
+        meetingsHeld: acc.meetingsHeld + (m.meetingsHeld || 0),
+        notesAdded: acc.notesAdded + (m.notesAdded || 0),
+        tasksCompleted: acc.tasksCompleted + (m.tasksCompleted || 0),
+      }),
+      {
+        contactsCreated: 0,
+        contactsTouched: 0,
+        totalInteractions: 0,
+        callsCompleted: 0,
+        emailsSent: 0,
+        meetingsHeld: 0,
+        notesAdded: 0,
+        tasksCompleted: 0,
+      },
+    );
 
     return {
       dailyMetrics: metrics,
