@@ -10,10 +10,7 @@ import { financialProfiles } from "../db/schema";
 export const getFinancialProfile = createServerFn({ method: "GET" })
   .inputValidator((input: { contactId: string }) => input)
   .handler(async ({ data }) => {
-    const result = await db
-      .select()
-      .from(financialProfiles)
-      .where(eq(financialProfiles.contactId, data.contactId));
+    const result = await db.select().from(financialProfiles).where(eq(financialProfiles.contactId, data.contactId));
     return result[0] ?? null;
   });
 
@@ -68,7 +65,8 @@ export const createFinancialProfile = createServerFn({ method: "POST" })
 export const updateFinancialProfile = createServerFn({ method: "POST" })
   .inputValidator((input: { contactId: string; data: Record<string, unknown> }) => input)
   .handler(async ({ data }) => {
-    const { contactId, ...safeData } = data.data;
+    // 🛡️ Sentinel: Prevent Mass Assignment vulnerability
+    const { contactId, id, ...safeData } = data.data;
     await db
       .update(financialProfiles)
       .set({ ...(safeData as any), updatedAt: new Date() })

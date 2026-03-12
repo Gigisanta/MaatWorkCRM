@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { and, desc, eq } from "drizzle-orm";
 import { db } from "../db";
-import { tags, contactTags } from "../db/schema";
+import { contactTags, tags } from "../db/schema";
 
 export const getTags = createServerFn({ method: "GET" })
   .inputValidator((input: { orgId: string; scope?: string }) => input)
@@ -21,7 +21,9 @@ export const createTag = createServerFn({ method: "POST" })
   .inputValidator((input: { orgId: string; data: Record<string, unknown> }) => input)
   .handler(async ({ data }) => {
     const id = crypto.randomUUID();
-    const newTag = { id, organizationId: data.orgId, ...data.data };
+    // 🛡️ Sentinel: Prevent Mass Assignment vulnerability
+    const { id: _id, organizationId: _orgId, ...safeData } = data.data;
+    const newTag = { id, organizationId: data.orgId, ...safeData };
     await db.insert(tags).values(newTag as any);
     return { id };
   });
@@ -36,14 +38,13 @@ export const deleteTag = createServerFn({ method: "POST" })
 export const getContactTags = createServerFn({ method: "GET" })
   .inputValidator((input: { contactId: string }) => input)
   .handler(async ({ data }) => {
-    return db
-      .select()
-      .from(contactTags)
-      .where(eq(contactTags.contactId, data.contactId));
+    return db.select().from(contactTags).where(eq(contactTags.contactId, data.contactId));
   });
 
 export const addTagToContact = createServerFn({ method: "POST" })
-  .inputValidator((input: { contactId: string; tagId: string; monthlyPremium?: number; policyNumber?: string }) => input)
+  .inputValidator(
+    (input: { contactId: string; tagId: string; monthlyPremium?: number; policyNumber?: string }) => input,
+  )
   .handler(async ({ data }) => {
     const id = crypto.randomUUID();
     await db.insert(contactTags).values({
@@ -61,11 +62,6 @@ export const removeTagFromContact = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await db
       .delete(contactTags)
-      .where(
-        and(
-          eq(contactTags.contactId, data.contactId),
-          eq(contactTags.tagId, data.tagId)
-        )
-      );
+      .where(and(eq(contactTags.contactId, data.contactId), eq(contactTags.tagId, data.tagId)));
     return { success: true };
   });
