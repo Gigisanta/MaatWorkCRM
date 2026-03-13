@@ -2,7 +2,6 @@
 // MaatWork CRM — Database Connection (Neon PostgreSQL)
 // ============================================================
 
-import { readFileSync } from "node:fs";
 import path from "node:path";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
@@ -12,7 +11,7 @@ import { logDB, logError, logger } from "~/lib/logger";
 const loadEnvFile = (mode: string) => {
   const cwd = process.cwd();
   const isAppsWeb = cwd.endsWith("/apps/web") || cwd.endsWith("\\apps\\web");
-  const envPath = isAppsWeb ? path.join(cwd, ".env") : path.join(cwd, "apps/web/.env");
+  const _envPath = isAppsWeb ? path.join(cwd, ".env") : path.join(cwd, "apps/web/.env");
 
   try {
     const envConfig = loadEnv(mode, cwd, "");
@@ -41,11 +40,12 @@ export function getDb() {
     try {
       logDB("create-pool", {
         connectionString: `${connectionString.substring(0, 50)}...`,
-        ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+        // UI/UX REFINED BY JULES v2
+        ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: true } : false,
       });
       pool = new Pool({
         connectionString,
-        ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+        ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: true } : false,
       });
       _db = drizzle(pool);
       logDB("init-success", { hasPool: !!pool });
