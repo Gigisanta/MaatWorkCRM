@@ -1,5 +1,6 @@
 // ============================================================
 // AvatarPicker Component - Emoji/Initial avatar selector
+// UI/UX REFINED BY JULES v2
 // ============================================================
 
 import { useState } from "react";
@@ -34,6 +35,9 @@ export function AvatarPicker({ value, onChange, size = "md" }: AvatarPickerProps
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
+        aria-label="Select avatar"
+        title="Select avatar"
+        aria-expanded={isOpen}
         className={`${sizeClasses[size]} rounded-xl bg-gradient-to-br from-[#8B5CF6]/30 to-transparent flex items-center justify-center text-white font-black border border-white/10 hover:from-[#8B5CF6]/50 transition-all`}
       >
         {value}
@@ -54,6 +58,8 @@ export function AvatarPicker({ value, onChange, size = "md" }: AvatarPickerProps
                   onChange(emoji);
                   setIsOpen(false);
                 }}
+                aria-label={`Select avatar ${emoji}`}
+                title={`Select avatar ${emoji}`}
                 className={`w-8 h-8 flex items-center justify-center text-lg rounded-lg hover:bg-white/10 transition-colors ${
                   value === emoji ? "bg-white/20" : ""
                 }`}
