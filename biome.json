@@ -1,6 +1,6 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.6/schema.json",
-  "assist": { "actions": { "source": { "organizeImports": "on" } } },
+  "assists": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
     "rules": {
@@ -40,6 +40,6 @@
     }
   },
   "files": {
-    "includes": ["**", "!**/node_modules", "!**/.output", "!**/.vinxi", "!**/dist", "!**/*.gen.*", "!**/pnpm-lock.yaml"]
+    "include": ["**", "!**/node_modules", "!**/.output", "!**/.vinxi", "!**/dist", "!**/*.gen.*", "!**/pnpm-lock.yaml"]
   }
 }
