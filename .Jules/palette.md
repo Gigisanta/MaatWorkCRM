@@ -1,3 +1,7 @@
 ## 2025-03-10 - Accessibility gaps in icon-only buttons
 **Learning:** Found a recurring pattern in the app where icon-only interactive elements (like Settings and Toggle buttons on list items) lack `aria-label` or `title` attributes. Without these attributes, screen reader users and those navigating visually cannot easily infer the button's purpose or action state. For example, a toggle showing its current state needs explicit readable context indicating the action of pressing it (e.g., "Activar [Name]" vs "Desactivar [Name]").
 **Action:** Ensure that anytime an icon-only button is implemented or updated, both an `aria-label` for assistive technologies and a `title` attribute for native tooltips are provided, and that the language specifically describes the resulting action or context.
+
+## 2025-03-10 - Sidebar accessibility improvements
+**Learning:** Found a recurring pattern where `div` elements were being used as clickable interactable components in the Sidebar (e.g. for notifications and menu backdrops) without keyboard navigation support. Adding `onClick` to a `div` creates significant accessibility barriers for users relying on keyboard navigation or screen readers as it is a "Static Element".
+**Action:** When adding interactivity, always prefer native semantic `<button>` elements instead of assigning `onClick` handlers and `role="button"` to static elements like `div`. This natively supports `Enter`/`Space` key presses and is much cleaner for accessibility compliance.
