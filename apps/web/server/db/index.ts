@@ -1,6 +1,7 @@
 // ============================================================
 // MaatWork CRM — Database Connection (Neon PostgreSQL)
 // ============================================================
+// UI/UX REFINED BY JULES v2
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -39,13 +40,14 @@ export function getDb() {
     }
 
     try {
+      // Security: enforce rejectUnauthorized for production DB connections
       logDB("create-pool", {
         connectionString: `${connectionString.substring(0, 50)}...`,
-        ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+        ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: true } : false,
       });
       pool = new Pool({
         connectionString,
-        ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+        ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: true } : false,
       });
       _db = drizzle(pool);
       logDB("init-success", { hasPool: !!pool });

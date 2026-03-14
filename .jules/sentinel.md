@@ -1,3 +1,8 @@
+## 2024-03-14 - Prevent MitM Attacks on Database Connections
+**Vulnerability:** The application was configured with `rejectUnauthorized: false` for the production database connection pool in `apps/web/server/db/index.ts`. This disabled SSL certificate validation, meaning the application would accept any certificate, including self-signed or invalid ones. This allowed a Man-in-the-Middle (MitM) attacker to intercept and decrypt the database traffic, exposing sensitive data.
+**Learning:** Default examples for Postgres/Neon connections sometimes show `rejectUnauthorized: false` as a quick way to bypass local development or internal network certificate issues, but this is a critical vulnerability when connecting to managed databases over the public internet (like Neon).
+**Prevention:** Always enforce `rejectUnauthorized: true` for production SSL database connections. Ensure the host system has updated root CA certificates to validate the managed database's certificate properly.
+
 ## 2024-03-08 - Prevent Mass Assignment (IDOR precursor) in insert handlers
 **Vulnerability:** Insert endpoints (`createContact`, `createTask`, `createDeal`) accepted a blind `data.data` payload directly into `db.insert().values()`. Since the object spreading operator `...` overwrites properties with the same name, a malicious actor could send an `id` or `organizationId` in the `data.data` payload, bypassing the server-generated `id` and the authorized `organizationId`.
 **Learning:** Object spread syntax `...` applies keys in order. Spreading untrusted data *after* setting trusted fields (`{ id: safeId, ...untrustedData }`) allows the untrusted data to override the trusted fields. This applies to insert operations just as much as updates.
