@@ -11,7 +11,7 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { useMediaQuery } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
 import { usePlanningDialog } from './usePlanningDialog';
@@ -31,7 +31,7 @@ interface PlanningDialogProps {
 }
 
 export function PlanningDialog({ contactId, contactName, open: controlledOpen, onOpenChange }: PlanningDialogProps) {
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useIsMobile();
 
   const {
     open: internalOpen,
