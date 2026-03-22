@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 
 export const matcher = [
   '/dashboard/:path*',
@@ -13,23 +12,6 @@ export const matcher = [
   '/training/:path*',
   '/notifications/:path*',
   '/settings/:path*',
-  '/api/dashboard/:path*',
-  '/api/contacts/:path*',
-  '/api/deals/:path*',
-  '/api/accounts/:path*',
-  '/api/tasks/:path*',
-  '/api/calendar/:path*',
-  '/api/goals/:path*',
-  '/api/webhooks/:path*',
-  '/api/notifications/:path*',
-  '/api/organizations/:path*',
-  '/api/teams/:path*',
-  '/api/tags/:path*',
-  '/api/notes/:path*',
-  '/api/users/:path*',
-  '/api/sessions/:path*',
-  '/api/calendar-events/:path*',
-  '/api/training/:path*',
 ];
 
 const PROTECTED_PATHS = ['/dashboard', '/contacts', '/pipeline', '/tasks', '/calendar', '/reports', '/teams', '/training', '/notifications', '/settings'];
@@ -49,28 +31,25 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-
   const isProtectedPath = PROTECTED_PATHS.some(path =>
     pathname === path || pathname.startsWith(path + '/')
   );
   const isAuthPath = AUTH_PATHS.some(path => pathname === path);
 
-  if (isProtectedPath && !token) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(loginUrl);
-  }
+  if (isProtectedPath) {
+    // Check session_token cookie for database session auth
+    const sessionToken = request.cookies.get('session_token')?.value;
 
-  if (isAuthPath && token) {
-    return NextResponse.redirect(new URL('/', request.url));
-  }
-
-  if (pathname.startsWith('/api/cron/')) {
-    const cronSecret = request.headers.get('x-cron-secret');
-    if (cronSecret !== process.env.CRON_SECRET) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!sessionToken) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
     }
+  }
+
+  if (isAuthPath && request.cookies.get('session_token')) {
+    // Already authenticated, redirect to home
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   return NextResponse.next();

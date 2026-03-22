@@ -11,9 +11,8 @@ import { processOverdueTasks, processTasksDueSoon } from '@/lib/notifications';
  * Security: Verifies CRON_SECRET Bearer token in Authorization header.
  */
 export async function GET(req: NextRequest) {
-  // Verify CRON_SECRET for security
-  const authHeader = req.headers.get('authorization');
-  const expectedToken = `Bearer ${process.env.CRON_SECRET}`;
+  // Verify CRON_SECRET for security (Vercel Cron sends x-cron-secret header)
+  const cronSecret = req.headers.get('x-cron-secret');
 
   if (!process.env.CRON_SECRET) {
     console.error('CRON_SECRET environment variable is not set');
@@ -23,7 +22,7 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  if (authHeader !== expectedToken) {
+  if (cronSecret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

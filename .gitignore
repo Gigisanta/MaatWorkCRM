@@ -46,10 +46,20 @@ build
 *.temp
 
 # Upload folder
-upload/*.png
-upload/*.jpg
-upload/*.pdf
+upload/*
 
-# Locks
-package-lock.json
-bun.lockb
+# Download folder
+download/*
+
+# Local screenshots
+*.png
+
+# Backup files
+package.json.backup
+
+# Database (local dev)
+db/
+
+# Playwright
+playwright-report/
+test-results/
