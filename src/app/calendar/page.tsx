@@ -346,7 +346,7 @@ function EventDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass border-white/10 bg-slate-900/95 max-w-md">
+      <DialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900/95 max-w-md">
         <DialogHeader>
           <DialogTitle className="text-white">
             {isEditing ? "Editar Evento" : "Crear Nuevo Evento"}
@@ -364,7 +364,7 @@ function EventDialog({
               id="title"
               {...register("title")}
               placeholder="Título del evento"
-              className="glass border-white/10 bg-white/5 text-white"
+              className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white"
             />
             {errors.title && (
               <p className="text-xs text-rose-400">{errors.title.message}</p>
@@ -377,7 +377,7 @@ function EventDialog({
               value={selectedType}
               onValueChange={(value) => setValue("type", value as EventFormData["type"])}
             >
-              <SelectTrigger className="glass border-white/10 bg-white/5 text-white">
+              <SelectTrigger className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white">
                 <SelectValue placeholder="Tipo de evento" />
               </SelectTrigger>
               <SelectContent>
@@ -400,7 +400,7 @@ function EventDialog({
                 id="startAt"
                 type="datetime-local"
                 {...register("startAt")}
-                className="glass border-white/10 bg-white/5 text-white"
+                className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white"
               />
               {errors.startAt && (
                 <p className="text-xs text-rose-400">{errors.startAt.message}</p>
@@ -412,7 +412,7 @@ function EventDialog({
                 id="endAt"
                 type="datetime-local"
                 {...register("endAt")}
-                className="glass border-white/10 bg-white/5 text-white"
+                className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white"
               />
               {errors.endAt && (
                 <p className="text-xs text-rose-400">{errors.endAt.message}</p>
@@ -426,7 +426,7 @@ function EventDialog({
               id="location"
               {...register("location")}
               placeholder="Ubicación (opcional)"
-              className="glass border-white/10 bg-white/5 text-white"
+              className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white"
             />
             {errors.location && (
               <p className="text-xs text-rose-400">{errors.location.message}</p>
@@ -439,7 +439,7 @@ function EventDialog({
               id="description"
               {...register("description")}
               placeholder="Descripción (opcional)"
-              className="glass border-white/10 bg-white/5 text-white resize-none"
+              className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white resize-none"
               rows={3}
             />
             {errors.description && (
@@ -451,14 +451,14 @@ function EventDialog({
             <Button
               type="button"
               variant="outline"
-              className="glass border-white/10"
+              className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl"
               onClick={() => onOpenChange(false)}
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              className="bg-indigo-500 hover:bg-indigo-600"
+              className="bg-violet-500 hover:bg-violet-600"
               disabled={isSubmitting}
             >
               {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
@@ -494,7 +494,7 @@ function EventDetailDrawer({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="glass border-white/10 bg-slate-900/95">
+      <DrawerContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900/95">
         <DrawerHeader>
           <div className="flex items-center gap-3">
             <div className={cn("p-2 rounded-lg", config.bgColor)}>
@@ -568,7 +568,7 @@ function EventDetailDrawer({
           <div className="flex gap-2">
             <Button
               variant="outline"
-              className="flex-1 glass border-white/10"
+              className="flex-1 bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl"
               onClick={() => {
                 onOpenChange(false);
                 onEdit();
@@ -663,10 +663,10 @@ export default function CalendarPage() {
   }, [data]);
 
   // Get events for a specific day
-  const getEventsForDay = (date: Date): CalendarEvent[] => {
+  const getEventsForDay = React.useCallback((date: Date): CalendarEvent[] => {
     const dateKey = format(date, "yyyy-MM-dd");
     return eventsByDate.get(dateKey) || [];
-  };
+  }, [eventsByDate]);
 
   // Selected date events
   const selectedDateEvents = selectedDate ? getEventsForDay(selectedDate) : [];
@@ -732,10 +732,10 @@ export default function CalendarPage() {
     return (
       <div className="min-h-screen gradient-bg">
         <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
-        <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[280px]")}>
+        <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
           <AppHeader />
           <main className="p-4 lg:p-6">
-            <Card className="glass border-white/10">
+            <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
               <CardContent className="p-8 text-center">
                 <AlertCircle className="h-12 w-12 text-rose-500 mx-auto mb-3" />
                 <p className="text-white mb-2">Error al cargar eventos</p>
@@ -754,32 +754,34 @@ export default function CalendarPage() {
   return (
     <div className="min-h-screen gradient-bg">
       <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
-      <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[280px]")}>
+      <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
         <AppHeader />
         <main className="p-4 lg:p-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="space-y-6"
           >
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-white">Calendario</h1>
-                <p className="text-slate-400 mt-1">
-                  Gestiona tus eventos y reuniones
-                </p>
+                <div>
+                  <p className="text-xs font-medium text-violet-400 uppercase tracking-widest mb-1">CALENDARIO</p>
+                  <h1 className="text-2xl font-bold text-white tracking-tight">Calendario</h1>
+                  <p className="text-slate-500 mt-1 text-sm">Gestiona tus eventos y reuniones</p>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
-                  className="glass border-white/10 text-slate-300"
+                  className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl text-slate-300"
                   onClick={goToToday}
                 >
                   Hoy
                 </Button>
                 <Button
-                  className="bg-indigo-500 hover:bg-indigo-600"
+                  className="bg-violet-500 hover:bg-violet-600"
                   onClick={() => {
                     setSelectedDate(null);
                     setCreateDialogOpen(true);
@@ -793,7 +795,7 @@ export default function CalendarPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               {/* Calendar Grid */}
-              <Card className="lg:col-span-3 glass border-white/10">
+              <Card className="lg:col-span-3 bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                 <CardHeader className="border-b border-white/10">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -863,7 +865,7 @@ export default function CalendarPage() {
                               "relative min-h-[80px] p-2 rounded-lg text-left transition-all",
                               "hover:bg-white/10",
                               !isCurrentMonth && "opacity-30",
-                              isSelected && "bg-indigo-500/20 border border-indigo-500/50",
+                              isSelected && "bg-violet-500/20 border border-violet-500/50",
                               isTodayDate && !isSelected && "bg-white/5 border border-white/20"
                             )}
                           >
@@ -871,7 +873,7 @@ export default function CalendarPage() {
                               className={cn(
                                 "text-sm font-medium",
                                 isTodayDate
-                                  ? "text-indigo-400"
+                                  ? "text-violet-400"
                                   : isCurrentMonth
                                   ? "text-white"
                                   : "text-slate-500"
@@ -915,7 +917,7 @@ export default function CalendarPage() {
 
               {/* Selected Day Events */}
               <div className="space-y-4">
-                <Card className="glass border-white/10">
+                <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg text-white">
                       {selectedDate
@@ -1015,7 +1017,7 @@ export default function CalendarPage() {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="mt-3 glass border-white/10"
+                          className="mt-3 bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl"
                           onClick={() => handleCreateFromDay(selectedDate)}
                         >
                           <Plus className="h-4 w-4 mr-2" />
@@ -1034,7 +1036,7 @@ export default function CalendarPage() {
                 </Card>
 
                 {/* Upcoming Events */}
-                <Card className="glass border-white/10">
+                <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg text-white">
                       Próximos Eventos
@@ -1116,7 +1118,7 @@ export default function CalendarPage() {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="glass border-white/10 bg-slate-900/95">
+        <AlertDialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900/95">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white">¿Eliminar evento?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -1124,7 +1126,7 @@ export default function CalendarPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="glass border-white/10">
+            <AlertDialogCancel className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction

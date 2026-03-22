@@ -42,22 +42,63 @@ import {
   endOfQuarter,
 } from "date-fns";
 
-// Recharts imports (kept for inline charts)
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line,
-  Legend,
-} from "recharts";
+// Lazy chart components - dynamically imported for code splitting
+import dynamic from 'next/dynamic';
+import { Skeleton } from '@/components/ui/skeleton';
+
+// Dynamic imports for complex charts with custom features
+const DynamicBarChart = dynamic(
+  () => import('recharts').then(mod => mod.BarChart),
+  { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> }
+);
+const DynamicBar = dynamic(
+  () => import('recharts').then(mod => mod.Bar),
+  { ssr: false, loading: () => <></> }
+);
+const DynamicXAxis = dynamic(
+  () => import('recharts').then(mod => mod.XAxis),
+  { ssr: false, loading: () => <></> }
+);
+const DynamicYAxis = dynamic(
+  () => import('recharts').then(mod => mod.YAxis),
+  { ssr: false, loading: () => <></> }
+);
+const DynamicCartesianGrid = dynamic(
+  () => import('recharts').then(mod => mod.CartesianGrid),
+  { ssr: false, loading: () => <></> }
+);
+const DynamicTooltip = dynamic(
+  () => import('recharts').then(mod => mod.Tooltip),
+  { ssr: false, loading: () => <></> }
+);
+const DynamicCell = dynamic(
+  () => import('recharts').then(mod => mod.Cell),
+  { ssr: false, loading: () => <></> }
+);
+const DynamicPieChart = dynamic(
+  () => import('recharts').then(mod => mod.PieChart),
+  { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> }
+);
+const DynamicPie = dynamic(
+  () => import('recharts').then(mod => mod.Pie),
+  { ssr: false, loading: () => <></> }
+);
+const DynamicLegend = dynamic(
+  () => import('recharts').then(mod => mod.Legend),
+  { ssr: false, loading: () => <></> }
+);
+const DynamicLineChart = dynamic(
+  () => import('recharts').then(mod => mod.LineChart),
+  { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> }
+);
+const DynamicLine = dynamic(
+  () => import('recharts').then(mod => mod.Line),
+  { ssr: false, loading: () => <></> }
+);
+const DynamicResponsiveContainer = dynamic(
+  () => import('recharts').then(mod => mod.ResponsiveContainer),
+  { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> }
+);
 
 // Chart skeleton fallback
 function ChartSkeleton({ height = 300 }: { height?: number }) {
@@ -292,8 +333,8 @@ export default function ReportsPage() {
 
   const { start: periodStart, end: periodEnd } = getDateRange();
 
-  // Filter data by period
-  const filterByPeriod = <T extends { createdAt: string }>(items: T[]): T[] => {
+  // Filter data by period - memoized
+  const filterByPeriod = React.useCallback(<T extends { createdAt: string }>(items: T[]): T[] => {
     return items.filter((item) => {
       try {
         const itemDate = parseISO(item.createdAt);
@@ -302,56 +343,68 @@ export default function ReportsPage() {
         return false;
       }
     });
-  };
+  }, [periodStart, periodEnd]);
 
-  // Calculate KPIs
-  const periodDeals = filterByPeriod(deals);
-  const periodContacts = filterByPeriod(contacts);
-  const periodTasks = filterByPeriod(tasks);
+  // Calculate KPIs - memoized
+  const periodDeals = React.useMemo(() => filterByPeriod(deals), [filterByPeriod, deals]);
+  const periodContacts = React.useMemo(() => filterByPeriod(contacts), [filterByPeriod, contacts]);
+  const periodTasks = React.useMemo(() => filterByPeriod(tasks), [filterByPeriod, tasks]);
 
-  // Total Pipeline Value
-  const totalPipelineValue = deals.reduce((sum, deal) => sum + (deal.value || 0), 0);
-
-  // Weighted Pipeline Value
-  const weightedPipelineValue = deals.reduce(
-    (sum, deal) => sum + (deal.value || 0) * ((deal.probability || 0) / 100),
-    0
+  // Total Pipeline Value - memoized
+  const totalPipelineValue = React.useMemo(() =>
+    deals.reduce((sum, deal) => sum + (deal.value || 0), 0), [deals]
   );
 
-  // Active Contacts (not in "Caido" or "Cuenta vacia" stages)
+  // Weighted Pipeline Value - memoized
+  const weightedPipelineValue = React.useMemo(() =>
+    deals.reduce(
+      (sum, deal) => sum + (deal.value || 0) * ((deal.probability || 0) / 100),
+      0
+    ), [deals]
+  );
+
+  // Active Contacts (not in "Caido" or "Cuenta vacia" stages) - memoized
   const inactiveStages = ["Caído", "Caida", "Cuenta vacia", "Cuenta Vacía"];
-  const activeContacts = contacts.filter(
-    (contact) => !contact.pipelineStage || !inactiveStages.includes(contact.pipelineStage.name)
-  ).length;
+  const activeContacts = React.useMemo(() =>
+    contacts.filter(
+      (contact) => !contact.pipelineStage || !inactiveStages.includes(contact.pipelineStage.name)
+    ).length, [contacts]
+  );
 
-  // Overdue Tasks
+  // Overdue Tasks - memoized
   const now = new Date();
-  const overdueTasks = tasks.filter((task) => {
-    if (task.status === "completed" || task.status === "cancelled") return false;
-    if (!task.dueDate) return false;
-    try {
-      const dueDate = parseISO(task.dueDate);
-      return dueDate < startOfDay(now);
-    } catch {
-      return false;
-    }
-  }).length;
+  const overdueTasks = React.useMemo(() =>
+    tasks.filter((task) => {
+      if (task.status === "completed" || task.status === "cancelled") return false;
+      if (!task.dueDate) return false;
+      try {
+        const dueDate = parseISO(task.dueDate);
+        return dueDate < startOfDay(now);
+      } catch {
+        return false;
+      }
+    }).length, [tasks]
+  );
 
-  // Average Goal Progress
-  const allGoals: TeamGoal[] = teams.flatMap((team) => team.goals || []);
-  const averageGoalProgress = allGoals.length > 0
-    ? allGoals.reduce((sum, goal) => {
-        const progress = goal.targetValue > 0 
-          ? (goal.currentValue / goal.targetValue) * 100 
-          : 0;
-        return sum + Math.min(progress, 100);
-      }, 0) / allGoals.length
-    : 0;
+  // Average Goal Progress - memoized
+  const allGoals: TeamGoal[] = React.useMemo(() =>
+    teams.flatMap((team) => team.goals || []), [teams]
+  );
+  const averageGoalProgress = React.useMemo(() =>
+    allGoals.length > 0
+      ? allGoals.reduce((sum, goal) => {
+          const progress = goal.targetValue > 0
+            ? (goal.currentValue / goal.targetValue) * 100
+            : 0;
+          return sum + Math.min(progress, 100);
+        }, 0) / allGoals.length
+      : 0, [allGoals]
+  );
 
-  // Pipeline by Stage chart data
-  const getPipelineByStage = () => {
+  // Pipeline by Stage chart data - memoized
+  const getPipelineByStage = React.useCallback(() => {
     const stageMap = new Map<string, { name: string; value: number; count: number; color: string; order: number }>();
-    
+
     // Initialize all stages
     stages.forEach((stage) => {
       stageMap.set(stage.id, {
@@ -377,17 +430,19 @@ export default function ReportsPage() {
     return Array.from(stageMap.values())
       .sort((a, b) => a.order - b.order)
       .filter((stage) => stage.value > 0 || stage.count > 0);
-  };
+  }, [stages, deals]);
 
-  const pipelineByStage = getPipelineByStage();
+  const pipelineByStage = React.useMemo(() => getPipelineByStage(), [getPipelineByStage]);
 
-  // Deal Distribution (Pie chart)
-  const dealDistribution = pipelineByStage.filter((stage) => stage.value > 0);
+  // Deal Distribution (Pie chart) - memoized
+  const dealDistribution = React.useMemo(() =>
+    pipelineByStage.filter((stage) => stage.value > 0), [pipelineByStage]
+  );
 
-  // Contact Trend (Line chart - group by week/month)
-  const getContactTrend = () => {
+  // Contact Trend (Line chart - group by week/month) - memoized
+  const getContactTrend = React.useCallback(() => {
     const periodContactsForTrend = filterByPeriod(contacts);
-    
+
     // Group by week or month depending on period
     const groupedByDate = new Map<string, { nuevos: number; activos: number; label: string }>();
 
@@ -424,12 +479,12 @@ export default function ReportsPage() {
     return Array.from(groupedByDate.entries())
       .map(([_, data]) => data)
       .slice(-12); // Last 12 data points
-  };
+  }, [filterByPeriod, contacts, period]);
 
-  const contactTrend = getContactTrend();
+  const contactTrend = React.useMemo(() => getContactTrend(), [getContactTrend]);
 
-  // Team Performance (Advisor stats)
-  const getAdvisorPerformance = () => {
+  // Team Performance (Advisor stats) - memoized
+  const getAdvisorPerformance = React.useCallback(() => {
     const advisorMap = new Map<string, { name: string; deals: number; value: number; completedGoals: number; totalGoals: number }>();
 
     // Get team member stats from teams
@@ -438,7 +493,7 @@ export default function ReportsPage() {
       team.members?.forEach((member) => {
         const userId = member.userId;
         const userName = member.user?.name || "Sin nombre";
-        
+
         if (!advisorMap.has(userId)) {
           advisorMap.set(userId, {
             name: userName,
@@ -448,7 +503,7 @@ export default function ReportsPage() {
             totalGoals: 0,
           });
         }
-        
+
         const advisor = advisorMap.get(userId)!;
         advisor.totalGoals += teamGoals.length;
         advisor.completedGoals += teamGoals.filter((g) => g.status === "completed").length;
@@ -460,7 +515,7 @@ export default function ReportsPage() {
       if (deal.assignedUser) {
         const userId = deal.assignedUser.id;
         const userName = deal.assignedUser.name || "Sin nombre";
-        
+
         if (!advisorMap.has(userId)) {
           advisorMap.set(userId, {
             name: userName,
@@ -470,7 +525,7 @@ export default function ReportsPage() {
             totalGoals: 0,
           });
         }
-        
+
         const advisor = advisorMap.get(userId)!;
         advisor.deals += 1;
         advisor.value += deal.value || 0;
@@ -480,56 +535,66 @@ export default function ReportsPage() {
     return Array.from(advisorMap.values())
       .sort((a, b) => b.value - a.value)
       .slice(0, 10); // Top 10
-  };
+  }, [teams, filterByPeriod, deals]);
 
-  const advisorPerformance = getAdvisorPerformance();
+  const advisorPerformance = React.useMemo(() => getAdvisorPerformance(), [getAdvisorPerformance]);
 
   // Period comparison (for % change)
-  const getPreviousPeriodChange = (current: number, previous: number): number => {
+  const getPreviousPeriodChange = React.useCallback((current: number, previous: number): number => {
     if (previous === 0) return current > 0 ? 100 : 0;
     return ((current - previous) / previous) * 100;
-  };
+  }, []);
 
   // Get previous period data for comparison
-  const getPreviousPeriodRange = () => {
+  const getPreviousPeriodRange = React.useCallback(() => {
     const { start, end } = getDateRange();
     const duration = end.getTime() - start.getTime();
     const prevEnd = new Date(start.getTime() - 1);
     const prevStart = new Date(prevEnd.getTime() - duration);
     return { start: prevStart, end: prevEnd };
-  };
+  }, [getDateRange]);
 
-  const prevRange = getPreviousPeriodRange();
-  const previousPeriodDeals = deals.filter((deal) => {
+  const prevRange = React.useMemo(() => getPreviousPeriodRange(), [getPreviousPeriodRange]);
+  const previousPeriodDeals = React.useMemo(() => deals.filter((deal) => {
     try {
       const date = parseISO(deal.createdAt);
       return isWithinInterval(date, prevRange);
     } catch {
       return false;
     }
-  });
+  }), [deals, prevRange]);
 
-  const previousPipelineValue = previousPeriodDeals.reduce((sum, deal) => sum + (deal.value || 0), 0);
-  const pipelineChange = getPreviousPeriodChange(totalPipelineValue, previousPipelineValue);
+  const previousPipelineValue = React.useMemo(() =>
+    previousPeriodDeals.reduce((sum, deal) => sum + (deal.value || 0), 0), [previousPeriodDeals]
+  );
+  const pipelineChange = React.useMemo(() =>
+    getPreviousPeriodChange(totalPipelineValue, previousPipelineValue), [getPreviousPeriodChange, totalPipelineValue, previousPipelineValue]
+  );
 
-  const previousPeriodContacts = contacts.filter((contact) => {
+  const previousPeriodContacts = React.useMemo(() => contacts.filter((contact) => {
     try {
       const date = parseISO(contact.createdAt);
       return isWithinInterval(date, prevRange);
     } catch {
       return false;
     }
-  });
-  const contactsChange = getPreviousPeriodChange(periodContacts.length, previousPeriodContacts.length);
+  }), [contacts, prevRange]);
+  const contactsChange = React.useMemo(() =>
+    getPreviousPeriodChange(periodContacts.length, previousPeriodContacts.length), [getPreviousPeriodChange, periodContacts.length, previousPeriodContacts.length]
+  );
 
-  // Conversion rate calculation
-  const wonDeals = deals.filter((d) => d.stage?.name === "Cliente");
-  const conversionRate = deals.length > 0 ? (wonDeals.length / deals.length) * 100 : 0;
+  // Conversion rate calculation - memoized
+  const wonDeals = React.useMemo(() => deals.filter((d) => d.stage?.name === "Cliente"), [deals]);
+  const conversionRate = React.useMemo(() =>
+    deals.length > 0 ? (wonDeals.length / deals.length) * 100 : 0, [deals, wonDeals]
+  );
 
-  // Goals change calculation (simplified - just show current progress)
-  const goalsChange = allGoals.length > 0 
-    ? allGoals.filter((g) => g.status === "completed").length / allGoals.length * 100 
-    : 0;
+  // Goals change calculation (simplified - just show current progress) - memoized
+  const goalsChange = React.useMemo(() =>
+    allGoals.length > 0
+      ? allGoals.filter((g) => g.status === "completed").length / allGoals.length * 100
+      : 0, [allGoals]
+  );
 
   // Export to CSV
   const exportToCSV = () => {
@@ -587,7 +652,7 @@ export default function ReportsPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen gradient-bg flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
       </div>
     );
   }
@@ -596,7 +661,7 @@ export default function ReportsPage() {
   if (!authLoading && !isAuthenticated) {
     return (
       <div className="min-h-screen gradient-bg flex items-center justify-center">
-        <Card className="glass border-white/10 p-8">
+        <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl p-8">
           <CardContent className="text-center">
             <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
             <h2 className="text-xl font-bold text-white mb-2">Acceso Requerido</h2>
@@ -610,25 +675,27 @@ export default function ReportsPage() {
   return (
     <div className="min-h-screen gradient-bg">
       <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
-      <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[280px]")}>
+      <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
         <AppHeader />
         <main className="p-4 lg:p-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="space-y-6"
           >
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-white">Reportes</h1>
-                <p className="text-slate-400 mt-1">
-                  Análisis y métricas de tu negocio
-                </p>
+                <div>
+                  <p className="text-xs font-medium text-violet-400 uppercase tracking-widest mb-1">REPORTES</p>
+                  <h1 className="text-2xl font-bold text-white tracking-tight">Reportes</h1>
+                  <p className="text-slate-500 mt-1 text-sm">Análisis y métricas de tu negocio</p>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Select value={period} onValueChange={(v) => setPeriod(v as PeriodFilter)}>
-                  <SelectTrigger className="w-[160px] glass border-white/10 bg-white/5 text-white">
+                  <SelectTrigger className="w-[160px] bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -640,7 +707,7 @@ export default function ReportsPage() {
                 </Select>
                 <Button 
                   variant="outline" 
-                  className="glass border-white/10 text-slate-300"
+                  className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl text-slate-300"
                   onClick={exportToCSV}
                 >
                   <Download className="h-4 w-4 mr-2" />
@@ -652,7 +719,7 @@ export default function ReportsPage() {
             {/* Loading State */}
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
               </div>
             ) : (
               <>
@@ -664,8 +731,8 @@ export default function ReportsPage() {
                       value: `$${totalPipelineValue.toLocaleString()}`, 
                       change: pipelineChange,
                       icon: DollarSign,
-                      color: "text-indigo-400",
-                      bgColor: "bg-indigo-500/10"
+                      color: "text-violet-400",
+                      bgColor: "bg-violet-500/10"
                     },
                     { 
                       title: "Nuevos Contactos", 
@@ -692,7 +759,7 @@ export default function ReportsPage() {
                       bgColor: "bg-violet-500/10"
                     },
                   ].map((kpi, i) => (
-                    <Card key={i} className="glass border-white/10">
+                    <Card key={i} className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between">
                           <div className={cn("p-2 rounded-lg", kpi.bgColor)}>
@@ -723,7 +790,7 @@ export default function ReportsPage() {
 
                 {/* Additional KPIs Row */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <Card className="glass border-white/10">
+                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                     <CardContent className="p-4">
                       <p className="text-sm text-slate-400">Pipeline Ponderado</p>
                       <p className="text-xl font-bold text-emerald-400">
@@ -731,13 +798,13 @@ export default function ReportsPage() {
                       </p>
                     </CardContent>
                   </Card>
-                  <Card className="glass border-white/10">
+                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                     <CardContent className="p-4">
                       <p className="text-sm text-slate-400">Contactos Activos</p>
                       <p className="text-xl font-bold text-blue-400">{activeContacts}</p>
                     </CardContent>
                   </Card>
-                  <Card className="glass border-white/10">
+                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                     <CardContent className="p-4">
                       <p className="text-sm text-slate-400">Tasa de Conversión</p>
                       <p className="text-xl font-bold text-amber-400">{conversionRate.toFixed(1)}%</p>
@@ -748,7 +815,7 @@ export default function ReportsPage() {
                 {/* Charts Row 1 */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Pipeline by Stage */}
-                  <Card className="glass border-white/10">
+                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                     <CardHeader>
                       <CardTitle className="text-lg text-white">
                         Pipeline por Etapa
@@ -757,19 +824,19 @@ export default function ReportsPage() {
                     <CardContent>
                       <div className="h-[300px]">
                         {pipelineByStage.length > 0 ? (
-                          <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={pipelineByStage} layout="vertical">
-                              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                              <XAxis type="number" stroke="#64748b" fontSize={12} tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} />
-                              <YAxis dataKey="name" type="category" stroke="#64748b" fontSize={12} width={80} />
-                              <Tooltip content={<CustomTooltip />} />
-                              <Bar dataKey="value" radius={[0, 4, 4, 0]} name="Valor">
+                          <DynamicResponsiveContainer width="100%" height="100%">
+                            <DynamicBarChart data={pipelineByStage} layout="vertical">
+                              <DynamicCartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                              <DynamicXAxis type="number" stroke="#64748b" fontSize={12} tickFormatter={(v: number) => `$${(v/1000).toFixed(0)}k`} />
+                              <DynamicYAxis dataKey="name" type="category" stroke="#64748b" fontSize={12} width={80} />
+                              <DynamicTooltip content={<CustomTooltip />} />
+                              <DynamicBar dataKey="value" radius={[0, 4, 4, 0]} name="Valor">
                                 {pipelineByStage.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.color} />
+                                  <DynamicCell key={`cell-${index}`} fill={entry.color} />
                                 ))}
-                              </Bar>
-                            </BarChart>
-                          </ResponsiveContainer>
+                              </DynamicBar>
+                            </DynamicBarChart>
+                          </DynamicResponsiveContainer>
                         ) : (
                           <div className="flex items-center justify-center h-full text-slate-400">
                             No hay datos disponibles
@@ -780,7 +847,7 @@ export default function ReportsPage() {
                   </Card>
 
                   {/* Pipeline Distribution */}
-                  <Card className="glass border-white/10">
+                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                     <CardHeader>
                       <CardTitle className="text-lg text-white">
                         Distribución del Pipeline
@@ -789,9 +856,9 @@ export default function ReportsPage() {
                     <CardContent>
                       <div className="h-[300px]">
                         {dealDistribution.length > 0 ? (
-                          <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                              <Pie
+                          <DynamicResponsiveContainer width="100%" height="100%">
+                            <DynamicPieChart>
+                              <DynamicPie
                                 data={dealDistribution}
                                 cx="50%"
                                 cy="50%"
@@ -802,15 +869,15 @@ export default function ReportsPage() {
                                 nameKey="name"
                               >
                                 {dealDistribution.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.color} />
+                                  <DynamicCell key={`cell-${index}`} fill={entry.color} />
                                 ))}
-                              </Pie>
-                              <Tooltip content={<CustomTooltip />} />
-                              <Legend 
-                                formatter={(value) => <span className="text-slate-300">{value}</span>}
+                              </DynamicPie>
+                              <DynamicTooltip content={<CustomTooltip />} />
+                              <DynamicLegend
+                                formatter={(value: string) => <span className="text-slate-300">{value}</span>}
                               />
-                            </PieChart>
-                          </ResponsiveContainer>
+                            </DynamicPieChart>
+                          </DynamicResponsiveContainer>
                         ) : (
                           <div className="flex items-center justify-center h-full text-slate-400">
                             No hay datos disponibles
@@ -824,7 +891,7 @@ export default function ReportsPage() {
                 {/* Charts Row 2 */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Contact Trend */}
-                  <Card className="glass border-white/10">
+                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                     <CardHeader>
                       <CardTitle className="text-lg text-white">
                         Tendencia de Contactos Nuevos
@@ -833,31 +900,31 @@ export default function ReportsPage() {
                     <CardContent>
                       <div className="h-[300px]">
                         {contactTrend.length > 0 ? (
-                          <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={contactTrend}>
-                              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                              <XAxis dataKey="label" stroke="#64748b" fontSize={12} />
-                              <YAxis stroke="#64748b" fontSize={12} />
-                              <Tooltip 
-                                contentStyle={{ 
-                                  backgroundColor: "rgba(15, 23, 42, 0.9)", 
+                          <DynamicResponsiveContainer width="100%" height="100%">
+                            <DynamicLineChart data={contactTrend}>
+                              <DynamicCartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                              <DynamicXAxis dataKey="label" stroke="#64748b" fontSize={12} />
+                              <DynamicYAxis stroke="#64748b" fontSize={12} />
+                              <DynamicTooltip
+                                contentStyle={{
+                                  backgroundColor: "rgba(15, 23, 42, 0.9)",
                                   border: "1px solid rgba(255,255,255,0.1)",
                                   borderRadius: "8px"
                                 }}
                               />
-                              <Legend 
-                                formatter={(value) => <span className="text-slate-300">{value}</span>}
+                              <DynamicLegend
+                                formatter={(value: string) => <span className="text-slate-300">{value}</span>}
                               />
-                              <Line 
-                                type="monotone" 
-                                dataKey="nuevos" 
-                                stroke="#6366f1" 
+                              <DynamicLine
+                                type="monotone"
+                                dataKey="nuevos"
+                                stroke="#6366f1"
                                 strokeWidth={2}
                                 name="Nuevos"
                                 dot={{ fill: "#6366f1" }}
                               />
-                            </LineChart>
-                          </ResponsiveContainer>
+                            </DynamicLineChart>
+                          </DynamicResponsiveContainer>
                         ) : (
                           <div className="flex items-center justify-center h-full text-slate-400">
                             No hay datos disponibles para el período seleccionado
@@ -868,7 +935,7 @@ export default function ReportsPage() {
                   </Card>
 
                   {/* Deals by Stage Count */}
-                  <Card className="glass border-white/10">
+                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                     <CardHeader>
                       <CardTitle className="text-lg text-white">
                         Deals por Etapa
@@ -877,25 +944,25 @@ export default function ReportsPage() {
                     <CardContent>
                       <div className="h-[300px]">
                         {pipelineByStage.length > 0 ? (
-                          <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={pipelineByStage}>
-                              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                              <XAxis dataKey="name" stroke="#64748b" fontSize={12} angle={-45} textAnchor="end" height={80} />
-                              <YAxis stroke="#64748b" fontSize={12} />
-                              <Tooltip 
-                                contentStyle={{ 
-                                  backgroundColor: "rgba(15, 23, 42, 0.9)", 
+                          <DynamicResponsiveContainer width="100%" height="100%">
+                            <DynamicBarChart data={pipelineByStage}>
+                              <DynamicCartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                              <DynamicXAxis dataKey="name" stroke="#64748b" fontSize={12} angle={-45} textAnchor="end" height={80} />
+                              <DynamicYAxis stroke="#64748b" fontSize={12} />
+                              <DynamicTooltip
+                                contentStyle={{
+                                  backgroundColor: "rgba(15, 23, 42, 0.9)",
                                   border: "1px solid rgba(255,255,255,0.1)",
                                   borderRadius: "8px"
                                 }}
                               />
-                              <Bar dataKey="count" name="Cantidad" radius={[4, 4, 0, 0]}>
+                              <DynamicBar dataKey="count" name="Cantidad" radius={[4, 4, 0, 0]}>
                                 {pipelineByStage.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.color} />
+                                  <DynamicCell key={`cell-${index}`} fill={entry.color} />
                                 ))}
-                              </Bar>
-                            </BarChart>
-                          </ResponsiveContainer>
+                              </DynamicBar>
+                            </DynamicBarChart>
+                          </DynamicResponsiveContainer>
                         ) : (
                           <div className="flex items-center justify-center h-full text-slate-400">
                             No hay datos disponibles
@@ -907,7 +974,7 @@ export default function ReportsPage() {
                 </div>
 
                 {/* Advisor Performance */}
-                <Card className="glass border-white/10">
+                <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                   <CardHeader>
                     <CardTitle className="text-lg text-white">
                       Rendimiento por Asesor
@@ -944,7 +1011,7 @@ export default function ReportsPage() {
                                     initial={{ width: 0 }}
                                     animate={{ width: `${progress}%` }}
                                     transition={{ duration: 1, delay: i * 0.1 }}
-                                    className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full"
+                                    className="h-full bg-gradient-to-r from-violet-500 to-violet-400 rounded-full"
                                   />
                                 </div>
                               </div>
