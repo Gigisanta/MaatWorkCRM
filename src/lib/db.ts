@@ -6,39 +6,38 @@ const globalForPrisma = globalThis as unknown as {
 
 const SLOW_QUERY_THRESHOLD = 1000 // ms
 
-// Connection pool configuration for Vercel serverless environment
-const prismaClient = new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : ['error'],
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
-  },
+export const db = globalForPrisma.prisma ?? new PrismaClient({
+  log: process.env.NODE_ENV === 'development'
+    ? ['query', 'info', 'warn', 'error']
+    : ['error'],
+  datasources: { db: { url: process.env.DATABASE_URL } },
 })
 
+// Always assign to global in serverless
+if (process.env.NODE_ENV !== 'production' || process.env.VERCEL === '1') {
+  globalForPrisma.prisma = db
+}
+
 // Enhanced query logging for development and slow query detection
-prismaClient.$on('query' as any, (e: { timestamp: Date; query: string; params: string; duration: number }) => {
+db.$on('query' as any, (e: unknown) => {
+  const event = e as { timestamp: Date; query: string; params: string; duration: number };
   if (process.env.NODE_ENV === 'development') {
     console.log(JSON.stringify({
       level: 'debug',
       msg: 'prisma_query',
-      query: e.query,
-      duration_ms: e.duration,
-      timestamp: e.timestamp
+      query: event.query,
+      duration_ms: event.duration,
+      timestamp: event.timestamp
     }))
   }
 
-  if (e.duration > SLOW_QUERY_THRESHOLD) {
+  if (event.duration > SLOW_QUERY_THRESHOLD) {
     console.warn(JSON.stringify({
       level: 'warn',
       msg: 'slow_query',
-      query: e.query,
-      duration_ms: e.duration,
+      query: event.query,
+      duration_ms: event.duration,
       threshold: SLOW_QUERY_THRESHOLD
     }))
   }
 })
-
-export const db = prismaClient
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = db

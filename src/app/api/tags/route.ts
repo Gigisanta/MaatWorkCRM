@@ -4,7 +4,7 @@ import { getUserFromSession } from '@/lib/auth-helpers';
 import { getCachedTags, invalidateTagsCache } from '@/lib/cache';
 import logger from '@/lib/logger';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // 1 hour
 
 // GET /api/tags - List all tags for organization
 export async function GET(request: NextRequest) {

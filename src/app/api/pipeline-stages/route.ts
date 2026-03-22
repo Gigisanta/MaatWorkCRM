@@ -91,40 +91,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch stages with contacts grouped, including tags and assignedUser
-    const stages = await db.pipelineStage.findMany({
-      where: { organizationId, isActive: true },
-      orderBy: { order: 'asc' },
-      include: {
-        _count: { select: { contacts: true } },
-        contacts: {
-          take: 50,
-          orderBy: { createdAt: 'desc' },
-          include: {
-            tags: {
-              include: {
-                tag: {
-                  select: {
-                    id: true,
-                    name: true,
-                    color: true,
-                    value: true,
-                    expectedCloseDate: true,
-                  },
-                },
-              },
-            },
-            assignedUser: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                image: true,
-              },
-            },
-          },
-        },
-      },
-    });
+    const stages = await getCachedPipelineStages(organizationId);
 
     // Transform the response to match the required structure
     const transformedStages = stages.map((stage) => ({
