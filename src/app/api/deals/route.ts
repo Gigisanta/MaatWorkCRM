@@ -56,10 +56,15 @@ export async function GET(request: NextRequest) {
         where,
         include: {
           contact: {
-            include: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+              company: true,
               tags: {
-                include: {
-                  tag: true,
+                select: {
+                  tag: { select: { id: true, name: true, color: true } },
                 },
               },
             },
@@ -154,7 +159,7 @@ export async function POST(request: NextRequest) {
 
     logger.info({ operation: 'createDeal', requestId, dealId: deal.id, organizationId, duration_ms: Date.now() - start }, 'Deal created successfully');
 
-    revalidateTag('deals');
+    revalidateTag('deals', 'max');
 
     const response = NextResponse.json(deal, { status: 201 });
     response.headers.set('x-request-id', requestId);

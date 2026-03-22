@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
           },
         },
         skip,
-        take: limit,
+        take: 250,
         orderBy: { startAt: 'asc' },
       }),
       db.calendarEvent.count({ where }),

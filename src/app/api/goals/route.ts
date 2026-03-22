@@ -132,15 +132,10 @@ export async function POST(request: NextRequest) {
       },
       include: {
         team: {
-          include: {
-            leader: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                image: true,
-              },
-            },
+          select: {
+            id: true,
+            name: true,
+            leader: { select: { id: true, name: true, email: true } },
           },
         },
       },

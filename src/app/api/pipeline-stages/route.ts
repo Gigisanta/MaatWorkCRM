@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
 
     logger.debug({ operation: 'listPipelineStages', requestId }, 'Listing pipeline stages');
 
-    const { searchParams } = request.nextUrl;
+    const { searchParams } = await request.nextUrl;
     const organizationId = searchParams.get('organizationId');
 
     if (!organizationId) {
@@ -91,7 +91,38 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch stages with contacts grouped, including tags and assignedUser
-    const stages = await getCachedPipelineStages(organizationId);
+    const stages = await db.pipelineStage.findMany({
+      where: { organizationId, isActive: true },
+      include: {
+        contacts: {
+          take: 50,
+          orderBy: { createdAt: 'desc' as const },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            company: true,
+            emoji: true,
+            segment: true,
+            source: true,
+            createdAt: true,
+            tags: {
+              select: {
+                tag: {
+                  select: { id: true, name: true, color: true },
+                },
+              },
+            },
+            assignedUser: {
+              select: { id: true, name: true, email: true, image: true },
+            },
+          },
+        },
+        _count: { select: { contacts: true, deals: true } },
+      },
+      orderBy: { order: 'asc' },
+    });
 
     // Transform the response to match the required structure
     const transformedStages = stages.map((stage) => ({

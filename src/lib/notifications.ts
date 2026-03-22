@@ -395,8 +395,10 @@ export async function processOverdueTasks(organizationId: string) {
       status: { notIn: ["completed", "cancelled"] },
       assignedTo: { not: null },
     },
+    take: 100,
+    orderBy: { dueDate: 'asc' },
     include: {
-      assignedUser: true,
+      assignedUser: { select: { id: true, name: true } },
     },
   });
 
@@ -466,8 +468,10 @@ export async function processTasksDueSoon(organizationId: string) {
       status: { notIn: ["completed", "cancelled"] },
       assignedTo: { not: null },
     },
+    take: 100,
+    orderBy: { dueDate: 'asc' },
     include: {
-      assignedUser: true,
+      assignedUser: { select: { id: true, name: true } },
     },
   });
 
