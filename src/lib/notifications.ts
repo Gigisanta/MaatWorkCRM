@@ -418,20 +418,27 @@ export async function processOverdueTasks(organizationId: string) {
   const existingUrls = new Set(existingNotifications.map(n => n.actionUrl));
   const toNotify = overdueTasks.filter(t => !existingUrls.has(`/tasks?task=${t.id}`));
 
-  const notifications = [];
-
-  for (const task of toNotify) {
-    if (task.assignedTo) {
-      const notification = await notifyTaskOverdue({
-        taskId: task.id,
-        taskTitle: task.title,
-        assignedTo: task.assignedTo,
-        organizationId,
-        dueDate: task.dueDate!,
-      });
-      notifications.push(notification);
-    }
+  // Bulk create notifications
+  if (toNotify.length === 0) {
+    return [];
   }
+
+  const notificationData = toNotify
+    .filter(t => t.assignedTo && t.dueDate)
+    .map(t => ({
+      userId: t.assignedTo!,
+      organizationId,
+      type: "task" as const,
+      title: "Tarea vencida",
+      message: `La tarea "${t.title}" venció el ${t.dueDate!.toLocaleDateString("es-MX")}`,
+      actionUrl: `/tasks?task=${t.id}`,
+      isRead: false,
+    }));
+
+  const notifications = await db.notification.createMany({
+    data: notificationData,
+    skipDuplicates: true,
+  });
 
   return notifications;
 }
@@ -482,20 +489,27 @@ export async function processTasksDueSoon(organizationId: string) {
   const existingUrls = new Set(existingNotifications.map(n => n.actionUrl));
   const toNotify = upcomingTasks.filter(t => !existingUrls.has(`/tasks?task=${t.id}`));
 
-  const notifications = [];
-
-  for (const task of toNotify) {
-    if (task.assignedTo) {
-      const notification = await notifyTaskDueSoon({
-        taskId: task.id,
-        taskTitle: task.title,
-        assignedTo: task.assignedTo,
-        organizationId,
-        dueDate: task.dueDate!,
-      });
-      notifications.push(notification);
-    }
+  // Bulk create notifications
+  if (toNotify.length === 0) {
+    return [];
   }
+
+  const notificationData = toNotify
+    .filter(t => t.assignedTo && t.dueDate)
+    .map(t => ({
+      userId: t.assignedTo!,
+      organizationId,
+      type: "task" as const,
+      title: "Tarea próxima a vencer",
+      message: `La tarea "${t.title}" vence mañana`,
+      actionUrl: `/tasks?task=${t.id}`,
+      isRead: false,
+    }));
+
+  const notifications = await db.notification.createMany({
+    data: notificationData,
+    skipDuplicates: true,
+  });
 
   return notifications;
 }

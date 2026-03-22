@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/lib/auth-context';
+import { QuickActionsProvider } from '@/lib/quick-actions-context';
 import { useState } from 'react';
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -9,6 +10,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     defaultOptions: {
       queries: {
         staleTime: 60 * 1000, // 1 minute
+        gcTime: 10 * 60 * 1000, // 10 minutes - garbage collection time
         refetchOnWindowFocus: false,
       },
     },
@@ -17,7 +19,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        {children}
+        <QuickActionsProvider>
+          {children}
+        </QuickActionsProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -97,6 +97,7 @@ export async function GET(request: NextRequest) {
       include: {
         _count: { select: { contacts: true } },
         contacts: {
+          take: 50,
           orderBy: { createdAt: 'desc' },
           include: {
             tags: {
