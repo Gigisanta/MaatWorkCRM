@@ -398,6 +398,14 @@ export function ContactDrawer({
                     >
                       Actividad
                     </TabsTrigger>
+                    {financialPlan && (
+                      <TabsTrigger
+                        value="planning"
+                        className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
+                      >
+                        Plan Financiero
+                      </TabsTrigger>
+                    )}
                   </TabsList>
                 </div>
 
@@ -816,6 +824,126 @@ export function ContactDrawer({
                         </p>
                       )}
                     </div>
+                  </TabsContent>
+
+                  <TabsContent value="planning" className="mt-0 space-y-4">
+                    {financialPlan ? (
+                      <div className="space-y-4">
+                        {/* Client Info Summary */}
+                        {financialPlan.edad && (
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="p-3 rounded-lg glass border-white/10">
+                              <p className="text-xs text-slate-500">Edad</p>
+                              <p className="text-white font-medium">{financialPlan.edad}</p>
+                            </div>
+                            <div className="p-3 rounded-lg glass border-white/10">
+                              <p className="text-xs text-slate-500">Perfil de Riesgo</p>
+                              <p className="text-white font-medium capitalize">{financialPlan.perfilRiesgo || 'No definido'}</p>
+                            </div>
+                          </div>
+                        )}
+
+                        {financialPlan.profesion && (
+                          <div className="p-3 rounded-lg glass border-white/10">
+                            <p className="text-xs text-slate-500">Profesion</p>
+                            <p className="text-white">{financialPlan.profesion}</p>
+                          </div>
+                        )}
+
+                        {financialPlan.objetivo && (
+                          <div className="p-3 rounded-lg glass border-white/10">
+                            <p className="text-xs text-slate-500">Objetivo Financiero</p>
+                            <p className="text-white">{financialPlan.objetivo}</p>
+                          </div>
+                        )}
+
+                        {/* Financial Summary */}
+                        <div className="grid grid-cols-3 gap-4">
+                          <div className="p-3 rounded-lg glass border-white/10 text-center">
+                            <p className="text-xs text-slate-500">Aporte Inicial</p>
+                            <p className="text-emerald-400 font-bold">
+                              {financialPlan.aporteInicial ? `$${financialPlan.aporteInicial.toLocaleString()}` : '-'}
+                            </p>
+                          </div>
+                          <div className="p-3 rounded-lg glass border-white/10 text-center">
+                            <p className="text-xs text-slate-500">Aporte Mensual</p>
+                            <p className="text-emerald-400 font-bold">
+                              {financialPlan.aporteMensual ? `$${financialPlan.aporteMensual.toLocaleString()}` : '-'}
+                            </p>
+                          </div>
+                          <div className="p-3 rounded-lg glass border-white/10 text-center">
+                            <p className="text-xs text-slate-500">Horizonte</p>
+                            <p className="text-white font-bold">
+                              {financialPlan.horizonteMeses ? `${financialPlan.horizonteMeses} meses` : '-'}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Health Info */}
+                        {(financialPlan.ingresosMensuales || financialPlan.gastosMensuales) && (
+                          <div className="p-3 rounded-lg glass border-white/10">
+                            <p className="text-xs text-slate-500 mb-2">Salud Financiera</p>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <p className="text-xs text-slate-400">Ingresos Mensuales</p>
+                                <p className="text-emerald-400">
+                                  {financialPlan.ingresosMensuales ? `$${financialPlan.ingresosMensuales.toLocaleString()}` : '-'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-slate-400">Gastos Mensuales</p>
+                                <p className="text-rose-400">
+                                  {financialPlan.gastosMensuales ? `$${financialPlan.gastosMensuales.toLocaleString()}` : '-'}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Goals Count */}
+                        {financialPlan.metas && financialPlan.metas.length > 0 && (
+                          <div className="p-3 rounded-lg glass border-white/10">
+                            <p className="text-xs text-slate-500">Metas ({financialPlan.metas.length})</p>
+                            <div className="mt-2 space-y-1">
+                              {financialPlan.metas.slice(0, 3).map((meta: any, idx: number) => (
+                                <div key={idx} className="flex items-center gap-2">
+                                  <div className="w-2 h-2 rounded-full bg-indigo-500" />
+                                  <span className="text-sm text-white">{meta.nombre}</span>
+                                </div>
+                              ))}
+                              {financialPlan.metas.length > 3 && (
+                                <p className="text-xs text-slate-400">+{financialPlan.metas.length - 3} mas...</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Actions */}
+                        <div className="flex gap-2 pt-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 glass border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10"
+                            onClick={() => openDialog(contactId!, contact?.name)}
+                          >
+                            <FileText className="h-4 w-4 mr-2" />
+                            Editar Plan
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <FileText className="h-12 w-12 text-slate-600 mx-auto mb-3" />
+                        <p className="text-slate-400 mb-4">Este contacto no tiene un plan financiero</p>
+                        <Button
+                          className="bg-indigo-500 hover:bg-indigo-600"
+                          onClick={() => openDialog(contactId!, contact?.name)}
+                        >
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Generar Plan
+                        </Button>
+                      </div>
+                    )}
                   </TabsContent>
                 </div>
               </Tabs>
