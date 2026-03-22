@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import bcrypt from 'bcryptjs';
 import { canBeManager } from '@/lib/permissions';
 import logger from '@/lib/logger';
 
@@ -89,6 +88,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Hash password
+    const bcrypt = await import('bcryptjs');
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user

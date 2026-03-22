@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import logger from '@/lib/logger';
 
@@ -54,6 +53,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify password
+    const bcrypt = await import('bcryptjs');
     const passwordMatch = await bcrypt.compare(password, user.password);
 
     if (!passwordMatch) {

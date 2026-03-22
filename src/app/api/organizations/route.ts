@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getUserFromSession } from '@/lib/auth-helpers';
 import logger from '@/lib/logger';
 
 // GET /api/organizations - List all organizations
@@ -8,6 +9,13 @@ export async function GET(request: NextRequest) {
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
   try {
+    // Auth check
+    const session = await getUserFromSession(request);
+    if (!session) {
+      logger.warn({ operation: 'listOrganizations', requestId }, 'Unauthorized access attempt');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: { 'x-request-id': requestId } });
+    }
+
     logger.debug({ operation: 'listOrganizations', requestId }, 'Fetching organizations list');
 
     const organizations = await db.organization.findMany({

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { hash, compare } from 'bcryptjs';
 import logger from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
@@ -53,7 +52,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const isValidPassword = await compare(currentPassword, user.password);
+    const bcrypt = await import('bcryptjs');
+    const isValidPassword = await bcrypt.compare(currentPassword, user.password);
     if (!isValidPassword) {
       logger.warn({ operation: 'changePassword', requestId, userId, reason: 'invalid_current_password' }, 'Password change failed');
       return NextResponse.json(
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Hash new password
-    const hashedPassword = await hash(newPassword, 10);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     // Update password
     await db.user.update({

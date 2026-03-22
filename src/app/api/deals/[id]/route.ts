@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { revalidateTag } from 'next/cache';
 import logger from '@/lib/logger';
 
 // GET /api/deals/[id] - Get a single deal
@@ -108,6 +109,8 @@ export async function PUT(
 
     logger.info({ operation: 'updateDeal', requestId, dealId: id, duration_ms: Date.now() - start }, 'Deal updated successfully');
 
+    revalidateTag('deals');
+
     const response = NextResponse.json(deal);
     response.headers.set('x-request-id', requestId);
     return response;
@@ -135,6 +138,8 @@ export async function DELETE(
     });
 
     logger.info({ operation: 'deleteDeal', requestId, dealId: id, duration_ms: Date.now() - start }, 'Deal deleted successfully');
+
+    revalidateTag('deals');
 
     const response = NextResponse.json({ success: true });
     response.headers.set('x-request-id', requestId);

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { revalidateTag } from 'next/cache';
 import logger from '@/lib/logger';
 
 export const revalidate = 300;
@@ -152,6 +153,8 @@ export async function POST(request: NextRequest) {
     });
 
     logger.info({ operation: 'createDeal', requestId, dealId: deal.id, organizationId, duration_ms: Date.now() - start }, 'Deal created successfully');
+
+    revalidateTag('deals');
 
     const response = NextResponse.json(deal, { status: 201 });
     response.headers.set('x-request-id', requestId);

@@ -43,13 +43,21 @@ export async function GET(req: NextRequest) {
     let totalOverdueNotifications = 0;
     let totalDueSoonNotifications = 0;
 
-    // Process notifications for each organization
-    for (const organizationId of organizationIds) {
-      const overdueResults = await processOverdueTasks(organizationId);
-      const dueSoonResults = await processTasksDueSoon(organizationId);
+    // Process notifications for each organization in batches
+    const BATCH_SIZE = 10;
+    for (let i = 0; i < organizationIds.length; i += BATCH_SIZE) {
+      const batch = organizationIds.slice(i, i + BATCH_SIZE);
+      await Promise.all(batch.map(async (organizationId) => {
+        try {
+          const overdueResults = await processOverdueTasks(organizationId);
+          const dueSoonResults = await processTasksDueSoon(organizationId);
 
-      totalOverdueNotifications += overdueResults.length;
-      totalDueSoonNotifications += dueSoonResults.length;
+          totalOverdueNotifications += Array.isArray(overdueResults) ? 0 : overdueResults.count;
+          totalDueSoonNotifications += Array.isArray(dueSoonResults) ? 0 : dueSoonResults.count;
+        } catch (error) {
+          console.error(`Notification processing failed for org ${organizationId}:`, error);
+        }
+      }));
     }
 
     return NextResponse.json({
