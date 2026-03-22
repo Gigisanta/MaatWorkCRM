@@ -63,13 +63,7 @@ export async function GET(request: NextRequest) {
           },
           goals: {
             where: { status: 'active' },
-            select: {
-              id: true,
-              title: true,
-              targetValue: true,
-              currentValue: true,
-              status: true,
-            },
+            select: { id: true, title: true, targetValue: true, currentValue: true, unit: true },
           },
           _count: {
             select: {

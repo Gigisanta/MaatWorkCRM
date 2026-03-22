@@ -74,7 +74,7 @@ export async function GET(request: NextRequest) {
       where.type = type;
     }
 
-    const [notifications, total] = await Promise.all([
+    const [notifications, total, unreadCount] = await Promise.all([
       db.notification.findMany({
         where,
         skip,
@@ -82,12 +82,8 @@ export async function GET(request: NextRequest) {
         orderBy: { createdAt: 'desc' },
       }),
       db.notification.count({ where }),
+      db.notification.count({ where: { userId, organizationId, isRead: false } }),
     ]);
-
-    // Get unread count
-    const unreadCount = await db.notification.count({
-      where: { userId, organizationId, isRead: false },
-    });
 
     logger.info({ operation: 'listNotifications', requestId, count: notifications.length, total, unreadCount, duration_ms: Date.now() - start }, 'Notificaciones obtenidas exitosamente');
     return NextResponse.json({

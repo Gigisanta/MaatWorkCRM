@@ -14,6 +14,8 @@ export interface AuthUser {
   managerId?: string | null;
   organizationId?: string | null;
   organizationRole?: string | null;
+  googleAccessToken?: string | null;
+  linkedProviders?: string[];
 }
 
 /**
@@ -41,6 +43,7 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
             image: true,
             managerId: true,
             members: {
+              take: 1,
               select: {
                 organizationId: true,
                 role: true,
