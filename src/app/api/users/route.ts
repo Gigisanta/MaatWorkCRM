@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import logger from '@/lib/logger';
+import { getCachedUsers } from '@/lib/cache';
 
 // GET /api/users - List users for an organization
 export async function GET(request: NextRequest) {
@@ -21,23 +22,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get users who are members of the organization
-    const members = await db.member.findMany({
-      where: { organizationId },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-            role: true,
-          },
-        },
-      },
-    });
-
-    const users = members.map(m => m.user);
+    // Get cached users for organization
+    const users = await getCachedUsers(organizationId);
 
     logger.info({ operation: 'listUsers', requestId, organizationId, count: users.length, duration_ms: Date.now() - start }, 'Usuarios obtenidos exitosamente');
     return NextResponse.json({ users }, { headers: { 'x-request-id': requestId } });

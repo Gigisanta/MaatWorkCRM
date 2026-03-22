@@ -42,63 +42,10 @@ import {
   endOfQuarter,
 } from "date-fns";
 
-// Lazy chart components - dynamically imported for code splitting
-import dynamic from 'next/dynamic';
-import { Skeleton } from '@/components/ui/skeleton';
-
-// Dynamic imports for complex charts with custom features
-const DynamicBarChart = dynamic(
-  () => import('recharts').then(mod => mod.BarChart),
-  { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> }
-);
-const DynamicBar = dynamic(
-  () => import('recharts').then(mod => mod.Bar),
-  { ssr: false, loading: () => <></> }
-);
-const DynamicXAxis = dynamic(
-  () => import('recharts').then(mod => mod.XAxis),
-  { ssr: false, loading: () => <></> }
-);
-const DynamicYAxis = dynamic(
-  () => import('recharts').then(mod => mod.YAxis),
-  { ssr: false, loading: () => <></> }
-);
-const DynamicCartesianGrid = dynamic(
-  () => import('recharts').then(mod => mod.CartesianGrid),
-  { ssr: false, loading: () => <></> }
-);
-const DynamicTooltip = dynamic(
-  () => import('recharts').then(mod => mod.Tooltip),
-  { ssr: false, loading: () => <></> }
-);
-const DynamicCell = dynamic(
-  () => import('recharts').then(mod => mod.Cell),
-  { ssr: false, loading: () => <></> }
-);
-const DynamicPieChart = dynamic(
-  () => import('recharts').then(mod => mod.PieChart),
-  { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> }
-);
-const DynamicPie = dynamic(
-  () => import('recharts').then(mod => mod.Pie),
-  { ssr: false, loading: () => <></> }
-);
-const DynamicLegend = dynamic(
-  () => import('recharts').then(mod => mod.Legend),
-  { ssr: false, loading: () => <></> }
-);
-const DynamicLineChart = dynamic(
-  () => import('recharts').then(mod => mod.LineChart),
-  { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> }
-);
-const DynamicLine = dynamic(
-  () => import('recharts').then(mod => mod.Line),
-  { ssr: false, loading: () => <></> }
-);
-const DynamicResponsiveContainer = dynamic(
-  () => import('recharts').then(mod => mod.ResponsiveContainer),
-  { ssr: false, loading: () => <Skeleton className="h-[300px] w-full" /> }
-);
+// Lazy chart wrappers - pre-composed with recharts
+import LazyLineChart from '@/components/charts/lazy-line-chart';
+import LazyBarChart from '@/components/charts/lazy-bar-chart';
+import LazyPieChart from '@/components/charts/lazy-pie-chart';
 
 // Chart skeleton fallback
 function ChartSkeleton({ height = 300 }: { height?: number }) {
@@ -824,19 +771,7 @@ export default function ReportsPage() {
                     <CardContent>
                       <div className="h-[300px]">
                         {pipelineByStage.length > 0 ? (
-                          <DynamicResponsiveContainer width="100%" height="100%">
-                            <DynamicBarChart data={pipelineByStage} layout="vertical">
-                              <DynamicCartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                              <DynamicXAxis type="number" stroke="#64748b" fontSize={12} tickFormatter={(v: number) => `$${(v/1000).toFixed(0)}k`} />
-                              <DynamicYAxis dataKey="name" type="category" stroke="#64748b" fontSize={12} width={80} />
-                              <DynamicTooltip content={<CustomTooltip />} />
-                              <DynamicBar dataKey="value" radius={[0, 4, 4, 0]} name="Valor">
-                                {pipelineByStage.map((entry, index) => (
-                                  <DynamicCell key={`cell-${index}`} fill={entry.color} />
-                                ))}
-                              </DynamicBar>
-                            </DynamicBarChart>
-                          </DynamicResponsiveContainer>
+                          <LazyBarChart data={pipelineByStage} layout="vertical" dataKey="value" nameKey="name" />
                         ) : (
                           <div className="flex items-center justify-center h-full text-slate-400">
                             No hay datos disponibles
@@ -856,28 +791,7 @@ export default function ReportsPage() {
                     <CardContent>
                       <div className="h-[300px]">
                         {dealDistribution.length > 0 ? (
-                          <DynamicResponsiveContainer width="100%" height="100%">
-                            <DynamicPieChart>
-                              <DynamicPie
-                                data={dealDistribution}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={60}
-                                outerRadius={100}
-                                paddingAngle={5}
-                                dataKey="value"
-                                nameKey="name"
-                              >
-                                {dealDistribution.map((entry, index) => (
-                                  <DynamicCell key={`cell-${index}`} fill={entry.color} />
-                                ))}
-                              </DynamicPie>
-                              <DynamicTooltip content={<CustomTooltip />} />
-                              <DynamicLegend
-                                formatter={(value: string) => <span className="text-slate-300">{value}</span>}
-                              />
-                            </DynamicPieChart>
-                          </DynamicResponsiveContainer>
+                          <LazyPieChart data={dealDistribution} innerRadius={60} outerRadius={100} />
                         ) : (
                           <div className="flex items-center justify-center h-full text-slate-400">
                             No hay datos disponibles
@@ -900,31 +814,7 @@ export default function ReportsPage() {
                     <CardContent>
                       <div className="h-[300px]">
                         {contactTrend.length > 0 ? (
-                          <DynamicResponsiveContainer width="100%" height="100%">
-                            <DynamicLineChart data={contactTrend}>
-                              <DynamicCartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                              <DynamicXAxis dataKey="label" stroke="#64748b" fontSize={12} />
-                              <DynamicYAxis stroke="#64748b" fontSize={12} />
-                              <DynamicTooltip
-                                contentStyle={{
-                                  backgroundColor: "rgba(15, 23, 42, 0.9)",
-                                  border: "1px solid rgba(255,255,255,0.1)",
-                                  borderRadius: "8px"
-                                }}
-                              />
-                              <DynamicLegend
-                                formatter={(value: string) => <span className="text-slate-300">{value}</span>}
-                              />
-                              <DynamicLine
-                                type="monotone"
-                                dataKey="nuevos"
-                                stroke="#6366f1"
-                                strokeWidth={2}
-                                name="Nuevos"
-                                dot={{ fill: "#6366f1" }}
-                              />
-                            </DynamicLineChart>
-                          </DynamicResponsiveContainer>
+                          <LazyLineChart data={contactTrend} dataKey="nuevos" name="label" />
                         ) : (
                           <div className="flex items-center justify-center h-full text-slate-400">
                             No hay datos disponibles para el período seleccionado
@@ -944,25 +834,7 @@ export default function ReportsPage() {
                     <CardContent>
                       <div className="h-[300px]">
                         {pipelineByStage.length > 0 ? (
-                          <DynamicResponsiveContainer width="100%" height="100%">
-                            <DynamicBarChart data={pipelineByStage}>
-                              <DynamicCartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                              <DynamicXAxis dataKey="name" stroke="#64748b" fontSize={12} angle={-45} textAnchor="end" height={80} />
-                              <DynamicYAxis stroke="#64748b" fontSize={12} />
-                              <DynamicTooltip
-                                contentStyle={{
-                                  backgroundColor: "rgba(15, 23, 42, 0.9)",
-                                  border: "1px solid rgba(255,255,255,0.1)",
-                                  borderRadius: "8px"
-                                }}
-                              />
-                              <DynamicBar dataKey="count" name="Cantidad" radius={[4, 4, 0, 0]}>
-                                {pipelineByStage.map((entry, index) => (
-                                  <DynamicCell key={`cell-${index}`} fill={entry.color} />
-                                ))}
-                              </DynamicBar>
-                            </DynamicBarChart>
-                          </DynamicResponsiveContainer>
+                          <LazyBarChart data={pipelineByStage} nameKey="name" dataKey="count" />
                         ) : (
                           <div className="flex items-center justify-center h-full text-slate-400">
                             No hay datos disponibles

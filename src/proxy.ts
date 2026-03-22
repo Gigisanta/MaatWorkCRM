@@ -1,27 +1,37 @@
-import type { NextRequest } from 'next/server'
-import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 
-export function proxy(request: NextRequest) {
-  const requestId = request.headers.get('x-request-id') || crypto.randomUUID()
-  const start = Date.now()
+export const runtime = 'edge';
 
-  // Logging de request
-  console.log(JSON.stringify({
-    level: 'info',
-    msg: 'request_start',
-    method: request.method,
-    path: request.nextUrl.pathname,
-    requestId,
-    userAgent: request.headers.get('user-agent'),
-    ip: request.headers.get('x-forwarded-for') || 'unknown'
-  }))
+const PROTECTED_PATHS = ['/dashboard', '/contacts', '/pipeline', '/tasks', '/calendar', '/reports', '/teams', '/training', '/notifications', '/settings'];
+const AUTH_PATHS = ['/login', '/register'];
 
-  // Headers de response con timing
-  const response = NextResponse.next()
-  response.headers.set('x-request-id', requestId)
-  response.headers.set('x-response-time', String(Date.now() - start))
+export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
 
-  return response
+  const isProtectedPath = PROTECTED_PATHS.some(path =>
+    pathname === path || pathname.startsWith(path + '/')
+  );
+  const isAuthPath = AUTH_PATHS.some(path => pathname === path);
+
+  if (isProtectedPath && !token) {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  if (isAuthPath && token) {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
+  if (pathname.startsWith('/api/cron/')) {
+    const cronSecret = request.headers.get('x-cron-secret');
+    if (cronSecret !== process.env.CRON_SECRET) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  }
+
+  return NextResponse.next();
 }
-
-export const config = { matcher: ['/api/:path*', '/((?!_next/static|_next/image|favicon.ico).*)'] }
