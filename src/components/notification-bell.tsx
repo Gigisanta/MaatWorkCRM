@@ -17,7 +17,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth-context";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { es } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -80,7 +79,8 @@ export function NotificationBell() {
     queryKey: ["notifications", user?.id, user?.organizationId],
     queryFn: () => fetchNotifications(user!.id, user!.organizationId!),
     enabled: !!user?.id && !!user?.organizationId,
-    refetchInterval: 60000, // Refetch every minute
+    staleTime: 30 * 1000, // 30 seconds
+    refetchOnWindowFocus: true,
   });
 
   // Mark as read mutation
@@ -116,7 +116,7 @@ export function NotificationBell() {
       case "goal":
         return <Target className="h-4 w-4 text-emerald-500" />;
       case "contact":
-        return <Users className="h-4 w-4 text-indigo-500" />;
+        return <Users className="h-4 w-4 text-violet-500" />;
       case "system":
         return <Info className="h-4 w-4 text-slate-400" />;
       default:
@@ -127,7 +127,6 @@ export function NotificationBell() {
   const formatTime = (dateString: string) => {
     return formatDistanceToNow(new Date(dateString), {
       addSuffix: true,
-      locale: es,
     });
   };
 
@@ -152,35 +151,29 @@ export function NotificationBell() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative text-slate-400 hover:text-white"
+          className="relative h-9 w-9 rounded-xl bg-white/4 border border-white/8 hover:bg-white/8 hover:border-white/15 text-slate-400 hover:text-white transition-all duration-200"
         >
           <Bell className="h-5 w-5" />
           <AnimatePresence>
             {unreadCount > 0 && (
               <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                exit={{ scale: 0 }}
-                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-[10px] font-bold bg-rose-500 text-white rounded-full"
+                key={unreadCount}
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                className="absolute -top-1 -right-1 h-4 w-4 bg-rose-500 rounded-full text-[10px] font-bold text-white flex items-center justify-center border border-[#08090B] shadow-sm shadow-rose-500/30"
               >
-                {unreadCount > 9 ? "9+" : unreadCount}
+                {unreadCount > 9 ? '9+' : unreadCount}
               </motion.span>
             )}
           </AnimatePresence>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 p-0 glass border-white/10">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-          <DropdownMenuLabel className="p-0 text-white">
-            Notificaciones
-          </DropdownMenuLabel>
+      <DropdownMenuContent align="end" className="w-80 p-0 bg-[#0E0F12] border border-white/10 shadow-2xl shadow-black/40 rounded-xl overflow-hidden">
+        <div className="flex items-center justify-between px-3 py-3 border-b border-white/8 bg-white/2">
+          <span className="text-sm font-semibold text-white">Notificaciones</span>
           {unreadCount > 0 && (
-            <Badge
-              variant="secondary"
-              className="text-xs bg-indigo-500/20 text-indigo-400 border-indigo-500/30"
-            >
-              {unreadCount} nuevas
-            </Badge>
+            <span className="text-xs text-violet-400 font-medium">{unreadCount} sin leer</span>
           )}
         </div>
 
@@ -212,7 +205,7 @@ export function NotificationBell() {
                 <DropdownMenuItem
                   key={notification.id}
                   className={`flex items-start gap-3 p-3 cursor-pointer border-b border-white/5 last:border-0 ${
-                    !notification.isRead ? "bg-indigo-500/5" : ""
+                    !notification.isRead ? "bg-violet-500/4 border-l-2 border-l-violet-500/40" : "hover:bg-white/4"
                   }`}
                   onClick={() => handleNotificationClick(notification)}
                   onSelect={(e) => {
@@ -244,7 +237,7 @@ export function NotificationBell() {
                       </div>
                       <div className="flex items-center gap-2">
                         {!notification.isRead && (
-                          <div className="h-2 w-2 rounded-full bg-indigo-500" />
+                          <div className="h-2 w-2 rounded-full bg-violet-500" />
                         )}
                         <ExternalLink className="h-3 w-3 text-slate-500" />
                       </div>
@@ -266,7 +259,7 @@ export function NotificationBell() {
                         </p>
                       </div>
                       {!notification.isRead && (
-                        <div className="h-2 w-2 rounded-full bg-indigo-500" />
+                        <div className="h-2 w-2 rounded-full bg-violet-500" />
                       )}
                     </>
                   )}
@@ -289,7 +282,7 @@ export function NotificationBell() {
               <Link
                 href="/notifications"
                 onClick={() => setIsOpen(false)}
-                className="text-xs text-indigo-400 hover:text-indigo-300 px-2 py-1"
+                className="text-xs text-violet-400 hover:text-violet-300 px-2 py-1"
               >
                 Ver todas
               </Link>

@@ -193,16 +193,18 @@ model PipelineStage {
   slaHours       Int?
   isDefault      Boolean  @default(false)
   isActive       Boolean  @default(true)
-  
+
   // Relations
   contacts       Contact[]
   deals          Deal[]
   historyFrom    PipelineStageHistory[] @relation("FromStage")
   historyTo      PipelineStageHistory[] @relation("ToStage")
-  
+
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
+
   createdAt      DateTime @default(now())
+
+  @@index([organizationId])
 }
 
 model PipelineStageHistory {
@@ -214,10 +216,14 @@ model PipelineStageHistory {
   reason          String?
   changedByUserId String?
   changedAt       DateTime @default(now())
-  
+
   contact         Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
   fromStage       PipelineStage? @relation("FromStage", fields: [fromStageId], references: [id])
   toStage         PipelineStage? @relation("ToStage", fields: [toStageId], references: [id])
+
+  @@index([contactId])
+  @@index([organizationId])
+  @@index([changedAt])
 }
 
 model Deal {
@@ -257,15 +263,16 @@ model Note {
   entityId       String
   content        String
   authorId       String?
-  
+
   author         User?    @relation("NoteAuthor", fields: [authorId], references: [id])
-  
+
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-  
+
   @@index([entityType, entityId])
+  @@index([organizationId])
 }
 
 // ============================================
@@ -368,16 +375,18 @@ model Team {
   name                  String
   description           String?
   leaderId              String?
-  
+
   leader                User?    @relation("TeamLeader", fields: [leaderId], references: [id])
   members               TeamMember[]
   goals                 TeamGoal[]
   calendarEvents        CalendarEvent[]
-  
+
   organization          Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
+
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
+
+  @@index([organizationId])
 }
 
 model TeamMember {
@@ -407,11 +416,14 @@ model TeamGoal {
   startDate   DateTime?
   endDate     DateTime?
   status      String   @default("active") // active, completed, missed, cancelled
-  
+
   team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([teamId])
+  @@index([status])
 }
 
 // ============================================
@@ -447,6 +459,10 @@ model CalendarEvent {
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([teamId])
+  @@index([startAt, endAt])
 }
 
 model CalendarSyncState {
@@ -498,7 +514,6 @@ model Notification {
 
   @@index([userId, isRead, createdAt])
   @@index([organizationId, createdAt])
-  @@index([userId, isRead, createdAt])
 }
 
 // ============================================

@@ -9,7 +9,6 @@ import { AppHeader } from "@/components/layout/app-header";
 import { useAuth } from "@/lib/auth-context";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 const kpiConfig = [
@@ -59,7 +58,22 @@ export default function DashboardPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
 
-  // Fetch basic stats
+  // Fetch dashboard stats
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ["dashboard-stats", user?.organizationId],
+    queryFn: async () => {
+      if (!user?.organizationId) return null;
+      const response = await fetch(
+        `/api/dashboard/stats?organizationId=${user.organizationId}`
+      );
+      if (!response.ok) throw new Error("Failed to fetch stats");
+      return response.json();
+    },
+    enabled: !!user?.organizationId && isAuthenticated,
+    staleTime: 60 * 1000,
+  });
+
+  // Keep deals list query for pipeline table (not stats)
   const { data: dealsData } = useQuery({
     queryKey: ["dashboard-deals", user?.organizationId],
     queryFn: async () => {
@@ -73,88 +87,21 @@ export default function DashboardPage() {
     enabled: !!user?.organizationId && isAuthenticated,
   });
 
-  const { data: contactsData } = useQuery({
-    queryKey: ["dashboard-contacts", user?.organizationId],
-    queryFn: async () => {
-      if (!user?.organizationId) return { contacts: [] };
-      const response = await fetch(
-        `/api/contacts?organizationId=${user.organizationId}&limit=1000`
-      );
-      if (!response.ok) throw new Error("Failed to fetch contacts");
-      return response.json();
-    },
-    enabled: !!user?.organizationId && isAuthenticated,
-  });
+  // Derive KPIs from stats endpoint
+  const pipelineValue = stats?.pipelineValue || 0;
+  const activeDealsCount = stats?.activeDealsCount || 0;
+  const activeContacts = stats?.activeContacts || 0;
+  const pendingTasks = stats?.pendingTasks || 0;
+  const avgGoalProgress = stats?.avgGoalProgress || 0;
 
-  const { data: tasksData } = useQuery({
-    queryKey: ["dashboard-tasks", user?.organizationId],
-    queryFn: async () => {
-      if (!user?.organizationId) return { tasks: [] };
-      const response = await fetch(
-        `/api/tasks?organizationId=${user.organizationId}&limit=1000`
-      );
-      if (!response.ok) throw new Error("Failed to fetch tasks");
-      return response.json();
-    },
-    enabled: !!user?.organizationId && isAuthenticated,
-  });
-
-  const { data: teamsData } = useQuery({
-    queryKey: ["dashboard-teams", user?.organizationId],
-    queryFn: async () => {
-      if (!user?.organizationId) return { teams: [] };
-      const response = await fetch(
-        `/api/teams?organizationId=${user.organizationId}&limit=100`
-      );
-      if (!response.ok) throw new Error("Failed to fetch teams");
-      return response.json();
-    },
-    enabled: !!user?.organizationId && isAuthenticated,
-  });
-
-  // Calculate KPIs
+  // Keep deals list for pipeline table
   const deals = dealsData?.deals || [];
-  const contacts = contactsData?.contacts || [];
-  const tasks = tasksData?.tasks || [];
-  const teams = teamsData?.teams || [];
-
   const inactiveStageNames = ["Caído", "Caida", "Cuenta vacia", "Cuenta Vacía"];
-
   const activeDeals = React.useMemo(() =>
     deals.filter((deal: any) => {
       if (!deal.stage) return true;
       return !inactiveStageNames.includes(deal.stage.name);
     }), [deals]
-  );
-  const pipelineValue = React.useMemo(() =>
-    activeDeals.reduce((sum: number, deal: any) => sum + (deal.value || 0), 0), [activeDeals]
-  );
-
-  const activeContacts = React.useMemo(() =>
-    contacts.filter((contact: any) => {
-      if (!contact.pipelineStage) return true;
-      return !inactiveStageNames.includes(contact.pipelineStage.name);
-    }).length, [contacts]
-  );
-
-  const pendingTasks = React.useMemo(() =>
-    tasks.filter((task: any) =>
-      task.status !== "completed" && task.status !== "cancelled"
-    ).length, [tasks]
-  );
-
-  const allGoals = React.useMemo(() =>
-    teams.flatMap((team: any) => team.goals || []), [teams]
-  );
-  const avgGoalProgress = React.useMemo(() =>
-    allGoals.length > 0
-      ? allGoals.reduce((sum: number, goal: any) => {
-          const progress = goal.targetValue > 0
-            ? (goal.currentValue / goal.targetValue) * 100
-            : 0;
-          return sum + Math.min(progress, 100);
-        }, 0) / allGoals.length
-      : 0, [allGoals]
   );
 
   const todayDateString = format(new Date(), "EEEE, d 'de' MMMM", { locale: es });
