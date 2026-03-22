@@ -54,6 +54,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { usePlanningDialog } from "./usePlanningDialog";
+import { useAuth } from "@/lib/auth-context";
 
 // Types
 interface Tag {
@@ -160,8 +161,23 @@ export function ContactDrawer({
   const [newTag, setNewTag] = React.useState("");
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { openDialog } = usePlanningDialog();
+
+  // Check if user is admin (can reassign contacts)
+  const isAdmin = user?.role === 'admin' || user?.role === 'owner' || user?.role === 'dueno';
+
+  // Fetch organization users for assignment dropdown (only for admins)
+  const { data: usersData } = useQuery<{ users: { id: string; name: string | null; email: string }[] }>({
+    queryKey: ["organization-users", organizationId],
+    queryFn: async () => {
+      const response = await fetch(`/api/users?organizationId=${organizationId}`);
+      if (!response.ok) throw new Error("Error al cargar usuarios");
+      return response.json();
+    },
+    enabled: !!organizationId && isAdmin,
+  });
 
   // Fetch contact details
   const { data: contact, isLoading } = useQuery<ContactDetail>({
@@ -531,6 +547,32 @@ export function ContactDrawer({
                               </FormItem>
                             )}
                           />
+                          {isAdmin && usersData?.users && (
+                            <FormField
+                              name="assignedTo"
+                              control={form.control}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-slate-400">Asignado a</FormLabel>
+                                  <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger className="glass border-white/10 bg-white/5 text-white">
+                                        <SelectValue placeholder="Seleccionar usuario" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {usersData.users.map((u) => (
+                                        <SelectItem key={u.id} value={u.id}>
+                                          {u.name || u.email}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          )}
                           <div className="flex justify-end gap-2">
                             <Button
                               type="button"

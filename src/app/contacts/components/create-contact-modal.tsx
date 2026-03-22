@@ -4,7 +4,7 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import {
@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/auth-context";
 
 const contactFormSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
@@ -53,6 +54,14 @@ interface PipelineStage {
   order: number;
 }
 
+interface User {
+  id: string;
+  name: string | null;
+  email: string;
+  image: string | null;
+  role: string;
+}
+
 interface CreateContactModalProps {
   open: boolean;
   onClose: () => void;
@@ -66,7 +75,22 @@ export function CreateContactModal({
   stages,
   organizationId,
 }: CreateContactModalProps) {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  // Check if user is admin (can assign contacts to other users)
+  const isAdmin = user?.role === 'admin' || user?.role === 'owner' || user?.role === 'dueno';
+
+  // Fetch organization users for assignment dropdown
+  const { data: usersData } = useQuery<{ users: User[] }>({
+    queryKey: ["organization-users", organizationId],
+    queryFn: async () => {
+      const response = await fetch(`/api/users?organizationId=${organizationId}`);
+      if (!response.ok) throw new Error("Error al cargar usuarios");
+      return response.json();
+    },
+    enabled: !!organizationId && isAdmin,
+  });
 
   const form = useForm<ContactFormData>({
     resolver: zodResolver(contactFormSchema),
@@ -78,7 +102,7 @@ export function CreateContactModal({
       emoji: "👤",
       source: "",
       pipelineStageId: "",
-      assignedTo: "",
+      assignedTo: user?.id || "",
     },
   });
 
@@ -224,6 +248,32 @@ export function CreateContactModal({
                   </FormItem>
                 )}
               />
+              {isAdmin && usersData?.users && (
+                <FormField
+                  name="assignedTo"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-slate-400">Asignar a</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="glass border-white/10 bg-white/5 text-white">
+                            <SelectValue placeholder="Seleccionar usuario" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {usersData.users.map((u) => (
+                            <SelectItem key={u.id} value={u.id}>
+                              {u.name || u.email}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
             <DialogFooter>
               <Button

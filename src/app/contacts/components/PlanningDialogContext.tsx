@@ -19,6 +19,7 @@ interface PlanningDialogContextValue {
   prevStep: () => void;
   goToStep: (step: number) => void;
   updateFormData: (data: Partial<PlanningFormData>) => void;
+  setActiveContact: (contactId: string, contactName: string) => void;
   onSave: () => Promise<void>;
   onPreview: () => Promise<void>;
 }
@@ -82,6 +83,11 @@ export function PlanningDialogProvider({ children }: { children: React.ReactNode
 
   const updateFormData = React.useCallback((data: Partial<PlanningFormData>) => {
     setFormData((prev) => ({ ...prev, ...data }));
+  }, []);
+
+  const setActiveContact = React.useCallback((contactId: string, contactName: string) => {
+    setActiveContactId(contactId);
+    setActiveContactName(contactName);
   }, []);
 
   const onSave = React.useCallback(async () => {
@@ -171,6 +177,7 @@ export function PlanningDialogProvider({ children }: { children: React.ReactNode
     prevStep,
     goToStep,
     updateFormData,
+    setActiveContact,
     onSave,
     onPreview,
   };

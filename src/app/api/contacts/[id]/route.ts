@@ -190,7 +190,21 @@ export async function PUT(
     if (data.segment !== undefined) updateData.segment = data.segment;
     if (data.source !== undefined) updateData.source = data.source;
     if (data.pipelineStageId !== undefined) updateData.pipelineStageId = data.pipelineStageId;
-    if (data.assignedTo !== undefined) updateData.assignedTo = data.assignedTo;
+
+    // Only admins can change assignedTo
+    if (data.assignedTo !== undefined) {
+      if (hasPermission(userRole, 'contacts:update:all')) {
+        updateData.assignedTo = data.assignedTo;
+      } else {
+        logger.warn({ operation: 'updateContact', requestId, contactId: id }, 'Forbidden: only admins can reassign contacts');
+        const response = NextResponse.json(
+          { error: 'Solo los administradores pueden reasignar contactos' },
+          { status: 403 }
+        );
+        response.headers.set('x-request-id', requestId);
+        return response;
+      }
+    }
 
     const contact = await db.contact.update({
       where: { id },

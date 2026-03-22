@@ -2,7 +2,8 @@
 
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Save, Eye, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { X, Save, Eye, ChevronLeft, ChevronRight, Loader2, User, Check } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/auth-context';
 
 import { usePlanningDialogContext } from './PlanningDialogContext';
 import { PlanningStepper } from './PlanningStepper';
@@ -32,6 +34,8 @@ interface PlanningDialogProps {
 
 export function PlanningDialog({ contactId, contactName, open: controlledOpen, onOpenChange }: PlanningDialogProps) {
   const isMobile = useIsMobile();
+  const { user } = useAuth();
+  const organizationId = user?.organizationId || null;
 
   const {
     open: internalOpen,
@@ -40,6 +44,7 @@ export function PlanningDialog({ contactId, contactName, open: controlledOpen, o
     formData,
     isGenerating,
     previewHtml,
+    activeContactId,
     activeContactName,
     openDialog,
     closeDialog,
@@ -47,6 +52,7 @@ export function PlanningDialog({ contactId, contactName, open: controlledOpen, o
     prevStep,
     goToStep,
     updateFormData,
+    setActiveContact,
     onSave,
     onPreview,
   } = usePlanningDialogContext();
@@ -78,6 +84,21 @@ export function PlanningDialog({ contactId, contactName, open: controlledOpen, o
   const handlePreview = async () => {
     await onPreview();
   };
+
+  // Fetch contacts for selector
+  const { data: contactsData } = useQuery<{
+    contacts: Array<{ id: string; name: string; email: string | null; company: string | null; emoji: string }>;
+  }>({
+    queryKey: ['contacts-selector', organizationId],
+    queryFn: async () => {
+      const response = await fetch(`/api/contacts?organizationId=${organizationId}&limit=100`);
+      if (!response.ok) throw new Error('Error al cargar contactos');
+      return response.json();
+    },
+    enabled: !!organizationId,
+  });
+
+  const contacts = contactsData?.contacts || [];
 
   // Determine which step to render
   const renderStep = () => {
@@ -128,6 +149,77 @@ export function PlanningDialog({ contactId, contactName, open: controlledOpen, o
         {/* Stepper */}
         <div className="px-6 py-2 border-b border-white/10 shrink-0">
           <PlanningStepper currentStep={currentStep} onStepClick={goToStep} />
+        </div>
+
+        {/* Contact Selector Bar */}
+        <div className="px-6 py-3 border-b border-white/10 shrink-0 bg-slate-900/50">
+          <div className="flex items-center gap-3">
+            <User className="h-4 w-4 text-slate-400" />
+            <span className="text-sm text-slate-400">Cliente:</span>
+            {activeContactId ? (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-white font-medium">
+                  {activeContactName || 'Cliente seleccionado'}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-slate-400 hover:text-white h-6 px-2"
+                  onClick={() => {
+                    // Open a contact picker - for now just show dropdown
+                    const select = document.getElementById('contact-selector') as HTMLSelectElement;
+                    if (select) select.focus();
+                  }}
+                >
+                  Cambiar
+                </Button>
+                <select
+                  id="contact-selector"
+                  className="glass border-white/10 bg-white/5 text-white text-sm rounded px-2 py-1 h-7 w-48"
+                  value=""
+                  onChange={(e) => {
+                    const contactId = e.target.value;
+                    if (contactId) {
+                      const contact = contacts.find(c => c.id === contactId);
+                      if (contact) {
+                        setActiveContact(contact.id, contact.name);
+                      }
+                    }
+                    e.target.value = '';
+                  }}
+                >
+                  <option value="">Cambiar cliente...</option>
+                  {contacts.map(contact => (
+                    <option key={contact.id} value={contact.id}>
+                      {contact.emoji} {contact.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <select
+                id="contact-selector"
+                className="glass border-white/10 bg-white/5 text-white text-sm rounded px-2 py-1 h-7 w-64"
+                value=""
+                onChange={(e) => {
+                  const contactId = e.target.value;
+                  if (contactId) {
+                    const contact = contacts.find(c => c.id === contactId);
+                    if (contact) {
+                      setActiveContact(contact.id, contact.name);
+                    }
+                  }
+                }}
+              >
+                <option value="">Seleccionar un cliente...</option>
+                {contacts.map(contact => (
+                  <option key={contact.id} value={contact.id}>
+                    {contact.emoji} {contact.name} {contact.company ? `(${contact.company})` : ''}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
         </div>
 
         {/* Content - Scrollable */}

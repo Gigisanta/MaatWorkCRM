@@ -483,7 +483,7 @@ export async function POST(request: NextRequest) {
         segment: data.segment ?? null,
         source: data.source ?? null,
         pipelineStageId: stageId ?? null,
-        assignedTo: data.assignedTo ?? user.id,
+        assignedTo: data.assignedTo || user.id,
         ...(data.tagIds && data.tagIds.length > 0 && {
           tags: {
             create: data.tagIds.map((tagId: string) => ({
