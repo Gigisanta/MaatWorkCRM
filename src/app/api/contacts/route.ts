@@ -118,6 +118,9 @@ export async function GET(request: NextRequest) {
                 tasks: true,
               },
             },
+            financialPlan: {
+              select: { id: true },
+            },
           },
           skip,
           take: limit,
@@ -136,6 +139,7 @@ export async function GET(request: NextRequest) {
           expectedCloseDate: ct.tag.expectedCloseDate,
         })),
         interactionCount: (contact._count?.deals || 0) + (contact._count?.tasks || 0),
+        hasFinancialPlan: !!contact.financialPlan,
       }));
 
       logger.info({ operation: 'getContacts', requestId, count: contacts.length, total, duration_ms: Date.now() - start }, 'Contacts fetched successfully');
@@ -238,6 +242,9 @@ export async function GET(request: NextRequest) {
                 tasks: true,
               },
             },
+            financialPlan: {
+              select: { id: true },
+            },
           },
           skip,
           take: limit,
@@ -256,6 +263,7 @@ export async function GET(request: NextRequest) {
           expectedCloseDate: ct.tag.expectedCloseDate,
         })),
         interactionCount: (contact._count?.deals || 0) + (contact._count?.tasks || 0),
+        hasFinancialPlan: !!contact.financialPlan,
       }));
 
       logger.info({ operation: 'getContacts', requestId, count: contacts.length, total, duration_ms: Date.now() - start }, 'Contacts fetched successfully');
@@ -353,6 +361,9 @@ export async function GET(request: NextRequest) {
                 tasks: true,
               },
             },
+            financialPlan: {
+              select: { id: true },
+            },
           },
           skip,
           take: limit,
@@ -371,6 +382,7 @@ export async function GET(request: NextRequest) {
           expectedCloseDate: ct.tag.expectedCloseDate,
         })),
         interactionCount: (contact._count?.deals || 0) + (contact._count?.tasks || 0),
+        hasFinancialPlan: !!contact.financialPlan,
       }));
 
       logger.info({ operation: 'getContacts', requestId, count: contacts.length, total, duration_ms: Date.now() - start }, 'Contacts fetched successfully');

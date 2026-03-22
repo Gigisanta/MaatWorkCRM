@@ -151,6 +151,7 @@ model Contact {
   deals          Deal[]
   tasks          Task[]
   stageHistory   PipelineStageHistory[]
+  financialPlan  FinancialPlan?
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -575,9 +576,170 @@ model AutomationConfig {
   enabled        Boolean  @default(true)
   config         String?  // JSON string
   webhookUrl     String?
-  
+
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+// ============================================
+// FINANCIAL PLANNING MODULE
+// ============================================
+
+model FinancialPlan {
+  id               String    @id @default(cuid())
+  contactId        String    @unique
+  contact          Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  // Client profile
+  edad             Int?
+  profesion         String?
+  objetivo         String?
+  perfilRiesgo     String?   // conservador, moderado, agresivo
+  aporteMensual    Float?
+  aporteInicial    Float?
+  horizonteMeses   Int?
+  tipoAporte       String?   // mensual, trimestral, anual
+
+  // Financial health
+  ingresosMensuales     Float?
+  gastosMensuales       Float?
+  fondoEmergenciaMeses  Int?
+  fondoEmergenciaActual Float?
+  patrimonioActivos     Float?
+  patrimonioDeudas      Float?
+
+  // Advisor config
+  webUrl               String?
+  asesorNombre         String?
+  asesorTelefono       String?
+  asesorMensajePredefinido String?
+
+  // AI fields
+  terminoFinanciero   String?
+  usarTerminoIA       Boolean  @default(false)
+  consejoFinal        String?
+  usarConsejoIA       Boolean  @default(false)
+
+  // Branding
+  colorPrincipal       String   @default("#6366f1")
+  colorAcento          String   @default("#10b981")
+  logoUrl             String?
+
+  // Goal summary
+  proyeccionRetiro    String?
+  gastosPrincipales   String?
+  observaciones       String?
+
+  // Generation state
+  wizardStep          Int      @default(1)
+  generatedHtml       String?  // HTML completo generado
+  editableHtml        String?  // HTML editable por el usuario
+  version             Int      @default(1)
+  lastGeneratedAt     DateTime?
+
+  // Related plans
+  metasVida                 MetaVida[]
+  asignacionesEstrategicas AsignacionEstrategica[]
+  instrumentos             PlanInstrument[]
+  obligacionesNegociables   ObligacionNegociable[]
+  riesgos                  Riesgo[]
+
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([contactId])
+}
+
+// Metas de vida linked to a FinancialPlan
+model MetaVida {
+  id              String        @id @default(cuid())
+  financialPlanId String
+  financialPlan   FinancialPlan @relation(fields: [financialPlanId], references: [id], onDelete: Cascade)
+  nombre          String
+  montoObjetivo   Float?
+  fechaEstimada   DateTime?
+  prioridad       String?       // baja, media, alta
+  notes           String?
+  order           Int           @default(0)
+
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([financialPlanId])
+}
+
+// Asignaciones estrat gicas (asset allocation)
+model AsignacionEstrategica {
+  id              String        @id @default(cuid())
+  financialPlanId String
+  financialPlan   FinancialPlan @relation(fields: [financialPlanId], references: [id], onDelete: Cascade)
+  claseActivo     String        // Renta Fija, Renta Variable, Efectivo, Inmuebles, etc.
+  porcentaje      Float
+  descripcion     String?
+
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([financialPlanId])
+}
+
+// Instrumentos financeiros seleccionados en el plan
+model PlanInstrument {
+  id              String        @id @default(cuid())
+  financialPlanId String
+  financialPlan   FinancialPlan @relation(fields: [financialPlanId], references: [id], onDelete: Cascade)
+  nombre          String
+  tipo            String?       // ETF, Fondo, ACCI N, BONO, DEPÓSITO, etc.
+  claseActivo     String?
+  emisor          String?
+  moneda          String?
+  rendimientoEsperado Float?
+  participacion   Float?        // % dentro del portfolio
+  isin            String?
+  notas           String?
+
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([financialPlanId])
+}
+
+// Obligaciones negociables / deudas activas
+model ObligacionNegociable {
+  id              String        @id @default(cuid())
+  financialPlanId String
+  financialPlan   FinancialPlan @relation(fields: [financialPlanId], references: [id], onDelete: Cascade)
+  acreedor        String
+  tipo            String?       // hipoteca, pr stamo personal, tarjeta, etc.
+  saldoPendiente  Float?
+  tasaInteres     Float?
+  cuotaMensual    Float?
+  fechaVencimiento DateTime?
+  origen          String?
+  notas           String?
+
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([financialPlanId])
+}
+
+// Riesgos identificados en el plan
+model Riesgo {
+  id              String        @id @default(cuid())
+  financialPlanId String
+  financialPlan   FinancialPlan @relation(fields: [financialPlanId], references: [id], onDelete: Cascade)
+  nombre          String
+  tipo            String?       // mercado, cr dito, liquidez, operativo
+  probabilidad   String?        // baja, media, alta
+  impacto         String?       // bajo, medio, alto
+  mitigacion      String?
+  severity        String?
+
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([financialPlanId])
 }

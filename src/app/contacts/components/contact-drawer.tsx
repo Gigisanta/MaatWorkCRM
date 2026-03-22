@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { X, Edit, Trash2, Loader2, Tag as TagIcon } from "lucide-react";
+import { X, Edit, Trash2, Loader2, Tag as TagIcon, FileText, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -53,6 +53,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
+import { usePlanningDialog } from "./usePlanningDialog";
 
 // Types
 interface Tag {
@@ -160,12 +161,25 @@ export function ContactDrawer({
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
   const queryClient = useQueryClient();
 
+  const { openDialog } = usePlanningDialog();
+
   // Fetch contact details
   const { data: contact, isLoading } = useQuery<ContactDetail>({
     queryKey: ["contact", contactId],
     queryFn: async () => {
       const response = await fetch(`/api/contacts/${contactId}`);
       if (!response.ok) throw new Error("Error al cargar contacto");
+      return response.json();
+    },
+    enabled: !!contactId && open,
+  });
+
+  // Fetch financial plan to check if contact has one
+  const { data: financialPlan } = useQuery({
+    queryKey: ["contact-financial-plan", contactId],
+    queryFn: async () => {
+      const response = await fetch(`/api/contacts/${contactId}/planning`);
+      if (!response.ok) return null;
       return response.json();
     },
     enabled: !!contactId && open,
@@ -391,6 +405,29 @@ export function ContactDrawer({
                         onClick={() => setShowDeleteDialog(true)}
                       >
                         <Trash2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                          "glass border-white/10",
+                          financialPlan
+                            ? "border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+                            : "border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10"
+                        )}
+                        onClick={() => openDialog(contactId!, contact?.name)}
+                      >
+                        {financialPlan ? (
+                          <>
+                            <FileText className="h-4 w-4 mr-2" />
+                            Editar Plan
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-4 w-4 mr-2" />
+                            Generar Plan
+                          </>
+                        )}
                       </Button>
                     </div>
 

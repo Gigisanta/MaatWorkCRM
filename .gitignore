@@ -45,9 +45,6 @@ build
 *.tmp
 *.temp
 
-# INTEGRAR folder - to delete
-"INTEGRAR Y ELIMINAR"
-
 # Upload folder
 upload/*.png
 upload/*.jpg

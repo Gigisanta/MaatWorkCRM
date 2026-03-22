@@ -16,6 +16,7 @@ import { ContactPagination } from "./components/contact-pagination";
 import { ContactDrawer } from "./components/contact-drawer";
 import { CreateContactModal } from "./components/create-contact-modal";
 import { TagManagerDialog, type Tag } from "./components/tag-manager-dialog";
+import { PlanningDialog } from "./components/PlanningDialog";
 import { type Contact, type PipelineStage } from "./components/contact-table";
 
 interface ContactsResponse {
@@ -409,6 +410,9 @@ export default function ContactsPage() {
         isCreating={createOrgTagMutation.isPending}
         isDeleting={deleteOrgTagMutation.isPending}
       />
+
+      {/* Planning Dialog */}
+      <PlanningDialog />
     </div>
   );
 }

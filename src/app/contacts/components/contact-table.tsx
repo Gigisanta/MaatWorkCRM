@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from "next/navigation";
-import { User, ChevronRight, Edit, XCircle, Plus } from "lucide-react";
+import { User, ChevronRight, Edit, XCircle, Plus, FileText } from "lucide-react";
 import { type Tag } from "./tag-manager-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -52,6 +52,7 @@ export interface Contact {
   tags: Tag[];
   createdAt: string;
   updatedAt: string;
+  hasFinancialPlan?: boolean;
 }
 
 export interface PipelineStage {
@@ -186,10 +187,21 @@ export function ContactTable({
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">{contact.emoji}</span>
-                    <div>
-                      <p className="font-medium text-white">{contact.name}</p>
-                      {contact.company && (
-                        <p className="text-xs text-slate-500">{contact.company}</p>
+                    <div className="flex items-center gap-2">
+                      <div>
+                        <p className="font-medium text-white">{contact.name}</p>
+                        {contact.company && (
+                          <p className="text-xs text-slate-500">{contact.company}</p>
+                        )}
+                      </div>
+                      {contact.hasFinancialPlan && (
+                        <Badge
+                          variant="secondary"
+                          className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 ml-1"
+                        >
+                          <FileText className="h-3 w-3 mr-1" />
+                          Plan
+                        </Badge>
                       )}
                     </div>
                   </div>
