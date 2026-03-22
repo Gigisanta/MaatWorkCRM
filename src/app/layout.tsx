@@ -9,6 +9,7 @@ import { Providers } from "@/components/providers";
 import { SkipLink } from "@/components/ui/skip-link";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { QuickActionsModals } from "@/components/quick-actions-modals";
 
 // DM Sans - Primary font for display, headings, and body
 const dmSans = DM_Sans({
@@ -30,6 +31,7 @@ const outfit = Outfit({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -65,6 +67,7 @@ export default function RootLayout({
               {children}
             </main>
             <Toaster position="bottom-right" richColors closeButton />
+            <QuickActionsModals />
           </Providers>
         </ThemeProvider>
         <Analytics />

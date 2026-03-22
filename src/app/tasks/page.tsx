@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -64,7 +66,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { format, isToday, isTomorrow, isPast, parseISO } from "date-fns";
-import { es } from "date-fns/locale";
 import { useAuth } from "@/lib/auth-context";
 
 // Constants
@@ -125,6 +126,7 @@ const taskSchema = z.object({
   recurrenceRule: z.enum(["daily", "weekly", "monthly"]).optional().nullable(),
 });
 
+type TaskFormDataInput = z.input<typeof taskSchema>;
 type TaskFormData = z.infer<typeof taskSchema>;
 
 // Priority config
@@ -260,7 +262,7 @@ function TaskCard({
   const formatDueDate = (date: Date) => {
     if (isToday(date)) return "Hoy";
     if (isTomorrow(date)) return "Mañana";
-    return format(date, "d MMM", { locale: es });
+    return format(date, "d MMM");
   };
 
   const getRecurrenceLabel = (rule: string | null) => {
@@ -356,7 +358,7 @@ function TaskCard({
 
             {/* Recurrence */}
             {task.isRecurrent && (
-              <Badge variant="outline" className="text-xs text-indigo-400 border-indigo-500/30">
+              <Badge variant="outline" className="text-xs text-violet-400 border-violet-500/30">
                 {getRecurrenceLabel(task.recurrenceRule)}
               </Badge>
             )}
@@ -375,7 +377,7 @@ function TaskCard({
             <div className="flex items-center gap-2 mt-3">
               <Avatar className="h-5 w-5">
                 <AvatarImage src={task.assignedUser.image || undefined} />
-                <AvatarFallback className="bg-indigo-500/20 text-indigo-400 text-[10px]">
+                <AvatarFallback className="bg-violet-500/20 text-violet-400 text-[10px]">
                   {task.assignedUser.name?.split(" ").map(n => n[0]).join("") || "NA"}
                 </AvatarFallback>
               </Avatar>
@@ -429,8 +431,8 @@ function TaskDialog({
     reset,
     setValue,
     watch,
-  } = useForm<TaskFormData>({
-    resolver: zodResolver(taskSchema),
+  } = useForm<TaskFormDataInput>({
+    resolver: zodResolver(taskSchema) as any,
     defaultValues: {
       title: task?.title || "",
       description: task?.description || "",
@@ -439,9 +441,9 @@ function TaskDialog({
       assignedTo: task?.assignedTo || "",
       contactId: task?.contactId || "",
       isRecurrent: task?.isRecurrent || false,
-      recurrenceRule: task?.recurrenceRule?.includes("DAILY") ? "daily" 
-        : task?.recurrenceRule?.includes("WEEKLY") ? "weekly" 
-        : task?.recurrenceRule?.includes("MONTHLY") ? "monthly" 
+      recurrenceRule: task?.recurrenceRule?.includes("DAILY") ? "daily"
+        : task?.recurrenceRule?.includes("WEEKLY") ? "weekly"
+        : task?.recurrenceRule?.includes("MONTHLY") ? "monthly"
         : null,
     },
   });
@@ -485,13 +487,13 @@ function TaskDialog({
     },
   });
 
-  const onSubmit = (data: TaskFormData) => {
-    mutation.mutate(data);
+  const onSubmit = (data: TaskFormDataInput) => {
+    mutation.mutate(data as TaskFormData);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass border-white/10 bg-slate-900/95 max-w-md">
+      <DialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900/95 max-w-md">
         <DialogHeader>
           <DialogTitle className="text-white">
             {isEditing ? "Editar Tarea" : "Crear Nueva Tarea"}
@@ -509,7 +511,7 @@ function TaskDialog({
               id="title"
               {...register("title")}
               placeholder="Título de la tarea"
-              className="glass border-white/10 bg-white/5 text-white"
+              className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white"
             />
             {errors.title && (
               <p className="text-xs text-rose-400">{errors.title.message}</p>
@@ -522,7 +524,7 @@ function TaskDialog({
               id="description"
               {...register("description")}
               placeholder="Descripción (opcional)"
-              className="glass border-white/10 bg-white/5 text-white resize-none"
+              className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white resize-none"
               rows={3}
             />
             {errors.description && (
@@ -537,7 +539,7 @@ function TaskDialog({
                 defaultValue={task?.priority || "medium"}
                 onValueChange={(value) => setValue("priority", value as TaskFormData["priority"])}
               >
-                <SelectTrigger className="glass border-white/10 bg-white/5 text-white">
+                <SelectTrigger className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white">
                   <SelectValue placeholder="Prioridad" />
                 </SelectTrigger>
                 <SelectContent>
@@ -554,7 +556,7 @@ function TaskDialog({
                 id="dueDate"
                 type="date"
                 {...register("dueDate")}
-                className="glass border-white/10 bg-white/5 text-white"
+                className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white"
               />
             </div>
           </div>
@@ -562,14 +564,14 @@ function TaskDialog({
           <div className="space-y-2">
             <Label className="text-white">Asignado a</Label>
             <Select 
-              defaultValue={task?.assignedTo || ""}
-              onValueChange={(value) => setValue("assignedTo", value || null)}
+              defaultValue={task?.assignedTo ?? "unassigned"}
+              onValueChange={(value) => setValue("assignedTo", value === "unassigned" ? null : value)}
             >
-              <SelectTrigger className="glass border-white/10 bg-white/5 text-white">
+              <SelectTrigger className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white">
                 <SelectValue placeholder="Sin asignar" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Sin asignar</SelectItem>
+                <SelectItem value="unassigned">Sin asignar</SelectItem>
                 {users.map((user) => (
                   <SelectItem key={user.id} value={user.id}>
                     {user.name}
@@ -600,7 +602,7 @@ function TaskDialog({
                   : "weekly"}
                 onValueChange={(value) => setValue("recurrenceRule", value as "daily" | "weekly" | "monthly")}
               >
-                <SelectTrigger className="glass border-white/10 bg-white/5 text-white">
+                <SelectTrigger className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white">
                   <SelectValue placeholder="Frecuencia" />
                 </SelectTrigger>
                 <SelectContent>
@@ -616,14 +618,14 @@ function TaskDialog({
             <Button 
               type="button"
               variant="outline" 
-              className="glass border-white/10"
+              className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl"
               onClick={() => onOpenChange(false)}
             >
               Cancelar
             </Button>
             <Button 
               type="submit"
-              className="bg-indigo-500 hover:bg-indigo-600"
+              className="bg-violet-500 hover:bg-violet-600"
               disabled={isSubmitting}
             >
               {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
@@ -637,18 +639,19 @@ function TaskDialog({
 }
 
 // Main Page
-export default function TasksPage() {
+function TasksPageContent() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  
-  // State
+  const searchParams = useSearchParams();
+
+  // State - check URL param for action=create to auto-open dialog
   const [search, setSearch] = React.useState("");
   const [filterStatus, setFilterStatus] = React.useState<string>("all");
   const [filterPriority, setFilterPriority] = React.useState<string>("all");
   const [filterAssignedTo, setFilterAssignedTo] = React.useState<string>("all");
-  
+
   // Dialogs
-  const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = React.useState(searchParams.get('action') === 'create');
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
@@ -694,8 +697,8 @@ export default function TasksPage() {
 
   // Update task status mutation (for uncompleting)
   const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) => 
-      updateTask(id, { status: status as TaskFormData["priority"] }),
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
+      updateTask(id, { priority: status as TaskFormData["priority"] }),
     onMutate: ({ id }) => {
       setTogglingTasks(prev => new Set(prev).add(id));
     },
@@ -784,10 +787,10 @@ export default function TasksPage() {
     return (
       <div className="min-h-screen gradient-bg">
         <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
-        <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[280px]")}>
+        <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
           <AppHeader />
           <main className="p-4 lg:p-6">
-            <Card className="glass border-white/10">
+            <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
               <CardContent className="p-8 text-center">
                 <AlertCircle className="h-12 w-12 text-rose-500 mx-auto mb-3" />
                 <p className="text-white mb-2">Error al cargar tareas</p>
@@ -806,29 +809,33 @@ export default function TasksPage() {
   return (
     <div className="min-h-screen gradient-bg">
       <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
-      <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[280px]")}>
+      <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
         <AppHeader />
         <main className="p-4 lg:p-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="space-y-6"
           >
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-white">Tareas</h1>
-                <p className="text-slate-400 mt-1">
-                  {pendingTasks.length + inProgressTasks.length} pendientes
-                  {overdueCount > 0 && (
-                    <span className="text-rose-400 ml-2">
-                      • {overdueCount} vencida{overdueCount !== 1 ? "s" : ""}
-                    </span>
-                  )}
-                </p>
+                <div>
+                  <p className="text-xs font-medium text-violet-400 uppercase tracking-widest mb-1">TAREAS</p>
+                  <h1 className="text-2xl font-bold text-white tracking-tight">Tareas</h1>
+                  <p className="text-slate-500 mt-1 text-sm">
+                    {pendingTasks.length + inProgressTasks.length} pendientes
+                    {overdueCount > 0 && (
+                      <span className="text-rose-400 ml-2">
+                        • {overdueCount} vencida{overdueCount !== 1 ? "s" : ""}
+                      </span>
+                    )}
+                  </p>
+                </div>
               </div>
-              <Button 
-                className="bg-indigo-500 hover:bg-indigo-600"
+              <Button
+                className="bg-violet-500 hover:bg-violet-600"
                 onClick={() => setCreateDialogOpen(true)}
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -838,7 +845,7 @@ export default function TasksPage() {
 
             {/* Quick Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <Card className="glass border-white/10">
+              <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <Circle className="h-5 w-5 text-amber-500" />
@@ -849,7 +856,7 @@ export default function TasksPage() {
                   </div>
                 </CardContent>
               </Card>
-              <Card className="glass border-white/10">
+              <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <Clock className="h-5 w-5 text-blue-500" />
@@ -860,7 +867,7 @@ export default function TasksPage() {
                   </div>
                 </CardContent>
               </Card>
-              <Card className="glass border-white/10">
+              <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="h-5 w-5 text-emerald-500" />
@@ -871,7 +878,7 @@ export default function TasksPage() {
                   </div>
                 </CardContent>
               </Card>
-              <Card className="glass border-white/10">
+              <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
                     <AlertCircle className="h-5 w-5 text-rose-500" />
@@ -885,7 +892,7 @@ export default function TasksPage() {
             </div>
 
             {/* Filters */}
-            <Card className="glass border-white/10">
+            <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
               <CardContent className="p-4">
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="relative flex-1">
@@ -894,11 +901,11 @@ export default function TasksPage() {
                       placeholder="Buscar tareas..."
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      className="pl-10 glass border-white/10 bg-white/5 text-white placeholder:text-slate-500"
+                      className="pl-10 bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white placeholder:text-slate-500"
                     />
                   </div>
                   <Select value={filterStatus} onValueChange={setFilterStatus}>
-                    <SelectTrigger className="w-[160px] glass border-white/10 bg-white/5 text-white">
+                    <SelectTrigger className="w-[160px] bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white">
                       <SelectValue placeholder="Estado" />
                     </SelectTrigger>
                     <SelectContent>
@@ -909,7 +916,7 @@ export default function TasksPage() {
                     </SelectContent>
                   </Select>
                   <Select value={filterPriority} onValueChange={setFilterPriority}>
-                    <SelectTrigger className="w-[160px] glass border-white/10 bg-white/5 text-white">
+                    <SelectTrigger className="w-[160px] bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white">
                       <SelectValue placeholder="Prioridad" />
                     </SelectTrigger>
                     <SelectContent>
@@ -921,7 +928,7 @@ export default function TasksPage() {
                     </SelectContent>
                   </Select>
                   <Select value={filterAssignedTo} onValueChange={setFilterAssignedTo}>
-                    <SelectTrigger className="w-[160px] glass border-white/10 bg-white/5 text-white">
+                    <SelectTrigger className="w-[160px] bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white">
                       <SelectValue placeholder="Asignado" />
                     </SelectTrigger>
                     <SelectContent>
@@ -970,7 +977,7 @@ export default function TasksPage() {
                         ))}
                       </div>
                     ) : (
-                      <Card className="glass border-white/10 border-dashed">
+                      <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl border-dashed">
                         <CardContent className="p-8 text-center">
                           <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto mb-3" />
                           <p className="text-slate-400">No hay tareas pendientes</p>
@@ -1004,7 +1011,7 @@ export default function TasksPage() {
                         ))}
                       </div>
                     ) : (
-                      <Card className="glass border-white/10 border-dashed">
+                      <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl border-dashed">
                         <CardContent className="p-8 text-center">
                           <Clock className="h-12 w-12 text-slate-500 mx-auto mb-3" />
                           <p className="text-slate-400">No hay tareas en progreso</p>
@@ -1061,7 +1068,7 @@ export default function TasksPage() {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="glass border-white/10 bg-slate-900/95">
+        <AlertDialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900/95">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white">¿Eliminar tarea?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -1069,7 +1076,7 @@ export default function TasksPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="glass border-white/10">
+            <AlertDialogCancel className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
@@ -1084,5 +1091,21 @@ export default function TasksPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+function TasksLoading() {
+  return (
+    <div className="min-h-screen bg-[#08090B] flex items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
+    </div>
+  );
+}
+
+export default function TasksPage() {
+  return (
+    <Suspense fallback={<TasksLoading />}>
+      <TasksPageContent />
+    </Suspense>
   );
 }

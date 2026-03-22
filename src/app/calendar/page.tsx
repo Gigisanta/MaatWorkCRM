@@ -86,7 +86,6 @@ import {
   endOfWeek,
   parseISO,
 } from "date-fns";
-import { es } from "date-fns/locale";
 import { useAuth } from "@/lib/auth-context";
 
 // Constants
@@ -148,6 +147,7 @@ const eventSchema = z.object({
   path: ["endAt"],
 });
 
+type EventFormDataInput = z.input<typeof eventSchema>;
 type EventFormData = z.infer<typeof eventSchema>;
 
 // Event type config
@@ -308,8 +308,8 @@ function EventDialog({
     reset,
     setValue,
     watch,
-  } = useForm<EventFormData>({
-    resolver: zodResolver(eventSchema),
+  } = useForm<EventFormDataInput>({
+    resolver: zodResolver(eventSchema) as any,
     defaultValues: getDefaultValues(),
   });
 
@@ -340,8 +340,8 @@ function EventDialog({
     },
   });
 
-  const onSubmit = (data: EventFormData) => {
-    mutation.mutate(data);
+  const onSubmit = (data: EventFormDataInput) => {
+    mutation.mutate(data as EventFormData);
   };
 
   return (
@@ -518,7 +518,7 @@ function EventDetailDrawer({
             <div>
               <p className="text-sm text-slate-400">Fecha y hora</p>
               <p className="text-white font-medium">
-                {format(startDate, "EEEE, d 'de' MMMM", { locale: es })}
+                {format(startDate, "EEEE, d 'de' MMMM")}
               </p>
               <p className="text-slate-300">
                 {format(startDate, "HH:mm")} - {format(endDate, "HH:mm")}
@@ -808,7 +808,7 @@ export default function CalendarPage() {
                         <ChevronLeft className="h-5 w-5" />
                       </Button>
                       <h2 className="text-lg font-semibold text-white capitalize">
-                        {format(currentDate, "MMMM yyyy", { locale: es })}
+                        {format(currentDate, "MMMM yyyy")}
                       </h2>
                       <Button
                         variant="ghost"
@@ -921,7 +921,7 @@ export default function CalendarPage() {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg text-white">
                       {selectedDate
-                        ? format(selectedDate, "d 'de' MMMM", { locale: es })
+                        ? format(selectedDate, "d 'de' MMMM")
                         : "Selecciona un día"}
                     </CardTitle>
                   </CardHeader>
@@ -1071,7 +1071,7 @@ export default function CalendarPage() {
                                   {event.title}
                                 </p>
                                 <p className="text-xs text-slate-400">
-                                  {format(parseISO(event.startAt), "d MMM, HH:mm", { locale: es })}
+                                  {format(parseISO(event.startAt), "d MMM, HH:mm")}
                                 </p>
                               </div>
                             </div>

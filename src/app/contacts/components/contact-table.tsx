@@ -26,7 +26,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { formatDistanceToNow } from "date-fns";
-import { es } from "date-fns/locale";
 
 export interface Contact {
   id: string;
@@ -82,17 +81,18 @@ interface ContactTableProps {
 
 function ContactsTableSkeleton() {
   return (
-    <div className="space-y-3">
-      {[...Array(5)].map((_, i) => (
-        <div key={i} className="flex items-center gap-4 p-4">
-          <div className="h-4 w-4 bg-slate-700/50 rounded animate-pulse" />
-          <div className="h-10 w-10 rounded-full bg-slate-700/50 animate-pulse" />
-          <div className="flex-1 space-y-2">
-            <div className="h-4 w-40 bg-slate-700/50 rounded animate-pulse" />
-            <div className="h-3 w-24 bg-slate-700/50 rounded animate-pulse" />
+    <div className="divide-y divide-white/5">
+      {[...Array(6)].map((_, i) => (
+        <div key={i} className="flex items-center gap-4 px-4 py-3.5" style={{ animationDelay: `${i * 80}ms` }}>
+          <div className="h-4 w-4 bg-white/6 rounded animate-pulse" />
+          <div className="h-9 w-9 rounded-full bg-white/6 animate-pulse" />
+          <div className="flex-1 space-y-1.5">
+            <div className="h-4 w-36 bg-white/6 rounded-md animate-pulse" />
+            <div className="h-3 w-24 bg-white/4 rounded-md animate-pulse" />
           </div>
-          <div className="h-4 w-32 bg-slate-700/50 rounded animate-pulse" />
-          <div className="h-6 w-20 bg-slate-700/50 rounded animate-pulse" />
+          <div className="h-3.5 w-32 bg-white/6 rounded-md animate-pulse hidden lg:block" />
+          <div className="h-5 w-20 bg-white/6 rounded-full animate-pulse hidden lg:block" />
+          <div className="h-3 w-16 bg-white/4 rounded-md animate-pulse hidden sm:block" />
         </div>
       ))}
     </div>
@@ -119,7 +119,7 @@ export function ContactTable({
 
   if (isLoading) {
     return (
-      <Card className="glass border-white/10">
+      <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl overflow-hidden">
         <CardContent className="p-0">
           <ContactsTableSkeleton />
         </CardContent>
@@ -129,13 +129,15 @@ export function ContactTable({
 
   if (contacts.length === 0) {
     return (
-      <Card className="glass border-white/10">
+      <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl overflow-hidden">
         <CardContent className="p-0">
-          <div className="flex flex-col items-center justify-center py-12">
-            <User className="h-12 w-12 text-slate-500 mb-4" />
-            <p className="text-slate-400 text-lg">No hay contactos</p>
-            <p className="text-slate-500 text-sm">
-              Crea tu primer contacto para comenzar
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="w-16 h-16 rounded-2xl bg-violet-500/10 flex items-center justify-center mb-4">
+              <User className="h-8 w-8 text-violet-400/60" strokeWidth={1.5} />
+            </div>
+            <p className="text-white font-semibold text-lg">Sin contactos</p>
+            <p className="text-slate-500 text-sm mt-1 text-center max-w-sm">
+              Crea tu primer contacto para comenzar a gestionar tu pipeline
             </p>
           </div>
         </CardContent>
@@ -144,11 +146,11 @@ export function ContactTable({
   }
 
   return (
-    <Card className="glass border-white/10">
+    <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl overflow-hidden">
       <CardContent className="p-0">
         <Table>
           <TableHeader>
-            <TableRow className="border-white/10 hover:bg-white/5">
+            <TableRow className="border-white/6 hover:bg-transparent">
               <TableHead className="w-12">
                 <Checkbox
                   checked={
@@ -157,17 +159,16 @@ export function ContactTable({
                   onCheckedChange={onToggleSelectAll}
                 />
               </TableHead>
-              <TableHead className="text-slate-400">Contacto</TableHead>
-              <TableHead className="text-slate-400">Email</TableHead>
-              <TableHead className="text-slate-400 hidden lg:table-cell">Etapa</TableHead>
-              <TableHead className="text-slate-400 hidden lg:table-cell">Tags</TableHead>
+              <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Contacto</TableHead>
+              <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Etapa</TableHead>
+              <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Productos</TableHead>
               {!isAdvisor && (
-                <TableHead className="text-slate-400 hidden xl:table-cell">
+                <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider hidden xl:table-cell">
                   Asignado
                 </TableHead>
               )}
-              <TableHead className="text-slate-400 hidden sm:table-cell">
-                Creado
+              <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider hidden sm:table-cell">
+                Última edición
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -175,7 +176,7 @@ export function ContactTable({
             {contacts.map((contact) => (
               <TableRow
                 key={contact.id}
-                className="border-white/10 hover:bg-white/5 cursor-pointer"
+                className="border-white/5 hover:bg-white/3 cursor-pointer transition-colors duration-150 group"
                 onClick={() => onContactClick(contact)}
               >
                 <TableCell onClick={(e) => e.stopPropagation()}>
@@ -186,27 +187,25 @@ export function ContactTable({
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{contact.emoji}</span>
-                    <div className="flex items-center gap-2">
-                      <div>
-                        <p className="font-medium text-white">{contact.name}</p>
-                        {contact.company && (
-                          <p className="text-xs text-slate-500">{contact.company}</p>
+                    <div className="relative">
+                      <span className="text-xl leading-none">{contact.emoji}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-white text-sm">{contact.name}</p>
+                        {contact.hasFinancialPlan && (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-500/12 border border-emerald-500/25 text-[10px] text-emerald-400 font-medium">
+                            <FileText className="h-2.5 w-2.5" />
+                            Plan
+                          </span>
                         )}
                       </div>
-                      {contact.hasFinancialPlan && (
-                        <Badge
-                          variant="secondary"
-                          className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 ml-1"
-                        >
-                          <FileText className="h-3 w-3 mr-1" />
-                          Plan
-                        </Badge>
+                      {contact.company && (
+                        <p className="text-[11px] text-slate-500 truncate">{contact.company}</p>
                       )}
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="text-slate-300">{contact.email || "-"}</TableCell>
                 <TableCell className="hidden lg:table-cell" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center gap-2">
                     <Badge
@@ -273,7 +272,7 @@ export function ContactTable({
                           <Edit className="h-3 w-3" />
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="glass border-white/10 bg-slate-900/95 backdrop-blur-xl max-w-md w-full">
+                      <DialogContent className="bg-[#0E0F12] border border-white/10 backdrop-blur-xl max-w-md w-full rounded-xl">
                         <DialogHeader>
                           <DialogTitle className="text-white">Gestionar etiquetas</DialogTitle>
                           <DialogDescription className="text-slate-400">
@@ -346,9 +345,9 @@ export function ContactTable({
                               <Input
                                 name="newTagName"
                                 placeholder="Nombre de la etiqueta..."
-                                className="glass border-white/10 bg-white/5 text-white placeholder:text-slate-500 h-9 text-sm"
+                                className="bg-white/5 border border-white/10 text-white placeholder:text-slate-500 h-9 text-sm"
                               />
-                              <Button type="submit" size="sm" className="h-9 bg-indigo-500 hover:bg-indigo-600">
+                              <Button type="submit" size="sm" className="h-9 bg-violet-500 hover:bg-violet-600">
                                 <Plus className="h-4 w-4" />
                               </Button>
                             </form>
@@ -363,7 +362,7 @@ export function ContactTable({
                     {contact.assignedUser ? (
                       <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
-                          <AvatarFallback className="bg-indigo-500/20 text-indigo-400 text-xs">
+                          <AvatarFallback className="bg-violet-500/20 text-violet-400 text-xs">
                             {contact.assignedUser.name
                               ?.split(" ")
                               .map((n) => n[0])
@@ -379,11 +378,8 @@ export function ContactTable({
                     )}
                   </TableCell>
                 )}
-                <TableCell className="text-slate-400 text-sm hidden sm:table-cell">
-                  {formatDistanceToNow(new Date(contact.createdAt), {
-                    addSuffix: true,
-                    locale: es,
-                  })}
+                <TableCell className="text-xs text-slate-500 hidden sm:table-cell">
+                  {formatDistanceToNow(new Date(contact.updatedAt), { addSuffix: true })}
                 </TableCell>
               </TableRow>
             ))}

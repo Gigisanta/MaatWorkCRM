@@ -65,7 +65,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
-import { es } from "date-fns/locale";
 import { useAuth } from "@/lib/auth-context";
 
 // Constants
@@ -104,6 +103,7 @@ const materialSchema = z.object({
   duration: z.string().max(50, "La duración es muy larga").optional().nullable(),
 });
 
+type MaterialFormDataInput = z.input<typeof materialSchema>;
 type MaterialFormData = z.infer<typeof materialSchema>;
 
 // Category config
@@ -225,7 +225,7 @@ function MaterialCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
     >
-      <Card className="glass border-white/10 h-full hover:border-white/20 transition-all group">
+      <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl h-full hover:border-white/20 transition-all group">
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between">
             <div className={cn("p-2 rounded-lg", config.bgColor)}>
@@ -283,7 +283,7 @@ function MaterialCard({
           </div>
           <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between text-xs text-slate-500">
             <span>{material.createdBy || "Sistema"}</span>
-            <span>{format(parseISO(material.createdAt), "d MMM yyyy", { locale: es })}</span>
+            <span>{format(parseISO(material.createdAt), "d MMM yyyy")}</span>
           </div>
         </CardContent>
       </Card>
@@ -294,7 +294,7 @@ function MaterialCard({
 // Material Skeleton
 function MaterialSkeleton() {
   return (
-    <Card className="glass border-white/10">
+    <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
           <Skeleton className="h-9 w-9 rounded-lg" />
@@ -339,8 +339,8 @@ function MaterialDialog({
     reset,
     setValue,
     watch,
-  } = useForm<MaterialFormData>({
-    resolver: zodResolver(materialSchema),
+  } = useForm<MaterialFormDataInput>({
+    resolver: zodResolver(materialSchema) as any,
     defaultValues: {
       title: material?.title || "",
       description: material?.description || "",
@@ -383,13 +383,13 @@ function MaterialDialog({
     },
   });
 
-  const onSubmit = (data: MaterialFormData) => {
-    mutation.mutate(data);
+  const onSubmit = (data: MaterialFormDataInput) => {
+    mutation.mutate(data as MaterialFormData);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="glass border-white/10 bg-slate-900/95 max-w-lg">
+      <DialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900/95 max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-white">
             {isEditing ? "Editar Material" : "Añadir Material"}
@@ -407,7 +407,7 @@ function MaterialDialog({
               id="title"
               {...register("title")}
               placeholder="Título del material"
-              className="glass border-white/10 bg-white/5 text-white"
+              className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white"
             />
             {errors.title && (
               <p className="text-xs text-rose-400">{errors.title.message}</p>
@@ -420,7 +420,7 @@ function MaterialDialog({
               id="description"
               {...register("description")}
               placeholder="Descripción del material (opcional)"
-              className="glass border-white/10 bg-white/5 text-white resize-none"
+              className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white resize-none"
               rows={3}
             />
             {errors.description && (
@@ -435,7 +435,7 @@ function MaterialDialog({
                 value={watchCategory}
                 onValueChange={(value) => setValue("category", value as MaterialFormData["category"])}
               >
-                <SelectTrigger className="glass border-white/10 bg-white/5 text-white">
+                <SelectTrigger className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white">
                   <SelectValue placeholder="Categoría" />
                 </SelectTrigger>
                 <SelectContent>
@@ -456,7 +456,7 @@ function MaterialDialog({
                 id="url"
                 {...register("url")}
                 placeholder="https://..."
-                className="glass border-white/10 bg-white/5 text-white"
+                className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white"
               />
               {errors.url && (
                 <p className="text-xs text-rose-400">{errors.url.message}</p>
@@ -470,7 +470,7 @@ function MaterialDialog({
               id="content"
               {...register("content")}
               placeholder="Contenido del material si no hay URL externa..."
-              className="glass border-white/10 bg-white/5 text-white resize-none"
+              className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white resize-none"
               rows={4}
             />
             {errors.content && (
@@ -482,14 +482,14 @@ function MaterialDialog({
             <Button
               type="button"
               variant="outline"
-              className="glass border-white/10"
+              className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl"
               onClick={() => onOpenChange(false)}
             >
               Cancelar
             </Button>
             <Button
               type="submit"
-              className="bg-indigo-500 hover:bg-indigo-600"
+              className="bg-violet-500 hover:bg-violet-600"
               disabled={isSubmitting}
             >
               {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
@@ -579,10 +579,10 @@ export default function TrainingPage() {
     return (
       <div className="min-h-screen gradient-bg">
         <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
-        <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[280px]")}>
+        <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
           <AppHeader />
           <main className="p-4 lg:p-6">
-            <Card className="glass border-white/10">
+            <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
               <CardContent className="p-8 text-center">
                 <AlertCircle className="h-12 w-12 text-rose-500 mx-auto mb-3" />
                 <p className="text-white mb-2">Error al cargar materiales</p>
@@ -601,24 +601,26 @@ export default function TrainingPage() {
   return (
     <div className="min-h-screen gradient-bg">
       <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
-      <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[280px]")}>
+      <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
         <AppHeader />
         <main className="p-4 lg:p-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="space-y-6"
           >
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-white">Capacitación</h1>
-                <p className="text-slate-400 mt-1">
-                  Materiales de formación y recursos del equipo
-                </p>
+                <div>
+                  <p className="text-xs font-medium text-violet-400 uppercase tracking-widest mb-1">CAPACITACIÓN</p>
+                  <h1 className="text-2xl font-bold text-white tracking-tight">Capacitación</h1>
+                  <p className="text-slate-500 mt-1 text-sm">Materiales de formación y recursos del equipo</p>
+                </div>
               </div>
               <Button
-                className="bg-indigo-500 hover:bg-indigo-600"
+                className="bg-violet-500 hover:bg-violet-600"
                 onClick={() => setCreateDialogOpen(true)}
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -632,7 +634,7 @@ export default function TrainingPage() {
                 const count = categoryCounts[key as keyof typeof categoryCounts] || 0;
                 const Icon = config.icon;
                 return (
-                  <Card key={key} className="glass border-white/10">
+                  <Card key={key} className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                     <CardContent className="p-4">
                       <div className="flex items-center gap-3">
                         <div className={cn("p-2 rounded-lg", config.bgColor)}>
@@ -650,7 +652,7 @@ export default function TrainingPage() {
             </div>
 
             {/* Filters */}
-            <Card className="glass border-white/10">
+            <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
               <CardContent className="p-4">
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="relative flex-1">
@@ -659,11 +661,11 @@ export default function TrainingPage() {
                       placeholder="Buscar materiales..."
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      className="pl-10 glass border-white/10 bg-white/5 text-white placeholder:text-slate-500"
+                      className="pl-10 bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white placeholder:text-slate-500"
                     />
                   </div>
                   <Select value={filterCategory} onValueChange={setFilterCategory}>
-                    <SelectTrigger className="w-[160px] glass border-white/10 bg-white/5 text-white">
+                    <SelectTrigger className="w-[160px] bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white">
                       <SelectValue placeholder="Categoría" />
                     </SelectTrigger>
                     <SelectContent>
@@ -700,13 +702,13 @@ export default function TrainingPage() {
                     ))}
                   </div>
                 ) : (
-                  <Card className="glass border-white/10 border-dashed">
+                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl border-dashed">
                     <CardContent className="p-12 text-center">
                       <GraduationCap className="h-12 w-12 text-slate-600 mx-auto mb-4" />
                       <p className="text-slate-400 mb-4">No se encontraron materiales</p>
                       <Button
                         variant="outline"
-                        className="glass border-white/10"
+                        className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl"
                         onClick={() => setCreateDialogOpen(true)}
                       >
                         <Plus className="h-4 w-4 mr-2" />
@@ -738,7 +740,7 @@ export default function TrainingPage() {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="glass border-white/10 bg-slate-900/95">
+        <AlertDialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900/95">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white">¿Eliminar material?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -746,7 +748,7 @@ export default function TrainingPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="glass border-white/10">
+            <AlertDialogCancel className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction

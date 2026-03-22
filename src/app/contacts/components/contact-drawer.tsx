@@ -52,7 +52,6 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
-import { es } from "date-fns/locale";
 import { usePlanningDialog } from "./usePlanningDialog";
 import { useAuth } from "@/lib/auth-context";
 
@@ -135,6 +134,7 @@ const contactFormSchema = z.object({
   assignedTo: z.string().optional().or(z.literal("")),
 });
 
+type ContactFormDataInput = z.input<typeof contactFormSchema>;
 type ContactFormData = z.infer<typeof contactFormSchema>;
 
 interface ContactDrawerProps {
@@ -202,8 +202,8 @@ export function ContactDrawer({
   });
 
   // Edit form
-  const form = useForm<ContactFormData>({
-    resolver: zodResolver(contactFormSchema),
+  const form = useForm<ContactFormDataInput>({
+    resolver: zodResolver(contactFormSchema) as any,
     values: contact
       ? {
           name: contact.name,
@@ -315,8 +315,8 @@ export function ContactDrawer({
     },
   });
 
-  const onSubmit = (data: ContactFormData) => {
-    updateMutation.mutate(data);
+  const onSubmit = (data: ContactFormDataInput) => {
+    updateMutation.mutate(data as ContactFormData);
   };
 
   if (!contactId) return null;
@@ -732,7 +732,6 @@ export function ContactDrawer({
                                 <p className="text-xs text-slate-500">
                                   {formatDistanceToNow(new Date(item.changedAt), {
                                     addSuffix: true,
-                                    locale: es,
                                   })}
                                 </p>
                               </div>
@@ -781,7 +780,6 @@ export function ContactDrawer({
                                   <span className="text-xs text-slate-500">
                                     {formatDistanceToNow(new Date(task.dueDate), {
                                       addSuffix: true,
-                                      locale: es,
                                     })}
                                   </span>
                                 )}
@@ -812,7 +810,6 @@ export function ContactDrawer({
                               <p className="text-xs text-slate-500 mt-1">
                                 {formatDistanceToNow(new Date(history.changedAt), {
                                   addSuffix: true,
-                                  locale: es,
                                 })}
                               </p>
                             </div>

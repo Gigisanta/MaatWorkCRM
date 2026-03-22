@@ -104,7 +104,7 @@ export default function DashboardPage() {
     }), [deals]
   );
 
-  const todayDateString = format(new Date(), "EEEE, d 'de' MMMM", { locale: es });
+  const todayDateString = format(new Date(), "EEEE, d 'de' MMMM");
   const capitalizedDate = todayDateString.charAt(0).toUpperCase() + todayDateString.slice(1);
 
   const kpiValues: Record<string, string> = {
