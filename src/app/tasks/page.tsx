@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
+import { useSidebar } from "@/lib/sidebar-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -169,7 +170,7 @@ async function fetchTasks(params: {
     searchParams.set("overdue", "true");
   }
 
-  const response = await fetch(`/api/tasks?${searchParams.toString()}`);
+  const response = await fetch(`/api/tasks?${searchParams.toString()}`, { credentials: 'include' });
   if (!response.ok) {
     throw new Error("Error al cargar tareas");
   }
@@ -184,10 +185,11 @@ async function createTask(data: TaskFormData): Promise<Task> {
     body: JSON.stringify({
       ...data,
       organizationId: ORGANIZATION_ID,
-      recurrenceRule: data.isRecurrent && data.recurrenceRule 
-        ? `FREQ=${data.recurrenceRule.toUpperCase()}` 
+      recurrenceRule: data.isRecurrent && data.recurrenceRule
+        ? `FREQ=${data.recurrenceRule.toUpperCase()}`
         : null,
     }),
+    credentials: 'include',
   });
   if (!response.ok) {
     const error = await response.json();
@@ -203,10 +205,11 @@ async function updateTask(id: string, data: Partial<TaskFormData>): Promise<Task
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       ...data,
-      recurrenceRule: data.isRecurrent && data.recurrenceRule 
-        ? `FREQ=${data.recurrenceRule.toUpperCase()}` 
+      recurrenceRule: data.isRecurrent && data.recurrenceRule
+        ? `FREQ=${data.recurrenceRule.toUpperCase()}`
         : null,
     }),
+    credentials: 'include',
   });
   if (!response.ok) {
     const error = await response.json();
@@ -221,6 +224,7 @@ async function completeTask(id: string): Promise<{ completedTask: Task; newRecur
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ createNextRecurrence: true }),
+    credentials: 'include',
   });
   if (!response.ok) {
     const error = await response.json();
@@ -233,6 +237,7 @@ async function completeTask(id: string): Promise<{ completedTask: Task; newRecur
 async function deleteTask(id: string): Promise<void> {
   const response = await fetch(`/api/tasks/${id}`, {
     method: "DELETE",
+    credentials: 'include',
   });
   if (!response.ok) {
     const error = await response.json();
@@ -661,7 +666,7 @@ function TasksPageContent() {
   const [togglingTasks, setTogglingTasks] = React.useState<Set<string>>(new Set());
 
   // Sidebar state
-  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+  const { collapsed, setCollapsed } = useSidebar();
 
   // Fetch tasks
   const { data, isLoading, error } = useQuery({
@@ -786,8 +791,8 @@ function TasksPageContent() {
   if (error) {
     return (
       <div className="min-h-screen gradient-bg">
-        <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
-        <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
+        <AppSidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
+        <div className={cn("transition-all duration-300", collapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
           <AppHeader />
           <main className="p-4 lg:p-6">
             <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
@@ -808,8 +813,8 @@ function TasksPageContent() {
 
   return (
     <div className="min-h-screen gradient-bg">
-      <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
-      <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
+      <AppSidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
+      <div className={cn("transition-all duration-300", collapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
         <AppHeader />
         <main className="p-4 lg:p-6">
           <motion.div

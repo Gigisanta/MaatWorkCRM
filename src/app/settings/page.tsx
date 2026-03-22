@@ -20,12 +20,14 @@ import {
   X,
   AlertTriangle,
   Palette,
+  Link as LinkIcon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
 
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
+import { useSidebar } from "@/lib/sidebar-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,8 +65,9 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
-import { canManageUsers, getRoleDisplayName, isManagerOrAdmin } from "@/lib/auth-helpers";
+import { canManageUsers, getRoleDisplayName, isManagerOrAdmin } from "@/lib/auth-helpers-client";
 import { ThemeToggle, ThemePreviewCard } from "@/components/theme-toggle";
+import Link from "next/link";
 
 // ============================================
 // Validation Schemas
@@ -116,7 +119,7 @@ export default function SettingsPage() {
   const [deleteAccountOpen, setDeleteAccountOpen] = React.useState(false);
   const [inviteMemberOpen, setInviteMemberOpen] = React.useState(false);
   const [removeMemberId, setRemoveMemberId] = React.useState<string | null>(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+  const { collapsed, setCollapsed } = useSidebar();
 
   // Check if user is admin
   const isAdmin = user ? canManageUsers(user.role) : false;
@@ -131,7 +134,7 @@ export default function SettingsPage() {
     queryKey: ['userSettings', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
-      const res = await fetch(`/api/users/${user.id}/settings`);
+      const res = await fetch(`/api/users/${user.id}/settings`, { credentials: 'include' });
       if (!res.ok) throw new Error('Error al cargar configuración');
       return res.json();
     },
@@ -143,7 +146,7 @@ export default function SettingsPage() {
     queryKey: ['organization', user?.organizationId],
     queryFn: async () => {
       if (!user?.organizationId) return null;
-      const res = await fetch(`/api/organizations/${user.organizationId}`);
+      const res = await fetch(`/api/organizations/${user.organizationId}`, { credentials: 'include' });
       if (!res.ok) throw new Error('Error al cargar organización');
       return res.json();
     },
@@ -154,7 +157,7 @@ export default function SettingsPage() {
   const { data: sessionsData, isLoading: sessionsLoading, refetch: refetchSessions } = useQuery({
     queryKey: ['sessions'],
     queryFn: async () => {
-      const res = await fetch('/api/sessions');
+      const res = await fetch('/api/sessions', { credentials: 'include' });
       if (!res.ok) throw new Error('Error al cargar sesiones');
       return res.json();
     },
@@ -170,6 +173,7 @@ export default function SettingsPage() {
     mutationFn: async (data: ProfileForm) => {
       if (!user?.id) throw new Error('Usuario no encontrado');
       const res = await fetch(`/api/users/${user.id}`, {
+        credentials: 'include',
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -201,6 +205,7 @@ export default function SettingsPage() {
           currentPassword: data.currentPassword,
           newPassword: data.newPassword,
         }),
+        credentials: 'include',
       });
       if (!res.ok) {
         const error = await res.json();
@@ -223,6 +228,7 @@ export default function SettingsPage() {
     mutationFn: async (settings: Record<string, boolean>) => {
       if (!user?.id) throw new Error('Usuario no encontrado');
       const res = await fetch(`/api/users/${user.id}/settings`, {
+        credentials: 'include',
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -247,6 +253,7 @@ export default function SettingsPage() {
     mutationFn: async (data: OrganizationForm) => {
       if (!user?.organizationId) throw new Error('Organización no encontrada');
       const res = await fetch(`/api/organizations/${user.organizationId}`, {
+        credentials: 'include',
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -265,6 +272,7 @@ export default function SettingsPage() {
     mutationFn: async (data: InviteMemberForm) => {
       if (!user?.organizationId) throw new Error('Organización no encontrada');
       const res = await fetch(`/api/organizations/${user.organizationId}/members`, {
+        credentials: 'include',
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -292,7 +300,7 @@ export default function SettingsPage() {
       if (!user?.organizationId) throw new Error('Organización no encontrada');
       const res = await fetch(
         `/api/organizations/${user.organizationId}/members?userId=${memberUserId}`,
-        { method: 'DELETE' }
+        { method: 'DELETE', credentials: 'include' }
       );
       if (!res.ok) {
         const error = await res.json();
@@ -313,7 +321,7 @@ export default function SettingsPage() {
   // Logout other sessions mutation
   const logoutOthersMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch('/api/sessions/logout-others', { method: 'POST' });
+      const res = await fetch('/api/sessions/logout-others', { method: 'POST', credentials: 'include' });
       if (!res.ok) throw new Error('Error al cerrar sesiones');
       return res.json();
     },
@@ -327,7 +335,7 @@ export default function SettingsPage() {
   const deleteAccountMutation = useMutation({
     mutationFn: async () => {
       if (!user?.id) throw new Error('Usuario no encontrado');
-      const res = await fetch(`/api/users/${user.id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/users/${user.id}`, { method: 'DELETE', credentials: 'include' });
       if (!res.ok) throw new Error('Error al eliminar cuenta');
       return res.json();
     },
@@ -419,7 +427,7 @@ export default function SettingsPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen gradient-bg flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
       </div>
     );
   }
@@ -459,22 +467,22 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen gradient-bg">
-      <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
-      <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[280px]")}>
+      <AppSidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
+      <div className={cn("transition-all duration-300", collapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
         <AppHeader />
         <main className="p-4 lg:p-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="space-y-6"
           >
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-white">Configuración</h1>
-                <p className="text-slate-400 mt-1">
-                  Gestiona tu cuenta y preferencias
-                </p>
+                <p className="text-xs font-medium text-violet-400 uppercase tracking-widest mb-1">CONFIGURACIÓN</p>
+                <h1 className="text-2xl font-bold text-white tracking-tight">Configuración</h1>
+                <p className="text-slate-500 mt-1 text-sm">Gestiona tu cuenta y preferencias</p>
               </div>
 
               {/* Theme Selector */}
@@ -511,12 +519,19 @@ export default function SettingsPage() {
                   <Shield className="h-4 w-4 mr-2" />
                   Seguridad
                 </TabsTrigger>
-                <TabsTrigger 
+                <TabsTrigger
                   value="appearance"
                   className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
                 >
                   <Palette className="h-4 w-4 mr-2" />
                   Apariencia
+                </TabsTrigger>
+                <TabsTrigger
+                  value="accounts"
+                  className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
+                >
+                  <LinkIcon className="mr-2 h-4 w-4" />
+                  Cuentas
                 </TabsTrigger>
               </TabsList>
 
@@ -524,7 +539,7 @@ export default function SettingsPage() {
               {/* Profile Tab */}
               {/* ============================================ */}
               <TabsContent value="profile">
-                <Card className="glass border-white/10">
+                <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                   <CardHeader>
                     <CardTitle className="text-white">Información Personal</CardTitle>
                     <CardDescription className="text-slate-400">
@@ -536,12 +551,12 @@ export default function SettingsPage() {
                     <div className="flex items-center gap-6">
                       <Avatar className="h-20 w-20">
                         <AvatarImage src={user?.image || undefined} />
-                        <AvatarFallback className="bg-indigo-500/20 text-indigo-400 text-2xl">
+                        <AvatarFallback className="bg-violet-500/20 text-violet-400 text-2xl">
                           {getInitials(user?.name)}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <Button variant="outline" className="glass border-white/10 text-slate-300" disabled>
+                        <Button variant="outline" className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl text-slate-300" disabled>
                           <Camera className="h-4 w-4 mr-2" />
                           Cambiar foto
                         </Button>
@@ -560,7 +575,7 @@ export default function SettingsPage() {
                           <Label className="text-slate-300">Nombre completo</Label>
                           <Input 
                             {...profileForm.register('name')}
-                            className="glass border-white/10 bg-white/5 text-white"
+                            className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white"
                             placeholder="Tu nombre"
                           />
                           {profileForm.formState.errors.name && (
@@ -572,7 +587,7 @@ export default function SettingsPage() {
                           <Input 
                             {...profileForm.register('email')}
                             type="email"
-                            className="glass border-white/10 bg-white/5 text-white"
+                            className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white"
                             placeholder="tu@email.com"
                           />
                           {profileForm.formState.errors.email && (
@@ -583,7 +598,7 @@ export default function SettingsPage() {
                           <Label className="text-slate-300">Teléfono</Label>
                           <Input 
                             {...profileForm.register('phone')}
-                            className="glass border-white/10 bg-white/5 text-white"
+                            className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white"
                             placeholder="+52 55 1234 5678"
                           />
                         </div>
@@ -592,7 +607,7 @@ export default function SettingsPage() {
                           <Input 
                             value={getRoleDisplayName(user?.role || 'member')}
                             disabled
-                            className="glass border-white/10 bg-white/5 text-slate-400"
+                            className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-slate-400"
                           />
                         </div>
                       </div>
@@ -602,7 +617,7 @@ export default function SettingsPage() {
                         <Textarea 
                           {...profileForm.register('bio')}
                           placeholder="Cuéntanos sobre ti..."
-                          className="glass border-white/10 bg-white/5 text-white resize-none"
+                          className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white resize-none"
                           rows={3}
                         />
                         {profileForm.formState.errors.bio && (
@@ -615,13 +630,13 @@ export default function SettingsPage() {
                           type="button"
                           variant="outline"
                           onClick={() => setPasswordModalOpen(true)}
-                          className="glass border-white/10 text-slate-300"
+                          className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl text-slate-300"
                         >
                           Cambiar contraseña
                         </Button>
                         <Button 
                           type="submit"
-                          className="bg-indigo-500 hover:bg-indigo-600"
+                          className="bg-violet-500 hover:bg-violet-600"
                           disabled={updateProfileMutation.isPending}
                         >
                           {updateProfileMutation.isPending ? (
@@ -642,7 +657,7 @@ export default function SettingsPage() {
               {/* ============================================ */}
               <TabsContent value="organization">
                 <div className="space-y-6">
-                  <Card className="glass border-white/10">
+                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                     <CardHeader>
                       <CardTitle className="text-white">Organización</CardTitle>
                       <CardDescription className="text-slate-400">
@@ -652,7 +667,7 @@ export default function SettingsPage() {
                     <CardContent className="space-y-6">
                       {orgLoading ? (
                         <div className="flex justify-center py-8">
-                          <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
+                          <Loader2 className="h-6 w-6 animate-spin text-violet-500" />
                         </div>
                       ) : organization?.organization ? (
                         <form 
@@ -665,7 +680,7 @@ export default function SettingsPage() {
                               <Input 
                                 {...organizationForm.register('name')}
                                 disabled={!isAdmin}
-                                className="glass border-white/10 bg-white/5 text-white"
+                                className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white"
                               />
                               {organizationForm.formState.errors.name && (
                                 <p className="text-xs text-red-400">{organizationForm.formState.errors.name.message}</p>
@@ -676,7 +691,7 @@ export default function SettingsPage() {
                               <Input 
                                 value={organization.organization.slug}
                                 disabled
-                                className="glass border-white/10 bg-white/5 text-slate-400"
+                                className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-slate-400"
                               />
                             </div>
                           </div>
@@ -684,7 +699,7 @@ export default function SettingsPage() {
                             <div className="flex justify-end">
                               <Button 
                                 type="submit"
-                                className="bg-indigo-500 hover:bg-indigo-600"
+                                className="bg-violet-500 hover:bg-violet-600"
                                 disabled={updateOrganizationMutation.isPending}
                               >
                                 {updateOrganizationMutation.isPending ? (
@@ -703,7 +718,7 @@ export default function SettingsPage() {
                     </CardContent>
                   </Card>
 
-                  <Card className="glass border-white/10">
+                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                     <CardHeader>
                       <CardTitle className="text-white">Miembros del Equipo</CardTitle>
                       <CardDescription className="text-slate-400">
@@ -729,7 +744,7 @@ export default function SettingsPage() {
                             <div className="flex items-center gap-3">
                               <Avatar className="h-10 w-10">
                                 <AvatarImage src={member.user.image || undefined} />
-                                <AvatarFallback className="bg-indigo-500/20 text-indigo-400">
+                                <AvatarFallback className="bg-violet-500/20 text-violet-400">
                                   {getInitials(member.user.name)}
                                 </AvatarFallback>
                               </Avatar>
@@ -767,7 +782,7 @@ export default function SettingsPage() {
                       {isAdmin && (
                         <Button 
                           variant="outline" 
-                          className="mt-4 glass border-white/10 text-slate-300"
+                          className="mt-4 bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl text-slate-300"
                           onClick={() => setInviteMemberOpen(true)}
                         >
                           <UserPlus className="h-4 w-4 mr-2" />
@@ -783,7 +798,7 @@ export default function SettingsPage() {
               {/* Notifications Tab */}
               {/* ============================================ */}
               <TabsContent value="notifications">
-                <Card className="glass border-white/10">
+                <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                   <CardHeader>
                     <CardTitle className="text-white">Preferencias de Notificación</CardTitle>
                     <CardDescription className="text-slate-400">
@@ -793,7 +808,7 @@ export default function SettingsPage() {
                   <CardContent className="space-y-6">
                     {settingsLoading ? (
                       <div className="flex justify-center py-8">
-                        <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
+                        <Loader2 className="h-6 w-6 animate-spin text-violet-500" />
                       </div>
                     ) : (
                       <div className="space-y-4">
@@ -826,7 +841,7 @@ export default function SettingsPage() {
               {/* ============================================ */}
               <TabsContent value="security">
                 <div className="space-y-6">
-                  <Card className="glass border-white/10">
+                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                     <CardHeader>
                       <CardTitle className="text-white">Sesiones Activas</CardTitle>
                       <CardDescription className="text-slate-400">
@@ -836,7 +851,7 @@ export default function SettingsPage() {
                     <CardContent>
                       {sessionsLoading ? (
                         <div className="flex justify-center py-8">
-                          <Loader2 className="h-6 w-6 animate-spin text-indigo-500" />
+                          <Loader2 className="h-6 w-6 animate-spin text-violet-500" />
                         </div>
                       ) : (
                         <div className="space-y-3">
@@ -849,7 +864,7 @@ export default function SettingsPage() {
                                 createdAt: string;
                                 isCurrent: boolean;
                               }) => {
-                                const { browser, os } = parseUserAgent(session.userAgent);
+                                const { browser, os } = parseUserAgent(session.userAgent || null);
                                 return (
                                   <div 
                                     key={session.id} 
@@ -890,7 +905,7 @@ export default function SettingsPage() {
                               {sessionsData.sessions.length > 1 && (
                                 <Button
                                   variant="outline"
-                                  className="mt-4 glass border-white/10 text-slate-300"
+                                  className="mt-4 bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl text-slate-300"
                                   onClick={() => logoutOthersMutation.mutate()}
                                   disabled={logoutOthersMutation.isPending}
                                 >
@@ -911,7 +926,7 @@ export default function SettingsPage() {
                     </CardContent>
                   </Card>
 
-                  <Card className="glass border-white/10 border-rose-500/30">
+                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl border-rose-500/30">
                     <CardHeader>
                       <CardTitle className="text-rose-400 flex items-center gap-2">
                         <AlertTriangle className="h-5 w-5" />
@@ -948,7 +963,7 @@ export default function SettingsPage() {
               {/* ============================================ */}
               <TabsContent value="appearance">
                 <div className="space-y-6">
-                  <Card className="glass border-white/10">
+                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                     <CardHeader>
                       <CardTitle className="text-white">Tema de la Interfaz</CardTitle>
                       <CardDescription className="text-slate-400">
@@ -1007,15 +1022,15 @@ export default function SettingsPage() {
                         <h4 className="text-sm font-medium text-white">Consejos</h4>
                         <ul className="text-sm text-slate-400 space-y-2">
                           <li className="flex items-start gap-2">
-                            <span className="text-indigo-400 mt-0.5">•</span>
+                            <span className="text-violet-400 mt-0.5">•</span>
                             El modo oscuro es ideal para trabajar en ambientes con poca luz
                           </li>
                           <li className="flex items-start gap-2">
-                            <span className="text-indigo-400 mt-0.5">•</span>
+                            <span className="text-violet-400 mt-0.5">•</span>
                             El modo claro ofrece mejor legibilidad en ambientes luminosos
                           </li>
                           <li className="flex items-start gap-2">
-                            <span className="text-indigo-400 mt-0.5">•</span>
+                            <span className="text-violet-400 mt-0.5">•</span>
                             La opción "Sistema" adapta automáticamente el tema según la configuración de tu dispositivo
                           </li>
                         </ul>
@@ -1024,7 +1039,7 @@ export default function SettingsPage() {
                   </Card>
 
                   {/* Accent Color Card */}
-                  <Card className="glass border-white/10">
+                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                     <CardHeader>
                       <CardTitle className="text-white">Color de Acento</CardTitle>
                       <CardDescription className="text-slate-400">
@@ -1058,6 +1073,71 @@ export default function SettingsPage() {
                   </Card>
                 </div>
               </TabsContent>
+
+              {/* ============================================ */}
+              {/* Connected Accounts Tab */}
+              {/* ============================================ */}
+              <TabsContent value="accounts">
+                <div className="space-y-6">
+                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
+                    <CardHeader>
+                      <CardTitle className="text-white">Cuentas Vinculadas</CardTitle>
+                      <CardDescription className="text-slate-400">
+                        Conecta servicios externos a tu cuenta
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {/* Google Calendar Integration */}
+                      <div className="flex items-center justify-between p-4 rounded-lg glass border border-white/10">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
+                            <svg className="w-5 h-5" viewBox="0 0 24 24">
+                              <path d="M19.5 4H5.5C4.67 4 4 4.67 4 5.5v13c0 .83.67 1.5 1.5 1.5h14c.83 0 1.5-.67 1.5-1.5v-13c0-.83-.67-1.5-1.5-1.5zm-4.5 13H8v-4h7v4zm0-5H8V8h7v4zm4.5 5h-3v-3h3v3zm0-5h-3V8h3v4z" fill="#4285F4"/>
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="font-medium text-white">Google Calendar</p>
+                            <p className="text-sm text-slate-400">Sincroniza eventos con Google Calendar</p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl text-slate-300"
+                          asChild
+                        >
+                          <Link href="/settings/google-calendar">
+                            Configurar
+                          </Link>
+                        </Button>
+                      </div>
+
+                      {/* Connected Accounts */}
+                      <div className="flex items-center justify-between p-4 rounded-lg glass border border-white/10">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
+                            <LinkIcon className="h-5 w-5 text-slate-400" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-white">Cuentas Conectadas</p>
+                            <p className="text-sm text-slate-400">Gestiona Google y otros servicios</p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl text-slate-300"
+                          asChild
+                        >
+                          <Link href="/settings/connected-accounts">
+                            Verificar
+                          </Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
             </Tabs>
           </motion.div>
         </main>
@@ -1067,7 +1147,7 @@ export default function SettingsPage() {
       {/* Change Password Modal */}
       {/* ============================================ */}
       <Dialog open={passwordModalOpen} onOpenChange={setPasswordModalOpen}>
-        <DialogContent className="glass border-white/10 bg-slate-900">
+        <DialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900">
           <DialogHeader>
             <DialogTitle className="text-white">Cambiar Contraseña</DialogTitle>
             <DialogDescription className="text-slate-400">
@@ -1080,7 +1160,7 @@ export default function SettingsPage() {
               <Input 
                 {...passwordForm.register('currentPassword')}
                 type="password"
-                className="glass border-white/10 bg-white/5 text-white"
+                className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white"
               />
               {passwordForm.formState.errors.currentPassword && (
                 <p className="text-xs text-red-400">{passwordForm.formState.errors.currentPassword.message}</p>
@@ -1091,7 +1171,7 @@ export default function SettingsPage() {
               <Input 
                 {...passwordForm.register('newPassword')}
                 type="password"
-                className="glass border-white/10 bg-white/5 text-white"
+                className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white"
               />
               {passwordForm.formState.errors.newPassword && (
                 <p className="text-xs text-red-400">{passwordForm.formState.errors.newPassword.message}</p>
@@ -1102,7 +1182,7 @@ export default function SettingsPage() {
               <Input 
                 {...passwordForm.register('confirmPassword')}
                 type="password"
-                className="glass border-white/10 bg-white/5 text-white"
+                className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white"
               />
               {passwordForm.formState.errors.confirmPassword && (
                 <p className="text-xs text-red-400">{passwordForm.formState.errors.confirmPassword.message}</p>
@@ -1113,13 +1193,13 @@ export default function SettingsPage() {
                 type="button"
                 variant="outline"
                 onClick={() => setPasswordModalOpen(false)}
-                className="glass border-white/10 text-slate-300"
+                className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl text-slate-300"
               >
                 Cancelar
               </Button>
               <Button 
                 type="submit"
-                className="bg-indigo-500 hover:bg-indigo-600"
+                className="bg-violet-500 hover:bg-violet-600"
                 disabled={changePasswordMutation.isPending}
               >
                 {changePasswordMutation.isPending ? (
@@ -1136,7 +1216,7 @@ export default function SettingsPage() {
       {/* Invite Member Modal */}
       {/* ============================================ */}
       <Dialog open={inviteMemberOpen} onOpenChange={setInviteMemberOpen}>
-        <DialogContent className="glass border-white/10 bg-slate-900">
+        <DialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900">
           <DialogHeader>
             <DialogTitle className="text-white">Invitar Miembro</DialogTitle>
             <DialogDescription className="text-slate-400">
@@ -1150,7 +1230,7 @@ export default function SettingsPage() {
                 {...inviteMemberForm.register('email')}
                 type="email"
                 placeholder="email@ejemplo.com"
-                className="glass border-white/10 bg-white/5 text-white"
+                className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white"
               />
               {inviteMemberForm.formState.errors.email && (
                 <p className="text-xs text-red-400">{inviteMemberForm.formState.errors.email.message}</p>
@@ -1161,7 +1241,7 @@ export default function SettingsPage() {
               <Input 
                 {...inviteMemberForm.register('name')}
                 placeholder="Nombre del invitado"
-                className="glass border-white/10 bg-white/5 text-white"
+                className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white"
               />
             </div>
             <div className="space-y-2">
@@ -1170,7 +1250,7 @@ export default function SettingsPage() {
                 onValueChange={(value) => inviteMemberForm.setValue('role', value as 'owner' | 'admin' | 'member')}
                 defaultValue={inviteMemberForm.getValues('role')}
               >
-                <SelectTrigger className="glass border-white/10 bg-white/5 text-white">
+                <SelectTrigger className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white">
                   <SelectValue placeholder="Selecciona un rol" />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-900 border-white/10">
@@ -1185,13 +1265,13 @@ export default function SettingsPage() {
                 type="button"
                 variant="outline"
                 onClick={() => setInviteMemberOpen(false)}
-                className="glass border-white/10 text-slate-300"
+                className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl text-slate-300"
               >
                 Cancelar
               </Button>
               <Button 
                 type="submit"
-                className="bg-indigo-500 hover:bg-indigo-600"
+                className="bg-violet-500 hover:bg-violet-600"
                 disabled={inviteMemberMutation.isPending}
               >
                 {inviteMemberMutation.isPending ? (
@@ -1210,7 +1290,7 @@ export default function SettingsPage() {
       {/* Remove Member Confirmation */}
       {/* ============================================ */}
       <AlertDialog open={!!removeMemberId} onOpenChange={() => setRemoveMemberId(null)}>
-        <AlertDialogContent className="glass border-white/10 bg-slate-900">
+        <AlertDialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white">Eliminar Miembro</AlertDialogTitle>
             <AlertDialogDescription className="text-slate-400">
@@ -1219,7 +1299,7 @@ export default function SettingsPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="glass border-white/10 text-slate-300">
+            <AlertDialogCancel className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl text-slate-300">
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
@@ -1249,7 +1329,7 @@ export default function SettingsPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="glass border-white/10 text-slate-300">
+            <AlertDialogCancel className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl text-slate-300">
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction

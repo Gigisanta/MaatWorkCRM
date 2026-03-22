@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
+import { useSidebar } from "@/lib/sidebar-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -123,7 +124,7 @@ async function fetchNotifications(params: {
     searchParams.set("page", params.page.toString());
   }
 
-  const response = await fetch(`/api/notifications?${searchParams.toString()}`);
+  const response = await fetch(`/api/notifications?${searchParams.toString()}`, { credentials: 'include' });
   if (!response.ok) {
     throw new Error("Error al cargar notificaciones");
   }
@@ -134,6 +135,7 @@ async function fetchNotifications(params: {
 async function markAsRead(notificationId: string): Promise<void> {
   const response = await fetch(`/api/notifications/${notificationId}/read`, {
     method: "POST",
+    credentials: 'include',
   });
   if (!response.ok) {
     throw new Error("Error al marcar notificación como leída");
@@ -145,6 +147,7 @@ async function markAllAsRead(userId: string, organizationId: string): Promise<vo
   const response = await fetch("/api/notifications/read-all", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: 'include',
     body: JSON.stringify({ userId, organizationId }),
   });
   if (!response.ok) {
@@ -274,7 +277,7 @@ export default function NotificationsPage() {
 
   // Marking state
   const [markingAsRead, setMarkingAsRead] = React.useState<Set<string>>(new Set());
-  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+  const { collapsed, setCollapsed } = useSidebar();
 
   // Fetch notifications
   const { data, isLoading, error } = useQuery({
@@ -335,8 +338,8 @@ export default function NotificationsPage() {
   if (error) {
     return (
       <div className="min-h-screen gradient-bg">
-        <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
-        <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
+        <AppSidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
+        <div className={cn("transition-all duration-300", collapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
           <AppHeader />
           <main className="p-4 lg:p-6">
             <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
@@ -361,8 +364,8 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen gradient-bg">
-      <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
-      <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
+      <AppSidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
+      <div className={cn("transition-all duration-300", collapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
         <AppHeader />
         <main className="p-4 lg:p-6">
           <motion.div

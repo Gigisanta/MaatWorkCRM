@@ -45,6 +45,7 @@ const contactFormSchema = z.object({
   assignedTo: z.string().optional().or(z.literal("")),
 });
 
+type ContactFormDataInput = z.input<typeof contactFormSchema>;
 type ContactFormData = z.infer<typeof contactFormSchema>;
 
 interface PipelineStage {
@@ -85,15 +86,15 @@ export function CreateContactModal({
   const { data: usersData } = useQuery<{ users: User[] }>({
     queryKey: ["organization-users", organizationId],
     queryFn: async () => {
-      const response = await fetch(`/api/users?organizationId=${organizationId}`);
+      const response = await fetch(`/api/users?organizationId=${organizationId}`, { credentials: 'include' });
       if (!response.ok) throw new Error("Error al cargar usuarios");
       return response.json();
     },
     enabled: !!organizationId && isAdmin,
   });
 
-  const form = useForm<ContactFormData>({
-    resolver: zodResolver(contactFormSchema),
+  const form = useForm<ContactFormDataInput>({
+    resolver: zodResolver(contactFormSchema) as any,
     defaultValues: {
       name: "",
       email: "",
@@ -112,6 +113,7 @@ export function CreateContactModal({
       const response = await fetch("/api/contacts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: 'include',
         body: JSON.stringify({
           ...data,
           organizationId,
@@ -134,8 +136,8 @@ export function CreateContactModal({
     },
   });
 
-  const onSubmit = (data: ContactFormData) => {
-    createMutation.mutate(data);
+  const onSubmit = (data: ContactFormDataInput) => {
+    createMutation.mutate(data as ContactFormData);
   };
 
   return (

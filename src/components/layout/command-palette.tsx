@@ -145,6 +145,13 @@ const actionMapping: Record<string, string> = {
   "e": "create-event",
 };
 
+// Theme commands
+const themeCommands = [
+  { name: "Cambiar a tema claro", theme: "light", icon: Sun },
+  { name: "Cambiar a tema oscuro", theme: "dark", icon: Moon },
+  { name: "Usar tema del sistema", theme: "system", icon: Monitor },
+];
+
 interface CommandPaletteProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -263,7 +270,8 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     queryFn: async () => {
       if (!search || search.length < 2 || !user?.organizationId) return [];
       const res = await fetch(
-        `/api/contacts?search=${encodeURIComponent(search)}&limit=5&organizationId=${user.organizationId}`
+        `/api/contacts?search=${encodeURIComponent(search)}&limit=5&organizationId=${user.organizationId}`,
+        { credentials: 'include' }
       );
       const data = await res.json();
       return data.contacts as Contact[];
@@ -277,7 +285,8 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     queryFn: async () => {
       if (!search || search.length < 2 || !user?.organizationId) return [];
       const res = await fetch(
-        `/api/tasks?search=${encodeURIComponent(search)}&limit=5&organizationId=${user.organizationId}`
+        `/api/tasks?search=${encodeURIComponent(search)}&limit=5&organizationId=${user.organizationId}`,
+        { credentials: 'include' }
       );
       const data = await res.json();
       return data.tasks as Task[];
@@ -299,35 +308,28 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
     runCommand(() => router.push(`/${item.type === "contact" ? "contacts" : "tasks"}?highlight=${item.id}`));
   };
 
-  const hasSearchResults = (contactsResults && contactsResults.length > 0) || 
+  const hasSearchResults = (contactsResults && contactsResults.length > 0) ||
                            (tasksResults && tasksResults.length > 0);
   const isSearching = isFetchingContacts || isFetchingTasks;
-
-  // Theme commands
-  const themeCommands = [
-    { name: "Cambiar a tema claro", theme: "light", icon: Sun },
-    { name: "Cambiar a tema oscuro", theme: "dark", icon: Moon },
-    { name: "Usar tema del sistema", theme: "system", icon: Monitor },
-  ];
 
   if (!mounted) {
     return null;
   }
 
   return (
-    <CommandDialog 
-      open={open} 
+    <CommandDialog
+      open={open}
       onOpenChange={onOpenChange}
-      className="bg-slate-900/95 border-white/10 backdrop-blur-xl max-w-xl"
+      className="bg-[#0E0F12] border-white/8 backdrop-blur-xl max-w-xl rounded-xl overflow-hidden shadow-2xl shadow-black/60"
     >
-      <CommandInput 
-        placeholder="Escribe un comando o busca..." 
+      <CommandInput
+        placeholder="Escribe un comando o busca..."
         value={search}
         onValueChange={setSearch}
-        className="text-white placeholder:text-slate-400"
+        className="text-lg text-white placeholder:text-slate-400 px-4 py-3 border-b border-white/8"
       />
       <CommandList className="max-h-[400px] overflow-y-auto">
-        <CommandEmpty className="text-slate-400 py-6 text-center">
+        <CommandEmpty className="text-slate-500 text-sm py-6 text-center">
           {isSearching ? (
             <div className="flex items-center justify-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -342,19 +344,19 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         {hasSearchResults && (
           <>
             {contactsResults && contactsResults.length > 0 && (
-              <CommandGroup heading="Contactos" className="text-slate-300">
+              <CommandGroup heading="Contactos" className="[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-slate-500 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest">
                 {contactsResults.map((contact) => (
                   <CommandItem
                     key={contact.id}
                     value={`contact-${contact.id}`}
                     onSelect={() => handleSelectContact(contact)}
-                    className="text-white hover:bg-white/10 cursor-pointer"
+                    className="text-slate-200 cursor-pointer data-[selected=true]:bg-violet-500/15 data-[selected=true]:text-violet-200 hover:bg-white/6"
                   >
                     <span className="mr-2 text-lg">{contact.emoji || "👤"}</span>
                     <div className="flex flex-col">
                       <span>{contact.name}</span>
                       {contact.email && (
-                        <span className="text-xs text-slate-400 flex items-center gap-1">
+                        <span className="text-xs text-slate-500 flex items-center gap-1">
                           <Mail className="h-3 w-3" />
                           {contact.email}
                         </span>
@@ -367,18 +369,18 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             )}
 
             {tasksResults && tasksResults.length > 0 && (
-              <CommandGroup heading="Tareas" className="text-slate-300">
+              <CommandGroup heading="Tareas" className="[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-slate-500 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest">
                 {tasksResults.map((task) => (
                   <CommandItem
                     key={task.id}
                     value={`task-${task.id}`}
                     onSelect={() => handleSelectTask(task)}
-                    className="text-white hover:bg-white/10 cursor-pointer"
+                    className="text-slate-200 cursor-pointer data-[selected=true]:bg-violet-500/15 data-[selected=true]:text-violet-200 hover:bg-white/6"
                   >
                     <CheckSquare className="mr-2 h-4 w-4 text-slate-400" />
                     <div className="flex flex-col">
                       <span>{task.title}</span>
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-slate-500">
                         {task.status === "completed" ? "Completada" : 
                          task.status === "in_progress" ? "En progreso" : "Pendiente"}
                         {" • "}{task.priority === "urgent" ? "Urgente" : 
@@ -398,13 +400,13 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         {/* Recent Items (only when not searching) */}
         {search.length < 2 && recentItems.length > 0 && (
           <>
-            <CommandGroup heading="Recientes" className="text-slate-300">
+            <CommandGroup heading="Recientes" className="[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-slate-500 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest">
               {recentItems.map((item) => (
                 <CommandItem
                   key={`${item.type}-${item.id}`}
                   value={`recent-${item.id}`}
                   onSelect={() => handleSelectRecent(item)}
-                  className="text-white hover:bg-white/10 cursor-pointer"
+                  className="text-slate-200 cursor-pointer data-[selected=true]:bg-violet-500/15 data-[selected=true]:text-violet-200 hover:bg-white/6"
                 >
                   {item.type === "contact" ? (
                     <User className="mr-2 h-4 w-4 text-slate-400" />
@@ -412,7 +414,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                     <CheckSquare className="mr-2 h-4 w-4 text-slate-400" />
                   )}
                   <span>{item.name}</span>
-                  <span className="ml-2 text-xs text-slate-500">
+                  <span className="ml-2 text-xs text-slate-500 font-medium">
                     {item.type === "contact" ? "Contacto" : "Tarea"}
                   </span>
                   <Clock className="ml-auto h-4 w-4 text-slate-500" />
@@ -426,7 +428,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         {/* Quick Actions */}
         {search.length < 2 && (
           <>
-            <CommandGroup heading="Acciones Rápidas" className="text-slate-300">
+            <CommandGroup heading="Acciones Rápidas" className="[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-slate-500 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest">
               {quickActions.map((action) => (
                 <CommandItem
                   key={action.name}
@@ -434,9 +436,9 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                   onSelect={() => {
                     runCommand(() => dispatchCommandAction(action.action));
                   }}
-                  className="text-white hover:bg-white/10 cursor-pointer"
+                  className="text-slate-200 cursor-pointer data-[selected=true]:bg-violet-500/15 data-[selected=true]:text-violet-200 hover:bg-white/6"
                 >
-                  <action.icon className="mr-2 h-4 w-4 text-indigo-400" />
+                  <action.icon className="mr-2 h-4 w-4 text-violet-400" />
                   {action.name}
                   {action.shortcut && (
                     <CommandShortcut className="text-slate-400">
@@ -453,7 +455,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         {/* Navigation */}
         {search.length < 2 && (
           <>
-            <CommandGroup heading="Navegación" className="text-slate-300">
+            <CommandGroup heading="Navegación" className="[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-slate-500 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest">
               {navigation.map((item) => (
                 <CommandItem
                   key={item.name}
@@ -461,9 +463,9 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                   onSelect={() => {
                     runCommand(() => router.push(item.href));
                   }}
-                  className="text-white hover:bg-white/10 cursor-pointer"
+                  className="text-slate-200 cursor-pointer data-[selected=true]:bg-violet-500/15 data-[selected=true]:text-violet-200 hover:bg-white/6"
                 >
-                  <item.icon className="mr-2 h-4 w-4 text-slate-400" />
+                  <item.icon className="mr-2 h-4 w-4 text-violet-400" />
                   {item.name}
                   {item.shortcut && (
                     <CommandShortcut className="text-slate-400">
@@ -479,7 +481,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
         {/* Theme Commands */}
         {search.length < 2 && (
-          <CommandGroup heading="Tema" className="text-slate-300">
+          <CommandGroup heading="Tema" className="[&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-slate-500 [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest">
             {themeCommands.map((cmd) => (
               <CommandItem
                 key={cmd.name}
@@ -487,12 +489,12 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                 onSelect={() => {
                   runCommand(() => setTheme(cmd.theme));
                 }}
-                className="text-white hover:bg-white/10 cursor-pointer"
+                className="text-slate-200 cursor-pointer data-[selected=true]:bg-violet-500/15 data-[selected=true]:text-violet-200 hover:bg-white/6"
               >
-                <cmd.icon className="mr-2 h-4 w-4 text-slate-400" />
+                <cmd.icon className="mr-2 h-4 w-4 text-violet-400" />
                 {cmd.name}
                 {theme === cmd.theme && (
-                  <span className="ml-auto text-xs text-indigo-400">Activo</span>
+                  <span className="ml-auto text-xs text-violet-400">Activo</span>
                 )}
               </CommandItem>
             ))}

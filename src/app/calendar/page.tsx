@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
+import { useSidebar } from "@/lib/sidebar-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -168,7 +169,7 @@ async function fetchEvents(params: {
   searchParams.set("startDate", params.startDate);
   searchParams.set("endDate", params.endDate);
 
-  const response = await fetch(`/api/calendar-events?${searchParams.toString()}`);
+  const response = await fetch(`/api/calendar-events?${searchParams.toString()}`, { credentials: 'include' });
   if (!response.ok) {
     throw new Error("Error al cargar eventos");
   }
@@ -179,6 +180,7 @@ async function createEvent(data: EventFormData): Promise<CalendarEvent> {
   const response = await fetch("/api/calendar-events", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: 'include',
     body: JSON.stringify({
       ...data,
       organizationId: ORGANIZATION_ID,
@@ -195,6 +197,7 @@ async function updateEvent(id: string, data: Partial<EventFormData>): Promise<Ca
   const response = await fetch(`/api/calendar-events/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
+    credentials: 'include',
     body: JSON.stringify(data),
   });
   if (!response.ok) {
@@ -207,6 +210,7 @@ async function updateEvent(id: string, data: Partial<EventFormData>): Promise<Ca
 async function deleteEvent(id: string): Promise<void> {
   const response = await fetch(`/api/calendar-events/${id}`, {
     method: "DELETE",
+    credentials: 'include',
   });
   if (!response.ok) {
     const error = await response.json();
@@ -616,7 +620,7 @@ export default function CalendarPage() {
   const [selectedEvent, setSelectedEvent] = React.useState<CalendarEvent | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [eventToDelete, setEventToDelete] = React.useState<CalendarEvent | null>(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+  const { collapsed, setCollapsed } = useSidebar();
 
   // Calculate date range for current month view
   const monthStart = startOfMonth(currentDate);
@@ -731,8 +735,8 @@ export default function CalendarPage() {
   if (error) {
     return (
       <div className="min-h-screen gradient-bg">
-        <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
-        <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
+        <AppSidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
+        <div className={cn("transition-all duration-300", collapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
           <AppHeader />
           <main className="p-4 lg:p-6">
             <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
@@ -753,8 +757,8 @@ export default function CalendarPage() {
 
   return (
     <div className="min-h-screen gradient-bg">
-      <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
-      <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
+      <AppSidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
+      <div className={cn("transition-all duration-300", collapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
         <AppHeader />
         <main className="p-4 lg:p-6">
           <motion.div

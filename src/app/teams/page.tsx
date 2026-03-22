@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
+import { useSidebar } from "@/lib/sidebar-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -175,9 +176,12 @@ const addMemberSchema = z.object({
   role: z.enum(["member", "leader"]).default("member"),
 });
 
+type CreateTeamFormInput = z.input<typeof createTeamSchema>;
+type CreateGoalFormInput = z.input<typeof createGoalSchema>;
 type CreateTeamForm = z.infer<typeof createTeamSchema>;
 type CreateGoalForm = z.infer<typeof createGoalSchema>;
 type UpdateGoalProgressForm = z.infer<typeof updateGoalProgressSchema>;
+type AddMemberFormInput = z.input<typeof addMemberSchema>;
 type AddMemberForm = z.infer<typeof addMemberSchema>;
 
 // Circular Progress Component
@@ -266,7 +270,7 @@ function GoalCard({
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
-      active: "bg-indigo-500/20 text-indigo-400",
+      active: "bg-violet-500/20 text-violet-400",
       completed: "bg-emerald-500/20 text-emerald-400",
       missed: "bg-rose-500/20 text-rose-400",
       cancelled: "bg-slate-500/20 text-slate-400",
@@ -275,12 +279,12 @@ function GoalCard({
   };
 
   return (
-    <Card className="glass border-white/10 hover:border-white/20 transition-all">
+    <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl hover:border-white/20 transition-all">
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <Target className="h-4 w-4 text-indigo-400" />
+              <Target className="h-4 w-4 text-violet-400" />
               <span className="text-sm text-slate-400">
                 {getTypeLabel(goal.type)}
               </span>
@@ -358,13 +362,13 @@ function TeamDetailDrawer({
   const [deletingGoal, setDeletingGoal] = React.useState<TeamGoal | null>(null);
   const [removingMember, setRemovingMember] = React.useState<TeamMember | null>(null);
 
-  const addMemberForm = useForm<AddMemberForm>({
-    resolver: zodResolver(addMemberSchema),
+  const addMemberForm = useForm<AddMemberFormInput>({
+    resolver: zodResolver(addMemberSchema) as any,
     defaultValues: { userId: "", role: "member" },
   });
 
-  const createGoalForm = useForm<CreateGoalForm>({
-    resolver: zodResolver(createGoalSchema),
+  const createGoalForm = useForm<CreateGoalFormInput>({
+    resolver: zodResolver(createGoalSchema) as any,
     defaultValues: {
       title: "",
       type: undefined,
@@ -400,8 +404,8 @@ function TeamDetailDrawer({
         <DrawerHeader className="border-b border-white/10 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-indigo-500/10">
-                <Users className="h-5 w-5 text-indigo-400" />
+              <div className="p-2 rounded-lg bg-violet-500/10">
+                <Users className="h-5 w-5 text-violet-400" />
               </div>
               <div>
                 <DrawerTitle className="text-xl font-semibold text-white">
@@ -428,7 +432,7 @@ function TeamDetailDrawer({
             {team.leader ? (
               <div className="flex items-center gap-3 p-3 rounded-lg glass border border-white/10">
                 <Avatar className="h-10 w-10">
-                  <AvatarFallback className="bg-indigo-500/20 text-indigo-400">
+                  <AvatarFallback className="bg-violet-500/20 text-violet-400">
                     {team.leader.name?.split(" ").map((n) => n[0]).join("") || "NA"}
                   </AvatarFallback>
                 </Avatar>
@@ -446,13 +450,13 @@ function TeamDetailDrawer({
           <div>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium text-slate-400 flex items-center gap-2">
-                <Users className="h-4 w-4 text-indigo-400" />
+                <Users className="h-4 w-4 text-violet-400" />
                 Miembros ({team.members.length})
               </h3>
               <Button
                 variant="outline"
                 size="sm"
-                className="glass border-white/10 text-slate-300"
+                className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl text-slate-300"
                 onClick={() => setShowAddMember(true)}
               >
                 <UserPlus className="h-4 w-4 mr-2" />
@@ -470,7 +474,7 @@ function TeamDetailDrawer({
                   >
                     <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">
-                        <AvatarFallback className="bg-indigo-500/20 text-indigo-400 text-xs">
+                        <AvatarFallback className="bg-violet-500/20 text-violet-400 text-xs">
                           {member.user.name?.split(" ").map((n) => n[0]).join("") || "NA"}
                         </AvatarFallback>
                       </Avatar>
@@ -521,13 +525,13 @@ function TeamDetailDrawer({
           <div>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-medium text-slate-400 flex items-center gap-2">
-                <Target className="h-4 w-4 text-indigo-400" />
+                <Target className="h-4 w-4 text-violet-400" />
                 Objetivos ({team.goals.length})
               </h3>
               <Button
                 variant="outline"
                 size="sm"
-                className="glass border-white/10 text-slate-300"
+                className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl text-slate-300"
                 onClick={() => setShowCreateGoal(true)}
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -581,7 +585,7 @@ function TeamDetailDrawer({
 
         {/* Add Member Dialog */}
         <Dialog open={showAddMember} onOpenChange={setShowAddMember}>
-          <DialogContent className="glass border-white/10 bg-slate-900">
+          <DialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900">
             <DialogHeader>
               <DialogTitle className="text-white">Añadir Miembro</DialogTitle>
               <DialogDescription className="text-slate-400">
@@ -591,7 +595,7 @@ function TeamDetailDrawer({
             <Form {...addMemberForm}>
               <form
                 onSubmit={addMemberForm.handleSubmit((data) => {
-                  onAddMember(data);
+                  onAddMember(data as AddMemberForm);
                   setShowAddMember(false);
                   addMemberForm.reset();
                 })}
@@ -605,7 +609,7 @@ function TeamDetailDrawer({
                       <FormLabel className="text-slate-300">Usuario</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger className="glass border-white/10 bg-white/5 text-white">
+                          <SelectTrigger className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white">
                             <SelectValue placeholder="Selecciona un usuario" />
                           </SelectTrigger>
                         </FormControl>
@@ -629,7 +633,7 @@ function TeamDetailDrawer({
                       <FormLabel className="text-slate-300">Rol</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger className="glass border-white/10 bg-white/5 text-white">
+                          <SelectTrigger className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white">
                             <SelectValue placeholder="Selecciona un rol" />
                           </SelectTrigger>
                         </FormControl>
@@ -646,7 +650,7 @@ function TeamDetailDrawer({
                   <Button type="button" variant="outline" onClick={() => setShowAddMember(false)}>
                     Cancelar
                   </Button>
-                  <Button type="submit" className="bg-indigo-500 hover:bg-indigo-600">
+                  <Button type="submit" className="bg-violet-500 hover:bg-violet-600">
                     Añadir
                   </Button>
                 </DialogFooter>
@@ -657,7 +661,7 @@ function TeamDetailDrawer({
 
         {/* Create Goal Dialog */}
         <Dialog open={showCreateGoal} onOpenChange={setShowCreateGoal}>
-          <DialogContent className="glass border-white/10 bg-slate-900">
+          <DialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900">
             <DialogHeader>
               <DialogTitle className="text-white">Crear Objetivo</DialogTitle>
               <DialogDescription className="text-slate-400">
@@ -667,7 +671,7 @@ function TeamDetailDrawer({
             <Form {...createGoalForm}>
               <form
                 onSubmit={createGoalForm.handleSubmit((data) => {
-                  onCreateGoal(data);
+                  onCreateGoal(data as CreateGoalForm);
                   setShowCreateGoal(false);
                   createGoalForm.reset();
                 })}
@@ -682,7 +686,7 @@ function TeamDetailDrawer({
                       <FormControl>
                         <Input
                           {...field}
-                          className="glass border-white/10 bg-white/5 text-white"
+                          className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white"
                           placeholder="Ej: $50k nuevos clientes"
                         />
                       </FormControl>
@@ -699,7 +703,7 @@ function TeamDetailDrawer({
                       <FormControl>
                         <Textarea
                           {...field}
-                          className="glass border-white/10 bg-white/5 text-white resize-none"
+                          className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white resize-none"
                           placeholder="Descripción del objetivo..."
                           rows={2}
                         />
@@ -717,7 +721,7 @@ function TeamDetailDrawer({
                         <FormLabel className="text-slate-300">Tipo</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="glass border-white/10 bg-white/5 text-white">
+                            <SelectTrigger className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white">
                               <SelectValue placeholder="Tipo" />
                             </SelectTrigger>
                           </FormControl>
@@ -741,7 +745,7 @@ function TeamDetailDrawer({
                         <FormLabel className="text-slate-300">Unidad</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="glass border-white/10 bg-white/5 text-white">
+                            <SelectTrigger className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white">
                               <SelectValue placeholder="Unidad" />
                             </SelectTrigger>
                           </FormControl>
@@ -767,7 +771,7 @@ function TeamDetailDrawer({
                           <Input
                             {...field}
                             type="number"
-                            className="glass border-white/10 bg-white/5 text-white"
+                            className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white"
                             onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                           />
                         </FormControl>
@@ -785,7 +789,7 @@ function TeamDetailDrawer({
                           <Input
                             {...field}
                             type="number"
-                            className="glass border-white/10 bg-white/5 text-white"
+                            className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white"
                             onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                           />
                         </FormControl>
@@ -798,7 +802,7 @@ function TeamDetailDrawer({
                   <Button type="button" variant="outline" onClick={() => setShowCreateGoal(false)}>
                     Cancelar
                   </Button>
-                  <Button type="submit" className="bg-indigo-500 hover:bg-indigo-600">
+                  <Button type="submit" className="bg-violet-500 hover:bg-violet-600">
                     Crear
                   </Button>
                 </DialogFooter>
@@ -809,7 +813,7 @@ function TeamDetailDrawer({
 
         {/* Update Goal Progress Dialog */}
         <Dialog open={!!editingGoal} onOpenChange={() => setEditingGoal(null)}>
-          <DialogContent className="glass border-white/10 bg-slate-900">
+          <DialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900">
             <DialogHeader>
               <DialogTitle className="text-white">Actualizar Progreso</DialogTitle>
               <DialogDescription className="text-slate-400">
@@ -836,7 +840,7 @@ function TeamDetailDrawer({
                         <Input
                           {...field}
                           type="number"
-                          className="glass border-white/10 bg-white/5 text-white"
+                          className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white"
                           onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                         />
                       </FormControl>
@@ -851,7 +855,7 @@ function TeamDetailDrawer({
                   <Button type="button" variant="outline" onClick={() => setEditingGoal(null)}>
                     Cancelar
                   </Button>
-                  <Button type="submit" className="bg-indigo-500 hover:bg-indigo-600">
+                  <Button type="submit" className="bg-violet-500 hover:bg-violet-600">
                     Actualizar
                   </Button>
                 </DialogFooter>
@@ -862,7 +866,7 @@ function TeamDetailDrawer({
 
         {/* Delete Goal Confirmation */}
         <Dialog open={!!deletingGoal} onOpenChange={() => setDeletingGoal(null)}>
-          <DialogContent className="glass border-white/10 bg-slate-900">
+          <DialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900">
             <DialogHeader>
               <DialogTitle className="text-white">Eliminar Objetivo</DialogTitle>
               <DialogDescription className="text-slate-400">
@@ -890,7 +894,7 @@ function TeamDetailDrawer({
 
         {/* Remove Member Confirmation */}
         <Dialog open={!!removingMember} onOpenChange={() => setRemovingMember(null)}>
-          <DialogContent className="glass border-white/10 bg-slate-900">
+          <DialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900">
             <DialogHeader>
               <DialogTitle className="text-white">Remover Miembro</DialogTitle>
               <DialogDescription className="text-slate-400">
@@ -956,7 +960,7 @@ function CreateTeamDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="glass border-white/10 bg-slate-900 max-w-lg">
+      <DialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900 max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-white">Crear Nuevo Equipo</DialogTitle>
           <DialogDescription className="text-slate-400">
@@ -974,7 +978,7 @@ function CreateTeamDialog({
                   <FormControl>
                     <Input
                       {...field}
-                      className="glass border-white/10 bg-white/5 text-white"
+                      className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white"
                       placeholder="Ej: Equipo Alfa"
                     />
                   </FormControl>
@@ -991,7 +995,7 @@ function CreateTeamDialog({
                   <FormControl>
                     <Textarea
                       {...field}
-                      className="glass border-white/10 bg-white/5 text-white resize-none"
+                      className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white resize-none"
                       placeholder="Descripción del equipo..."
                       rows={3}
                     />
@@ -1008,7 +1012,7 @@ function CreateTeamDialog({
                   <FormLabel className="text-slate-300">Líder del Equipo</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger className="glass border-white/10 bg-white/5 text-white">
+                      <SelectTrigger className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white">
                         <SelectValue placeholder="Selecciona un líder" />
                       </SelectTrigger>
                     </FormControl>
@@ -1031,7 +1035,7 @@ function CreateTeamDialog({
                   <Button
                     variant="outline"
                     role="combobox"
-                    className="w-full justify-between glass border-white/10 bg-white/5 text-white mt-2"
+                    className="w-full justify-between bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white mt-2"
                   >
                     {selectedMembers.length > 0
                       ? `${selectedMembers.length} seleccionados`
@@ -1039,7 +1043,7 @@ function CreateTeamDialog({
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-full p-0 glass border-white/10 bg-slate-900">
+                <PopoverContent className="w-full p-0 bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900">
                   <Command>
                     <CommandInput placeholder="Buscar usuarios..." />
                     <CommandList>
@@ -1069,7 +1073,7 @@ function CreateTeamDialog({
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-indigo-500 hover:bg-indigo-600">
+              <Button type="submit" className="bg-violet-500 hover:bg-violet-600">
                 Crear Equipo
               </Button>
             </DialogFooter>
@@ -1087,14 +1091,14 @@ export default function TeamsPage() {
   const [selectedTeam, setSelectedTeam] = React.useState<Team | null>(null);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
   const [createTeamOpen, setCreateTeamOpen] = React.useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+  const { collapsed, setCollapsed } = useSidebar();
 
   // Fetch teams
   const { data: teamsData, isLoading, error } = useQuery({
     queryKey: ["teams", user?.organizationId],
     queryFn: async () => {
       if (!user?.organizationId) return null;
-      const response = await fetch(`/api/teams?organizationId=${user.organizationId}`);
+      const response = await fetch(`/api/teams?organizationId=${user.organizationId}`, { credentials: 'include' });
       if (!response.ok) throw new Error("Failed to fetch teams");
       return response.json() as Promise<TeamsResponse>;
     },
@@ -1105,7 +1109,7 @@ export default function TeamsPage() {
   const { data: usersData } = useQuery({
     queryKey: ["users"],
     queryFn: async () => {
-      const response = await fetch("/api/auth/managers");
+      const response = await fetch("/api/auth/managers", { credentials: 'include' });
       if (!response.ok) throw new Error("Failed to fetch users");
       const data = await response.json();
       return data.managers as User[];
@@ -1117,7 +1121,7 @@ export default function TeamsPage() {
     queryKey: ["team", selectedTeam?.id],
     queryFn: async () => {
       if (!selectedTeam?.id) return null;
-      const response = await fetch(`/api/teams/${selectedTeam.id}`);
+      const response = await fetch(`/api/teams/${selectedTeam.id}`, { credentials: 'include' });
       if (!response.ok) throw new Error("Failed to fetch team");
       return response.json() as Promise<Team>;
     },
@@ -1134,6 +1138,7 @@ export default function TeamsPage() {
           ...data,
           organizationId: user?.organizationId,
         }),
+        credentials: 'include',
       });
       if (!response.ok) {
         const error = await response.json();
@@ -1155,6 +1160,7 @@ export default function TeamsPage() {
   const addMemberMutation = useMutation({
     mutationFn: async ({ teamId, data }: { teamId: string; data: AddMemberForm }) => {
       const response = await fetch(`/api/teams/${teamId}/members`, {
+        credentials: 'include',
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -1179,6 +1185,7 @@ export default function TeamsPage() {
   const removeMemberMutation = useMutation({
     mutationFn: async ({ teamId, memberId }: { teamId: string; memberId: string }) => {
       const response = await fetch(`/api/teams/${teamId}/members/${memberId}`, {
+        credentials: 'include',
         method: "DELETE",
       });
       if (!response.ok) {
@@ -1204,6 +1211,7 @@ export default function TeamsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...data, teamId }),
+        credentials: 'include',
       });
       if (!response.ok) {
         const error = await response.json();
@@ -1228,6 +1236,7 @@ export default function TeamsPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currentValue }),
+        credentials: 'include',
       });
       if (!response.ok) {
         const error = await response.json();
@@ -1250,6 +1259,7 @@ export default function TeamsPage() {
     mutationFn: async (goalId: string) => {
       const response = await fetch(`/api/goals/${goalId}`, {
         method: "DELETE",
+        credentials: 'include',
       });
       if (!response.ok) {
         const error = await response.json();
@@ -1277,25 +1287,27 @@ export default function TeamsPage() {
 
   return (
     <div className="min-h-screen gradient-bg">
-      <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
-      <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[280px]")}>
+      <AppSidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
+      <div className={cn("transition-all duration-300", collapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
         <AppHeader />
         <main className="p-4 lg:p-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             className="space-y-6"
           >
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-white">Equipos</h1>
-                <p className="text-slate-400 mt-1">
-                  Gestiona tus equipos y objetivos
-                </p>
+                <div>
+                  <p className="text-xs font-medium text-violet-400 uppercase tracking-widest mb-1">EQUIPOS</p>
+                  <h1 className="text-2xl font-bold text-white tracking-tight">Equipos</h1>
+                  <p className="text-slate-500 mt-1 text-sm">Gestiona tus equipos y objetivos</p>
+                </div>
               </div>
               <Button
-                className="bg-indigo-500 hover:bg-indigo-600"
+                className="bg-violet-500 hover:bg-violet-600"
                 onClick={() => setCreateTeamOpen(true)}
               >
                 <Plus className="h-4 w-4 mr-2" />
@@ -1306,7 +1318,7 @@ export default function TeamsPage() {
             {/* Loading State */}
             {isLoading && (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+                <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
               </div>
             )}
 
@@ -1330,7 +1342,7 @@ export default function TeamsPage() {
 
             {/* Empty State */}
             {!isLoading && !error && teams.length === 0 && (
-              <Card className="glass border-white/10">
+              <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                 <CardContent className="p-12 text-center">
                   <Users className="h-12 w-12 text-slate-500 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-white mb-2">No hay equipos</h3>
@@ -1338,7 +1350,7 @@ export default function TeamsPage() {
                     Crea tu primer equipo para comenzar a gestionar objetivos y miembros
                   </p>
                   <Button
-                    className="bg-indigo-500 hover:bg-indigo-600"
+                    className="bg-violet-500 hover:bg-violet-600"
                     onClick={() => setCreateTeamOpen(true)}
                   >
                     <Plus className="h-4 w-4 mr-2" />
@@ -1362,14 +1374,14 @@ export default function TeamsPage() {
                   return (
                     <Card
                       key={team.id}
-                      className="glass border-white/10 hover:border-white/20 transition-all cursor-pointer"
+                      className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl hover:border-white/20 transition-all cursor-pointer"
                       onClick={() => handleTeamClick(team)}
                     >
                       <CardHeader className="border-b border-white/10">
                         <div className="flex items-start justify-between">
                           <div>
                             <CardTitle className="text-xl text-white flex items-center gap-2">
-                              <Users className="h-5 w-5 text-indigo-400" />
+                              <Users className="h-5 w-5 text-violet-400" />
                               {team.name}
                             </CardTitle>
                             <p className="text-slate-400 mt-1 text-sm">{team.description || "Sin descripción"}</p>
@@ -1403,7 +1415,7 @@ export default function TeamsPage() {
                               <div className="flex items-center gap-3">
                                 <div className="relative">
                                   <Avatar className="h-10 w-10">
-                                    <AvatarFallback className="bg-indigo-500/20 text-indigo-400">
+                                    <AvatarFallback className="bg-violet-500/20 text-violet-400">
                                       {team.leader.name?.split(" ").map((n) => n[0]).join("") || "NA"}
                                     </AvatarFallback>
                                   </Avatar>
@@ -1427,7 +1439,7 @@ export default function TeamsPage() {
                             <div className="flex -space-x-2">
                               {team.members.slice(0, 5).map((member) => (
                                 <Avatar key={member.id} className="h-8 w-8 border-2 border-slate-900">
-                                  <AvatarFallback className="bg-indigo-500/20 text-indigo-400 text-xs">
+                                  <AvatarFallback className="bg-violet-500/20 text-violet-400 text-xs">
                                     {member.user.name?.split(" ").map((n) => n[0]).join("") || "NA"}
                                   </AvatarFallback>
                                 </Avatar>

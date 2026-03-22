@@ -1,117 +1,81 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import logger from '@/lib/logger';
+import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
-  const start = Date.now();
-  const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
-
   try {
-    // Get session token from cookie
-    const sessionToken = request.cookies.get('session_token')?.value;
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get('session_token')?.value;
 
     if (!sessionToken) {
-      logger.info({ operation: 'session', requestId, reason: 'no_token' }, 'Session check (no token)');
-      return NextResponse.json(
-        { user: null, authenticated: false },
-        { status: 200 }
-      );
+      return NextResponse.json({ user: null, authenticated: false });
     }
 
-    // Find session in database
-    const session = await db.session.findUnique({
-      where: { token: sessionToken },
+    // Find valid session in database
+    const session = await db.session.findFirst({
+      where: {
+        token: sessionToken,
+        expiresAt: {
+          gt: new Date(),
+        },
+      },
       include: {
         user: {
           select: {
             id: true,
             email: true,
+            username: true,
             name: true,
+            image: true,
             role: true,
             isActive: true,
-            image: true,
             managerId: true,
-            members: {
-              select: {
-                organizationId: true,
-                role: true,
-              },
-            },
+            settings: true,
           },
         },
       },
     });
 
-    if (!session) {
-      // Clear invalid cookie
-      logger.warn({ operation: 'session', requestId, reason: 'invalid_token' }, 'Session check (invalid token)');
-      const response = NextResponse.json(
-        { user: null, authenticated: false },
-        { status: 200 }
-      );
-      response.cookies.set('session_token', '', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 0,
-        path: '/',
-      });
-      return response;
+    if (!session || !session.user || !session.user.isActive) {
+      return NextResponse.json({ user: null, authenticated: false });
     }
 
-    // Check if session is expired
-    if (session.expiresAt < new Date()) {
-      // Delete expired session
-      await db.session.delete({
-        where: { id: session.id },
-      });
+    // Get user's organization membership
+    const membership = await db.member.findFirst({
+      where: { userId: session.user.id },
+      select: {
+        organizationId: true,
+        role: true,
+      },
+    });
 
-      logger.info({ operation: 'session', requestId, userId: session.user.id, reason: 'session_expired' }, 'Session check (expired)');
-      const response = NextResponse.json(
-        { user: null, authenticated: false },
-        { status: 200 }
-      );
-      response.cookies.set('session_token', '', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 0,
-        path: '/',
-      });
-      return response;
-    }
-
-    // Check if user is active
-    if (!session.user.isActive) {
-      logger.warn({ operation: 'session', requestId, userId: session.user.id, reason: 'user_inactive' }, 'Session check (inactive user)');
-      return NextResponse.json(
-        { user: null, authenticated: false, error: 'Cuenta desactivada' },
-        { status: 200 }
-      );
-    }
-
-    // Extract organization info from first membership
-    const primaryMembership = session.user.members[0];
-
-    logger.info({ operation: 'session', requestId, userId: session.user.id, organizationId: primaryMembership?.organizationId, duration_ms: Date.now() - start }, 'Session check success');
+    // Get linked providers (for Google Calendar integration)
+    const accounts = await db.account.findMany({
+      where: { userId: session.user.id },
+      select: { providerId: true },
+    });
 
     return NextResponse.json({
       user: {
-        ...session.user,
-        members: undefined,
-        organizationId: primaryMembership?.organizationId || null,
-        organizationRole: primaryMembership?.role || null,
+        id: session.user.id,
+        email: session.user.email,
+        username: session.user.username,
+        name: session.user.name,
+        image: session.user.image,
+        role: session.user.role,
+        isActive: session.user.isActive,
+        managerId: session.user.managerId,
+        organizationId: membership?.organizationId || null,
+        organizationRole: membership?.role || null,
+        linkedProviders: accounts.map((a) => a.providerId),
       },
       authenticated: true,
       session: {
-        expiresAt: session.expiresAt,
+        expiresAt: session.expiresAt.toISOString(),
       },
     });
   } catch (error) {
-    logger.error({ err: error, operation: 'session', requestId, duration_ms: Date.now() - start }, 'Session check failed');
-    return NextResponse.json(
-      { user: null, authenticated: false, error: 'Error interno del servidor' },
-      { status: 500 }
-    );
+    console.error('Session validation error:', error);
+    return NextResponse.json({ user: null, authenticated: false });
   }
 }

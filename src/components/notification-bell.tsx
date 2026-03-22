@@ -39,7 +39,8 @@ interface NotificationsResponse {
 // Fetch notifications for the bell dropdown (limited to 10)
 async function fetchNotifications(userId: string, organizationId: string): Promise<NotificationsResponse> {
   const response = await fetch(
-    `/api/notifications?userId=${userId}&organizationId=${organizationId}&limit=10`
+    `/api/notifications?userId=${userId}&organizationId=${organizationId}&limit=10`,
+    { credentials: 'include' }
   );
   if (!response.ok) {
     throw new Error("Failed to fetch notifications");
@@ -51,6 +52,7 @@ async function fetchNotifications(userId: string, organizationId: string): Promi
 async function markAsRead(notificationId: string): Promise<void> {
   const response = await fetch(`/api/notifications/${notificationId}/read`, {
     method: "POST",
+    credentials: 'include',
   });
   if (!response.ok) {
     throw new Error("Failed to mark notification as read");
@@ -62,6 +64,7 @@ async function markAllAsRead(userId: string, organizationId: string): Promise<vo
   const response = await fetch("/api/notifications/read-all", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: 'include',
     body: JSON.stringify({ userId, organizationId }),
   });
   if (!response.ok) {

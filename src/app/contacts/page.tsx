@@ -1,24 +1,44 @@
 'use client';
 
 import * as React from "react";
+import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
+import { useSidebar } from "@/lib/sidebar-context";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
+import { useDebounce } from "@/hooks/use-debounce";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { ContactStats } from "./components/contact-stats";
 import { ContactFilters } from "./components/contact-filters";
 import { ContactTable } from "./components/contact-table";
 import { ContactPagination } from "./components/contact-pagination";
-import { ContactDrawer } from "./components/contact-drawer";
-import { CreateContactModal } from "./components/create-contact-modal";
-import { TagManagerDialog, type Tag } from "./components/tag-manager-dialog";
-import { PlanningDialog } from "./components/PlanningDialog";
 import { PlanningDialogProvider } from "./components/PlanningDialogContext";
 import { type Contact, type PipelineStage } from "./components/contact-table";
+import { type Tag } from "./components/tag-manager-dialog";
+
+// Dynamic imports for modal/dialog components (code splitting)
+const ContactDrawer = dynamic(
+  () => import("./components/contact-drawer").then((m) => m.ContactDrawer),
+  { ssr: false, loading: () => <div className="fixed inset-0 z-50"><Skeleton className="w-full h-full" /></div> }
+);
+const CreateContactModal = dynamic(
+  () => import("./components/create-contact-modal").then((m) => m.CreateContactModal),
+  { ssr: false, loading: () => <div className="fixed inset-0 z-50 flex items-center justify-center"><Skeleton className="w-[500px] h-[400px] rounded-xl" /></div> }
+);
+const TagManagerDialog = dynamic(
+  () => import("./components/tag-manager-dialog").then((m) => m.TagManagerDialog),
+  { ssr: false, loading: () => <div className="fixed inset-0 z-50 flex items-center justify-center"><Skeleton className="w-[400px] h-[300px] rounded-xl" /></div> }
+);
+const PlanningDialog = dynamic(
+  () => import("./components/PlanningDialog").then((m) => m.PlanningDialog),
+  { ssr: false, loading: () => <div className="fixed inset-0 z-50 flex items-center justify-center"><Skeleton className="w-[600px] h-[500px] rounded-xl" /></div> }
+);
 
 interface ContactsResponse {
   contacts: Contact[];
@@ -38,40 +58,24 @@ interface PipelineStagesResponse {
   stages: PipelineStage[];
 }
 
-// Debounce hook
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = React.useState<T>(value);
-
-  React.useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
-
 // Main Contacts Page
 export default function ContactsPage() {
   const { user } = useAuth();
   const organizationId = user?.organizationId || null;
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
 
-  // State
+  // State - check URL param for action=create to auto-open modal
   const [search, setSearch] = React.useState("");
   const [selectedContacts, setSelectedContacts] = React.useState<string[]>([]);
   const [selectedContactId, setSelectedContactId] = React.useState<string | null>(null);
   const [editingContactTagsId, setEditingContactTagsId] = React.useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
-  const [createModalOpen, setCreateModalOpen] = React.useState(false);
+  const [createModalOpen, setCreateModalOpen] = React.useState(searchParams.get('action') === 'create');
   const [filterStage, setFilterStage] = React.useState<string>("all");
   const [page, setPage] = React.useState(1);
   const [showTagManager, setShowTagManager] = React.useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+  const { collapsed, setCollapsed } = useSidebar();
 
   // Check if user is advisor (should not see assigned to column)
   const isAdvisor = user?.role === 'advisor' || user?.role === 'asesor';
@@ -83,7 +87,7 @@ export default function ContactsPage() {
   const { data: stagesData } = useQuery<PipelineStagesResponse>({
     queryKey: ["pipeline-stages", organizationId],
     queryFn: async () => {
-      const response = await fetch(`/api/pipeline-stages?organizationId=${organizationId}`);
+      const response = await fetch(`/api/pipeline-stages?organizationId=${organizationId}`, { credentials: 'include' });
       if (!response.ok) throw new Error("Error al cargar etapas");
       return response.json();
     },
@@ -96,7 +100,7 @@ export default function ContactsPage() {
   const { data: tagsData } = useQuery<TagsResponse>({
     queryKey: ["tags", organizationId],
     queryFn: async () => {
-      const response = await fetch(`/api/tags?organizationId=${organizationId}`);
+      const response = await fetch(`/api/tags?organizationId=${organizationId}`, { credentials: 'include' });
       if (!response.ok) throw new Error("Error al cargar etiquetas");
       return response.json();
     },
@@ -126,7 +130,7 @@ export default function ContactsPage() {
       params.set("page", page.toString());
       params.set("limit", "20");
 
-      const response = await fetch(`/api/contacts?${params.toString()}`);
+      const response = await fetch(`/api/contacts?${params.toString()}`, { credentials: 'include' });
       if (!response.ok) throw new Error("Error al cargar contactos");
       return response.json();
     },
@@ -150,6 +154,7 @@ export default function ContactsPage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ pipelineStageId: stageId }),
+        credentials: 'include',
       });
       if (!response.ok) throw new Error("Error al actualizar etapa");
       return response.json();
@@ -168,6 +173,7 @@ export default function ContactsPage() {
     mutationFn: async ({ contactId, tagId }: { contactId: string; tagId: string }) => {
       const response = await fetch(`/api/contacts/${contactId}/tags/${tagId}`, {
         method: "DELETE",
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -201,6 +207,7 @@ export default function ContactsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ tagId, tagName, organizationId }),
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -247,6 +254,7 @@ export default function ContactsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, color, organizationId }),
+        credentials: 'include',
       });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -267,6 +275,7 @@ export default function ContactsPage() {
     mutationFn: async (tagId: string) => {
       const response = await fetch(`/api/tags/${tagId}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -319,14 +328,15 @@ export default function ContactsPage() {
   return (
     <PlanningDialogProvider>
     <div className="min-h-screen gradient-bg">
-      <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
-      <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[280px]")}>
+      <AppSidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
+      <div className={cn("transition-all duration-300", collapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
         <AppHeader />
         <main className="p-4 lg:p-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-5"
           >
             {/* Header Stats */}
             <ContactStats

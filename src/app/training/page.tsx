@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
+import { useSidebar } from "@/lib/sidebar-context";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -147,7 +148,7 @@ async function fetchMaterials(params: {
     searchParams.set("search", params.search);
   }
 
-  const response = await fetch(`/api/training?${searchParams.toString()}`);
+  const response = await fetch(`/api/training?${searchParams.toString()}`, { credentials: 'include' });
   if (!response.ok) {
     throw new Error("Error al cargar materiales");
   }
@@ -158,6 +159,7 @@ async function createMaterial(data: MaterialFormData & { duration?: string | nul
   const response = await fetch("/api/training", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: 'include',
     body: JSON.stringify({
       ...data,
       organizationId: ORGANIZATION_ID,
@@ -176,6 +178,7 @@ async function updateMaterial(id: string, data: Partial<MaterialFormData>): Prom
   const response = await fetch(`/api/training/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
+    credentials: 'include',
     body: JSON.stringify({
       ...data,
       url: data.url || null,
@@ -192,6 +195,7 @@ async function updateMaterial(id: string, data: Partial<MaterialFormData>): Prom
 async function deleteMaterial(id: string): Promise<void> {
   const response = await fetch(`/api/training/${id}`, {
     method: "DELETE",
+    credentials: 'include',
   });
   if (!response.ok) {
     const error = await response.json();
@@ -517,7 +521,7 @@ export default function TrainingPage() {
   const [selectedMaterial, setSelectedMaterial] = React.useState<TrainingMaterial | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [materialToDelete, setMaterialToDelete] = React.useState<string | null>(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+  const { collapsed, setCollapsed } = useSidebar();
 
   // Debounced search
   const debouncedSearch = useDebounce(search, 300);
@@ -578,8 +582,8 @@ export default function TrainingPage() {
   if (error) {
     return (
       <div className="min-h-screen gradient-bg">
-        <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
-        <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
+        <AppSidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
+        <div className={cn("transition-all duration-300", collapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
           <AppHeader />
           <main className="p-4 lg:p-6">
             <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
@@ -600,8 +604,8 @@ export default function TrainingPage() {
 
   return (
     <div className="min-h-screen gradient-bg">
-      <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
-      <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
+      <AppSidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
+      <div className={cn("transition-all duration-300", collapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
         <AppHeader />
         <main className="p-4 lg:p-6">
           <motion.div

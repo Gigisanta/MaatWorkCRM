@@ -24,6 +24,178 @@ interface PlanningDialogContextValue {
   onPreview: () => Promise<void>;
 }
 
+// Transform frontend PlanningFormData to backend API format
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function transformFormDataToPlanData(data: PlanningFormData): any {
+  return {
+    // Client profile
+    edad: data.edad || 0,
+    profesion: data.profesion || '',
+    objetivo: data.objetivo || '',
+    perfilRiesgo: data.perfilRiesgo || 'moderado',
+    aporteMensual: data.aporteMensual || 0,
+    aporteInicial: data.aporteInicial,
+    horizonteMeses: data.horizonteMeses || 12,
+    // Financial health
+    ingresosMensuales: data.ingresosMensuales,
+    gastosMensuales: data.gastosMensuales,
+    fondoEmergenciaMeses: data.fondoEmergenciaMeses,
+    fondoEmergenciaActual: data.fondoEmergenciaActual,
+    patrimonioActivos: data.patrimonioActivos,
+    patrimonioDeudas: data.patrimonioDeudas,
+    // Goals - transform metas to metasVida
+    metasVida: data.metas?.map(m => ({
+      id: m.id,
+      nombre: m.nombre,
+      montoObjetivo: m.montoObjetivo,
+      fechaEstimada: m.fechaEstimada ? new Date(m.fechaEstimada) : null,
+      prioridad: m.prioridad,
+      notes: m.notes,
+    })) || [],
+    proyeccionRetiro: data.proyeccionRetiro,
+    // Portfolio - transform field names
+    instruments: data.instrumentos?.map(i => ({
+      id: i.id,
+      nombre: i.nombre,
+      tipo: i.tipo,
+      claseActivo: i.claseActivo,
+      emisor: i.emisor,
+      moneda: i.moneda,
+      rendimientoEsperado: i.rendimientoEsperado,
+      participacion: i.participacion,
+    })) || [],
+    // Transform asignaciones to asignacionesEstrategicas
+    asignacionesEstrategicas: data.asignaciones?.map((a: { id?: string; claseActivo: string; porcentaje: number; descripcion?: string | null }) => ({
+      id: a.id,
+      claseActivo: a.claseActivo,
+      porcentaje: a.porcentaje,
+      descripcion: a.descripcion || null,
+    })) || [],
+    // Obligations - transform obligaciones to obligacionesNegociables
+    obligacionesNegociables: data.obligaciones?.map((o: { id?: string; acreedor: string; tipo?: string | null; saldoPendiente?: number | null; tasaInteres?: number | null; cuotaMensual?: number | null; fechaVencimiento?: string | null }) => ({
+      id: o.id,
+      acreedor: o.acreedor,
+      tipo: o.tipo || null,
+      saldoPendiente: o.saldoPendiente ?? null,
+      tasaInteres: o.tasaInteres ?? null,
+      cuotaMensual: o.cuotaMensual ?? null,
+      fechaVencimiento: o.fechaVencimiento ? new Date(o.fechaVencimiento) : null,
+    })) || [],
+    // Risks
+    riesgos: data.riesgos?.map(r => ({
+      id: r.id,
+      nombre: r.nombre,
+      tipo: r.tipo,
+      probabilidad: r.probabilidad,
+      impacto: r.impacto,
+      mitigacion: r.mitigacion,
+      severity: r.severity,
+    })) || [],
+    // AI
+    usarTerminoIA: data.usarTerminoIA,
+    terminoFinanciero: data.terminoFinanciero,
+    usarConsejoIA: data.usarConsejoIA,
+    consejoFinal: data.consejoFinal,
+    // Branding
+    colorPrincipal: data.colorPrincipal,
+    colorAcento: data.colorAcento,
+    // Advisor
+    asesorNombre: data.asesorNombre,
+    asesorTelefono: data.asesorTelefono,
+    asesorMensajePredefinido: data.asesorMensajePredefinido,
+    // Required by PlanData but not in formData
+    gastosPrincipales: '',
+  };
+}
+
+// Transform API response to frontend formData format
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function transformApiResponseToFormData(apiData: any): Partial<PlanningFormData> {
+  if (!apiData) return {};
+
+  return {
+    // Client profile
+    edad: apiData.edad,
+    profesion: apiData.profesion,
+    objetivo: apiData.objetivo,
+    perfilRiesgo: apiData.perfilRiesgo?.toLowerCase() as 'conservador' | 'moderado' | 'agresivo',
+    aporteMensual: apiData.aporteMensual,
+    aporteInicial: apiData.aporteInicial,
+    horizonteMeses: apiData.horizonteMeses,
+    // Financial health
+    ingresosMensuales: apiData.ingresosMensuales,
+    gastosMensuales: apiData.gastosMensuales,
+    fondoEmergenciaMeses: apiData.fondoEmergenciaMeses,
+    fondoEmergenciaActual: apiData.fondoEmergenciaActual,
+    patrimonioActivos: apiData.patrimonioActivos,
+    patrimonioDeudas: apiData.patrimonioDeudas,
+    // Goals
+    metas: (apiData.metasVida || []).map((m: any) => ({
+      id: m.id,
+      nombre: m.nombre,
+      montoObjetivo: m.montoObjetivo,
+      fechaEstimada: m.fechaEstimada ? new Date(m.fechaEstimada).toISOString() : undefined,
+      prioridad: m.prioridad as 'baja' | 'media' | 'alta',
+      notes: m.notes,
+    })),
+    proyeccionRetiro: apiData.proyeccionRetiro,
+    // Portfolio
+    instrumentos: (apiData.instrumentos || []).map((i: any) => ({
+      id: i.id,
+      nombre: i.nombre,
+      tipo: i.tipo,
+      claseActivo: i.claseActivo,
+      emisor: i.emisor,
+      moneda: i.moneda as 'USD' | 'ARS' | 'Mix',
+      rendimientoEsperado: i.rendimientoEsperado,
+      participacion: i.participacion,
+      isin: i.isin,
+      notas: i.notas,
+    })),
+    asignaciones: (apiData.asignacionesEstrategicas || []).map((a: any) => ({
+      id: a.id,
+      claseActivo: a.claseActivo,
+      porcentaje: a.porcentaje,
+      descripcion: a.descripcion,
+    })),
+    // Obligations
+    obligaciones: (apiData.obligacionesNegociables || []).map((o: any) => ({
+      id: o.id,
+      acreedor: o.acreedor,
+      tipo: o.tipo,
+      saldoPendiente: o.saldoPendiente,
+      tasaInteres: o.tasaInteres,
+      cuotaMensual: o.cuotaMensual,
+      fechaVencimiento: o.fechaVencimiento ? new Date(o.fechaVencimiento).toISOString() : undefined,
+      origen: o.origen,
+      notas: o.notas,
+    })),
+    // Risks
+    riesgos: (apiData.riesgos || []).map((r: any) => ({
+      id: r.id,
+      nombre: r.nombre,
+      tipo: r.tipo,
+      probabilidad: r.probabilidad as 'baja' | 'media' | 'alta',
+      impacto: r.impacto as 'bajo' | 'medio' | 'alto',
+      mitigacion: r.mitigacion,
+      severity: r.severity,
+    })),
+    // AI
+    usarTerminoIA: apiData.usarTerminoIA,
+    terminoFinanciero: apiData.terminoFinanciero,
+    usarConsejoIA: apiData.usarConsejoIA,
+    consejoFinal: apiData.consejoFinal,
+    // Branding
+    colorPrincipal: apiData.colorPrincipal,
+    colorAcento: apiData.colorAcento,
+    // Advisor
+    asesorNombre: apiData.asesorNombre,
+    asesorTelefono: apiData.asesorTelefono,
+    asesorMensajePredefinido: apiData.asesorMensajePredefinido,
+    // Proyeccion
+  };
+}
+
 const PlanningDialogContext = React.createContext<PlanningDialogContextValue | null>(null);
 
 const defaultFormData: PlanningFormData = {
@@ -51,9 +223,31 @@ export function PlanningDialogProvider({ children }: { children: React.ReactNode
 
   const totalSteps = 5;
 
-  const openDialog = React.useCallback((cid?: string, cname?: string) => {
+  const openDialog = React.useCallback(async (cid?: string, cname?: string) => {
+    // Reset to default form data first
+    setFormData(defaultFormData);
+    setCurrentStep(1);
+    setPreviewHtml(null);
+
     if (cid) setActiveContactId(cid);
     if (cname) setActiveContactName(cname);
+
+    // Load existing financial plan data if contactId is provided
+    if (cid) {
+      try {
+        const response = await fetch(`/api/contacts/${cid}/planning`, { credentials: 'include' });
+        if (response.ok) {
+          const apiData = await response.json();
+          const existingData = transformApiResponseToFormData(apiData);
+          if (existingData && Object.keys(existingData).length > 0) {
+            setFormData({ ...defaultFormData, ...existingData });
+          }
+        }
+      } catch (error) {
+        console.error('Error loading existing financial plan:', error);
+      }
+    }
+
     setOpen(true);
   }, []);
 
@@ -101,6 +295,7 @@ export function PlanningDialogProvider({ children }: { children: React.ReactNode
       const response = await fetch(`/api/contacts/${activeContactId}/planning`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           ...formData,
           wizardStep: currentStep,
@@ -134,21 +329,25 @@ export function PlanningDialogProvider({ children }: { children: React.ReactNode
       await fetch(`/api/contacts/${activeContactId}/planning`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           ...formData,
           wizardStep: currentStep,
         }),
       });
 
-      // Then generate HTML
+      // Then generate HTML - transform formData to PlanData format
+      const planData = transformFormDataToPlanData(formData);
       const response = await fetch(`/api/contacts/${activeContactId}/planning/html`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        credentials: 'include',
+        body: JSON.stringify({ planData }),
       });
 
       if (!response.ok) {
-        throw new Error('Error al generar la vista previa');
+        const errorText = await response.text();
+        throw new Error(`Error al generar la vista previa: ${response.status} ${errorText}`);
       }
 
       const data = await response.json();

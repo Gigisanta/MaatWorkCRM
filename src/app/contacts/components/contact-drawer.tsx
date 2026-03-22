@@ -172,7 +172,7 @@ export function ContactDrawer({
   const { data: usersData } = useQuery<{ users: { id: string; name: string | null; email: string }[] }>({
     queryKey: ["organization-users", organizationId],
     queryFn: async () => {
-      const response = await fetch(`/api/users?organizationId=${organizationId}`);
+      const response = await fetch(`/api/users?organizationId=${organizationId}`, { credentials: 'include' });
       if (!response.ok) throw new Error("Error al cargar usuarios");
       return response.json();
     },
@@ -183,7 +183,7 @@ export function ContactDrawer({
   const { data: contact, isLoading } = useQuery<ContactDetail>({
     queryKey: ["contact", contactId],
     queryFn: async () => {
-      const response = await fetch(`/api/contacts/${contactId}`);
+      const response = await fetch(`/api/contacts/${contactId}`, { credentials: 'include' });
       if (!response.ok) throw new Error("Error al cargar contacto");
       return response.json();
     },
@@ -194,7 +194,7 @@ export function ContactDrawer({
   const { data: financialPlan } = useQuery({
     queryKey: ["contact-financial-plan", contactId],
     queryFn: async () => {
-      const response = await fetch(`/api/contacts/${contactId}/planning`);
+      const response = await fetch(`/api/contacts/${contactId}/planning`, { credentials: 'include' });
       if (!response.ok) return null;
       return response.json();
     },
@@ -224,6 +224,7 @@ export function ContactDrawer({
       const response = await fetch(`/api/contacts/${contactId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        credentials: 'include',
         body: JSON.stringify(data),
       });
       if (!response.ok) throw new Error("Error al actualizar contacto");
@@ -246,6 +247,7 @@ export function ContactDrawer({
     mutationFn: async () => {
       const response = await fetch(`/api/contacts/${contactId}`, {
         method: "DELETE",
+        credentials: 'include',
       });
       if (!response.ok) throw new Error("Error al eliminar contacto");
       return response.json();
@@ -268,6 +270,7 @@ export function ContactDrawer({
       const response = await fetch(`/api/contacts/${contactId}/tags`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: 'include',
         body: JSON.stringify({
           tagName,
           organizationId,
@@ -295,6 +298,7 @@ export function ContactDrawer({
       console.log(`[DEBUG DRAWER] Removing tag: contactId=${contactId}, tagId=${tagId}`);
       const response = await fetch(`/api/contacts/${contactId}/tags/${tagId}`, {
         method: "DELETE",
+        credentials: 'include',
       });
       console.log(`[DEBUG DRAWER] Response status: ${response.status}`);
       if (!response.ok) {
