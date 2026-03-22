@@ -1,13 +1,14 @@
-import * as Sentry from '@sentry/nextjs'
+// Sentry is not installed - these are no-op stubs
+// To enable Sentry: npm install @sentry/nextjs
 
 export function captureServerError(error: unknown, context: Record<string, unknown>) {
-  Sentry.captureException(error, { extra: context })
+  console.error('Server error:', error, context)
 }
 
 export function addServerTag(key: string, value: string) {
-  Sentry.setTag(key, value)
+  // No-op when Sentry is not installed
 }
 
 export function addServerUser(userId: string, email?: string) {
-  Sentry.setUser({ id: userId, email })
+  // No-op when Sentry is not installed
 }

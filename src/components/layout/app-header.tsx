@@ -25,13 +25,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CommandPalette } from "./command-palette";
 import { NotificationBell } from "@/components/notification-bell";
 import { useAuth } from "@/lib/auth-context";
-import { useRouter } from "next/navigation";
+import { useQuickActions } from "@/lib/quick-actions-context";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
 export function AppHeader() {
   const { user, logout, isLoading } = useAuth();
-  const router = useRouter();
+  const { setCreateContactOpen, setCreateTaskOpen } = useQuickActions();
   const [showCommandPalette, setShowCommandPalette] = React.useState(false);
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
 
@@ -51,18 +51,18 @@ export function AppHeader() {
 
   return (
     <>
-      <header className="h-16 border-b border-white/10 glass">
+      <header className="h-16 border-b border-white/6 glass">
         <div className="flex h-full items-center justify-between px-4 lg:px-6">
           {/* Search */}
           <div className="flex-1 max-w-xl">
             <button
               onClick={() => setShowCommandPalette(true)}
-              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-slate-400 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 transition-colors"
+              className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-slate-500 bg-white/4 border border-white/8 rounded-xl hover:bg-white/7 hover:border-white/15 hover:text-slate-400 focus:bg-white/8 focus:border-violet-500/40 transition-all duration-200 group"
               aria-label="Abrir búsqueda"
             >
-              <Search className="h-4 w-4" />
-              <span>Buscar contactos, tareas, deals...</span>
-              <kbd className="hidden sm:inline-flex ml-auto px-2 py-0.5 text-xs bg-white/10 rounded">
+              <Search className="h-4 w-4 flex-shrink-0 text-slate-600 group-hover:text-slate-400 transition-colors duration-200" />
+              <span className="truncate">Buscar contactos, tareas, deals...</span>
+              <kbd className="hidden sm:inline-flex ml-auto px-2 py-0.5 text-xs bg-white/8 border border-white/10 rounded-md flex-shrink-0">
                 ⌘K
               </kbd>
             </button>
@@ -72,18 +72,24 @@ export function AppHeader() {
           <div className="flex items-center gap-2 ml-4">
             {/* Quick actions */}
             <div className="hidden md:flex items-center gap-1">
-              <Link href="/contacts">
-                <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white">
-                  <Plus className="h-4 w-4 mr-1" />
+              <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCreateContactOpen(true)}
+                  className="text-slate-400 hover:text-slate-200 bg-white/4 border border-white/8 rounded-lg hover:bg-white/8 hover:border-white/15 transition-all duration-200"
+                >
+                  <Plus className="h-4 w-4 mr-1 text-violet-400" />
                   Contacto
                 </Button>
-              </Link>
-              <Link href="/tasks">
-                <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white">
-                  <Plus className="h-4 w-4 mr-1" />
+              <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCreateTaskOpen(true)}
+                  className="text-slate-400 hover:text-slate-200 bg-white/4 border border-white/8 rounded-lg hover:bg-white/8 hover:border-white/15 transition-all duration-200"
+                >
+                  <Plus className="h-4 w-4 mr-1 text-violet-400" />
                   Tarea
                 </Button>
-              </Link>
             </div>
 
             {/* Theme toggle */}
@@ -92,13 +98,28 @@ export function AppHeader() {
             {/* Notifications */}
             <NotificationBell />
 
+            {/* Google Calendar indicator */}
+            <Link href="/settings/google-calendar">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative h-9 w-9 rounded-full text-slate-400 hover:text-slate-200"
+                title="Google Calendar"
+              >
+                <svg className="h-5 w-5" viewBox="0 0 24 24">
+                  <path d="M19.5 4H5.5C4.67 4 4 4.67 4 5.5v13c0 .83.67 1.5 1.5 1.5h14c.83 0 1.5-.67 1.5-1.5v-13c0-.83-.67-1.5-1.5-1.5zm-4.5 13H8v-4h7v4zm0-5H8V8h7v4zm4.5 5h-3v-3h3v3zm0-5h-3V8h3v4z" fill="currentColor"/>
+                </svg>
+                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-[#0E0F12]" />
+              </Button>
+            </Link>
+
             {/* User menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                   <Avatar className="h-9 w-9">
                     <AvatarImage src={user?.image || undefined} />
-                    <AvatarFallback className="bg-indigo-500/20 text-indigo-400">
+                    <AvatarFallback className="bg-violet-500/15 text-violet-300">
                       {isLoading ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
@@ -143,8 +164,8 @@ export function AppHeader() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  className="text-rose-500 cursor-pointer"
+                <DropdownMenuItem
+                  className="text-rose-400 cursor-pointer focus:bg-rose-500/10 focus:text-rose-400"
                   onClick={handleLogout}
                   disabled={isLoggingOut}
                 >

@@ -4,12 +4,11 @@ import { db } from "@/lib/db";
 
 export async function GET(request: Request) {
   const session = await getUserFromSession(request as any);
-  if (!session?.user?.id) {
+  if (!session?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { user } = session;
-  const organizationId = user.members?.[0]?.organizationId;
+  const organizationId = session.organizationId;
   if (!organizationId) {
     return NextResponse.json({ error: "No organization" }, { status: 400 });
   }
@@ -24,7 +23,7 @@ export async function GET(request: Request) {
   ] = await Promise.all([
     // Deals - get aggregate value only
     db.deal.aggregate({
-      where: { organizationId, status: { not: "cancelled" } },
+      where: { organizationId },
       _count: true,
       _sum: { value: true },
     }),
@@ -72,11 +71,13 @@ export async function GET(request: Request) {
     ? Math.round(totalProgress / goalsResult.length)
     : 0;
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     pipelineValue,
     activeDealsCount,
     activeContacts,
     pendingTasks,
     avgGoalProgress,
   });
+  response.headers.set('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
+  return response;
 }

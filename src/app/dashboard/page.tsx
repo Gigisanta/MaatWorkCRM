@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
+import { useSidebar } from "@/lib/sidebar-context";
 import { useAuth } from "@/lib/auth-context";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -56,7 +57,7 @@ const kpiConfig = [
 
 export default function DashboardPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+  const { collapsed, setCollapsed } = useSidebar();
 
   // Fetch dashboard stats
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -64,7 +65,8 @@ export default function DashboardPage() {
     queryFn: async () => {
       if (!user?.organizationId) return null;
       const response = await fetch(
-        `/api/dashboard/stats?organizationId=${user.organizationId}`
+        `/api/dashboard/stats?organizationId=${user.organizationId}`,
+        { credentials: 'include' }
       );
       if (!response.ok) throw new Error("Failed to fetch stats");
       return response.json();
@@ -79,7 +81,8 @@ export default function DashboardPage() {
     queryFn: async () => {
       if (!user?.organizationId) return { deals: [] };
       const response = await fetch(
-        `/api/deals?organizationId=${user.organizationId}&limit=1000`
+        `/api/deals?organizationId=${user.organizationId}&limit=1000`,
+        { credentials: 'include' }
       );
       if (!response.ok) throw new Error("Failed to fetch deals");
       return response.json();
@@ -130,10 +133,10 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen gradient-bg">
-      <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
+      <AppSidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
       <div className={cn(
         "transition-all duration-300",
-        sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[220px]"
+        collapsed ? "lg:pl-[80px]" : "lg:pl-[220px]"
       )}>
         <AppHeader />
         <main className="p-4 lg:p-6">
@@ -230,11 +233,11 @@ export default function DashboardPage() {
                   </div>
                   <div className="bg-white/4 rounded-lg p-3">
                     <p className="text-xs text-slate-500 mb-1">Total contactos</p>
-                    <p className="text-2xl font-bold text-white">{contacts.length}</p>
+                    <p className="text-2xl font-bold text-white">{activeContacts}</p>
                   </div>
                   <div className="bg-white/4 rounded-lg p-3">
                     <p className="text-xs text-slate-500 mb-1">Equipos</p>
-                    <p className="text-2xl font-bold text-white">{teams.length}</p>
+                    <p className="text-2xl font-bold text-white">{stats?.teamsCount || 0}</p>
                   </div>
                 </div>
               </div>

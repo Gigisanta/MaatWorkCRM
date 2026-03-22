@@ -14,6 +14,7 @@ import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { MaatWorkLogo } from '@/components/brand';
+import { GoogleSignInButton } from '@/components/auth/google-signin-button';
 
 function LoginContent() {
   const [identifier, setIdentifier] = React.useState('');
@@ -81,9 +82,9 @@ function LoginContent() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="flex justify-center mb-8"
+          className="flex justify-center mb-10"
         >
-          <MaatWorkLogo size="lg" showWordmark showTagline />
+          <MaatWorkLogo size="2xl" showWordmark showTagline />
         </motion.div>
 
         <Card className="bg-[#0E0F12]/90 backdrop-blur-xl border-[#1C1D21]">
@@ -196,29 +197,22 @@ function LoginContent() {
               </Button>
             </form>
 
-            {/* Divider */}
+            {/* Google Sign In */}
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-[#1C1D21]"></div>
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-[#0E0F12] px-2 text-[#666666]">
-                  Demo Credentials
+                  O
                 </span>
               </div>
             </div>
 
-            {/* Demo accounts */}
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="bg-[#08090B] rounded-lg p-3 border border-[#1C1D21]">
-                <p className="text-[#A78BFA] font-medium">Admin</p>
-                <p className="text-[#666666]">gio / admin123</p>
-              </div>
-              <div className="bg-[#08090B] rounded-lg p-3 border border-[#1C1D21]">
-                <p className="text-[#A78BFA] font-medium">Asesor</p>
-                <p className="text-[#666666]">ana / demo123</p>
-              </div>
-            </div>
+            <GoogleSignInButton
+              variant="outline"
+              className="w-full bg-[#08090B] border-[#1C1D21] text-[#F0EFE9] hover:bg-[#1C1D21] hover:border-[#8B5CF6]"
+            />
           </CardContent>
         </Card>
       </motion.div>

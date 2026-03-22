@@ -4,7 +4,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 interface MaatWorkLogoProps {
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl" | "2xl";
   showWordmark?: boolean;
   showTagline?: boolean;
   variant?: "default" | "light" | "accent";
@@ -16,6 +16,7 @@ const sizes = {
   md: { icon: 32, wordmark: "text-base", tagline: "text-[9px]" },
   lg: { icon: 48, wordmark: "text-xl", tagline: "text-[10px]" },
   xl: { icon: 64, wordmark: "text-2xl", tagline: "text-xs" },
+  "2xl": { icon: 80, wordmark: "text-3xl", tagline: "text-sm" },
 };
 
 export function MaatWorkLogo({

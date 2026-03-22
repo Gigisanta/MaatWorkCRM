@@ -1,9 +1,12 @@
-import { calendar_v3 as gcal } from 'googleapis';
+import { google, calendar_v3 as gcal } from 'googleapis';
 import { db } from '@/lib/db';
 import { Prisma } from '@prisma/client';
 import { OAuth2Client } from 'google-auth-library';
 import { decryptTokenIfSet } from '@/lib/crypto';
 import { localEventToGoogle } from './event-mapper';
+
+const MAX_EVENTS_PER_PAGE = 250;
+const SYNC_LOOKBACK_DAYS = 7; // Fallback lookback if no syncToken
 
 // ─── OAuth Client ────────────────────────────────────────────────
 
@@ -60,9 +63,11 @@ export class CalendarSyncEngine {
       timeMax.setMonth(timeMax.getMonth() + 1);
 
       const allEvents: gcal.Schema$Event[] = [];
+      let nextSyncToken: string | undefined;
       let pageToken: string | undefined;
 
       // Paginate to handle >250 events
+      // nextSyncToken appears on EVERY page response when no syncToken is passed
       do {
         const res = await calendar.events.list({
           calendarId,
@@ -70,18 +75,19 @@ export class CalendarSyncEngine {
           timeMax: timeMax.toISOString(),
           singleEvents: true,
           orderBy: 'startTime',
-          maxResults: 250,
+          maxResults: MAX_EVENTS_PER_PAGE,
           pageToken,
         });
         if (res.data.items) allEvents.push(...res.data.items);
+        // Store the latest nextSyncToken (last page has the definitive token)
+        if (res.data.nextSyncToken) nextSyncToken = res.data.nextSyncToken;
         pageToken = res.data.nextPageToken ?? undefined;
       } while (pageToken);
 
-      const syncToken = allEvents[allEvents.length - 1]?.id;
-
+      // Store null syncToken to force initial sync next time (expires after ~30 days)
       await this.batchUpsertEvents(userId, organizationId, allEvents);
 
-      await this.updateSyncState(userId, calendarId, 'idle', syncToken);
+      await this.updateSyncState(userId, calendarId, 'idle', nextSyncToken ?? null);
       return { synced: allEvents.length };
     } catch (error) {
       await this.markError(userId, calendarId);
@@ -117,41 +123,60 @@ export class CalendarSyncEngine {
 
     try {
       const now = new Date();
-      const timeMin = new Date(syncState.lastSyncedAt ?? now);
-      // Solo ventana de 24h hacia atrás para reducir eventos
-      timeMin.setHours(timeMin.getHours() - 24);
-
       const allEvents: gcal.Schema$Event[] = [];
+      let nextSyncToken: string | undefined;
       let pageToken: string | undefined;
 
+      // Use syncToken if available — Google returns ONLY changed events since that token
+      // If expired (410), clear and do initialSync
+      const listParams: any = {
+        calendarId,
+        singleEvents: true,
+        orderBy: 'startTime',
+        maxResults: MAX_EVENTS_PER_PAGE,
+        pageToken,
+      };
+
+      if (syncState.syncToken) {
+        // Delta mode: use syncToken for efficient change detection
+        listParams.syncToken = syncState.syncToken;
+      } else {
+        // Fallback: time-based window if no syncToken
+        const timeMin = new Date(syncState.lastSyncedAt ?? now);
+        timeMin.setDate(timeMin.getDate() - SYNC_LOOKBACK_DAYS);
+        listParams.timeMin = timeMin.toISOString();
+        listParams.timeMax = now.toISOString();
+      }
+
       do {
-        const res = await calendar.events.list({
-          calendarId,
-          timeMin: timeMin.toISOString(),
-          timeMax: now.toISOString(),
-          singleEvents: true,
-          orderBy: 'startTime',
-          maxResults: 250,
-          pageToken,
-        });
+        const res = await calendar.events.list(listParams);
         if (res.data.items) allEvents.push(...res.data.items);
+        // nextSyncToken appears on every page; keep the latest
+        if (res.data.nextSyncToken) nextSyncToken = res.data.nextSyncToken;
         pageToken = res.data.nextPageToken ?? undefined;
+        // When using syncToken, don't pass pageToken on subsequent calls (use nextPageToken)
+        if (syncState.syncToken && pageToken) {
+          // With syncToken, pagination still works but pageToken gets the nextPageToken
+        }
       } while (pageToken);
 
       if (allEvents.length > 0) {
         await this.batchUpsertEvents(userId, organizationId, allEvents);
       }
 
-      await this.updateSyncState(userId, calendarId, 'idle', syncState.syncToken);
+      // Store the new nextSyncToken for next delta
+      await this.updateSyncState(userId, calendarId, 'idle', nextSyncToken ?? syncState.syncToken);
       return { synced: allEvents.length, direction: 'delta' };
     } catch (error: any) {
-      // syncToken puede expirar — Google expira después de ~30 días sin uso
+      // syncToken expired (410) — Google tokens expire after ~30 days without use
       if (error?.status === 410 || error?.message?.includes('syncToken')) {
         await db.calendarSyncState.update({
           where: { userId_calendarId: { userId, calendarId } },
           data: { syncToken: null },
         });
-        return this.deltaSync(userId, organizationId, calendarId);
+        console.warn('[CalendarSync] syncToken expired, re-running initialSync');
+        const result = await this.initialSync(userId, organizationId, calendarId);
+        return { ...result, direction: 'full' };
       }
       await this.markError(userId, calendarId);
       throw error;
@@ -274,6 +299,14 @@ export class CalendarSyncEngine {
           const end = gEvent.end?.dateTime || gEvent.end?.date;
           const isCancelled = gEvent.status === 'cancelled';
 
+          if (isCancelled) {
+            // Cancelled in Google → hard delete locally (not soft delete)
+            await tx.calendarEvent.deleteMany({
+              where: { googleEventId: gEvent.id! },
+            }).catch(() => {});
+            continue;
+          }
+
           const data: Prisma.CalendarEventUncheckedCreateInput = {
             googleEventId: gEvent.id!,
             googleEtag: gEvent.etag || undefined,
@@ -284,7 +317,7 @@ export class CalendarSyncEngine {
             attendees: gEvent.attendees ? JSON.stringify(gEvent.attendees) : undefined,
             reminders: gEvent.reminders ? JSON.stringify(gEvent.reminders) : undefined,
             colorId: gEvent.colorId || undefined,
-            status: isCancelled ? 'cancelled' : (gEvent.status || undefined),
+            status: gEvent.status || undefined,
             syncDirection: 'inbound',
             source: 'google',
             startAt: start ? new Date(start) : new Date(),

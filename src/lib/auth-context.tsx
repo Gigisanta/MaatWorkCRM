@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import type { AuthUser } from './auth-helpers';
@@ -19,6 +20,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
   mutateUser: (user: AuthUser | null) => void;
+  linkedProviders?: string[];
 }
 
 interface RegisterData {
@@ -42,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchSession = useCallback(async () => {
     try {
-      const response = await fetch('/api/auth/session');
+      const response = await fetch('/api/auth/session', { credentials: 'include' });
       const data = await response.json();
       
       if (data.authenticated && data.user) {
@@ -117,6 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier: email, password, rememberMe }),
+        credentials: 'include',
       });
 
       const data = await response.json();
@@ -144,6 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
+        credentials: 'include',
       });
 
       const result = await response.json();
@@ -166,19 +170,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      setUser(null);
-      setSession(null);
-      toast.success('Sesión cerrada');
-      notifyOtherTabs();
-      router.push('/login');
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Still clear local state
-      setUser(null);
-      setSession(null);
-      router.push('/login');
+      // Clear custom session if exists
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
+    } catch {
+      // Ignore errors from custom logout
     }
+    try {
+      // Clear NextAuth session (handles Google OAuth too)
+      await signOut({ redirect: false });
+    } catch {
+      // Ignore if no NextAuth session
+    }
+    setUser(null);
+    setSession(null);
+    toast.success('Sesión cerrada');
+    notifyOtherTabs();
+    router.push('/login');
   }, [router, notifyOtherTabs]);
 
   const mutateUser = useCallback((newUser: AuthUser | null) => {

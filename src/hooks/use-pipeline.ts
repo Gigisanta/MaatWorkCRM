@@ -98,7 +98,7 @@ const DEFAULT_ORG_ID = 'demo-org';
 
 // Fetch stages
 async function fetchStages(organizationId: string): Promise<PipelineStage[]> {
-  const response = await fetch(`/api/pipeline-stages?organizationId=${organizationId}`);
+  const response = await fetch(`/api/pipeline-stages?organizationId=${organizationId}`, { credentials: 'include' });
   if (!response.ok) throw new Error('Failed to fetch stages');
   const data = await response.json();
   return data.stages;
@@ -106,7 +106,7 @@ async function fetchStages(organizationId: string): Promise<PipelineStage[]> {
 
 // Fetch deals
 async function fetchDeals(organizationId: string): Promise<Deal[]> {
-  const response = await fetch(`/api/deals?organizationId=${organizationId}&limit=100`);
+  const response = await fetch(`/api/deals?organizationId=${organizationId}&limit=100`, { credentials: 'include' });
   if (!response.ok) throw new Error('Failed to fetch deals');
   const data = await response.json();
   return data.deals;
@@ -114,7 +114,7 @@ async function fetchDeals(organizationId: string): Promise<Deal[]> {
 
 // Fetch contacts
 async function fetchContacts(organizationId: string, search: string): Promise<Contact[]> {
-  const response = await fetch(`/api/contacts?organizationId=${organizationId}&search=${encodeURIComponent(search)}&limit=20`);
+  const response = await fetch(`/api/contacts?organizationId=${organizationId}&search=${encodeURIComponent(search)}&limit=20`, { credentials: 'include' });
   if (!response.ok) throw new Error('Failed to fetch contacts');
   const data = await response.json();
   return data.contacts;
@@ -122,7 +122,7 @@ async function fetchContacts(organizationId: string, search: string): Promise<Co
 
 // Fetch contacts with products (tags)
 async function fetchContactsWithProducts(organizationId: string): Promise<ContactWithProducts[]> {
-  const response = await fetch(`/api/contacts?organizationId=${organizationId}&limit=100`);
+  const response = await fetch(`/api/contacts?organizationId=${organizationId}&limit=100`, { credentials: 'include' });
   if (!response.ok) throw new Error('Failed to fetch contacts');
   const data = await response.json();
   return data.contacts || [];
@@ -130,7 +130,7 @@ async function fetchContactsWithProducts(organizationId: string): Promise<Contac
 
 // Fetch users for assignee select
 async function fetchUsers(organizationId: string): Promise<User[]> {
-  const response = await fetch(`/api/users?organizationId=${organizationId}`);
+  const response = await fetch(`/api/users?organizationId=${organizationId}`, { credentials: 'include' });
   if (!response.ok) throw new Error('Failed to fetch users');
   const data = await response.json();
   return data.users || [];
@@ -210,6 +210,7 @@ export function useStages(organizationId: string = DEFAULT_ORG_ID) {
   return useQuery({
     queryKey: ['stages', organizationId],
     queryFn: () => fetchStages(organizationId),
+    enabled: !!organizationId,
   });
 }
 
@@ -217,6 +218,7 @@ export function useDeals(organizationId: string = DEFAULT_ORG_ID) {
   return useQuery({
     queryKey: ['deals', organizationId],
     queryFn: () => fetchDeals(organizationId),
+    enabled: !!organizationId,
   });
 }
 
@@ -224,7 +226,7 @@ export function useContacts(organizationId: string = DEFAULT_ORG_ID, search: str
   return useQuery({
     queryKey: ['contacts', organizationId, search],
     queryFn: () => fetchContacts(organizationId, search),
-    enabled: search.length > 0,
+    enabled: search.length > 0 && !!organizationId,
   });
 }
 
@@ -232,6 +234,7 @@ export function useContactsWithProducts(organizationId: string = DEFAULT_ORG_ID)
   return useQuery({
     queryKey: ['contactsWithProducts', organizationId],
     queryFn: () => fetchContactsWithProducts(organizationId),
+    enabled: !!organizationId,
   });
 }
 
@@ -239,6 +242,7 @@ export function useUsers(organizationId: string = DEFAULT_ORG_ID) {
   return useQuery({
     queryKey: ['users', organizationId],
     queryFn: () => fetchUsers(organizationId),
+    enabled: !!organizationId,
   });
 }
 

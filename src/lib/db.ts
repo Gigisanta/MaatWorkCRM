@@ -19,7 +19,8 @@ if (process.env.NODE_ENV !== 'production' || process.env.VERCEL === '1') {
 }
 
 // Enhanced query logging for development and slow query detection
-db.$on('query' as any, (e: unknown) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+(db as any).$on('query', (e: unknown) => {
   const event = e as { timestamp: Date; query: string; params: string; duration: number };
   if (process.env.NODE_ENV === 'development') {
     console.log(JSON.stringify({

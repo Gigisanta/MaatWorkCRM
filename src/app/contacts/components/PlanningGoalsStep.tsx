@@ -114,13 +114,7 @@ export function PlanningGoalsStep({ data, onUpdate }: PlanningGoalsStepProps) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.3 }}
-      className="space-y-6"
-    >
+    <div className="space-y-6">
       <div className="space-y-1">
         <h3 className="text-lg font-semibold text-white">Metas Financieras</h3>
         <p className="text-sm text-slate-400">Define las metas y objetivos del cliente</p>
@@ -346,6 +340,6 @@ export function PlanningGoalsStep({ data, onUpdate }: PlanningGoalsStepProps) {
           className="glass border-white/10 bg-white/5 text-white min-h-[80px]"
         />
       </Card>
-    </motion.div>
+    </div>
   );
 }

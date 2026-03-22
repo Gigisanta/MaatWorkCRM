@@ -3,22 +3,26 @@ import { db } from '@/lib/db';
 import { calendarSyncEngine } from '@/lib/google-calendar/sync-engine';
 
 export async function GET(request: NextRequest) {
-  // Verify cron secret
   const cronSecret = request.headers.get('x-cron-secret');
   if (cronSecret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    // Get all users with Google accounts and active sync
+    // Solo usuarios con sync activo y tokens de Google válidos
     const syncStates = await db.calendarSyncState.findMany({
       where: {
         syncStatus: { in: ['idle', 'error'] },
+        // Skip error states con muchos errores (>5 en 24h)
+        errorCount: { lt: 6 },
       },
       include: {
         user: {
-          select: {
-            id: true,
+          include: {
+            accounts: {
+              where: { providerId: 'google' },
+              select: { access_token: true },
+            },
             members: {
               select: { organizationId: true },
             },
@@ -27,38 +31,42 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const results = [];
+    // Filter: solo usuarios con cuenta Google real
+    const activeSyncs = syncStates.filter(
+      (s) => s.user.accounts.length > 0 && s.user.members.length > 0
+    );
 
-    const BATCH_SIZE = 5;
-    for (let i = 0; i < syncStates.length; i += BATCH_SIZE) {
-      const batch = syncStates.slice(i, i + BATCH_SIZE);
-      const batchResults = await Promise.all(batch.map(async (syncState) => {
-        try {
+    if (activeSyncs.length === 0) {
+      return NextResponse.json({ processed: 0, results: [], timestamp: new Date().toISOString() });
+    }
+
+    const results = [];
+    const BATCH_SIZE = 3; // Más pequeño = menos presión en BD
+
+    for (let i = 0; i < activeSyncs.length; i += BATCH_SIZE) {
+      const batch = activeSyncs.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.allSettled(
+        batch.map(async (syncState) => {
           const membership = syncState.user.members[0];
           if (!membership) return { userId: syncState.userId, status: 'skipped' };
 
-          // Only retry error states after some time
-          if (syncState.syncStatus === 'error' && syncState.errorCount > 5) {
-            return { userId: syncState.userId, status: 'skipped' };
-          }
-
-          await calendarSyncEngine.deltaSync(
+          const { synced } = await calendarSyncEngine.deltaSync(
             syncState.userId,
             membership.organizationId,
             syncState.calendarId
           );
 
-          return { userId: syncState.userId, status: 'success' };
-        } catch (error: any) {
-          // Increment error count
-          await db.calendarSyncState.update({
-            where: { id: syncState.id },
-            data: { errorCount: { increment: 1 }, syncStatus: 'error' },
-          });
-          return { userId: syncState.userId, status: 'error', message: error.message };
+          return { userId: syncState.userId, status: 'success', synced };
+        })
+      );
+
+      for (const result of batchResults) {
+        if (result.status === 'rejected') {
+          results.push({ status: 'error', message: result.reason?.message });
+        } else {
+          results.push(result.value);
         }
-      }));
-      results.push(...batchResults);
+      }
     }
 
     return NextResponse.json({

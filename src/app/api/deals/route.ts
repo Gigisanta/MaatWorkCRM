@@ -2,11 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { revalidateTag } from 'next/cache';
 import logger from '@/lib/logger';
+import { getUserFromSession } from '@/lib/auth-helpers';
 
 export const revalidate = 300;
 
 // GET /api/deals - List deals with filters
 export async function GET(request: NextRequest) {
+  const session = await getUserFromSession(request);
+  if (!session) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
   const start = Date.now();
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
@@ -107,6 +113,11 @@ export async function GET(request: NextRequest) {
 
 // POST /api/deals - Create a new deal
 export async function POST(request: NextRequest) {
+  const session = await getUserFromSession(request);
+  if (!session) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+
   const start = Date.now();
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 

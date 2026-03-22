@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
+import { useSidebar } from "@/lib/sidebar-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -168,7 +169,7 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?:
 export default function ReportsPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [period, setPeriod] = React.useState<PeriodFilter>("month");
-  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+  const { collapsed, setCollapsed } = useSidebar();
 
   // Get date range based on period filter
   const getDateRange = React.useCallback(() => {
@@ -621,8 +622,8 @@ export default function ReportsPage() {
 
   return (
     <div className="min-h-screen gradient-bg">
-      <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
-      <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
+      <AppSidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
+      <div className={cn("transition-all duration-300", collapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
         <AppHeader />
         <main className="p-4 lg:p-6">
           <motion.div

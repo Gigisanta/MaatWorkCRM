@@ -193,13 +193,7 @@ export function PlanningFinalStep({ data, onUpdate }: PlanningFinalStepProps) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.3 }}
-      className="space-y-6"
-    >
+    <div className="space-y-6">
       <div className="space-y-1">
         <h3 className="text-lg font-semibold text-white">Informacion Final</h3>
         <p className="text-sm text-slate-400">Obligaciones, riesgos, branding y asesor</p>
@@ -535,6 +529,6 @@ export function PlanningFinalStep({ data, onUpdate }: PlanningFinalStepProps) {
           </div>
         </div>
       </Card>
-    </motion.div>
+    </div>
   );
 }

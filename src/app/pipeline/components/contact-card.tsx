@@ -38,92 +38,87 @@ export function ContactCard({
   // Tags are the products
   const products: Product[] = contact.tags || [];
   const hasProducts = products.length > 0;
-  const totalValue = products.reduce((sum, p) => sum + (p.value || 0), 0);
 
   return (
     <motion.div
       ref={setNodeRef}
       style={style}
       layout
-      initial={{ opacity: 0, scale: 0.9 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{
-        opacity: isDragging ? 0.5 : 1,
-        scale: isDragging ? 1.02 : isHighlighted ? 1.02 : 1,
-        borderColor: isHighlighted ? "rgba(99, 102, 241, 0.8)" : undefined,
+        opacity: isDragging ? 0.4 : 1,
+        scale: isDragging ? 1.03 : 1,
       }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      transition={{ type: "spring", duration: 0.5 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ type: "spring", stiffness: 400, damping: 30 }}
       className={cn(
-        "p-3 rounded-lg glass border cursor-grab active:cursor-grabbing group relative",
-        "hover:border-white/20 transition-all duration-200",
-        isDragging && "shadow-xl shadow-black/20",
+        "p-3 rounded-xl border cursor-grab active:cursor-grabbing group relative overflow-hidden",
+        "bg-[#0E0F12]/90 backdrop-blur-sm",
+        "transition-all duration-200",
+        isDragging && "shadow-2xl shadow-black/40",
         isHighlighted
-          ? "border-indigo-500 shadow-lg shadow-indigo-500/20 animate-pulse"
+          ? "border-violet-500/60 shadow-md shadow-violet-500/15"
           : hasProducts
-          ? "border-white/10"
-          : "border-amber-500/30"
+          ? "border-white/8 hover:border-white/15 hover:shadow-md hover:shadow-black/20"
+          : "border-amber-500/25 hover:border-amber-500/40"
       )}
       {...attributes}
       {...listeners}
     >
+      {/* Subtle top gradient for visual depth */}
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
+
       {/* Header: emoji + name */}
-      <div className="flex items-start gap-2">
-        <span className="text-2xl flex-shrink-0">{contact.emoji || "👤"}</span>
+      <div className="flex items-start gap-2.5">
+        <span className="text-xl flex-shrink-0 leading-none mt-0.5">{contact.emoji || "👤"}</span>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-white truncate">
+          <p className="text-sm font-semibold text-white truncate leading-snug">
             {contact.name}
           </p>
-          {/* Total value if products exist */}
-          {hasProducts && totalValue > 0 && (
-            <p className="text-lg font-bold text-white">
-              ${totalValue.toLocaleString()}
-            </p>
-          )}
         </div>
-        <GripVertical className="h-4 w-4 text-slate-600 flex-shrink-0" />
+        <GripVertical className="h-3.5 w-3.5 text-slate-700 flex-shrink-0 mt-0.5 group-hover:text-slate-500 transition-colors" />
       </div>
 
       {/* Products list */}
       {hasProducts ? (
-        <div className="mt-2 space-y-1">
+        <div className="mt-2.5 space-y-1">
           {products.map((product) => (
             <ProductSubCard key={product.id} product={product} />
           ))}
         </div>
       ) : (
-        /* Warning state: no products */
-        <div className="mt-3 flex items-center gap-2 py-2 px-2 rounded bg-amber-500/10 border border-amber-500/20">
-          <AlertTriangle className="h-3 w-3 text-amber-500 flex-shrink-0" />
-          <span className="text-xs text-amber-400">Sin productos</span>
+        <div className="mt-2.5 flex items-center gap-1.5 py-1.5 px-2 rounded-lg bg-amber-500/8 border border-amber-500/15">
+          <AlertTriangle className="h-3 w-3 text-amber-500/80 flex-shrink-0" />
+          <span className="text-[10px] text-amber-400/80 font-medium">Sin productos asignados</span>
         </div>
       )}
 
       {/* Footer: assigned user */}
       {contact.assignedUser && (
-        <div className="mt-3 flex items-center gap-1.5">
-          <div className="h-5 w-5 rounded-full bg-indigo-500/20 flex items-center justify-center">
-            <span className="text-[10px] text-indigo-400 font-medium">
+        <div className="mt-2.5 flex items-center gap-1.5 pt-2 border-t border-white/5">
+          <div className="h-4 w-4 rounded-full bg-violet-500/15 flex items-center justify-center flex-shrink-0">
+            <span className="text-[9px] text-violet-300 font-semibold leading-none">
               {contact.assignedUser.name
                 ?.split(" ")
                 .map((n) => n[0])
                 .join("") || contact.assignedUser.email?.[0]?.toUpperCase() || "?"}
             </span>
           </div>
-          <span className="text-xs text-slate-400 truncate">
+          <span className="text-[10px] text-slate-500 truncate">
             {contact.assignedUser.name || contact.assignedUser.email}
           </span>
         </div>
       )}
 
-      {/* Edit button - shows on hover */}
+      {/* Edit button */}
       <button
-        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded bg-white/10 hover:bg-white/20"
+        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-150 p-1 rounded-md bg-white/8 hover:bg-white/15 border border-white/8"
         onClick={(e) => {
           e.stopPropagation();
           onEdit(contact);
         }}
       >
-        <Pencil className="h-3 w-3 text-slate-400" />
+        <Pencil className="h-3 w-3 text-slate-300" />
       </button>
     </motion.div>
   );

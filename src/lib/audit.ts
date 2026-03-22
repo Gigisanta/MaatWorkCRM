@@ -12,7 +12,7 @@ interface AuditLogEntry {
   userAgent?: string;
 }
 
-export async function createAuditLog(entry: AuditLogEntry) {
+export async function createAuditLog(entry: AuditLogEntry, organizationId: string) {
   // Console logging for debugging
   console.log(JSON.stringify({
     level: 'info',
@@ -23,13 +23,30 @@ export async function createAuditLog(entry: AuditLogEntry) {
     entityId: entry.entityId
   }))
 
+  // Build oldData/newData from changes if provided
+  let oldData: string | undefined;
+  let newData: string | undefined;
+  if (entry.changes) {
+    const oldObj: Record<string, unknown> = {};
+    const newObj: Record<string, unknown> = {};
+    for (const [key, change] of Object.entries(entry.changes)) {
+      oldObj[key] = change.old;
+      newObj[key] = change.new;
+    }
+    oldData = JSON.stringify(oldObj);
+    newData = JSON.stringify(newObj);
+  }
+
   return db.auditLog.create({
     data: {
+      organizationId,
       userId: entry.userId,
       action: entry.action,
       entityType: entry.entityType,
       entityId: entry.entityId,
-      changes: entry.changes ? JSON.stringify(entry.changes) : undefined,
+      description: `${entry.action} on ${entry.entityType}`,
+      oldData,
+      newData,
       ipAddress: entry.ip,
       userAgent: entry.userAgent,
     },

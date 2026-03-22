@@ -3,13 +3,9 @@ import { DM_Sans } from "next/font/google";
 import { Outfit } from "next/font/google";
 import { Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "@/components/ui/sonner";
-import { ThemeProvider } from "next-themes";
-import { Providers } from "@/components/providers";
-import { SkipLink } from "@/components/ui/skip-link";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
-import { QuickActionsModals } from "@/components/quick-actions-modals";
+import { ProvidersWrapper } from "./providers";
+// import { Analytics } from "@vercel/analytics/next";
+// import { SpeedInsights } from "@vercel/speed-insights/next";
 
 // DM Sans - Primary font for display, headings, and body
 const dmSans = DM_Sans({
@@ -54,24 +50,11 @@ export default function RootLayout({
       <body
         className={`${dmSans.variable} ${outfit.variable} ${geistMono.variable} antialiased font-sans`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem={false}
-          disableTransitionOnChange
-          forcedTheme="dark"
-        >
-          <Providers>
-            <SkipLink href="#main-content">Saltar al contenido principal</SkipLink>
-            <main id="main-content">
-              {children}
-            </main>
-            <Toaster position="bottom-right" richColors closeButton />
-            <QuickActionsModals />
-          </Providers>
-        </ThemeProvider>
-        <Analytics />
-        <SpeedInsights />
+        <ProvidersWrapper>
+          {children}
+        </ProvidersWrapper>
+        {/* <Analytics /> */}
+        {/* <SpeedInsights /> */}
       </body>
     </html>
   );

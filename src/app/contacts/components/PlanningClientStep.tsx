@@ -4,7 +4,6 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -71,13 +70,7 @@ export function PlanningClientStep({ data, onUpdate }: PlanningClientStepProps) 
   ];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.3 }}
-      className="space-y-6"
-    >
+    <div className="space-y-6">
       <div className="space-y-1">
         <h3 className="text-lg font-semibold text-white">Informacion del Cliente</h3>
         <p className="text-sm text-slate-400">Datos basicos del cliente para el plan financiero</p>
@@ -228,6 +221,6 @@ export function PlanningClientStep({ data, onUpdate }: PlanningClientStepProps) 
           />
         </div>
       </Form>
-    </motion.div>
+    </div>
   );
 }

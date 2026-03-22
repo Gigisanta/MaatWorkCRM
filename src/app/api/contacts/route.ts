@@ -154,6 +154,7 @@ export async function GET(request: NextRequest) {
         },
       });
       response.headers.set('x-request-id', requestId);
+      response.headers.set('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
       return response;
     }
 
@@ -278,6 +279,7 @@ export async function GET(request: NextRequest) {
         },
       });
       response.headers.set('x-request-id', requestId);
+      response.headers.set('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
       return response;
     }
 
@@ -397,6 +399,7 @@ export async function GET(request: NextRequest) {
         },
       });
       response.headers.set('x-request-id', requestId);
+      response.headers.set('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
       return response;
     }
 
@@ -540,8 +543,8 @@ export async function POST(request: NextRequest) {
 
     logger.info({ operation: 'createContact', requestId, contactId: contact.id, duration_ms: Date.now() - start }, 'Contact created successfully');
 
-    revalidateTag('contacts');
-    revalidateTag('dashboard');
+    revalidateTag('contacts', 'max');
+    revalidateTag('dashboard', 'max');
 
     const response = NextResponse.json(responseData, { status: 201 });
     response.headers.set('x-request-id', requestId);

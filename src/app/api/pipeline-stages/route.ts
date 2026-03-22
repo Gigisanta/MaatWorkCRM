@@ -106,11 +106,13 @@ export async function GET(request: NextRequest) {
             emoji: true,
             segment: true,
             source: true,
+            pipelineStageId: true,
             createdAt: true,
+            updatedAt: true,
             tags: {
               select: {
                 tag: {
-                  select: { id: true, name: true, color: true },
+                  select: { id: true, name: true, color: true, value: true, expectedCloseDate: true },
                 },
               },
             },
@@ -157,7 +159,9 @@ export async function GET(request: NextRequest) {
 
     logger.info({ operation: 'listPipelineStages', requestId, count: stages.length, duration_ms: Date.now() - start }, 'Pipeline stages listed successfully');
 
-    return NextResponse.json({ stages: transformedStages }, { headers: { 'x-request-id': requestId } });
+    const response = NextResponse.json({ stages: transformedStages }, { headers: { 'x-request-id': requestId } });
+    response.headers.set('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+    return response;
   } catch (error) {
     logger.error({ err: error, operation: 'listPipelineStages', requestId, duration_ms: Date.now() - start }, 'Failed to list pipeline stages');
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500, headers: { 'x-request-id': requestId } });
