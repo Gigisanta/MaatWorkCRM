@@ -17,6 +17,7 @@ import { ContactDrawer } from "./components/contact-drawer";
 import { CreateContactModal } from "./components/create-contact-modal";
 import { TagManagerDialog, type Tag } from "./components/tag-manager-dialog";
 import { PlanningDialog } from "./components/PlanningDialog";
+import { PlanningDialogProvider } from "./components/PlanningDialogContext";
 import { type Contact, type PipelineStage } from "./components/contact-table";
 
 interface ContactsResponse {
@@ -316,6 +317,7 @@ export default function ContactsPage() {
   }, [debouncedSearch, filterStage]);
 
   return (
+    <PlanningDialogProvider>
     <div className="min-h-screen gradient-bg">
       <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
       <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[280px]")}>
@@ -414,5 +416,6 @@ export default function ContactsPage() {
       {/* Planning Dialog */}
       <PlanningDialog />
     </div>
+    </PlanningDialogProvider>
   );
 }

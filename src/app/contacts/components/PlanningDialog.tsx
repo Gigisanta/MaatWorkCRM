@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
-import { usePlanningDialog } from './usePlanningDialog';
+import { usePlanningDialogContext } from './PlanningDialogContext';
 import { PlanningStepper } from './PlanningStepper';
 import { PlanningClientStep } from './PlanningClientStep';
 import { PlanningHealthStep } from './PlanningHealthStep';
@@ -49,7 +49,7 @@ export function PlanningDialog({ contactId, contactName, open: controlledOpen, o
     updateFormData,
     onSave,
     onPreview,
-  } = usePlanningDialog({ contactId, contactName });
+  } = usePlanningDialogContext();
 
   // Handle controlled vs uncontrolled
   const isControlled = controlledOpen !== undefined;
