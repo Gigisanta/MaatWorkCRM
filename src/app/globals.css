@@ -1,0 +1,681 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-dm-sans);
+  --font-display: var(--font-outfit);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  
+  /* Border radius */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 9999px;
+  
+  /* MaatWork Brand Colors */
+  --color-violet: #8B5CF6;
+  --color-violet-hover: #6D28D9;
+  --color-violet-active: #4C1D95;
+  --color-lavender: #A78BFA;
+  --color-obsidian: #08090B;
+  --color-carbon: #0E0F12;
+  --color-graphite: #1C1D21;
+  --color-ivory: #F0EFE9;
+  --color-muted-text: #666666;
+  
+  /* Status Colors */
+  --color-emerald: #4ADE80;
+  --color-amber: #FBBF24;
+  --color-rose: #F87171;
+  --color-sky: #38BDF8;
+}
+
+/* ============================================
+   MAATWORK DARK THEME (Primary Theme)
+   ============================================ */
+:root {
+  /* Force dark theme as default per brandbook */
+  color-scheme: dark;
+  
+  /* Base colors - Obsidian background */
+  --background: #08090B;
+  --foreground: #F0EFE9;
+  
+  /* Card and surface colors - Carbon with glass effect */
+  --card: rgba(14, 15, 18, 0.8);
+  --card-foreground: #F0EFE9;
+  --popover: #0E0F12;
+  --popover-foreground: #F0EFE9;
+  
+  /* Primary (Violet) - Main brand color */
+  --primary: #8B5CF6;
+  --primary-foreground: #ffffff;
+  
+  /* Secondary */
+  --secondary: rgba(28, 29, 33, 0.8);
+  --secondary-foreground: #F0EFE9;
+  
+  /* Muted */
+  --muted: rgba(28, 29, 33, 0.6);
+  --muted-foreground: #888888;
+  
+  /* Accent (Lavender) */
+  --accent: #A78BFA;
+  --accent-foreground: #08090B;
+  
+  /* Destructive */
+  --destructive: #F87171;
+  
+  /* Borders and inputs - Graphite */
+  --border: #1C1D21;
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --input: rgba(255, 255, 255, 0.08);
+  --ring: #8B5CF6;
+  
+  /* Chart colors */
+  --chart-1: #8B5CF6;
+  --chart-2: #4ADE80;
+  --chart-3: #FBBF24;
+  --chart-4: #A78BFA;
+  --chart-5: #F87171;
+  
+  /* Sidebar */
+  --sidebar: rgba(8, 9, 11, 0.95);
+  --sidebar-foreground: #F0EFE9;
+  --sidebar-primary: #8B5CF6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(139, 92, 246, 0.12);
+  --sidebar-accent-foreground: #A78BFA;
+  --sidebar-border: #1C1D21;
+  --sidebar-ring: #8B5CF6;
+  
+  /* Radius */
+  --radius: 0.75rem;
+}
+
+/* ============================================
+   LIGHT THEME (Optional - for accessibility)
+   ============================================ */
+.light {
+  color-scheme: light;
+  
+  /* Base colors */
+  --background: #FDFCF8;
+  --foreground: #1C1D21;
+  
+  /* Card and surface colors */
+  --card: #ffffff;
+  --card-foreground: #1C1D21;
+  --popover: #ffffff;
+  --popover-foreground: #1C1D21;
+  
+  /* Primary (Violet) */
+  --primary: #8B5CF6;
+  --primary-foreground: #ffffff;
+  
+  /* Secondary */
+  --secondary: #f1f5f9;
+  --secondary-foreground: #1C1D21;
+  
+  /* Muted */
+  --muted: #f1f5f9;
+  --muted-foreground: #666666;
+  
+  /* Accent */
+  --accent: #A78BFA;
+  --accent-foreground: #1C1D21;
+  
+  /* Destructive */
+  --destructive: #F87171;
+  
+  /* Borders and inputs */
+  --border: #e2e8f0;
+  --border-subtle: rgba(0, 0, 0, 0.05);
+  --input: #e2e8f0;
+  --ring: #8B5CF6;
+  
+  /* Chart colors */
+  --chart-1: #8B5CF6;
+  --chart-2: #4ADE80;
+  --chart-3: #FBBF24;
+  --chart-4: #A78BFA;
+  --chart-5: #F87171;
+  
+  /* Sidebar */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1C1D21;
+  --sidebar-primary: #8B5CF6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(139, 92, 246, 0.1);
+  --sidebar-accent-foreground: #8B5CF6;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #8B5CF6;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+  }
+  
+  /* Typography scale per brandbook */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+    letter-spacing: -0.01em;
+  }
+  
+  .display-xl {
+    font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+    font-size: clamp(42px, 6vw, 64px);
+    font-weight: 300;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    color: var(--foreground);
+  }
+  
+  .display-xl strong {
+    font-weight: 700;
+    color: var(--primary);
+  }
+  
+  .display-lg {
+    font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+    font-size: clamp(36px, 5vw, 48px);
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1.08;
+  }
+  
+  .display-lg strong {
+    font-weight: 600;
+    color: var(--primary);
+  }
+  
+  .heading-1 {
+    font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+  }
+  
+  .heading-2 {
+    font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+  
+  .heading-3 {
+    font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.3;
+  }
+  
+  .body-lg {
+    font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+    font-size: 17px;
+    font-weight: 300;
+    line-height: 1.75;
+  }
+  
+  .body {
+    font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 300;
+    line-height: 1.70;
+    color: var(--muted-foreground);
+  }
+  
+  .body-sm {
+    font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+  
+  .label {
+    font-family: var(--font-outfit), 'Outfit', sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  
+  .caption {
+    font-family: var(--font-outfit), 'Outfit', sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    line-height: 1.5;
+  }
+}
+
+/* ============================================
+   CUSTOM SCROLLBAR
+   ============================================ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.4);
+}
+
+/* ============================================
+   GLASSMORPHISM UTILITIES (Brandbook Spec)
+   ============================================ */
+.glass {
+  background: rgba(14, 15, 18, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.light .glass {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.glass-strong {
+  background: rgba(14, 15, 18, 0.85);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.light .glass-strong {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* ============================================
+   GRADIENT BACKGROUNDS (Brandbook Spec)
+   ============================================ */
+.gradient-brand {
+  background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 50%, #4C1D95 100%);
+}
+
+.gradient-bg {
+  background: linear-gradient(135deg, #08090B 0%, #0E0F12 50%, #1C1D21 100%);
+}
+
+.light .gradient-bg {
+  background: linear-gradient(135deg, #FDFCF8 0%, #f1f5f9 50%, #e0e7ff 100%);
+}
+
+.gradient-primary {
+  background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%);
+}
+
+.gradient-success {
+  background: linear-gradient(135deg, #4ADE80 0%, #22c55e 100%);
+}
+
+.gradient-danger {
+  background: linear-gradient(135deg, #F87171 0%, #ef4444 100%);
+}
+
+/* ============================================
+   BUTTON STYLES (Brandbook Spec)
+   ============================================ */
+.btn-primary {
+  background: var(--primary);
+  color: #ffffff;
+  padding: 11px 24px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border: none;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.btn-primary:hover {
+  background: var(--color-violet-hover, #6D28D9);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  background: var(--color-violet-active, #4C1D95);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  padding: 11px 24px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.btn-secondary:hover {
+  border-color: var(--primary);
+  background: rgba(139, 92, 246, 0.12);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--muted-foreground);
+  border: 1px solid var(--border);
+  padding: 11px 24px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.btn-ghost:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ============================================
+   CHIP & BADGE STYLES (Brandbook Spec)
+   ============================================ */
+.chip-brand {
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  color: var(--accent);
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-outfit), 'Outfit', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.chip-active {
+  background: rgba(74, 222, 128, 0.10);
+  border: 1px solid rgba(74, 222, 128, 0.2);
+  color: #4ADE80;
+}
+
+.chip-warning {
+  background: rgba(251, 191, 36, 0.10);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  color: #FBBF24;
+}
+
+.chip-danger {
+  background: rgba(248, 113, 113, 0.10);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  color: #F87171;
+}
+
+/* ============================================
+   CARD STYLES (Brandbook Spec)
+   ============================================ */
+.card-brand {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+}
+
+.card-interactive {
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.card-interactive:hover {
+  border-color: rgba(139, 92, 246, 0.35);
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   INPUT STYLES (Brandbook Spec)
+   ============================================ */
+.input-brand {
+  background: var(--color-carbon, #0E0F12);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  color: var(--foreground);
+  font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input-brand:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+}
+
+.input-brand::placeholder {
+  color: var(--color-muted-text, #666666);
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+@keyframes countUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-count-up {
+  animation: countUp 0.5s ease-out forwards;
+}
+
+/* Shimmer animation for loading */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(139, 92, 246, 0) 0%,
+    rgba(139, 92, 246, 0.1) 50%,
+    rgba(139, 92, 246, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Pulse glow animation */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px 5px rgba(139, 92, 246, 0.2);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* ============================================
+   PIPELINE STAGE COLORS
+   ============================================ */
+.stage-prospecto { background-color: #8B5CF6; }
+.stage-contactado { background-color: #A78BFA; }
+.stage-primera-reunion { background-color: #FBBF24; }
+.stage-segunda-reunion { background-color: #38BDF8; }
+.stage-apertura { background-color: #4ADE80; }
+.stage-cliente { background-color: #22c55e; }
+.stage-caido { background-color: #F87171; }
+.stage-cuenta-vacia { background-color: #f97316; }
+
+/* ============================================
+   PRIORITY COLORS
+   ============================================ */
+.priority-low { background-color: #64748b; }
+.priority-medium { background-color: #38BDF8; }
+.priority-high { background-color: #FBBF24; }
+.priority-urgent { background-color: #F87171; }
+
+/* ============================================
+   STATUS COLORS (with opacity backgrounds)
+   ============================================ */
+.status-success {
+  background: rgba(74, 222, 128, 0.10);
+  color: #4ADE80;
+  border: 1px solid rgba(74, 222, 128, 0.2);
+}
+
+.status-warning {
+  background: rgba(251, 191, 36, 0.10);
+  color: #FBBF24;
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.status-error {
+  background: rgba(248, 113, 113, 0.10);
+  color: #F87171;
+  border: 1px solid rgba(248, 113, 113, 0.2);
+}
+
+.status-info {
+  background: rgba(56, 189, 248, 0.10);
+  color: #38BDF8;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+/* ============================================
+   THEME TRANSITION
+   ============================================ */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+html.theme-loading * {
+  transition: none !important;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+.text-brand {
+  color: var(--primary);
+}
+
+.text-brand-muted {
+  color: var(--accent);
+}
+
+.bg-brand {
+  background-color: var(--primary);
+}
+
+.border-brand {
+  border-color: var(--primary);
+}
+
+.border-brand-subtle {
+  border-color: rgba(139, 92, 246, 0.35);
+}
+
+/* Focus ring for accessibility */
+.focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--primary);
+}
+
+/* Custom scrollbar for specific containers */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.3);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.5);
+}

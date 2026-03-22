@@ -1,0 +1,1088 @@
+"use client";
+
+import * as React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "sonner";
+import {
+  Plus,
+  Search,
+  Calendar,
+  Clock,
+  CheckCircle2,
+  Circle,
+  AlertCircle,
+  MoreHorizontal,
+  Trash2,
+  Edit,
+  Loader2,
+} from "lucide-react";
+import { AppSidebar } from "@/components/layout/app-sidebar";
+import { AppHeader } from "@/components/layout/app-header";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
+import { format, isToday, isTomorrow, isPast, parseISO } from "date-fns";
+import { es } from "date-fns/locale";
+import { useAuth } from "@/lib/auth-context";
+
+// Constants
+const ORGANIZATION_ID = "org_maatwork_demo";
+
+// Types
+interface TaskUser {
+  id: string;
+  name: string | null;
+  email: string | null;
+  image: string | null;
+}
+
+interface TaskContact {
+  id: string;
+  name: string;
+  email: string | null;
+  company: string | null;
+  emoji?: string;
+}
+
+interface Task {
+  id: string;
+  title: string;
+  description: string | null;
+  status: "pending" | "in_progress" | "completed";
+  priority: "low" | "medium" | "high" | "urgent";
+  dueDate: string | null;
+  assignedTo: string | null;
+  assignedUser: TaskUser | null;
+  contactId: string | null;
+  contact: TaskContact | null;
+  isRecurrent: boolean;
+  recurrenceRule: string | null;
+  completedAt: string | null;
+  createdAt: string;
+}
+
+interface TasksResponse {
+  tasks: Task[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+// Zod Schema
+const taskSchema = z.object({
+  title: z.string().min(1, "El título es requerido").max(200, "El título es muy largo"),
+  description: z.string().max(1000, "La descripción es muy larga").optional(),
+  priority: z.enum(["low", "medium", "high", "urgent"]).default("medium"),
+  dueDate: z.string().optional().nullable(),
+  assignedTo: z.string().optional().nullable(),
+  contactId: z.string().optional().nullable(),
+  isRecurrent: z.boolean().default(false),
+  recurrenceRule: z.enum(["daily", "weekly", "monthly"]).optional().nullable(),
+});
+
+type TaskFormData = z.infer<typeof taskSchema>;
+
+// Priority config
+const priorityConfig = {
+  low: { color: "bg-slate-500", label: "Baja", textColor: "text-slate-400" },
+  medium: { color: "bg-blue-500", label: "Media", textColor: "text-blue-400" },
+  high: { color: "bg-amber-500", label: "Alta", textColor: "text-amber-400" },
+  urgent: { color: "bg-rose-500", label: "Urgente", textColor: "text-rose-400" },
+};
+
+// Users for assignment (from seed)
+const users = [
+  { id: "user_gio", name: "Gio Livo" },
+  { id: "user_carlos", name: "Carlos Admin" },
+  { id: "user_ana", name: "Ana García" },
+  { id: "user_pedro", name: "Pedro Ruiz" },
+  { id: "user_demo", name: "Juan Demo" },
+];
+
+// Fetch tasks
+async function fetchTasks(params: {
+  status?: string;
+  priority?: string;
+  assignedTo?: string;
+  overdue?: boolean;
+}): Promise<TasksResponse> {
+  const searchParams = new URLSearchParams();
+  searchParams.set("organizationId", ORGANIZATION_ID);
+  
+  if (params.status && params.status !== "all") {
+    searchParams.set("status", params.status);
+  }
+  if (params.priority && params.priority !== "all") {
+    searchParams.set("priority", params.priority);
+  }
+  if (params.assignedTo && params.assignedTo !== "all") {
+    searchParams.set("assignedTo", params.assignedTo);
+  }
+  if (params.overdue) {
+    searchParams.set("overdue", "true");
+  }
+
+  const response = await fetch(`/api/tasks?${searchParams.toString()}`);
+  if (!response.ok) {
+    throw new Error("Error al cargar tareas");
+  }
+  return response.json();
+}
+
+// Create task
+async function createTask(data: TaskFormData): Promise<Task> {
+  const response = await fetch("/api/tasks", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ...data,
+      organizationId: ORGANIZATION_ID,
+      recurrenceRule: data.isRecurrent && data.recurrenceRule 
+        ? `FREQ=${data.recurrenceRule.toUpperCase()}` 
+        : null,
+    }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Error al crear tarea");
+  }
+  return response.json();
+}
+
+// Update task
+async function updateTask(id: string, data: Partial<TaskFormData>): Promise<Task> {
+  const response = await fetch(`/api/tasks/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ...data,
+      recurrenceRule: data.isRecurrent && data.recurrenceRule 
+        ? `FREQ=${data.recurrenceRule.toUpperCase()}` 
+        : null,
+    }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Error al actualizar tarea");
+  }
+  return response.json();
+}
+
+// Complete task
+async function completeTask(id: string): Promise<{ completedTask: Task; newRecurrentTask: Task | null }> {
+  const response = await fetch(`/api/tasks/${id}/complete`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ createNextRecurrence: true }),
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Error al completar tarea");
+  }
+  return response.json();
+}
+
+// Delete task
+async function deleteTask(id: string): Promise<void> {
+  const response = await fetch(`/api/tasks/${id}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || "Error al eliminar tarea");
+  }
+}
+
+// Task Card Component
+function TaskCard({ 
+  task, 
+  onToggle, 
+  onEdit, 
+  onDelete,
+  isToggling,
+}: { 
+  task: Task; 
+  onToggle: (id: string) => void;
+  onEdit: (task: Task) => void;
+  onDelete: (id: string) => void;
+  isToggling: boolean;
+}) {
+  const dueDate = task.dueDate ? parseISO(task.dueDate) : null;
+  const isOverdue = dueDate && isPast(dueDate) && task.status !== "completed";
+  const isDueToday = dueDate && isToday(dueDate);
+  const isDueTomorrow = dueDate && isTomorrow(dueDate);
+
+  const formatDueDate = (date: Date) => {
+    if (isToday(date)) return "Hoy";
+    if (isTomorrow(date)) return "Mañana";
+    return format(date, "d MMM", { locale: es });
+  };
+
+  const getRecurrenceLabel = (rule: string | null) => {
+    if (!rule) return "Recurrente";
+    if (rule.includes("DAILY")) return "Diario";
+    if (rule.includes("WEEKLY")) return "Semanal";
+    if (rule.includes("MONTHLY")) return "Mensual";
+    return "Recurrente";
+  };
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      className={cn(
+        "group p-4 rounded-lg glass border border-white/10",
+        "hover:border-white/20 transition-all duration-200",
+        task.status === "completed" && "opacity-60"
+      )}
+    >
+      <div className="flex items-start gap-3">
+        <Checkbox
+          checked={task.status === "completed"}
+          onCheckedChange={() => onToggle(task.id)}
+          disabled={isToggling}
+          className="mt-0.5"
+        />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1">
+              <p className={cn(
+                "font-medium",
+                task.status === "completed" ? "text-slate-500 line-through" : "text-white"
+              )}>
+                {task.title}
+              </p>
+              {task.description && (
+                <p className="text-sm text-slate-400 mt-1 line-clamp-2">
+                  {task.description}
+                </p>
+              )}
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onEdit(task)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Editar
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="text-rose-500"
+                  onClick={() => onDelete(task.id)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Eliminar
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 mt-3">
+            {/* Priority */}
+            <div className={cn(
+              "flex items-center gap-1.5 px-2 py-0.5 rounded text-xs",
+              priorityConfig[task.priority].color + "/20",
+              priorityConfig[task.priority].textColor
+            )}>
+              {task.priority === "urgent" && <AlertCircle className="h-3 w-3" />}
+              {priorityConfig[task.priority].label}
+            </div>
+
+            {/* Due Date */}
+            {dueDate && (
+              <div className={cn(
+                "flex items-center gap-1 text-xs",
+                isOverdue ? "text-rose-400" : "text-slate-400"
+              )}>
+                <Calendar className="h-3 w-3" />
+                {formatDueDate(dueDate)}
+                {isOverdue && <span className="text-rose-400">(Vencida)</span>}
+              </div>
+            )}
+
+            {/* Recurrence */}
+            {task.isRecurrent && (
+              <Badge variant="outline" className="text-xs text-indigo-400 border-indigo-500/30">
+                {getRecurrenceLabel(task.recurrenceRule)}
+              </Badge>
+            )}
+
+            {/* Contact */}
+            {task.contact && (
+              <div className="flex items-center gap-1 text-xs text-slate-400">
+                <span>{task.contact.emoji || "👤"}</span>
+                <span>{task.contact.name}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Assigned To */}
+          {task.assignedUser && (
+            <div className="flex items-center gap-2 mt-3">
+              <Avatar className="h-5 w-5">
+                <AvatarImage src={task.assignedUser.image || undefined} />
+                <AvatarFallback className="bg-indigo-500/20 text-indigo-400 text-[10px]">
+                  {task.assignedUser.name?.split(" ").map(n => n[0]).join("") || "NA"}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-xs text-slate-400">{task.assignedUser.name}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// Task Skeleton
+function TaskSkeleton() {
+  return (
+    <div className="p-4 rounded-lg glass border border-white/10">
+      <div className="flex items-start gap-3">
+        <Skeleton className="h-4 w-4 rounded" />
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-3 w-1/2" />
+          <div className="flex gap-2 mt-2">
+            <Skeleton className="h-5 w-16 rounded" />
+            <Skeleton className="h-5 w-20 rounded" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Task Dialog Component
+function TaskDialog({
+  open,
+  onOpenChange,
+  task,
+  onSuccess,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  task?: Task | null;
+  onSuccess: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const isEditing = !!task;
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+    setValue,
+    watch,
+  } = useForm<TaskFormData>({
+    resolver: zodResolver(taskSchema),
+    defaultValues: {
+      title: task?.title || "",
+      description: task?.description || "",
+      priority: task?.priority || "medium",
+      dueDate: task?.dueDate ? format(parseISO(task.dueDate), "yyyy-MM-dd") : "",
+      assignedTo: task?.assignedTo || "",
+      contactId: task?.contactId || "",
+      isRecurrent: task?.isRecurrent || false,
+      recurrenceRule: task?.recurrenceRule?.includes("DAILY") ? "daily" 
+        : task?.recurrenceRule?.includes("WEEKLY") ? "weekly" 
+        : task?.recurrenceRule?.includes("MONTHLY") ? "monthly" 
+        : null,
+    },
+  });
+
+  const isRecurrent = watch("isRecurrent");
+
+  // Reset form when task changes
+  React.useEffect(() => {
+    if (open) {
+      reset({
+        title: task?.title || "",
+        description: task?.description || "",
+        priority: task?.priority || "medium",
+        dueDate: task?.dueDate ? format(parseISO(task.dueDate), "yyyy-MM-dd") : "",
+        assignedTo: task?.assignedTo || "",
+        contactId: task?.contactId || "",
+        isRecurrent: task?.isRecurrent || false,
+        recurrenceRule: task?.recurrenceRule?.includes("DAILY") ? "daily" 
+          : task?.recurrenceRule?.includes("WEEKLY") ? "weekly" 
+          : task?.recurrenceRule?.includes("MONTHLY") ? "monthly" 
+          : null,
+      });
+    }
+  }, [open, task, reset]);
+
+  const mutation = useMutation({
+    mutationFn: async (data: TaskFormData) => {
+      if (isEditing && task) {
+        return updateTask(task.id, data);
+      }
+      return createTask(data);
+    },
+    onSuccess: () => {
+      toast.success(isEditing ? "Tarea actualizada" : "Tarea creada");
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      onSuccess();
+      onOpenChange(false);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const onSubmit = (data: TaskFormData) => {
+    mutation.mutate(data);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="glass border-white/10 bg-slate-900/95 max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-white">
+            {isEditing ? "Editar Tarea" : "Crear Nueva Tarea"}
+          </DialogTitle>
+          <DialogDescription>
+            {isEditing 
+              ? "Modifica los detalles de la tarea" 
+              : "Completa los detalles para crear una nueva tarea"}
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4">
+          <div className="space-y-2">
+            <Label htmlFor="title" className="text-white">Título *</Label>
+            <Input 
+              id="title"
+              {...register("title")}
+              placeholder="Título de la tarea"
+              className="glass border-white/10 bg-white/5 text-white"
+            />
+            {errors.title && (
+              <p className="text-xs text-rose-400">{errors.title.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description" className="text-white">Descripción</Label>
+            <Textarea 
+              id="description"
+              {...register("description")}
+              placeholder="Descripción (opcional)"
+              className="glass border-white/10 bg-white/5 text-white resize-none"
+              rows={3}
+            />
+            {errors.description && (
+              <p className="text-xs text-rose-400">{errors.description.message}</p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-white">Prioridad</Label>
+              <Select 
+                defaultValue={task?.priority || "medium"}
+                onValueChange={(value) => setValue("priority", value as TaskFormData["priority"])}
+              >
+                <SelectTrigger className="glass border-white/10 bg-white/5 text-white">
+                  <SelectValue placeholder="Prioridad" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Baja</SelectItem>
+                  <SelectItem value="medium">Media</SelectItem>
+                  <SelectItem value="high">Alta</SelectItem>
+                  <SelectItem value="urgent">Urgente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dueDate" className="text-white">Fecha límite</Label>
+              <Input 
+                id="dueDate"
+                type="date"
+                {...register("dueDate")}
+                className="glass border-white/10 bg-white/5 text-white"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-white">Asignado a</Label>
+            <Select 
+              defaultValue={task?.assignedTo || ""}
+              onValueChange={(value) => setValue("assignedTo", value || null)}
+            >
+              <SelectTrigger className="glass border-white/10 bg-white/5 text-white">
+                <SelectValue placeholder="Sin asignar" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Sin asignar</SelectItem>
+                {users.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>
+                    {user.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-3 pt-2">
+            <Checkbox
+              id="isRecurrent"
+              checked={isRecurrent}
+              onCheckedChange={(checked) => setValue("isRecurrent", checked as boolean)}
+            />
+            <Label htmlFor="isRecurrent" className="text-white cursor-pointer">
+              Tarea recurrente
+            </Label>
+          </div>
+
+          {isRecurrent && (
+            <div className="space-y-2">
+              <Label className="text-white">Frecuencia</Label>
+              <Select 
+                defaultValue={task?.recurrenceRule?.includes("DAILY") ? "daily" 
+                  : task?.recurrenceRule?.includes("WEEKLY") ? "weekly" 
+                  : task?.recurrenceRule?.includes("MONTHLY") ? "monthly" 
+                  : "weekly"}
+                onValueChange={(value) => setValue("recurrenceRule", value as "daily" | "weekly" | "monthly")}
+              >
+                <SelectTrigger className="glass border-white/10 bg-white/5 text-white">
+                  <SelectValue placeholder="Frecuencia" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">Diario</SelectItem>
+                  <SelectItem value="weekly">Semanal</SelectItem>
+                  <SelectItem value="monthly">Mensual</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <DialogFooter className="pt-4">
+            <Button 
+              type="button"
+              variant="outline" 
+              className="glass border-white/10"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              type="submit"
+              className="bg-indigo-500 hover:bg-indigo-600"
+              disabled={isSubmitting}
+            >
+              {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {isEditing ? "Guardar" : "Crear"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Main Page
+export default function TasksPage() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  
+  // State
+  const [search, setSearch] = React.useState("");
+  const [filterStatus, setFilterStatus] = React.useState<string>("all");
+  const [filterPriority, setFilterPriority] = React.useState<string>("all");
+  const [filterAssignedTo, setFilterAssignedTo] = React.useState<string>("all");
+  
+  // Dialogs
+  const [createDialogOpen, setCreateDialogOpen] = React.useState(false);
+  const [editDialogOpen, setEditDialogOpen] = React.useState(false);
+  const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [taskToDelete, setTaskToDelete] = React.useState<string | null>(null);
+
+  // Toggling state for individual tasks
+  const [togglingTasks, setTogglingTasks] = React.useState<Set<string>>(new Set());
+
+  // Sidebar state
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
+
+  // Fetch tasks
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["tasks", filterStatus, filterPriority, filterAssignedTo],
+    queryFn: () => fetchTasks({
+      status: filterStatus,
+      priority: filterPriority,
+      assignedTo: filterAssignedTo,
+    }),
+  });
+
+  // Complete task mutation
+  const completeMutation = useMutation({
+    mutationFn: completeTask,
+    onMutate: (id) => {
+      setTogglingTasks(prev => new Set(prev).add(id));
+    },
+    onSuccess: () => {
+      toast.success("Tarea completada");
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+    onSettled: (_, __, id) => {
+      setTogglingTasks(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    },
+  });
+
+  // Update task status mutation (for uncompleting)
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) => 
+      updateTask(id, { status: status as TaskFormData["priority"] }),
+    onMutate: ({ id }) => {
+      setTogglingTasks(prev => new Set(prev).add(id));
+    },
+    onSuccess: () => {
+      toast.success("Estado actualizado");
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+    onSettled: (_, __, { id }) => {
+      setTogglingTasks(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    },
+  });
+
+  // Delete task mutation
+  const deleteMutation = useMutation({
+    mutationFn: deleteTask,
+    onSuccess: () => {
+      toast.success("Tarea eliminada");
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      setDeleteDialogOpen(false);
+      setTaskToDelete(null);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  // Handlers
+  const handleToggleTask = (task: Task) => {
+    if (task.status === "completed") {
+      // Uncomplete - change to pending
+      updateStatusMutation.mutate({ id: task.id, status: "pending" });
+    } else {
+      // Complete
+      completeMutation.mutate(task.id);
+    }
+  };
+
+  const handleEditTask = (task: Task) => {
+    setSelectedTask(task);
+    setEditDialogOpen(true);
+  };
+
+  const handleDeleteClick = (id: string) => {
+    setTaskToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (taskToDelete) {
+      deleteMutation.mutate(taskToDelete);
+    }
+  };
+
+  // Filter tasks by search
+  const filteredTasks = React.useMemo(() => {
+    const tasks = data?.tasks;
+    if (!tasks) return [];
+    return tasks.filter(task => 
+      task.title.toLowerCase().includes(search.toLowerCase()) ||
+      task.description?.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [data, search]);
+
+  // Group tasks by status
+  const pendingTasks = filteredTasks.filter(t => t.status === "pending");
+  const inProgressTasks = filteredTasks.filter(t => t.status === "in_progress");
+  const completedTasks = filteredTasks.filter(t => t.status === "completed");
+
+  // Count overdue
+  const overdueCount = React.useMemo(() => {
+    return filteredTasks.filter(t => {
+      if (!t.dueDate || t.status === "completed") return false;
+      return isPast(parseISO(t.dueDate));
+    }).length;
+  }, [filteredTasks]);
+
+  // Handle error
+  if (error) {
+    return (
+      <div className="min-h-screen gradient-bg">
+        <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
+        <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[280px]")}>
+          <AppHeader />
+          <main className="p-4 lg:p-6">
+            <Card className="glass border-white/10">
+              <CardContent className="p-8 text-center">
+                <AlertCircle className="h-12 w-12 text-rose-500 mx-auto mb-3" />
+                <p className="text-white mb-2">Error al cargar tareas</p>
+                <p className="text-slate-400 text-sm mb-4">{(error as Error).message}</p>
+                <Button onClick={() => queryClient.invalidateQueries({ queryKey: ["tasks"] })}>
+                  Reintentar
+                </Button>
+              </CardContent>
+            </Card>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen gradient-bg">
+      <AppSidebar collapsed={sidebarCollapsed} onCollapsedChange={setSidebarCollapsed} />
+      <div className={cn("transition-all duration-300", sidebarCollapsed ? "lg:pl-[80px]" : "lg:pl-[280px]")}>
+        <AppHeader />
+        <main className="p-4 lg:p-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+          >
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-bold text-white">Tareas</h1>
+                <p className="text-slate-400 mt-1">
+                  {pendingTasks.length + inProgressTasks.length} pendientes
+                  {overdueCount > 0 && (
+                    <span className="text-rose-400 ml-2">
+                      • {overdueCount} vencida{overdueCount !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                </p>
+              </div>
+              <Button 
+                className="bg-indigo-500 hover:bg-indigo-600"
+                onClick={() => setCreateDialogOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Nueva Tarea
+              </Button>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <Card className="glass border-white/10">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <Circle className="h-5 w-5 text-amber-500" />
+                    <div>
+                      <p className="text-2xl font-bold text-white">{pendingTasks.length}</p>
+                      <p className="text-xs text-slate-400">Pendientes</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="glass border-white/10">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <Clock className="h-5 w-5 text-blue-500" />
+                    <div>
+                      <p className="text-2xl font-bold text-white">{inProgressTasks.length}</p>
+                      <p className="text-xs text-slate-400">En Progreso</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="glass border-white/10">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                    <div>
+                      <p className="text-2xl font-bold text-white">{completedTasks.length}</p>
+                      <p className="text-xs text-slate-400">Completadas</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="glass border-white/10">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <AlertCircle className="h-5 w-5 text-rose-500" />
+                    <div>
+                      <p className="text-2xl font-bold text-white">{overdueCount}</p>
+                      <p className="text-xs text-slate-400">Vencidas</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Filters */}
+            <Card className="glass border-white/10">
+              <CardContent className="p-4">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                    <Input
+                      placeholder="Buscar tareas..."
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="pl-10 glass border-white/10 bg-white/5 text-white placeholder:text-slate-500"
+                    />
+                  </div>
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger className="w-[160px] glass border-white/10 bg-white/5 text-white">
+                      <SelectValue placeholder="Estado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="pending">Pendientes</SelectItem>
+                      <SelectItem value="in_progress">En Progreso</SelectItem>
+                      <SelectItem value="completed">Completadas</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={filterPriority} onValueChange={setFilterPriority}>
+                    <SelectTrigger className="w-[160px] glass border-white/10 bg-white/5 text-white">
+                      <SelectValue placeholder="Prioridad" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas</SelectItem>
+                      <SelectItem value="urgent">Urgente</SelectItem>
+                      <SelectItem value="high">Alta</SelectItem>
+                      <SelectItem value="medium">Media</SelectItem>
+                      <SelectItem value="low">Baja</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={filterAssignedTo} onValueChange={setFilterAssignedTo}>
+                    <SelectTrigger className="w-[160px] glass border-white/10 bg-white/5 text-white">
+                      <SelectValue placeholder="Asignado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {users.map((u) => (
+                        <SelectItem key={u.id} value={u.id}>
+                          {u.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Tasks List */}
+            {isLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <TaskSkeleton key={i} />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Pending Tasks */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Circle className="h-4 w-4 text-amber-500" />
+                    <h2 className="font-semibold text-white">Pendientes</h2>
+                    <Badge variant="outline" className="text-slate-400">
+                      {pendingTasks.length}
+                    </Badge>
+                  </div>
+                  <AnimatePresence mode="popLayout">
+                    {pendingTasks.length > 0 ? (
+                      <div className="space-y-2">
+                        {pendingTasks.map((task) => (
+                          <TaskCard 
+                            key={task.id} 
+                            task={task}
+                            onToggle={(id) => handleToggleTask(task)}
+                            onEdit={handleEditTask}
+                            onDelete={handleDeleteClick}
+                            isToggling={togglingTasks.has(task.id)}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <Card className="glass border-white/10 border-dashed">
+                        <CardContent className="p-8 text-center">
+                          <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto mb-3" />
+                          <p className="text-slate-400">No hay tareas pendientes</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* In Progress Tasks */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock className="h-4 w-4 text-blue-500" />
+                    <h2 className="font-semibold text-white">En Progreso</h2>
+                    <Badge variant="outline" className="text-slate-400">
+                      {inProgressTasks.length}
+                    </Badge>
+                  </div>
+                  <AnimatePresence mode="popLayout">
+                    {inProgressTasks.length > 0 ? (
+                      <div className="space-y-2">
+                        {inProgressTasks.map((task) => (
+                          <TaskCard 
+                            key={task.id} 
+                            task={task}
+                            onToggle={(id) => handleToggleTask(task)}
+                            onEdit={handleEditTask}
+                            onDelete={handleDeleteClick}
+                            isToggling={togglingTasks.has(task.id)}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <Card className="glass border-white/10 border-dashed">
+                        <CardContent className="p-8 text-center">
+                          <Clock className="h-12 w-12 text-slate-500 mx-auto mb-3" />
+                          <p className="text-slate-400">No hay tareas en progreso</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Completed Tasks */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    <h2 className="font-semibold text-white">Completadas</h2>
+                    <Badge variant="outline" className="text-slate-400">
+                      {completedTasks.length}
+                    </Badge>
+                  </div>
+                  <div className="space-y-2 max-h-[600px] overflow-y-auto custom-scrollbar">
+                    <AnimatePresence mode="popLayout">
+                      {completedTasks.map((task) => (
+                        <TaskCard 
+                          key={task.id} 
+                          task={task}
+                          onToggle={(id) => handleToggleTask(task)}
+                          onEdit={handleEditTask}
+                          onDelete={handleDeleteClick}
+                          isToggling={togglingTasks.has(task.id)}
+                        />
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </main>
+      </div>
+
+      {/* Create Task Dialog */}
+      <TaskDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSuccess={() => {}}
+      />
+
+      {/* Edit Task Dialog */}
+      <TaskDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        task={selectedTask}
+        onSuccess={() => setSelectedTask(null)}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent className="glass border-white/10 bg-slate-900/95">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white">¿Eliminar tarea?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. La tarea será eliminada permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="glass border-white/10">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-rose-500 hover:bg-rose-600"
+              onClick={handleDeleteConfirm}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
