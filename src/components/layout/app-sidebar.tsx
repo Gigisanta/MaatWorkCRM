@@ -90,7 +90,7 @@ export function AppSidebar({ collapsed, onCollapsedChange }: AppSidebarProps) {
     },
     enabled: !!user?.organizationId,
     staleTime: 30 * 1000,
-    refetchInterval: 60 * 1000,
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
   const unreadCount = notifData?.unreadCount || 0;
 
