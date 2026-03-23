@@ -75,6 +75,9 @@ export function ContactCard({
           <p className="text-sm font-semibold text-white truncate leading-snug">
             {contact.name}
           </p>
+          {contact.company && (
+            <p className="text-xs text-slate-500 truncate -mt-0.5">{contact.company}</p>
+          )}
         </div>
         <GripVertical className="h-3.5 w-3.5 text-slate-700 flex-shrink-0 mt-0.5 group-hover:text-slate-500 transition-colors" />
       </div>

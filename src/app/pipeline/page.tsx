@@ -76,6 +76,10 @@ const StageColumn = React.memo(function StageColumn({
 }) {
   const isOverWipLimit = stage.wipLimit !== null && stage.contacts.length > stage.wipLimit;
 
+  const columnValue = stage.contacts.reduce((sum: number, c: ContactWithProducts) =>
+    sum + (c.tags || []).reduce((ps: number, p: Product) => ps + (p.value || 0), 0)
+  , 0);
+
   return (
     <div className="flex flex-col h-full min-w-[280px] max-w-[280px]">
       {/* Stage header with color accent */}
@@ -88,7 +92,12 @@ const StageColumn = React.memo(function StageColumn({
             className="w-2.5 h-2.5 rounded-full flex-shrink-0"
             style={{ backgroundColor: stage.color, boxShadow: `0 0 6px ${stage.color}60` }}
           />
-          <span className="font-semibold text-white text-sm">{stage.name}</span>
+          <div className="flex flex-col">
+            <span className="font-semibold text-white text-sm">{stage.name}</span>
+            {columnValue > 0 && (
+              <p className="text-xs text-slate-500 font-medium mt-0.5">${columnValue.toLocaleString()}</p>
+            )}
+          </div>
           <span className={cn(
             "text-xs px-1.5 py-0.5 rounded-md font-medium",
             isOverWipLimit ? "bg-rose-500/20 text-rose-400" : "bg-white/8 text-slate-400"
@@ -354,8 +363,38 @@ function PipelineContent() {
     }));
   }, [optimisticStages, search, filterAssignee]);
 
-  // Total contacts count
+  // Total contacts count (from filtered stages, shown in header)
   const totalContacts = filteredStages.reduce((sum, stage) => sum + stage.contacts.length, 0);
+
+  // Stats bar: computed from raw (unfiltered) optimistic stages
+  const totalContactsAll = React.useMemo(
+    () => optimisticStages.reduce((sum, stage) => sum + stage.contacts.length, 0),
+    [optimisticStages]
+  );
+
+  const pipelineTotalValue = React.useMemo(
+    () =>
+      optimisticStages.reduce(
+        (sum, s) =>
+          sum +
+          (s.contacts || []).reduce(
+            (cs, c) =>
+              cs + (c.tags || []).reduce((ps, p) => ps + (p.value || 0), 0),
+            0
+          ),
+        0
+      ),
+    [optimisticStages]
+  );
+
+  const activeStageNames = ["Caído", "Caida", "Cuenta vacia", "Cuenta Vacía"];
+  const activeContactsCount = React.useMemo(
+    () =>
+      optimisticStages
+        .filter((s) => !activeStageNames.includes(s.name))
+        .reduce((sum, stage) => sum + stage.contacts.length, 0),
+    [optimisticStages]
+  );
 
   const handleDragStart = React.useCallback((event: DragStartEvent) => {
     const contactId = event.active.id as string;
@@ -465,6 +504,25 @@ function PipelineContent() {
       <AppSidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
       <div className={cn("transition-all duration-300", collapsed ? "lg:pl-[80px]" : "lg:pl-[220px]")}>
         <AppHeader />
+        {/* Pipeline Stats Bar */}
+        {optimisticStages.length > 0 && (
+          <div className="flex items-center gap-6 px-4 lg:px-6 py-2.5 border-b border-white/6 glass">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500">Contactos</span>
+              <span className="text-sm font-semibold text-white">{totalContactsAll}</span>
+            </div>
+            <div className="w-px h-4 bg-white/10" />
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500">Valor total</span>
+              <span className="text-sm font-semibold text-white">${pipelineTotalValue.toLocaleString()}</span>
+            </div>
+            <div className="w-px h-4 bg-white/10" />
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500">Etapas</span>
+              <span className="text-sm font-semibold text-white">{optimisticStages.length}</span>
+            </div>
+          </div>
+        )}
         <main className="p-4 lg:p-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
