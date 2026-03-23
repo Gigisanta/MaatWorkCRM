@@ -45,7 +45,7 @@ const kpiConfig = [
     iconBgClass: "bg-violet-500/10",
     iconColorClass: "text-violet-400",
   },
-];
+] as const;
 
 export function DashboardContent() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
