@@ -16,6 +16,8 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ['recharts', 'framer-motion', 'date-fns', '@dnd-kit/core', '@dnd-kit/sortable', 'lucide-react'],
+    // Enable bundle analyzer for identifying large dependencies
+    bundleAnalyzer: process.env.ANALYZE === 'true',
   },
   transpilePackages: ['recharts', 'framer-motion', 'date-fns'],
 };
