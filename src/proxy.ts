@@ -37,8 +37,9 @@ export async function proxy(request: NextRequest) {
   const isAuthPath = AUTH_PATHS.some(path => pathname === path);
 
   if (isProtectedPath) {
-    // Check session_token cookie for database session auth
-    const sessionToken = request.cookies.get('session_token')?.value;
+    // Check session_token cookie (database session) OR next-auth.session-token (JWT/OAuth)
+    const sessionToken = request.cookies.get('session_token')?.value ||
+                         request.cookies.get('next-auth.session-token')?.value;
 
     if (!sessionToken) {
       const loginUrl = new URL('/login', request.url);

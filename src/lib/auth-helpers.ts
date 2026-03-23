@@ -1,6 +1,7 @@
 // Auth helper functions for MaatWork CRM
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
+import { jwtVerify } from 'jose';
 
 export type UserRole = 'admin' | 'manager' | 'advisor' | 'owner' | 'staff' | 'member' | 'developer' | 'dueno' | 'asesor';
 
@@ -19,21 +20,80 @@ export interface AuthUser {
 }
 
 /**
+ * Decode NextAuth JWT token to get user ID
+ */
+async function getUserIdFromNextAuthToken(token: string): Promise<string | null> {
+  try {
+    const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET!);
+    const { payload } = await jwtVerify(token, secret);
+    return payload.id as string || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Get user from session token in API routes
+ * Supports both database session token (UUID) and NextAuth JWT session token
  * Returns null if not authenticated
  */
 export async function getUserFromSession(request: NextRequest): Promise<AuthUser | null> {
   try {
-    const sessionToken = request.cookies.get('session_token')?.value;
-    
-    if (!sessionToken) {
-      return null;
+    // Try database session token first (UUID from custom auth)
+    const dbSessionToken = request.cookies.get('session_token')?.value;
+    const nextAuthToken = request.cookies.get('next-auth.session-token')?.value;
+
+    let userId: string | null = null;
+
+    if (dbSessionToken) {
+      const session = await db.session.findUnique({
+        where: { token: dbSessionToken },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              role: true,
+              isActive: true,
+              image: true,
+              managerId: true,
+              members: {
+                take: 1,
+                select: {
+                  organizationId: true,
+                  role: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (session && session.expiresAt > new Date() && session.user.isActive) {
+        userId = session.user.id;
+        const primaryMembership = session.user.members[0];
+
+        return {
+          id: session.user.id,
+          email: session.user.email,
+          name: session.user.name,
+          role: session.user.role,
+          isActive: session.user.isActive,
+          image: session.user.image,
+          managerId: session.user.managerId,
+          organizationId: primaryMembership?.organizationId || null,
+          organizationRole: primaryMembership?.role || null,
+        };
+      }
     }
-    
-    const session = await db.session.findUnique({
-      where: { token: sessionToken },
-      include: {
-        user: {
+
+    // Try NextAuth JWT token (from Google OAuth)
+    if (nextAuthToken) {
+      const nextAuthUserId = await getUserIdFromNextAuthToken(nextAuthToken);
+      if (nextAuthUserId) {
+        const user = await db.user.findUnique({
+          where: { id: nextAuthUserId },
           select: {
             id: true,
             email: true,
@@ -50,27 +110,26 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
               },
             },
           },
-        },
-      },
-    });
-    
-    if (!session || session.expiresAt < new Date() || !session.user.isActive) {
-      return null;
+        });
+
+        if (user && user.isActive) {
+          const primaryMembership = user.members[0];
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            isActive: user.isActive,
+            image: user.image,
+            managerId: user.managerId,
+            organizationId: primaryMembership?.organizationId || null,
+            organizationRole: primaryMembership?.role || null,
+          };
+        }
+      }
     }
-    
-    const primaryMembership = session.user.members[0];
-    
-    return {
-      id: session.user.id,
-      email: session.user.email,
-      name: session.user.name,
-      role: session.user.role,
-      isActive: session.user.isActive,
-      image: session.user.image,
-      managerId: session.user.managerId,
-      organizationId: primaryMembership?.organizationId || null,
-      organizationRole: primaryMembership?.role || null,
-    };
+
+    return null;
   } catch (error) {
     console.error('Error getting user from session:', error);
     return null;
