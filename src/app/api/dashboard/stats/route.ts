@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getUserFromSession } from "@/lib/auth-helpers";
 import { db } from "@/lib/db";
+import { cacheGet, cacheSet } from "@/lib/redis";
 
 export async function GET(request: Request) {
   const session = await getUserFromSession(request as any);
@@ -11,6 +12,16 @@ export async function GET(request: Request) {
   const organizationId = session.organizationId;
   if (!organizationId) {
     return NextResponse.json({ error: "No organization" }, { status: 400 });
+  }
+
+  const cacheKey = `dashboard:stats:${organizationId}`;
+
+  // Cache-aside: try cache first
+  const cached = await cacheGet<Record<string, unknown>>(cacheKey);
+  if (cached) {
+    const response = NextResponse.json(cached);
+    response.headers.set("X-Cache", "HIT");
+    return response;
   }
 
   // Fecha de hace 30 días para calcular trend
@@ -89,7 +100,7 @@ export async function GET(request: Request) {
     ? Math.round(((activeContacts - prevContactsCount) / prevContactsCount) * 100)
     : null;
 
-  const response = NextResponse.json({
+  const stats = {
     pipelineValue,
     activeDealsCount,
     activeContacts,
@@ -97,7 +108,12 @@ export async function GET(request: Request) {
     avgGoalProgress,
     teamsCount,
     contactsTrend,
-  });
-  response.headers.set('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
+  };
+
+  // Cache for 5 minutes
+  await cacheSet(cacheKey, stats, 300);
+
+  const response = NextResponse.json(stats);
+  response.headers.set("X-Cache", "MISS");
   return response;
 }
