@@ -13,6 +13,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "No organization" }, { status: 400 });
   }
 
+  // Fecha de hace 30 días para calcular trend
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
   // Single parallel query with aggregations
   const [
     dealsResult,
@@ -20,6 +24,7 @@ export async function GET(request: Request) {
     tasksCount,
     teamsResult,
     goalsResult,
+    prevContactsCount,
   ] = await Promise.all([
     // Deals - get aggregate value only
     db.deal.aggregate({
@@ -55,12 +60,20 @@ export async function GET(request: Request) {
       },
       select: { targetValue: true, currentValue: true },
     }),
+    // Contacts that existed 30 days ago (created before that date)
+    db.contact.count({
+      where: {
+        organizationId,
+        createdAt: { lt: thirtyDaysAgo },
+      },
+    }),
   ]);
 
   const activeDealsCount = dealsResult._count || 0;
   const pipelineValue = dealsResult._sum?.value || 0;
   const activeContacts = contactsCount;
   const pendingTasks = tasksCount;
+  const teamsCount = teamsResult.length;
 
   // Calculate average goal progress
   const totalProgress = goalsResult.reduce(
@@ -71,12 +84,19 @@ export async function GET(request: Request) {
     ? Math.round(totalProgress / goalsResult.length)
     : 0;
 
+  // Calcular trend de contactos: % cambio vs mes anterior
+  const contactsTrend = prevContactsCount > 0
+    ? Math.round(((activeContacts - prevContactsCount) / prevContactsCount) * 100)
+    : null;
+
   const response = NextResponse.json({
     pipelineValue,
     activeDealsCount,
     activeContacts,
     pendingTasks,
     avgGoalProgress,
+    teamsCount,
+    contactsTrend,
   });
   response.headers.set('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
   return response;

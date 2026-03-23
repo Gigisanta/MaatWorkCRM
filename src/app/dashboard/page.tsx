@@ -9,7 +9,7 @@ import { AppHeader } from "@/components/layout/app-header";
 import { useSidebar } from "@/lib/sidebar-context";
 import { useAuth } from "@/lib/auth-context";
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, isToday, isTomorrow } from "date-fns";
 import { cn } from "@/lib/utils";
 
 const kpiConfig = [
@@ -20,8 +20,6 @@ const kpiConfig = [
     accentClass: "bg-gradient-to-r from-violet-500 to-violet-400",
     iconBgClass: "bg-violet-500/10",
     iconColorClass: "text-violet-400",
-    trendClass: "text-emerald-400 bg-emerald-400/10",
-    trend: "↑ Este mes",
   },
   {
     key: "contacts",
@@ -30,8 +28,6 @@ const kpiConfig = [
     accentClass: "bg-gradient-to-r from-emerald-500 to-emerald-400",
     iconBgClass: "bg-emerald-500/10",
     iconColorClass: "text-emerald-400",
-    trendClass: "text-emerald-400 bg-emerald-400/10",
-    trend: "↑ Este mes",
   },
   {
     key: "tasks",
@@ -40,18 +36,14 @@ const kpiConfig = [
     accentClass: "bg-gradient-to-r from-amber-500 to-amber-400",
     iconBgClass: "bg-amber-500/10",
     iconColorClass: "text-amber-400",
-    trendClass: "text-amber-400 bg-amber-400/10",
-    trend: "↓ Esta semana",
   },
   {
     key: "goals",
     label: "Progreso Objetivos",
     icon: TrendingUp,
-    accentClass: "bg-gradient-to-r from-sky-500 to-sky-400",
-    iconBgClass: "bg-sky-500/10",
-    iconColorClass: "text-sky-400",
-    trendClass: "text-sky-400 bg-sky-400/10",
-    trend: "↑ Este mes",
+    accentClass: "bg-gradient-to-r from-violet-500 to-violet-400",
+    iconBgClass: "bg-violet-500/10",
+    iconColorClass: "text-violet-400",
   },
 ];
 
@@ -97,6 +89,23 @@ export default function DashboardPage() {
   const pendingTasks = stats?.pendingTasks || 0;
   const avgGoalProgress = stats?.avgGoalProgress || 0;
 
+  // Upcoming tasks query
+  const { data: upcomingTasksData } = useQuery({
+    queryKey: ["dashboard-upcoming-tasks", user?.organizationId],
+    queryFn: async () => {
+      if (!user?.organizationId) return { tasks: [] };
+      const res = await fetch(
+        `/api/tasks?organizationId=${user.organizationId}&status=pending&limit=4&sortBy=dueDate&sortOrder=asc`,
+        { credentials: 'include' }
+      );
+      if (!res.ok) return { tasks: [] };
+      return res.json();
+    },
+    enabled: !!user?.organizationId && isAuthenticated,
+    staleTime: 60 * 1000,
+  });
+  const upcomingTasks = upcomingTasksData?.tasks || [];
+
   // Keep deals list for pipeline table
   const deals = dealsData?.deals || [];
   const inactiveStageNames = ["Caído", "Caida", "Cuenta vacia", "Cuenta Vacía"];
@@ -115,6 +124,20 @@ export default function DashboardPage() {
     contacts: String(activeContacts),
     tasks: String(pendingTasks),
     goals: `${Math.round(avgGoalProgress)}%`,
+  };
+
+  // Helper para renderizar trend dinámico
+  const renderTrend = (trendValue: number | null | undefined) => {
+    if (trendValue === null || trendValue === undefined) return null;
+    const isPositive = trendValue >= 0;
+    return (
+      <span className={cn(
+        "text-xs font-medium px-2 py-0.5 rounded-full",
+        isPositive ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
+      )}>
+        {isPositive ? "↑" : "↓"} {Math.abs(trendValue)}%
+      </span>
+    );
   };
 
   // Auth loading or redirecting
@@ -183,9 +206,11 @@ export default function DashboardPage() {
                     <div className={`p-2.5 rounded-xl ${kpi.iconBgClass} transition-all duration-300 group-hover:scale-110`}>
                       <kpi.icon className={`h-5 w-5 ${kpi.iconColorClass}`} strokeWidth={1.75} />
                     </div>
-                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${kpi.trendClass}`}>
-                      {kpi.trend}
-                    </span>
+                    {renderTrend(
+                      kpi.key === "contacts" ? stats?.contactsTrend :
+                      kpi.key === "pipeline" ? stats?.pipelineTrend :
+                      null
+                    )}
                   </div>
 
                   {/* Value */}
@@ -261,35 +286,51 @@ export default function DashboardPage() {
                   </Link>
                 </div>
 
-                {/* Task stats */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-white/4 rounded-lg">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-2 h-2 rounded-full bg-amber-400" />
-                      <span className="text-sm text-slate-300">Pendientes</span>
+                {/* Upcoming tasks */}
+                <div className="space-y-2 mb-4">
+                  {upcomingTasks.length > 0 ? (
+                    upcomingTasks.map((task: any) => (
+                      <div key={task.id} className="relative flex items-start gap-3 p-3 bg-white/4 rounded-lg pl-4">
+                        <div className={cn(
+                          "absolute left-0 top-2 bottom-2 w-[3px] rounded-full",
+                          task.priority === "urgent" ? "bg-rose-500" :
+                          task.priority === "high" ? "bg-amber-500" :
+                          task.priority === "medium" ? "bg-sky-500" : "bg-slate-600"
+                        )} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-slate-200 truncate">{task.title}</p>
+                          {task.dueDate && (
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              {isToday(new Date(task.dueDate)) ? "Hoy" :
+                               isTomorrow(new Date(task.dueDate)) ? "Mañana" :
+                               format(new Date(task.dueDate), "d MMM")}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="flex items-center justify-between p-3 bg-white/4 rounded-lg">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-2 h-2 rounded-full bg-amber-400" />
+                        <span className="text-sm text-slate-300">Pendientes</span>
+                      </div>
+                      <span className="text-sm font-semibold text-white">{pendingTasks}</span>
                     </div>
-                    <span className="text-sm font-semibold text-white">{pendingTasks}</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-white/4 rounded-lg">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                      <span className="text-sm text-slate-300">Objetivo promedio</span>
-                    </div>
-                    <span className="text-sm font-semibold text-white">{Math.round(avgGoalProgress)}%</span>
-                  </div>
+                  )}
+                </div>
 
-                  {/* Progress bar */}
-                  <div className="pt-1">
-                    <div className="flex justify-between text-xs text-slate-500 mb-1.5">
-                      <span>Progreso general de objetivos</span>
-                      <span>{Math.round(avgGoalProgress)}%</span>
-                    </div>
-                    <div className="h-1.5 bg-white/8 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-violet-500 to-violet-400 rounded-full transition-all duration-1000"
-                        style={{ width: `${Math.round(avgGoalProgress)}%` }}
-                      />
-                    </div>
+                {/* Progress bar */}
+                <div className="pt-1">
+                  <div className="flex justify-between text-xs text-slate-500 mb-1.5">
+                    <span>Progreso general de objetivos</span>
+                    <span>{Math.round(avgGoalProgress)}%</span>
+                  </div>
+                  <div className="h-1.5 bg-white/8 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-violet-500 to-violet-400 rounded-full transition-all duration-1000"
+                      style={{ width: `${Math.round(avgGoalProgress)}%` }}
+                    />
                   </div>
                 </div>
               </div>
