@@ -8,6 +8,11 @@ import { localEventToGoogle } from './event-mapper';
 const MAX_EVENTS_PER_PAGE = 250;
 const SYNC_LOOKBACK_DAYS = 7; // Fallback lookback if no syncToken
 
+// Debug logger — only logs in development
+const debug = process.env.NODE_ENV === 'development'
+  ? (msg: string, ...args: unknown[]) => console.log(`[SyncEngine] ${msg}`, ...args)
+  : (..._: unknown[]) => {};
+
 // ─── OAuth Client ────────────────────────────────────────────────
 
 function createCalendarClient(accessToken: string, refreshToken?: string | null): OAuth2Client {
@@ -18,7 +23,10 @@ function createCalendarClient(accessToken: string, refreshToken?: string | null)
   );
   client.setCredentials({
     access_token: accessToken,
-    refresh_token: refreshToken ? decryptTokenIfSet(refreshToken) : undefined,
+    // refreshToken puede venir encriptado o plano — intentamos decrypt y caemos al plano
+    refresh_token: refreshToken
+      ? (decryptTokenIfSet(refreshToken) ?? refreshToken)
+      : undefined,
   });
   return client;
 }
@@ -30,7 +38,11 @@ async function getUserTokens(userId: string) {
   });
   if (!account?.access_token) return null;
   return {
-    accessToken: decryptTokenIfSet(account.access_token) || account.access_token,
+    // Token puede estar encriptado o plano — intentamos decrypt y caemos al plano
+    accessToken: (() => {
+      const decrypted = decryptTokenIfSet(account.access_token!);
+      return decrypted ?? account.access_token!;
+    })(),
     refreshToken: account.refresh_token ?? undefined,
   };
 }
@@ -174,7 +186,7 @@ export class CalendarSyncEngine {
           where: { userId_calendarId: { userId, calendarId } },
           data: { syncToken: null },
         });
-        console.warn('[CalendarSync] syncToken expired, re-running initialSync');
+        debug('syncToken expired, re-running initialSync');
         const result = await this.initialSync(userId, organizationId, calendarId);
         return { ...result, direction: 'full' };
       }
@@ -238,6 +250,112 @@ export class CalendarSyncEngine {
     } catch (error: any) {
       if (error.code !== 404) throw error;
     }
+  }
+
+  /**
+   * registerWebhook — crea un canal de push notifications en Google Calendar.
+   * Debe llamarse después de un initialSync exitoso.
+   */
+  async registerWebhook(userId: string, calendarId = 'primary'): Promise<void> {
+    const tokens = await getUserTokens(userId);
+    if (!tokens) throw new Error('Google account not connected');
+
+    const auth = createCalendarClient(tokens.accessToken, tokens.refreshToken);
+    const calendar = google.calendar({ version: 'v3', auth });
+
+    // Generar canal único
+    const channelId = `maatwork-${userId}-${calendarId}-${Date.now()}`;
+    const webhookUrl = `${process.env.NEXTAUTH_URL}/api/webhooks/google-calendar`;
+
+    // Expiración: 1 semana (Google max es 1 semana)
+    const expiration = new Date();
+    expiration.setDate(expiration.getDate() + 6);
+
+    // Verificar si ya existe uno activo
+    const existing = await db.calendarWebhook.findFirst({
+      where: { userId, calendarId, isActive: true },
+    });
+
+    if (existing) {
+      // Ya existe canal activo — lo detenemos primero
+      try {
+        await calendar.channels.stop({
+          requestBody: { id: existing.channelId, resourceId: existing.channelId },
+        });
+      } catch {
+        // Ignorar errores al detener canal anterior
+      }
+    }
+
+    // Crear nuevo canal
+    const watchRes = await calendar.events.watch({
+      calendarId,
+      requestBody: {
+        id: channelId,
+        type: 'web_hook',
+        address: webhookUrl,
+        expiration: expiration.getTime().toString(),
+      },
+    });
+
+    // resourceId es enviado por Google en la respuesta del watch
+    const resourceId = watchRes.data?.resourceId ?? null;
+
+    // Guardar en BD
+    await db.calendarWebhook.upsert({
+      where: { userId_calendarId: { userId, calendarId } },
+      create: {
+        userId,
+        calendarId,
+        channelId,
+        resourceId,
+        expiration,
+        isActive: true,
+      },
+      update: {
+        channelId,
+        resourceId,
+        expiration,
+        isActive: true,
+      },
+    });
+
+    debug(`Webhook registered for user ${userId}, calendar ${calendarId}`);
+  }
+
+  /**
+   * unregisterWebhook — detiene el canal de push y lo marca inactivo en BD.
+   */
+  async unregisterWebhook(userId: string, calendarId = 'primary'): Promise<void> {
+    const tokens = await getUserTokens(userId);
+    if (!tokens) return; // No connected, nothing to unregister
+
+    const webhook = await db.calendarWebhook.findFirst({
+      where: { userId, calendarId, isActive: true },
+    });
+
+    if (webhook) {
+      try {
+        const auth = createCalendarClient(tokens.accessToken, tokens.refreshToken);
+        const calendar = google.calendar({ version: 'v3', auth });
+        // resourceId es obligatorio para detener el canal — si no lo tenemos, el stop fallará
+        // (no importa: el canal expirará y marcaremos isActive=false en BD igual)
+        if (webhook.resourceId) {
+          await calendar.channels.stop({
+            requestBody: { id: webhook.channelId, resourceId: webhook.resourceId },
+          });
+        }
+      } catch (error) {
+        debug('Failed to stop Google webhook:', (error as Error).message);
+      }
+    }
+
+    await db.calendarWebhook.updateMany({
+      where: { userId, calendarId },
+      data: { isActive: false },
+    });
+
+    debug(`Webhook unregistered for user ${userId}, calendar ${calendarId}`);
   }
 
   resolveConflict(localEvent: { updatedAt?: Date | null }, googleEvent: { updated?: string }): 'local' | 'google' {
