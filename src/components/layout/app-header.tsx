@@ -1,17 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { 
-  Search, 
-  Plus, 
+import {
+  Search,
+  Plus,
   CheckSquare,
-  Users,
+  User,
   Calendar,
-  Settings,
+  CalendarDays,
   LogOut,
   Loader2,
 } from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -92,9 +91,6 @@ export function AppHeader() {
                 </Button>
             </div>
 
-            {/* Theme toggle */}
-            <ThemeToggle />
-
             {/* Notifications */}
             <NotificationBell />
 
@@ -141,14 +137,8 @@ export function AppHeader() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href="/settings" className="cursor-pointer">
-                    <Users className="mr-2 h-4 w-4" />
+                    <User className="mr-2 h-4 w-4" />
                     Perfil
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/calendar" className="cursor-pointer">
-                    <Calendar className="mr-2 h-4 w-4" />
-                    Calendario
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
@@ -158,9 +148,9 @@ export function AppHeader() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/settings" className="cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Configuración
+                  <Link href="/calendar" className="cursor-pointer">
+                    <Calendar className="mr-2 h-4 w-4" />
+                    Calendario
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
