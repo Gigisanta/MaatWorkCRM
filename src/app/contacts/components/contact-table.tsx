@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from "react";
+import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { User, ChevronRight, Edit, XCircle, Plus, FileText } from "lucide-react";
 import { type Tag } from "./tag-manager-dialog";
@@ -196,7 +197,6 @@ export function ContactTable({
                             <p className="text-[11px] text-slate-500 truncate">{contact.company}</p>
                           )}
                         </div>
-                      </div>
                     </td>
                     <td className="hidden lg:table-cell w-40 shrink-0 px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-2">
