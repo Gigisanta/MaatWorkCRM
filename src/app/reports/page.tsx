@@ -856,7 +856,7 @@ export default function ReportsPage() {
                   <CardContent>
                     {advisorPerformance.length > 0 ? (
                       <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
-                        {advisorPerformance.map((advisor) => {
+                        {advisorPerformance.map((advisor, i) => {
                           const maxValue = Math.max(...advisorPerformance.map(a => a.value));
                           const progress = maxValue > 0 ? (advisor.value / maxValue) * 100 : 0;
 

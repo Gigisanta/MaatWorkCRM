@@ -43,7 +43,7 @@ model User {
   auditLogs     AuditLog[]
   createdEvents CalendarEvent[] @relation("EventCreator")
   members       Member[]
-  manager       User?          @relation("AdvisorManager", fields: [managerId], references: [id])
+  manager       User?          @relation("AdvisorManager", fields: [managerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   advisors      User[]         @relation("AdvisorManager")
   calendarSyncStates CalendarSyncState[]
   calendarWebhooks CalendarWebhook[]
