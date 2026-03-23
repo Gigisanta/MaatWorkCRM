@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { canBeManager } from '@/lib/permissions';
-import logger from '@/lib/logger';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   const start = Date.now();

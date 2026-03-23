@@ -5,7 +5,7 @@ import { hasPermission, normalizeRole } from '@/lib/permissions';
 import { contactCreateSchema } from '@/lib/schemas';
 import type { ContactCreateInput } from '@/lib/schemas';
 import { revalidateTag } from 'next/cache';
-import logger from '@/lib/logger';
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import logger from '@/lib/logger';
+import { logger } from '@/lib/logger';
 
 // DELETE /api/notes/[id] - Delete a note
 export async function DELETE(

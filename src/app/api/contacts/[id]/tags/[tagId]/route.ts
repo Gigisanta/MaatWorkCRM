@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getUserFromSession } from '@/lib/auth-helpers';
-import logger from '@/lib/logger';
+import { logger } from '@/lib/logger';
 
 // DELETE /api/contacts/[id]/tags/[tagId] - Remove a tag from a contact
 export async function DELETE(

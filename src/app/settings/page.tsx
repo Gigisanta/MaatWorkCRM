@@ -478,15 +478,10 @@ export default function SettingsPage() {
             className="space-y-6"
           >
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div>
-                <p className="text-xs font-medium text-violet-400 uppercase tracking-widest mb-1">CONFIGURACIÓN</p>
-                <h1 className="text-2xl font-bold text-white tracking-tight">Configuración</h1>
-                <p className="text-slate-500 mt-1 text-sm">Gestiona tu cuenta y preferencias</p>
-              </div>
-
-              {/* Theme Selector */}
-              <ThemeToggle variant="segmented" />
+            <div className="mb-8">
+              <p className="text-xs font-medium text-violet-400 uppercase tracking-widest mb-1.5">Tu cuenta</p>
+              <h1 className="text-2xl font-bold text-white tracking-tight">Configuración</h1>
+              <p className="text-slate-500 mt-1.5 text-sm">Administra tu perfil, organización y preferencias</p>
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">

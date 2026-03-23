@@ -21,6 +21,7 @@ import {
   Mail,
   ChevronRight,
   Loader2,
+  Search,
 } from "lucide-react";
 import {
   CommandDialog,

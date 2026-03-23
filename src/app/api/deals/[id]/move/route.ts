@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import logger from '@/lib/logger';
+import { logger } from '@/lib/logger';
 
 // POST /api/deals/[id]/move - Move deal to different stage
 export async function POST(

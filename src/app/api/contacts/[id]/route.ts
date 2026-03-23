@@ -5,7 +5,7 @@ import { hasPermission, normalizeRole } from '@/lib/permissions';
 import { contactUpdateSchema } from '@/lib/schemas';
 import type { ContactUpdateInput } from '@/lib/schemas';
 import { revalidateTag } from 'next/cache';
-import logger from '@/lib/logger';
+import { logger } from '@/lib/logger';
 
 // Helper to check if targetUserId is in the team managed by managerId
 async function isInTeam(targetUserId: string, managerId: string): Promise<boolean> {

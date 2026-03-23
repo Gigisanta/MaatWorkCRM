@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getUserFromSession } from '@/lib/auth-helpers';
 import { hasPermission, normalizeRole } from '@/lib/permissions';
-import logger from '@/lib/logger';
+import { logger } from '@/lib/logger';
 
 // Helper to check if targetUserId is in the team managed by managerId
 async function isInTeam(targetUserId: string, managerId: string): Promise<boolean> {

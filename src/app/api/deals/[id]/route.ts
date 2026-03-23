@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { revalidateTag } from 'next/cache';
-import logger from '@/lib/logger';
+import { logger } from '@/lib/logger';
 
 // GET /api/deals/[id] - Get a single deal
 export async function GET(

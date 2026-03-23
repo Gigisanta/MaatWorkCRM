@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getUserFromSession } from '@/lib/auth-helpers';
 import { hasPermission, normalizeRole } from '@/lib/permissions';
-import logger from '@/lib/logger';
+import { logger } from '@/lib/logger';
 
 // GET /api/teams - List teams
 export async function GET(request: NextRequest) {

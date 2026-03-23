@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import logger from '@/lib/logger';
+import { logger } from '@/lib/logger';
+import { taskCreateSchema } from '@/lib/schemas';
+import type { TaskCreateInput } from '@/lib/schemas';
 
 // GET /api/tasks - List tasks with filters
 export async function GET(request: NextRequest) {

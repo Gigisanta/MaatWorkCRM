@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import logger from '@/lib/logger';
+import { logger } from '@/lib/logger';
 
 // GET /api/calendar-events - List events with date range filter
 export async function GET(request: NextRequest) {

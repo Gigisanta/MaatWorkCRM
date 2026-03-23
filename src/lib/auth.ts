@@ -4,7 +4,8 @@ import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { db } from '@/lib/db';
-import { encryptToken, decryptTokenIfSet } from '@/lib/crypto';
+import { encryptToken } from '@/lib/crypto';
+import { calendarSyncEngine } from '@/lib/google-calendar/sync-engine';
 
 const GOOGLE_SCOPES =
   'openid email profile https://www.googleapis.com/auth/calendar';
@@ -111,6 +112,25 @@ export const authOptions: NextAuthOptions = {
           where: { id: user.id },
           data: { emailVerified: new Date() },
         });
+
+        // Trigger initial calendar sync and webhook registration (non-blocking)
+        const membership = await db.member.findFirst({
+          where: { userId: user.id },
+        });
+
+        if (membership) {
+          const orgId = membership.organizationId;
+
+          // Register webhook first so we receive push notifications
+          calendarSyncEngine.registerWebhook(user.id, 'primary').catch((err: Error) => {
+            console.error('[Auth] Failed to register calendar webhook:', err.message);
+          });
+
+          // Initial full sync — fire-and-forget, doesn't block the sign-in
+          calendarSyncEngine.initialSync(user.id, orgId, 'primary').catch((err: Error) => {
+            console.error('[Auth] Initial calendar sync failed:', err.message);
+          });
+        }
       }
     },
   },

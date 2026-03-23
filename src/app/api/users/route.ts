@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import logger from '@/lib/logger';
+import { logger } from '@/lib/logger';
 import { getCachedUsers } from '@/lib/cache';
 
 // GET /api/users - List users for an organization

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getUserFromSession } from '@/lib/auth-helpers';
 import { invalidateTagsCache } from '@/lib/cache';
-import logger from '@/lib/logger';
+import { logger } from '@/lib/logger';
 
 // PUT /api/tags/[id] - Update a tag
 export async function PUT(

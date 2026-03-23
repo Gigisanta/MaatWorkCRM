@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromSession } from '@/lib/auth-helpers';
 import { generatePlanHTML, type PlanData } from '@/lib/generatePlan';
-import logger from '@/lib/logger';
+import { logger } from '@/lib/logger';
 
 // POST /api/contacts/[id]/planning/html - Generate HTML for financial plan
 export async function POST(

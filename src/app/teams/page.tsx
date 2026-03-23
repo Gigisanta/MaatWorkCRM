@@ -20,6 +20,7 @@ import {
   Trash2,
   Loader2,
   AlertCircle,
+  Building2,
 } from "lucide-react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";

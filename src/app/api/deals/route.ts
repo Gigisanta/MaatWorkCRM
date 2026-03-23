@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { revalidateTag } from 'next/cache';
-import logger from '@/lib/logger';
+import { logger } from '@/lib/logger';
 import { getUserFromSession } from '@/lib/auth-helpers';
+import { dealCreateSchema } from '@/lib/schemas';
+import type { DealCreateInput } from '@/lib/schemas';
 
 export const revalidate = 300;
 
@@ -125,34 +127,30 @@ export async function POST(request: NextRequest) {
     logger.debug({ operation: 'createDeal', requestId }, 'Creating deal');
 
     const body = await request.json();
-    const {
-      organizationId,
-      contactId,
-      stageId,
-      title,
-      value,
-      probability,
-      expectedCloseDate,
-      assignedTo,
-    } = body;
+    const parsed = dealCreateSchema.safeParse(body);
 
-    if (!organizationId || !title) {
-      logger.warn({ operation: 'createDeal', requestId, organizationId, missingTitle: !title }, 'organizationId and title are required');
-      const response = NextResponse.json({ error: 'organizationId y title son requeridos' }, { status: 400 });
+    if (!parsed.success) {
+      logger.warn({ operation: 'createDeal', requestId }, 'Validation failed');
+      const response = NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
       response.headers.set('x-request-id', requestId);
       return response;
     }
 
+    const data: DealCreateInput = parsed.data;
+
     const deal = await db.deal.create({
       data: {
-        organizationId,
-        contactId,
-        stageId,
-        title,
-        value: value || 0,
-        probability: probability || 50,
-        expectedCloseDate: expectedCloseDate ? new Date(expectedCloseDate) : null,
-        assignedTo,
+        organizationId: data.organizationId,
+        contactId: data.contactId,
+        stageId: data.stageId,
+        title: data.title,
+        value: data.value ?? 0,
+        probability: data.probability ?? 50,
+        expectedCloseDate: data.expectedCloseDate ? new Date(data.expectedCloseDate) : null,
+        assignedTo: data.assignedTo,
       },
       include: {
         contact: true,
@@ -168,7 +166,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    logger.info({ operation: 'createDeal', requestId, dealId: deal.id, organizationId, duration_ms: Date.now() - start }, 'Deal created successfully');
+    logger.info({ operation: 'createDeal', requestId, dealId: deal.id, organizationId: data.organizationId, duration_ms: Date.now() - start }, 'Deal created successfully');
 
     revalidateTag('deals', 'max');
 

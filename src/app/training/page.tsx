@@ -67,6 +67,7 @@ import {
 import { cn } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
 import { useAuth } from "@/lib/auth-context";
+import { EmptyState } from "@/components/ui/empty-state";
 
 // Types
 interface TrainingMaterial {
@@ -706,20 +707,16 @@ export default function TrainingPage() {
                     ))}
                   </div>
                 ) : (
-                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl border-dashed">
-                    <CardContent className="p-12 text-center">
-                      <GraduationCap className="h-12 w-12 text-slate-600 mx-auto mb-4" />
-                      <p className="text-slate-400 mb-4">No se encontraron materiales</p>
-                      <Button
-                        variant="outline"
-                        className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl"
-                        onClick={() => setCreateDialogOpen(true)}
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Añadir material
-                      </Button>
-                    </CardContent>
-                  </Card>
+                  <EmptyState
+                    icon={GraduationCap}
+                    title={search ? "Sin resultados" : "No hay materiales de capacitación"}
+                    description={
+                      search
+                        ? `No se encontraron materiales para "${search}"`
+                        : "Añade recursos de formación para tu equipo"
+                    }
+                    action={!search ? { label: "Añadir material", onClick: () => setCreateDialogOpen(true) } : undefined}
+                  />
                 )}
               </AnimatePresence>
             )}

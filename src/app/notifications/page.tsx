@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { format, formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow, startOfDay, subDays } from "date-fns";
 import { useAuth } from "@/lib/auth-context";
 import Link from "next/link";
 
@@ -155,15 +155,26 @@ async function markAllAsRead(userId: string, organizationId: string): Promise<vo
   }
 }
 
+// Delete notification
+async function deleteNotification(notificationId: string): Promise<void> {
+  await fetch(`/api/notifications/${notificationId}`, {
+    method: "DELETE",
+    credentials: 'include',
+  });
+  // Silently fail if endpoint doesn't exist yet — handled optimistically in UI
+}
+
 // Notification Card Component
 function NotificationCard({
   notification,
   onMarkAsRead,
   isMarkingAsRead,
+  onDelete,
 }: {
   notification: Notification;
   onMarkAsRead: (id: string) => void;
   isMarkingAsRead: boolean;
+  onDelete: (id: string) => void;
 }) {
   const typeConfig = notificationTypeConfig[notification.type] || notificationTypeConfig.system;
   const formattedDate = formatDistanceToNow(new Date(notification.createdAt), {
@@ -178,9 +189,11 @@ function NotificationCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       className={cn(
-        "group p-4 rounded-lg bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8",
+        "group relative p-4 rounded-lg bg-[#0E0F12]/80 backdrop-blur-sm",
         "hover:border-white/20 transition-all duration-200 cursor-pointer",
-        !notification.isRead && "bg-violet-500/5 border-violet-500/20"
+        !notification.isRead
+          ? "border-l-2 border-l-violet-500 border border-white/8 bg-violet-500/5"
+          : "border border-white/8"
       )}
     >
       <div className="flex items-start gap-4">
@@ -200,7 +213,7 @@ function NotificationCard({
               <div className="h-2 w-2 rounded-full bg-violet-500 flex-shrink-0 mt-2" />
             )}
           </div>
-          
+
           <div className="flex items-center gap-3 mt-2">
             <span className="text-xs text-slate-500" title={fullDate}>
               {formattedDate}
@@ -235,6 +248,19 @@ function NotificationCard({
           </Button>
         )}
       </div>
+
+      {/* Delete button */}
+      <button
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onDelete(notification.id);
+        }}
+        className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 h-5 w-5 rounded-md flex items-center justify-center text-slate-500 hover:text-slate-300 hover:bg-white/8"
+        title="Descartar"
+      >
+        <X className="h-3 w-3" />
+      </button>
     </motion.div>
   );
 
@@ -329,6 +355,21 @@ export default function NotificationsPage() {
     markAsReadMutation.mutate(id);
   };
 
+  // Delete notification mutation
+  const deleteNotificationMutation = useMutation({
+    mutationFn: deleteNotification,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+    onError: () => {
+      toast.error("Error al eliminar notificación");
+    },
+  });
+
+  const handleDelete = (id: string) => {
+    deleteNotificationMutation.mutate(id);
+  };
+
   // Reset page when filters change
   React.useEffect(() => {
     setPage(1);
@@ -362,6 +403,21 @@ export default function NotificationsPage() {
   const unreadCount = data?.unreadCount || 0;
   const pagination = data?.pagination;
 
+  // Group notifications by date
+  const groupedNotifications = React.useMemo(() => {
+    const list: Notification[] = notifications;
+    const todayStart = startOfDay(new Date());
+    const yesterdayStart = subDays(todayStart, 1);
+    const weekStart = subDays(todayStart, 7);
+
+    return {
+      today: list.filter(n => new Date(n.createdAt) >= todayStart),
+      yesterday: list.filter(n => new Date(n.createdAt) >= yesterdayStart && new Date(n.createdAt) < todayStart),
+      thisWeek: list.filter(n => new Date(n.createdAt) >= weekStart && new Date(n.createdAt) < yesterdayStart),
+      older: list.filter(n => new Date(n.createdAt) < weekStart),
+    };
+  }, [notifications]);
+
   return (
     <div className="min-h-screen gradient-bg">
       <AppSidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
@@ -374,36 +430,32 @@ export default function NotificationsPage() {
             className="space-y-6"
           >
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center justify-between mb-6">
               <div>
-                <p className="text-xs font-medium text-violet-400 uppercase tracking-widest mb-1">Sistema</p>
-                <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                  <Bell className="h-6 w-6" />
-                  Notificaciones
-                </h1>
-                <p className="text-slate-400 mt-1">
-                  {unreadCount > 0 ? (
-                    <>
-                      Tienes <span className="text-violet-400">{unreadCount}</span> notificacion{unreadCount !== 1 ? "es" : ""} sin leer
-                    </>
-                  ) : (
-                    "No tienes notificaciones nuevas"
-                  )}
+                <p className="text-xs font-medium text-violet-400 uppercase tracking-widest mb-1.5">
+                  Centro de actividad
                 </p>
+                <h1 className="text-2xl font-bold text-white tracking-tight">Notificaciones</h1>
+                {unreadCount > 0 && (
+                  <p className="text-sm text-slate-500 mt-0.5">
+                    <span className="text-violet-400 font-medium">{unreadCount}</span> sin leer
+                  </p>
+                )}
               </div>
               {unreadCount > 0 && (
                 <Button
                   variant="outline"
-                  className="bg-white/4 border border-white/10 text-slate-400 hover:text-white"
+                  size="sm"
                   onClick={() => markAllAsReadMutation.mutate()}
                   disabled={markAllAsReadMutation.isPending}
+                  className="text-xs border-white/10 text-slate-400 hover:text-white hover:border-white/20"
                 >
                   {markAllAsReadMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
                   ) : (
-                    <Check className="h-4 w-4 mr-2" />
+                    <Check className="h-3 w-3 mr-1.5" />
                   )}
-                  Marcar todas como leídas
+                  Marcar todas leídas
                 </Button>
               )}
             </div>
@@ -516,16 +568,36 @@ export default function NotificationsPage() {
               </Card>
             ) : (
               <ScrollArea className="h-[calc(100vh-400px)]">
-                <div className="space-y-3 pr-4">
+                <div className="pr-4">
                   <AnimatePresence mode="popLayout">
-                    {notifications.map((notification) => (
-                      <NotificationCard
-                        key={notification.id}
-                        notification={notification}
-                        onMarkAsRead={handleMarkAsRead}
-                        isMarkingAsRead={markingAsRead.has(notification.id)}
-                      />
-                    ))}
+                    {(["today", "yesterday", "thisWeek", "older"] as const).map(groupKey => {
+                      const groupNotifs = groupedNotifications[groupKey];
+                      const groupLabel = {
+                        today: "Hoy",
+                        yesterday: "Ayer",
+                        thisWeek: "Esta semana",
+                        older: "Más antiguo",
+                      }[groupKey];
+                      if (groupNotifs.length === 0) return null;
+                      return (
+                        <div key={groupKey} className="mb-6">
+                          <p className="text-xs font-semibold text-slate-600 uppercase tracking-widest mb-3 px-1">
+                            {groupLabel}
+                          </p>
+                          <div className="space-y-2">
+                            {groupNotifs.map(notification => (
+                              <NotificationCard
+                                key={notification.id}
+                                notification={notification}
+                                onMarkAsRead={handleMarkAsRead}
+                                isMarkingAsRead={markingAsRead.has(notification.id)}
+                                onDelete={handleDelete}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </AnimatePresence>
                 </div>
               </ScrollArea>

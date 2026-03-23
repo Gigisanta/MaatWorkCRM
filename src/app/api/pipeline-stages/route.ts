@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getCachedPipelineStages, invalidatePipelineStagesCache } from '@/lib/cache';
 import { getUserFromSession } from '@/lib/auth-helpers';
-import logger from '@/lib/logger';
+import { logger } from '@/lib/logger';
 
 // POST /api/pipeline-stages - Create a new pipeline stage
 export async function POST(request: NextRequest) {
