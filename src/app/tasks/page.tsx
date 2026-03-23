@@ -21,6 +21,7 @@ import {
   Trash2,
   Edit,
   Loader2,
+  ChevronRight,
 } from "lucide-react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
@@ -66,7 +67,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
-import { format, isToday, isTomorrow, isPast, parseISO } from "date-fns";
+import { format, isToday, isTomorrow, isPast, parseISO, startOfDay, addDays } from "date-fns";
 import { useAuth } from "@/lib/auth-context";
 
 // Types
@@ -273,12 +274,19 @@ function TaskCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       className={cn(
-        "group p-4 rounded-lg glass border border-white/10",
+        "group p-4 rounded-lg glass border border-white/10 relative overflow-hidden",
         "hover:border-white/20 transition-all duration-200",
         task.status === "completed" && "opacity-60"
       )}
     >
-      <div className="flex items-start gap-3">
+      {/* Priority bar */}
+      <div className={cn(
+        "absolute left-0 top-0 bottom-0 w-[3px]",
+        task.priority === "urgent" ? "bg-rose-500" :
+        task.priority === "high" ? "bg-amber-500" :
+        task.priority === "medium" ? "bg-sky-500" : "bg-slate-700"
+      )} />
+      <div className="flex items-start gap-3 pl-4">
         <Checkbox
           checked={task.status === "completed"}
           onCheckedChange={() => onToggle(task.id)}
@@ -398,6 +406,63 @@ function TaskSkeleton() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Task Group Component
+function TaskGroup({
+  label,
+  tasks,
+  badgeColor,
+  defaultOpen = true,
+  onToggle,
+  onEdit,
+  onDelete,
+  togglingTasks,
+}: {
+  label: string;
+  tasks: Task[];
+  badgeColor: string;
+  defaultOpen?: boolean;
+  onToggle: (task: Task) => void;
+  onEdit: (task: Task) => void;
+  onDelete: (id: string) => void;
+  togglingTasks: Set<string>;
+}) {
+  const [open, setOpen] = React.useState(defaultOpen);
+  if (tasks.length === 0) return null;
+  return (
+    <div className="mb-4">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 w-full px-1 py-1 mb-2 text-left group"
+      >
+        <ChevronRight className={cn(
+          "h-3.5 w-3.5 text-slate-500 transition-transform duration-200",
+          open && "rotate-90"
+        )} />
+        <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">{label}</span>
+        <span className={cn("h-4 min-w-[16px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center", badgeColor)}>
+          {tasks.length}
+        </span>
+      </button>
+      {open && (
+        <AnimatePresence mode="popLayout">
+          <div className="space-y-2">
+            {tasks.map(task => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                onToggle={() => onToggle(task)}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                isToggling={togglingTasks.has(task.id)}
+              />
+            ))}
+          </div>
+        </AnimatePresence>
+      )}
     </div>
   );
 }
@@ -642,7 +707,7 @@ function TasksPageContent() {
   const searchParams = useSearchParams();
 
   // State - check URL param for action=create to auto-open dialog
-  const [search, setSearch] = React.useState("");
+  const [taskSearch, setTaskSearch] = React.useState("");
   const [filterStatus, setFilterStatus] = React.useState<string>("all");
   const [filterPriority, setFilterPriority] = React.useState<string>("all");
   const [filterAssignedTo, setFilterAssignedTo] = React.useState<string>("all");
@@ -776,13 +841,13 @@ function TasksPageContent() {
   const filteredTasks = React.useMemo(() => {
     const tasks = data?.tasks;
     if (!tasks) return [];
-    return tasks.filter(task => 
-      task.title.toLowerCase().includes(search.toLowerCase()) ||
-      task.description?.toLowerCase().includes(search.toLowerCase())
+    return tasks.filter(task =>
+      task.title.toLowerCase().includes(taskSearch.toLowerCase()) ||
+      task.description?.toLowerCase().includes(taskSearch.toLowerCase())
     );
-  }, [data, search]);
+  }, [data, taskSearch]);
 
-  // Group tasks by status
+  // Group tasks by status (for stats)
   const pendingTasks = filteredTasks.filter(t => t.status === "pending");
   const inProgressTasks = filteredTasks.filter(t => t.status === "in_progress");
   const completedTasks = filteredTasks.filter(t => t.status === "completed");
@@ -793,6 +858,22 @@ function TasksPageContent() {
       if (!t.dueDate || t.status === "completed") return false;
       return isPast(parseISO(t.dueDate));
     }).length;
+  }, [filteredTasks]);
+
+  // Group tasks by temporal proximity
+  const groupedTasks = React.useMemo(() => {
+    const today = startOfDay(new Date());
+    const tomorrow = addDays(today, 1);
+    const endOfWeek = addDays(today, 7);
+
+    return {
+      overdue: filteredTasks.filter(t => t.dueDate && new Date(t.dueDate) < today && t.status !== "completed"),
+      today: filteredTasks.filter(t => t.dueDate && isToday(new Date(t.dueDate)) && t.status !== "completed"),
+      tomorrow: filteredTasks.filter(t => t.dueDate && isTomorrow(new Date(t.dueDate)) && t.status !== "completed"),
+      thisWeek: filteredTasks.filter(t => t.dueDate && new Date(t.dueDate) > tomorrow && new Date(t.dueDate) <= endOfWeek && t.status !== "completed"),
+      later: filteredTasks.filter(t => (!t.dueDate || new Date(t.dueDate) > endOfWeek) && t.status !== "completed"),
+      completed: filteredTasks.filter(t => t.status === "completed"),
+    };
   }, [filteredTasks]);
 
   // Handle error
@@ -909,12 +990,12 @@ function TasksPageContent() {
               <CardContent className="p-4">
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                    <Input
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 pointer-events-none" />
+                    <input
+                      value={taskSearch}
+                      onChange={(e) => setTaskSearch(e.target.value)}
                       placeholder="Buscar tareas..."
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      className="pl-10 bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white placeholder:text-slate-500"
+                      className="w-full pl-9 pr-4 py-2 text-sm bg-white/4 border border-white/8 rounded-lg text-slate-300 placeholder:text-slate-600 focus:outline-none focus:border-violet-500/40 focus:bg-white/6 transition-all duration-200"
                     />
                   </div>
                   <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -965,100 +1046,71 @@ function TasksPageContent() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Pending Tasks */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Circle className="h-4 w-4 text-amber-500" />
-                    <h2 className="font-semibold text-white">Pendientes</h2>
-                    <Badge variant="outline" className="text-slate-400">
-                      {pendingTasks.length}
-                    </Badge>
-                  </div>
-                  <AnimatePresence mode="popLayout">
-                    {pendingTasks.length > 0 ? (
-                      <div className="space-y-2">
-                        {pendingTasks.map((task) => (
-                          <TaskCard 
-                            key={task.id} 
-                            task={task}
-                            onToggle={(id) => handleToggleTask(task)}
-                            onEdit={handleEditTask}
-                            onDelete={handleDeleteClick}
-                            isToggling={togglingTasks.has(task.id)}
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl border-dashed">
-                        <CardContent className="p-8 text-center">
-                          <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto mb-3" />
-                          <p className="text-slate-400">No hay tareas pendientes</p>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                {/* In Progress Tasks */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Clock className="h-4 w-4 text-blue-500" />
-                    <h2 className="font-semibold text-white">En Progreso</h2>
-                    <Badge variant="outline" className="text-slate-400">
-                      {inProgressTasks.length}
-                    </Badge>
-                  </div>
-                  <AnimatePresence mode="popLayout">
-                    {inProgressTasks.length > 0 ? (
-                      <div className="space-y-2">
-                        {inProgressTasks.map((task) => (
-                          <TaskCard 
-                            key={task.id} 
-                            task={task}
-                            onToggle={(id) => handleToggleTask(task)}
-                            onEdit={handleEditTask}
-                            onDelete={handleDeleteClick}
-                            isToggling={togglingTasks.has(task.id)}
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl border-dashed">
-                        <CardContent className="p-8 text-center">
-                          <Clock className="h-12 w-12 text-slate-500 mx-auto mb-3" />
-                          <p className="text-slate-400">No hay tareas en progreso</p>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                {/* Completed Tasks */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                    <h2 className="font-semibold text-white">Completadas</h2>
-                    <Badge variant="outline" className="text-slate-400">
-                      {completedTasks.length}
-                    </Badge>
-                  </div>
-                  <div className="space-y-2 max-h-[600px] overflow-y-auto custom-scrollbar">
-                    <AnimatePresence mode="popLayout">
-                      {completedTasks.map((task) => (
-                        <TaskCard 
-                          key={task.id} 
-                          task={task}
-                          onToggle={(id) => handleToggleTask(task)}
-                          onEdit={handleEditTask}
-                          onDelete={handleDeleteClick}
-                          isToggling={togglingTasks.has(task.id)}
-                        />
-                      ))}
-                    </AnimatePresence>
-                  </div>
-                </div>
-              </div>
+              <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
+                <CardContent className="p-4 lg:p-6">
+                  <TaskGroup
+                    label="Vencidas"
+                    tasks={groupedTasks.overdue}
+                    badgeColor="bg-rose-500/20 text-rose-400"
+                    onToggle={handleToggleTask}
+                    onEdit={handleEditTask}
+                    onDelete={handleDeleteClick}
+                    togglingTasks={togglingTasks}
+                  />
+                  <TaskGroup
+                    label="Hoy"
+                    tasks={groupedTasks.today}
+                    badgeColor="bg-amber-500/20 text-amber-400"
+                    onToggle={handleToggleTask}
+                    onEdit={handleEditTask}
+                    onDelete={handleDeleteClick}
+                    togglingTasks={togglingTasks}
+                  />
+                  <TaskGroup
+                    label="Mañana"
+                    tasks={groupedTasks.tomorrow}
+                    badgeColor="bg-sky-500/20 text-sky-400"
+                    onToggle={handleToggleTask}
+                    onEdit={handleEditTask}
+                    onDelete={handleDeleteClick}
+                    togglingTasks={togglingTasks}
+                  />
+                  <TaskGroup
+                    label="Esta semana"
+                    tasks={groupedTasks.thisWeek}
+                    badgeColor="bg-violet-500/20 text-violet-400"
+                    onToggle={handleToggleTask}
+                    onEdit={handleEditTask}
+                    onDelete={handleDeleteClick}
+                    togglingTasks={togglingTasks}
+                  />
+                  <TaskGroup
+                    label="Más adelante"
+                    tasks={groupedTasks.later}
+                    badgeColor="bg-slate-500/20 text-slate-400"
+                    onToggle={handleToggleTask}
+                    onEdit={handleEditTask}
+                    onDelete={handleDeleteClick}
+                    togglingTasks={togglingTasks}
+                  />
+                  <TaskGroup
+                    label="Completadas"
+                    tasks={groupedTasks.completed}
+                    badgeColor="bg-emerald-500/20 text-emerald-400"
+                    defaultOpen={false}
+                    onToggle={handleToggleTask}
+                    onEdit={handleEditTask}
+                    onDelete={handleDeleteClick}
+                    togglingTasks={togglingTasks}
+                  />
+                  {filteredTasks.length === 0 && (
+                    <div className="py-16 text-center">
+                      <CheckCircle2 className="h-12 w-12 text-slate-600 mx-auto mb-3" />
+                      <p className="text-slate-500">No hay tareas que coincidan</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             )}
           </motion.div>
         </main>
