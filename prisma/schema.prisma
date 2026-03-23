@@ -104,7 +104,10 @@ model Organization {
   name    String
   slug    String  @unique
   logo    String?
-  
+
+  // Google Calendar preferences — which calendar IDs to sync
+  calendarPreferences Json?  @default("{\"selectedCalendarIds\":[\"primary\"]}")
+
   // Relations
   members          Member[]
   contacts         Contact[]
@@ -131,11 +134,14 @@ model Member {
   userId         String
   organizationId String
   role           String   @default("member") // owner, admin, member
-  
+
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
+
   createdAt      DateTime @default(now())
+
+  @@index([userId])
+  @@index([organizationId])
 }
 
 // ============================================
@@ -180,6 +186,11 @@ model Contact {
   @@index([email])
   @@index([segment])
   @@index([source])
+  @@index([organizationId, pipelineStageId])
+  @@index([organizationId, assignedTo])
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([organizationId, updatedAt(sort: Desc)])
+  @@index([organizationId, segment])
 }
 
 model PipelineStage {
@@ -254,6 +265,8 @@ model Deal {
   @@index([stageId])
   @@index([assignedTo])
   @@index([expectedCloseDate])
+  @@index([organizationId, stageId])
+  @@index([contactId, stageId])
 }
 
 model Note {
@@ -295,6 +308,8 @@ model Tag {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   createdAt      DateTime @default(now())
+
+  @@index([organizationId])
 }
 
 model ContactTag {
@@ -316,12 +331,14 @@ model Segment {
   filters        String?  // JSON string
   isDynamic      Boolean  @default(false)
   contactCount   Int      @default(0)
-  
+
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
+
   lastRefreshedAt DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
 }
 
 // ============================================
@@ -363,6 +380,9 @@ model Task {
   @@index([completedAt])
   @@index([status])
   @@index([priority])
+  @@index([organizationId, assignedTo])
+  @@index([organizationId, status])
+  @@index([assignedTo, dueDate])
 }
 
 // ============================================
@@ -394,11 +414,14 @@ model TeamMember {
   teamId    String
   userId    String
   role      String   @default("member") // member, leader
-  
+
   team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   joinedAt  DateTime @default(now())
+
+  @@index([teamId])
+  @@index([userId])
 }
 
 model TeamGoal {
@@ -463,6 +486,8 @@ model CalendarEvent {
   @@index([organizationId])
   @@index([teamId])
   @@index([startAt, endAt])
+  @@index([organizationId, startAt(sort: Desc)])
+  @@index([googleEventId])
 }
 
 model CalendarSyncState {
@@ -477,6 +502,7 @@ model CalendarSyncState {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, calendarId])
+  @@index([userId])
 }
 
 model CalendarWebhook {
@@ -484,12 +510,15 @@ model CalendarWebhook {
   userId      String
   calendarId  String
   channelId   String
+  resourceId  String?  // Google resource ID, needed to stop the channel
   expiration  DateTime
   isActive    Boolean  @default(true)
 
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, calendarId])
+  @@index([userId])
+  @@index([channelId])
 }
 
 // ============================================
@@ -514,6 +543,7 @@ model Notification {
 
   @@index([userId, isRead, createdAt])
   @@index([organizationId, createdAt])
+  @@index([organizationId, userId, isRead])
 }
 
 // ============================================
@@ -529,11 +559,13 @@ model TrainingMaterial {
   content        String?
   category       String   @default("other") // course, video, document, guide, other
   createdBy      String?
-  
+
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
 }
 
 // ============================================
@@ -555,8 +587,11 @@ model AuditLog {
   
   user           User?    @relation(fields: [userId], references: [id])
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
+
   createdAt      DateTime @default(now())
+
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
 }
 
 // ============================================
@@ -575,13 +610,16 @@ model InstagramAccount {
   refreshToken         String?
   isActive             Boolean  @default(true)
   lastSyncedAt         DateTime?
-  
+
   conversations        InstagramConversation[]
-  
+
   organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  
+
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([userId])
 }
 
 model InstagramConversation {
@@ -600,13 +638,16 @@ model InstagramConversation {
   respondedToStory      Boolean  @default(false)
   iSentMessage          Boolean  @default(false)
   daysSinceLastContact  Int?
-  
+
   account               InstagramAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
   messages              InstagramMessage[]
   tags                  InstagramMessageTag[]
-  
+
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
+
+  @@index([accountId])
+  @@index([contactId])
 }
 
 model InstagramMessage {
@@ -632,10 +673,12 @@ model InstagramMessageTag {
   id             String   @id @default(cuid())
   conversationId String
   tag            String
-  
+
   conversation   InstagramConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  
+
   addedAt        DateTime @default(now())
+
+  @@index([conversationId])
 }
 
 // ============================================
@@ -657,6 +700,8 @@ model AutomationConfig {
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
 }
 
 // ============================================
