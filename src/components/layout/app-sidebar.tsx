@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -17,6 +17,7 @@ import {
   ChevronRight,
   Menu,
   Building2,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -29,6 +30,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { MaatWorkLogo, MaatWorkIcon } from "@/components/brand";
 import { useAuth } from "@/lib/auth-context";
+import { useQuery } from "@tanstack/react-query";
 
 interface AppSidebarProps {
   collapsed: boolean;
@@ -37,29 +39,60 @@ interface AppSidebarProps {
 
 export function AppSidebar({ collapsed, onCollapsedChange }: AppSidebarProps) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = React.useState(false);
 
-  // Memoized navigation groups with separators
+  // Memoized navigation groups with labels and separators
   const navigationGroups = React.useMemo(() => [
-    [
-      { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-      { name: "Contactos", href: "/contacts", icon: Users },
-      { name: "Pipeline", href: "/pipeline", icon: Target },
-    ],
-    [
-      { name: "Tareas", href: "/tasks", icon: CheckSquare },
-      { name: "Calendario", href: "/calendar", icon: Calendar },
-    ],
-    [
-      { name: "Equipos", href: "/teams", icon: Building2 },
-      { name: "Reportes", href: "/reports", icon: BarChart3 },
-      { name: "Capacitación", href: "/training", icon: GraduationCap },
-    ],
-    [
-      { name: "Configuración", href: "/settings", icon: Settings },
-    ],
+    {
+      label: "PRINCIPAL",
+      items: [
+        { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+        { name: "Contactos", href: "/contacts", icon: Users },
+        { name: "Pipeline", href: "/pipeline", icon: Target },
+      ]
+    },
+    {
+      label: "PRODUCTIVIDAD",
+      items: [
+        { name: "Tareas", href: "/tasks", icon: CheckSquare },
+        { name: "Calendario", href: "/calendar", icon: Calendar },
+      ]
+    },
+    {
+      label: "EQUIPO",
+      items: [
+        { name: "Equipos", href: "/teams", icon: Building2 },
+        { name: "Reportes", href: "/reports", icon: BarChart3 },
+        { name: "Capacitación", href: "/training", icon: GraduationCap },
+      ]
+    },
+    {
+      label: "SISTEMA",
+      items: [
+        { name: "Configuración", href: "/settings", icon: Settings },
+      ]
+    },
   ], []);
+
+  // Unread notifications count
+  const { data: notifData } = useQuery({
+    queryKey: ["notifications-unread", user?.organizationId],
+    queryFn: async () => {
+      if (!user?.organizationId) return { unreadCount: 0 };
+      const res = await fetch(
+        `/api/notifications?organizationId=${user.organizationId}&limit=1`,
+        { credentials: 'include' }
+      );
+      if (!res.ok) return { unreadCount: 0 };
+      const data = await res.json();
+      return { unreadCount: data.unreadCount || 0 };
+    },
+    enabled: !!user?.organizationId,
+    staleTime: 30 * 1000,
+    refetchInterval: 60 * 1000,
+  });
+  const unreadCount = notifData?.unreadCount || 0;
 
   // Get user initials for avatar fallback
   const userInitials = user?.name
@@ -158,8 +191,16 @@ export function AppSidebar({ collapsed, onCollapsedChange }: AppSidebarProps) {
               {groupIndex > 0 && (
                 <div className="my-2 mx-1 border-t border-white/5" />
               )}
+              {!collapsed && (
+                <p className={cn(
+                  "text-[10px] font-semibold text-slate-600 uppercase tracking-widest px-3 mb-1",
+                  groupIndex > 0 ? "mt-3" : ""
+                )}>
+                  {group.label}
+                </p>
+              )}
               <div className="space-y-0.5">
-                {group.map((item) => {
+                {group.items.map((item) => {
                   const isActive = pathname === item.href ||
                     (item.href !== "/" && pathname.startsWith(item.href));
 
@@ -191,6 +232,11 @@ export function AppSidebar({ collapsed, onCollapsedChange }: AppSidebarProps) {
                           </motion.span>
                         )}
                       </AnimatePresence>
+                      {item.name === "Configuración" && unreadCount > 0 && (
+                        <span className="ml-auto h-4 min-w-[16px] px-1 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center">
+                          {unreadCount > 99 ? "99+" : unreadCount}
+                        </span>
+                      )}
                     </Link>
                   );
 
@@ -216,7 +262,7 @@ export function AppSidebar({ collapsed, onCollapsedChange }: AppSidebarProps) {
 
         {/* User section */}
         <div className="border-t border-white/5 p-3">
-          <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/5 transition-all duration-200 cursor-pointer">
+          <div className="group flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/5 transition-all duration-200 cursor-pointer">
             <div className="relative flex-shrink-0">
               <Avatar className="h-9 w-9 border border-white/10">
                 <AvatarImage src={user?.image || undefined} />
@@ -243,6 +289,15 @@ export function AppSidebar({ collapsed, onCollapsedChange }: AppSidebarProps) {
                 </motion.div>
               )}
             </AnimatePresence>
+            {!collapsed && (
+              <button
+                onClick={async (e) => { e.stopPropagation(); await logout(); }}
+                className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 rounded-md hover:bg-white/10 text-slate-500 hover:text-rose-400 flex-shrink-0"
+                title="Cerrar sesión"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
         </div>
       </motion.aside>
