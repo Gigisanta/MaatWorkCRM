@@ -3,7 +3,8 @@
 import * as React from "react";
 import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Trash2, Plus } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
@@ -13,11 +14,20 @@ import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 import { ContactStats } from "./components/contact-stats";
 import { ContactFilters } from "./components/contact-filters";
 import { ContactTable } from "./components/contact-table";
 import { ContactPagination } from "./components/contact-pagination";
+import { ContactDrawerSkeleton } from "./components/contact-drawer-skeleton";
 import { PlanningDialogProvider } from "./components/PlanningDialogContext";
 import { type Contact, type PipelineStage } from "./components/contact-table";
 import { type Tag } from "./components/tag-manager-dialog";
@@ -25,7 +35,7 @@ import { type Tag } from "./components/tag-manager-dialog";
 // Dynamic imports for modal/dialog components (code splitting)
 const ContactDrawer = dynamic(
   () => import("./components/contact-drawer").then((m) => m.ContactDrawer),
-  { ssr: false, loading: () => <div className="fixed inset-0 z-50"><Skeleton className="w-full h-full" /></div> }
+  { ssr: false, loading: () => <ContactDrawerSkeleton /> }
 );
 const CreateContactModal = dynamic(
   () => import("./components/create-contact-modal").then((m) => m.CreateContactModal),
