@@ -68,9 +68,6 @@ import { cn } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
 import { useAuth } from "@/lib/auth-context";
 
-// Constants
-const ORGANIZATION_ID = "org_maatwork_demo";
-
 // Types
 interface TrainingMaterial {
   id: string;
@@ -135,11 +132,12 @@ function useDebounce<T>(value: T, delay: number): T {
 
 // API Functions
 async function fetchMaterials(params: {
+  organizationId: string;
   category?: string;
   search?: string;
 }): Promise<TrainingResponse> {
   const searchParams = new URLSearchParams();
-  searchParams.set("organizationId", ORGANIZATION_ID);
+  searchParams.set("organizationId", params.organizationId);
 
   if (params.category && params.category !== "all") {
     searchParams.set("category", params.category);
@@ -155,14 +153,13 @@ async function fetchMaterials(params: {
   return response.json();
 }
 
-async function createMaterial(data: MaterialFormData & { duration?: string | null }): Promise<TrainingMaterial> {
+async function createMaterial(data: MaterialFormData & { duration?: string | null; organizationId: string }): Promise<TrainingMaterial> {
   const response = await fetch("/api/training", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: 'include',
     body: JSON.stringify({
       ...data,
-      organizationId: ORGANIZATION_ID,
       url: data.url || null,
       content: data.content || null,
     }),
@@ -334,6 +331,7 @@ function MaterialDialog({
   onSuccess: () => void;
 }) {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const isEditing = !!material;
 
   const {
@@ -374,7 +372,7 @@ function MaterialDialog({
       if (isEditing && material) {
         return updateMaterial(material.id, data);
       }
-      return createMaterial(data);
+      return createMaterial({ ...data, organizationId: user?.organizationId ?? "" });
     },
     onSuccess: () => {
       toast.success(isEditing ? "Material actualizado" : "Material creado");
@@ -528,11 +526,13 @@ export default function TrainingPage() {
 
   // Fetch materials
   const { data, isLoading, error } = useQuery({
-    queryKey: ["training-materials", filterCategory, debouncedSearch],
+    queryKey: ["training-materials", filterCategory, debouncedSearch, user?.organizationId],
     queryFn: () => fetchMaterials({
+      organizationId: user?.organizationId ?? "",
       category: filterCategory,
       search: debouncedSearch,
     }),
+    enabled: !!user?.organizationId,
   });
 
   // Delete mutation

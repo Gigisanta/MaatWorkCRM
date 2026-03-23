@@ -69,9 +69,6 @@ import { cn } from "@/lib/utils";
 import { format, isToday, isTomorrow, isPast, parseISO } from "date-fns";
 import { useAuth } from "@/lib/auth-context";
 
-// Constants
-const ORGANIZATION_ID = "org_maatwork_demo";
-
 // Types
 interface TaskUser {
   id: string;
@@ -138,24 +135,16 @@ const priorityConfig = {
   urgent: { color: "bg-rose-500", label: "Urgente", textColor: "text-rose-400" },
 };
 
-// Users for assignment (from seed)
-const users = [
-  { id: "user_gio", name: "Gio Livo" },
-  { id: "user_carlos", name: "Carlos Admin" },
-  { id: "user_ana", name: "Ana García" },
-  { id: "user_pedro", name: "Pedro Ruiz" },
-  { id: "user_demo", name: "Juan Demo" },
-];
-
 // Fetch tasks
 async function fetchTasks(params: {
+  organizationId: string;
   status?: string;
   priority?: string;
   assignedTo?: string;
   overdue?: boolean;
 }): Promise<TasksResponse> {
   const searchParams = new URLSearchParams();
-  searchParams.set("organizationId", ORGANIZATION_ID);
+  searchParams.set("organizationId", params.organizationId);
   
   if (params.status && params.status !== "all") {
     searchParams.set("status", params.status);
@@ -178,13 +167,12 @@ async function fetchTasks(params: {
 }
 
 // Create task
-async function createTask(data: TaskFormData): Promise<Task> {
+async function createTask(data: TaskFormData & { organizationId: string }): Promise<Task> {
   const response = await fetch("/api/tasks", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       ...data,
-      organizationId: ORGANIZATION_ID,
       recurrenceRule: data.isRecurrent && data.recurrenceRule
         ? `FREQ=${data.recurrenceRule.toUpperCase()}`
         : null,
@@ -420,11 +408,13 @@ function TaskDialog({
   onOpenChange,
   task,
   onSuccess,
+  users,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   task?: Task | null;
   onSuccess: () => void;
+  users: { id: string; name: string | null }[];
 }) {
   const queryClient = useQueryClient();
   const isEditing = !!task;
@@ -474,12 +464,14 @@ function TaskDialog({
     }
   }, [open, task, reset]);
 
+  const { user } = useAuth();
+
   const mutation = useMutation({
     mutationFn: async (data: TaskFormData) => {
       if (isEditing && task) {
         return updateTask(task.id, data);
       }
-      return createTask(data);
+      return createTask({ ...data, organizationId: user?.organizationId ?? "" });
     },
     onSuccess: () => {
       toast.success(isEditing ? "Tarea actualizada" : "Tarea creada");
@@ -668,14 +660,30 @@ function TasksPageContent() {
   // Sidebar state
   const { collapsed, setCollapsed } = useSidebar();
 
+  // Fetch users for assignment dropdown
+  const { data: usersData } = useQuery({
+    queryKey: ["users", user?.organizationId],
+    queryFn: async (): Promise<{ users: { id: string; name: string | null }[] }> => {
+      if (!user?.organizationId) return { users: [] };
+      const res = await fetch(`/api/users?organizationId=${user.organizationId}`, { credentials: 'include' });
+      if (!res.ok) return { users: [] };
+      return res.json();
+    },
+    enabled: !!user?.organizationId,
+    staleTime: 5 * 60 * 1000,
+  });
+  const users = usersData?.users || [];
+
   // Fetch tasks
   const { data, isLoading, error } = useQuery({
-    queryKey: ["tasks", filterStatus, filterPriority, filterAssignedTo],
+    queryKey: ["tasks", filterStatus, filterPriority, filterAssignedTo, user?.organizationId],
     queryFn: () => fetchTasks({
+      organizationId: user?.organizationId ?? "",
       status: filterStatus,
       priority: filterPriority,
       assignedTo: filterAssignedTo,
     }),
+    enabled: !!user?.organizationId,
   });
 
   // Complete task mutation
@@ -1061,6 +1069,7 @@ function TasksPageContent() {
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         onSuccess={() => {}}
+        users={users}
       />
 
       {/* Edit Task Dialog */}
@@ -1069,6 +1078,7 @@ function TasksPageContent() {
         onOpenChange={setEditDialogOpen}
         task={selectedTask}
         onSuccess={() => setSelectedTask(null)}
+        users={users}
       />
 
       {/* Delete Confirmation Dialog */}

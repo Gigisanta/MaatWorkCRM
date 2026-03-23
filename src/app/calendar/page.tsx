@@ -89,9 +89,6 @@ import {
 } from "date-fns";
 import { useAuth } from "@/lib/auth-context";
 
-// Constants
-const ORGANIZATION_ID = "org_maatwork_demo";
-
 // Types
 interface CalendarEventUser {
   id: string;
@@ -161,11 +158,12 @@ const eventTypeConfig = {
 
 // API Functions
 async function fetchEvents(params: {
+  organizationId: string;
   startDate: string;
   endDate: string;
 }): Promise<EventsResponse> {
   const searchParams = new URLSearchParams();
-  searchParams.set("organizationId", ORGANIZATION_ID);
+  searchParams.set("organizationId", params.organizationId);
   searchParams.set("startDate", params.startDate);
   searchParams.set("endDate", params.endDate);
 
@@ -176,15 +174,12 @@ async function fetchEvents(params: {
   return response.json();
 }
 
-async function createEvent(data: EventFormData): Promise<CalendarEvent> {
+async function createEvent(data: EventFormData & { organizationId: string }): Promise<CalendarEvent> {
   const response = await fetch("/api/calendar-events", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: 'include',
-    body: JSON.stringify({
-      ...data,
-      organizationId: ORGANIZATION_ID,
-    }),
+    body: JSON.stringify(data),
   });
   if (!response.ok) {
     const error = await response.json();
@@ -265,6 +260,7 @@ function EventDialog({
   onSuccess: () => void;
 }) {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const isEditing = !!event;
 
   const getDefaultValues = (): EventFormData => {
@@ -331,7 +327,7 @@ function EventDialog({
       if (isEditing && event) {
         return updateEvent(event.id, data);
       }
-      return createEvent(data);
+      return createEvent({ ...data, organizationId: user?.organizationId ?? "" });
     },
     onSuccess: () => {
       toast.success(isEditing ? "Evento actualizado" : "Evento creado");
@@ -631,11 +627,13 @@ export default function CalendarPage() {
 
   // Fetch events for current month
   const { data, isLoading, error } = useQuery({
-    queryKey: ["calendar-events", format(calendarStart, "yyyy-MM-dd"), format(calendarEnd, "yyyy-MM-dd")],
+    queryKey: ["calendar-events", format(calendarStart, "yyyy-MM-dd"), format(calendarEnd, "yyyy-MM-dd"), user?.organizationId],
     queryFn: () => fetchEvents({
+      organizationId: user?.organizationId ?? "",
       startDate: format(calendarStart, "yyyy-MM-dd"),
       endDate: format(calendarEnd, "yyyy-MM-dd"),
     }),
+    enabled: !!user?.organizationId,
   });
 
   // Delete event mutation
