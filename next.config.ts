@@ -4,9 +4,10 @@ const nextConfig: NextConfig = {
   output: "standalone",
   reactStrictMode: true,
   compiler: {
-    removeConsole: process.env.NODE_ENV === "production"
-      ? ["log", "debug", "info"]
-      : [],
+    // TODO: restore after Next.js 16 Turbopack fix for removeConsole
+    // removeConsole: process.env.NODE_ENV === "production"
+    //   ? ["log", "debug", "info"]
+    //   : [],
   },
   serverExternalPackages: ['@prisma/client', 'prisma'],
   images: {
@@ -18,9 +19,17 @@ const nextConfig: NextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
   experimental: {
-    optimizePackageImports: ['recharts', 'framer-motion', 'date-fns', '@dnd-kit/core', '@dnd-kit/sortable', 'lucide-react'],
-    // Enable bundle analyzer for identifying large dependencies
-    bundleAnalyzer: process.env.ANALYZE === 'true',
+    reactCompiler: true,
+    optimizePackageImports: [
+      'recharts',
+      'framer-motion',
+      'date-fns',
+      '@dnd-kit/core',
+      '@dnd-kit/sortable',
+      '@dnd-kit/utilities',
+      'lucide-react',
+      'sonner',
+    ],
   },
   transpilePackages: ['recharts', 'framer-motion', 'date-fns'],
   headers: async () => [
