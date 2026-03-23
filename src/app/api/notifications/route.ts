@@ -77,6 +77,18 @@ export async function GET(request: NextRequest) {
     const [notifications, total, unreadCount] = await Promise.all([
       db.notification.findMany({
         where,
+        select: {
+          id: true,
+          userId: true,
+          organizationId: true,
+          type: true,
+          title: true,
+          message: true,
+          isRead: true,
+          actionUrl: true,
+          relatedEntityId: true,
+          createdAt: true,
+        },
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },

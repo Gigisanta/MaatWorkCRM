@@ -77,7 +77,14 @@ export async function GET(request: NextRequest) {
               },
             },
           },
-          stage: true,
+          stage: {
+            select: {
+              id: true,
+              name: true,
+              color: true,
+              order: true,
+            },
+          },
           assignedUser: {
             select: {
               id: true,

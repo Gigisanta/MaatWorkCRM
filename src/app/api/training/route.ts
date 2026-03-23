@@ -40,6 +40,17 @@ export async function GET(request: NextRequest) {
     const [materials, total] = await Promise.all([
       db.trainingMaterial.findMany({
         where,
+        select: {
+          id: true,
+          organizationId: true,
+          title: true,
+          description: true,
+          url: true,
+          category: true,
+          createdBy: true,
+          createdAt: true,
+          updatedAt: true,
+        },
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },

@@ -856,12 +856,12 @@ export default function ReportsPage() {
                   <CardContent>
                     {advisorPerformance.length > 0 ? (
                       <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
-                        {advisorPerformance.map((advisor, i) => {
+                        {advisorPerformance.map((advisor) => {
                           const maxValue = Math.max(...advisorPerformance.map(a => a.value));
                           const progress = maxValue > 0 ? (advisor.value / maxValue) * 100 : 0;
-                          
+
                           return (
-                            <div key={i} className="flex items-center gap-4 p-4 rounded-lg glass border border-white/10">
+                            <div key={advisor.name} className="flex items-center gap-4 p-4 rounded-lg glass border border-white/10">
                               <div className="flex-1">
                                 <div className="flex items-center justify-between mb-2">
                                   <span className="font-medium text-white">{advisor.name}</span>
