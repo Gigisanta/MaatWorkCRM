@@ -3,6 +3,11 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   reactStrictMode: true,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production"
+      ? ["log", "debug", "info"]
+      : [],
+  },
   serverExternalPackages: ['@prisma/client', 'prisma'],
   images: {
     remotePatterns: [{ protocol: "https", hostname: "**" }],
