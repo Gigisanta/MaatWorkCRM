@@ -1,84 +1,37 @@
-// Logger estructurado con niveles configurables
-const LOG_LEVEL = process.env.LOG_LEVEL || 'info'
-const ENABLE_CONSOLE = process.env.LOG_ENABLE_CONSOLE !== 'false'
+const LOG_LEVELS = {
+  error: 0,
+  warn: 1,
+  info: 2,
+  debug: 3,
+} as const;
 
-type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'fatal'
+type LogLevel = keyof typeof LOG_LEVELS;
 
-const levels: Record<LogLevel, number> = {
-  debug: 0,
-  info: 1,
-  warn: 2,
-  error: 3,
-  fatal: 4
-}
+const currentLevel: LogLevel = process.env.NODE_ENV === 'production' ? 'warn' : 'debug';
 
 function shouldLog(level: LogLevel): boolean {
-  return levels[level] >= levels[LOG_LEVEL as LogLevel] || ENABLE_CONSOLE
+  return LOG_LEVELS[level] <= LOG_LEVELS[currentLevel];
 }
 
-// Contexto de request para inyección de metadata
-interface RequestContext {
-  requestId?: string
-  userId?: string
-  orgId?: string
-}
-
-let requestContext: RequestContext = {}
-
-export function setRequestContext(ctx: RequestContext) {
-  requestContext = { ...requestContext, ...ctx }
-}
-
-export function clearRequestContext() {
-  requestContext = {}
-}
-
-function formatLog(level: LogLevel, msg: string, meta?: Record<string, unknown>) {
-  return JSON.stringify({
-    level,
-    msg,
-    timestamp: new Date().toISOString(),
-    requestId: requestContext.requestId,
-    userId: requestContext.userId,
-    orgId: requestContext.orgId,
-    ...meta
-  })
-}
-
-const logger = {
-  debug: (meta: Record<string, unknown>, msg: string) => {
-    if (shouldLog('debug')) {
-      console.log(formatLog('debug', msg, meta))
-    }
-  },
-  info: (meta: Record<string, unknown>, msg: string) => {
-    if (shouldLog('info')) {
-      console.log(formatLog('info', msg, meta))
-    }
-  },
-  warn: (meta: Record<string, unknown>, msg: string) => {
-    if (shouldLog('warn')) {
-      console.warn(formatLog('warn', msg, meta))
-    }
-  },
-  error: (meta: Record<string, unknown>, msg: string) => {
+export const logger = {
+  error: (message: string, meta?: Record<string, unknown>) => {
     if (shouldLog('error')) {
-      // Extraer err para manejo especial
-      const { err, ...rest } = meta
-      if (err instanceof Error) {
-        console.error(formatLog('error', msg, {
-          ...rest,
-          error: err.message,
-          stack: err.stack
-        }))
-      } else {
-        console.error(formatLog('error', msg, meta))
-      }
+      console.error(JSON.stringify({ level: 'error', message, ...meta, timestamp: new Date().toISOString() }));
     }
   },
-  fatal: (meta: Record<string, unknown>, msg: string) => {
-    console.error(formatLog('fatal', msg, meta))
-  }
-}
-
-export default logger
+  warn: (message: string, meta?: Record<string, unknown>) => {
+    if (shouldLog('warn')) {
+      console.warn(JSON.stringify({ level: 'warn', message, ...meta, timestamp: new Date().toISOString() }));
+    }
+  },
+  info: (message: string, meta?: Record<string, unknown>) => {
+    if (shouldLog('info')) {
+      console.info(JSON.stringify({ level: 'info', message, ...meta, timestamp: new Date().toISOString() }));
+    }
+  },
+  debug: (message: string, meta?: Record<string, unknown>) => {
+    if (shouldLog('debug')) {
+      console.debug(JSON.stringify({ level: 'debug', message, ...meta, timestamp: new Date().toISOString() }));
+    }
+  },
+};
