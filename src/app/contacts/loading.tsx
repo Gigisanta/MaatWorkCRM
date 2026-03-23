@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 export default function ContactsLoading() {
   return (
     <div className="min-h-screen gradient-bg">
-      <div className="lg:pl-[280px]">
+      <div className="lg:pl-[220px]">
         <div className="h-16 border-b border-white/5 px-6 flex items-center" />
         <main className="p-4 lg:p-6 space-y-6">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

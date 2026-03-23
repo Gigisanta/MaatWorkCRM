@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 export default function DashboardLoading() {
   return (
     <div className="min-h-screen gradient-bg">
-      <div className="lg:pl-[280px]">
+      <div className="lg:pl-[220px]">
         <div className="h-16 border-b border-white/5 px-6 flex items-center">
           <Skeleton className="h-4 w-32 bg-white/5" />
         </div>
