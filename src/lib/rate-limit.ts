@@ -50,12 +50,8 @@ export async function rateLimit(
 
   const result = await redis.eval(
     script,
-    1,
-    key,
-    windowStart.toString(),
-    limit.toString(),
-    (now + window * 1000).toString(),
-    now.toString()
+    [key],  // KEYS array
+    [windowStart.toString(), limit.toString(), (now + window * 1000).toString(), now.toString()]  // ARGV array
   ) as [number, number, number];
 
   return {

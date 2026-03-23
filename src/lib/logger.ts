@@ -14,22 +14,22 @@ function shouldLog(level: LogLevel): boolean {
 }
 
 export const logger = {
-  error: (message: string, meta?: Record<string, unknown>) => {
+  error: (meta: Record<string, unknown>, message: string) => {
     if (shouldLog('error')) {
       console.error(JSON.stringify({ level: 'error', message, ...meta, timestamp: new Date().toISOString() }));
     }
   },
-  warn: (message: string, meta?: Record<string, unknown>) => {
+  warn: (meta: Record<string, unknown>, message: string) => {
     if (shouldLog('warn')) {
       console.warn(JSON.stringify({ level: 'warn', message, ...meta, timestamp: new Date().toISOString() }));
     }
   },
-  info: (message: string, meta?: Record<string, unknown>) => {
+  info: (meta: Record<string, unknown>, message: string) => {
     if (shouldLog('info')) {
       console.info(JSON.stringify({ level: 'info', message, ...meta, timestamp: new Date().toISOString() }));
     }
   },
-  debug: (message: string, meta?: Record<string, unknown>) => {
+  debug: (meta: Record<string, unknown>, message: string) => {
     if (shouldLog('debug')) {
       console.debug(JSON.stringify({ level: 'debug', message, ...meta, timestamp: new Date().toISOString() }));
     }

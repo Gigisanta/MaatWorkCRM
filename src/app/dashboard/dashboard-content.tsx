@@ -267,13 +267,15 @@ function DashboardData({ user }: { user: any }) {
 }
 
 // Extract KPI section into its own component for Suspense boundary
+type KpiConfigType = typeof kpiConfig[number];
+
 function KPISection({
   kpiConfig,
   kpiValues,
   stats,
   renderTrend,
 }: {
-  kpiConfig: typeof kpiConfig;
+  kpiConfig: readonly KpiConfigType[];
   kpiValues: Record<string, string>;
   stats: any;
   renderTrend: (val: number | null | undefined) => React.ReactNode;

@@ -1,13 +1,10 @@
-import { EdgeConfig } from '@vercel/edge-config';
+import { createClient } from '@vercel/edge-config';
 
-let edgeConfig: EdgeConfig | null = null;
+let edgeConfig: ReturnType<typeof createClient> | null = null;
 
 export function getEdgeConfig() {
   if (!edgeConfig) {
-    edgeConfig = new EdgeConfig({
-      url: process.env.EDGE_CONFIG_URL,
-      token: process.env.EDGE_CONFIG_TOKEN,
-    });
+    edgeConfig = createClient(process.env.EDGE_CONFIG_URL!);
   }
   return edgeConfig;
 }

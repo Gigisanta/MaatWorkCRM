@@ -15,29 +15,37 @@ interface CachedSession {
 const SESSION_CACHE_TTL = 300000; // 5 minutes in ms
 const sessionCache = new Map<string, CachedSession>();
 
-// Security headers configuration
-const securityHeaders = {
-  'Content-Security-Policy': [
-    "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com",
-    "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: https: blob:",
-    "font-src 'self' data:",
-    `connect-src 'self' http://localhost:* ws://localhost:* https://${process.env.VERCEL_URL || 'maatworkcrm.vercel.app'}`,
-    "frame-ancestors 'none'",
-    "form-action 'self'",
-    "base-uri 'self'",
-    "object-src 'none'",
-  ].join('; '),
-  'X-Frame-Options': 'DENY',
-  'X-Content-Type-Options': 'nosniff',
-  'X-XSS-Protection': '1; mode=block',
-  'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-};
+// Generate a random nonce for CSP
+function generateNonce(): string {
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return btoa(String.fromCharCode(...array));
+}
 
 export async function proxy(request: NextRequest) {
   const url = new URL(request.url);
+  const nonce = generateNonce();
+
+  // Security headers configuration with nonce
+  const securityHeaders = {
+    'Content-Security-Policy': [
+      "default-src 'self'",
+      `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+      `style-src 'self' 'nonce-${nonce}'`,
+      "img-src 'self' data: https: blob:",
+      "font-src 'self' data:",
+      `connect-src 'self' http://localhost:* ws://localhost:* https://${process.env.VERCEL_URL || 'maatworkcrm.vercel.app'}`,
+      "frame-ancestors 'none'",
+      "form-action 'self'",
+      "base-uri 'self'",
+      "object-src 'none'",
+    ].join('; '),
+    'X-Frame-Options': 'DENY',
+    'X-Content-Type-Options': 'nosniff',
+    'X-XSS-Protection': '1; mode=block',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+  };
 
   // Public routes - skip auth
   if (url.pathname.startsWith('/login') || url.pathname.startsWith('/register')) {
@@ -46,6 +54,8 @@ export async function proxy(request: NextRequest) {
     Object.entries(securityHeaders).forEach(([key, value]) => {
       response.headers.set(key, value);
     });
+    // Set nonce header for static script tags
+    response.headers.set('x-nonce', nonce);
     return response;
   }
 
@@ -61,6 +71,8 @@ export async function proxy(request: NextRequest) {
   Object.entries(securityHeaders).forEach(([key, value]) => {
     response.headers.set(key, value);
   });
+  // Set nonce header for static script tags
+  response.headers.set('x-nonce', nonce);
   return response;
 }
 
