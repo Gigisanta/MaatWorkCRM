@@ -397,7 +397,11 @@ export async function processOverdueTasks(organizationId: string) {
     },
     take: 100,
     orderBy: { dueDate: 'asc' },
-    include: {
+    select: {
+      id: true,
+      title: true,
+      dueDate: true,
+      assignedTo: true,
       assignedUser: { select: { id: true, name: true } },
     },
   });
@@ -415,6 +419,7 @@ export async function processOverdueTasks(organizationId: string) {
       title: "Tarea vencida",
       createdAt: { gte: todayStart },
     },
+    select: { actionUrl: true },
   });
 
   const existingUrls = new Set(existingNotifications.map(n => n.actionUrl));
@@ -470,7 +475,11 @@ export async function processTasksDueSoon(organizationId: string) {
     },
     take: 100,
     orderBy: { dueDate: 'asc' },
-    include: {
+    select: {
+      id: true,
+      title: true,
+      dueDate: true,
+      assignedTo: true,
       assignedUser: { select: { id: true, name: true } },
     },
   });
@@ -488,6 +497,7 @@ export async function processTasksDueSoon(organizationId: string) {
       title: "Tarea próxima a vencer",
       createdAt: { gte: today },
     },
+    select: { actionUrl: true },
   });
 
   const existingUrls = new Set(existingNotifications.map(n => n.actionUrl));
@@ -537,7 +547,12 @@ export async function checkGoalMilestones(
       // Check if we already notified about this milestone
       const goal = await db.teamGoal.findUnique({
         where: { id: goalId },
-        include: { team: true },
+        select: {
+          id: true,
+          title: true,
+          teamId: true,
+          team: { select: { organizationId: true } },
+        },
       });
 
       if (goal) {
@@ -551,6 +566,8 @@ export async function checkGoalMilestones(
               gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
             },
           },
+          select: { id: true },
+          take: 1,
         });
 
         if (existingNotifications.length === 0) {
