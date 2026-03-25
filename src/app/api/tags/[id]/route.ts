@@ -41,6 +41,12 @@ export async function PUT(
       return NextResponse.json({ error: 'Tag not found' }, { status: 404, headers: { 'x-request-id': requestId } });
     }
 
+    // Organization ownership check
+    if (existing.organizationId !== user.organizationId) {
+      logger.warn({ operation: 'updateTag', requestId, tagId: id }, 'Access denied - org mismatch');
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
+
     const updateData: Record<string, unknown> = {};
     if (name !== undefined) updateData.name = name;
     if (color !== undefined) updateData.color = color;
@@ -96,6 +102,12 @@ export async function DELETE(
     if (!tag) {
       logger.warn({ operation: 'deleteTag', requestId, tagId: id }, 'Tag not found');
       return NextResponse.json({ error: 'Tag not found' }, { status: 404, headers: { 'x-request-id': requestId } });
+    }
+
+    // Organization ownership check
+    if (tag.organizationId !== user.organizationId) {
+      logger.warn({ operation: 'deleteTag', requestId, tagId: id }, 'Access denied - org mismatch');
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
     }
 
     // Delete related ContactTag entries first

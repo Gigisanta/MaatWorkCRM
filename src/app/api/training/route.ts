@@ -112,6 +112,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'organizationId and title are required' }, { status: 400, headers: { 'x-request-id': requestId } });
     }
 
+    // Organization ownership check - user must belong to the organization they're creating material for
+    if (user.organizationId !== organizationId) {
+      logger.warn({ operation: 'createTrainingMaterial', requestId, organizationId }, 'Access denied - org mismatch');
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
+
     const material = await db.trainingMaterial.create({
       data: {
         organizationId,

@@ -31,6 +31,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Organization ownership check - user must belong to the organization they're creating a stage for
+    if (user.organizationId !== organizationId) {
+      logger.warn({ operation: 'createPipelineStage', requestId, organizationId }, 'Access denied - org mismatch');
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
+
     // Get the max order if not provided
     let stageOrder = order;
     if (stageOrder === undefined || stageOrder === null) {
@@ -83,7 +89,7 @@ export async function GET(request: NextRequest) {
 
     logger.debug({ operation: 'listPipelineStages', requestId }, 'Listing pipeline stages');
 
-    const { searchParams } = await request.nextUrl;
+    const { searchParams } = request.nextUrl;
     const organizationId = searchParams.get('organizationId');
 
     if (!organizationId) {
