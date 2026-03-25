@@ -227,18 +227,28 @@ function MaterialCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
     >
-      <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl h-full hover:border-white/20 transition-all group">
-        <CardHeader className="pb-2">
-          <div className="flex items-start justify-between">
-            <div className={cn("p-2 rounded-lg", config.bgColor)}>
-              <Icon className={cn("h-5 w-5", config.color)} />
+      <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl h-full hover:border-white/20 transition-all group flex flex-col">
+        {/* Card header */}
+        <div className="p-5 pb-3">
+          <div className="flex items-start gap-3">
+            <div className={cn("p-2.5 rounded-xl flex-shrink-0", config.bgColor)}>
+              <Icon className={cn("h-5 w-5", config.color)} strokeWidth={1.5} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className={cn("text-[10px] font-medium uppercase tracking-wider", config.color)}>
+                {config.label}
+              </span>
+              <h3 className="text-sm font-semibold text-white truncate mt-0.5">{material.title}</h3>
+              {material.description && (
+                <p className="text-xs text-slate-500 mt-1 line-clamp-2">{material.description}</p>
+              )}
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white"
+                  className="h-7 w-7 flex-shrink-0 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white"
                 >
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
@@ -264,30 +274,33 @@ function MaterialCard({
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </CardHeader>
-        <CardContent>
-          <h3 className="font-semibold text-white mb-2 line-clamp-2">
-            {material.title}
-          </h3>
-          <p className="text-sm text-slate-400 mb-4 line-clamp-3">
-            {material.description || "Sin descripción"}
-          </p>
+        </div>
+
+        {/* Card footer */}
+        <div className="px-5 pb-4 pt-2 border-t border-white/5 mt-auto">
           <div className="flex items-center justify-between">
-            <Badge variant="outline" className={cn("text-xs", config.color)}>
-              {config.label}
-            </Badge>
-            {material.url && (
-              <div className="flex items-center gap-1 text-xs text-slate-500">
+            <span className="text-xs text-slate-500">
+              {format(parseISO(material.createdAt), "d MMM yyyy")}
+            </span>
+            {material.url ? (
+              <a
+                href={material.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-1.5 text-xs font-medium text-violet-400 hover:text-violet-300 transition-colors"
+              >
+                Ver recurso
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            ) : (
+              <span className="text-xs text-slate-600 flex items-center gap-1">
                 <LinkIcon className="h-3 w-3" />
-                <span>Enlace</span>
-              </div>
+                Sin enlace
+              </span>
             )}
           </div>
-          <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between text-xs text-slate-500">
-            <span>{material.createdBy || "Sistema"}</span>
-            <span>{format(parseISO(material.createdAt), "d MMM yyyy")}</span>
-          </div>
-        </CardContent>
+        </div>
       </Card>
     </motion.div>
   );
@@ -669,22 +682,38 @@ export default function TrainingPage() {
                       className="pl-10 bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white placeholder:text-slate-500"
                     />
                   </div>
-                  <Select value={filterCategory} onValueChange={setFilterCategory}>
-                    <SelectTrigger className="w-[160px] bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white">
-                      <SelectValue placeholder="Categoría" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas</SelectItem>
-                      {Object.entries(categoryConfig).map(([key, config]) => (
-                        <SelectItem key={key} value={key}>
-                          {config.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
               </CardContent>
             </Card>
+
+            {/* Category pills */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={() => setFilterCategory("all")}
+                className={cn(
+                  "px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200",
+                  filterCategory === "all"
+                    ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
+                    : "bg-white/4 text-slate-400 border border-white/8 hover:bg-white/8 hover:text-slate-300"
+                )}
+              >
+                Todos
+              </button>
+              {Object.entries(categoryConfig).map(([key, config]) => (
+                <button
+                  key={key}
+                  onClick={() => setFilterCategory(key)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200",
+                    filterCategory === key
+                      ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
+                      : "bg-white/4 text-slate-400 border border-white/8 hover:bg-white/8 hover:text-slate-300"
+                  )}
+                >
+                  {config.label}
+                </button>
+              ))}
+            </div>
 
             {/* Materials Grid */}
             {isLoading ? (
