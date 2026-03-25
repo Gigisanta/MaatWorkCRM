@@ -87,6 +87,29 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 import { Check, ChevronsUpDown } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+// Goal status helpers
+function getGoalStatus(current: number, target: number): { label: string; variant: "emerald" | "sky" | "amber" | "rose" } {
+  if (target <= 0) return { label: "Sin meta", variant: "sky" };
+  const pct = (current / target) * 100;
+  if (pct >= 100) return { label: "Completado", variant: "emerald" };
+  if (pct >= 70) return { label: "En camino", variant: "sky" };
+  if (pct >= 30) return { label: "En riesgo", variant: "amber" };
+  return { label: "Retrasado", variant: "rose" };
+}
+
+const statusColors = {
+  emerald: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+  sky: "bg-sky-500/10 text-sky-400 border-sky-500/20",
+  amber: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  rose: "bg-rose-500/10 text-rose-400 border-rose-500/20",
+} as const;
 
 // Types
 interface TeamMember {
@@ -293,9 +316,22 @@ function GoalCard({
                 {goal.status}
               </Badge>
             </div>
-            <h3 className="text-lg font-semibold text-white mb-4">
-              {goal.title}
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">
+                {goal.title}
+              </h3>
+              {(() => {
+                const { label, variant } = getGoalStatus(goal.currentValue, goal.targetValue);
+                return (
+                  <span className={cn(
+                    "text-[10px] font-semibold px-2 py-0.5 rounded-full border flex-shrink-0 ml-2",
+                    statusColors[variant]
+                  )}>
+                    {label}
+                  </span>
+                );
+              })()}
+            </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-400">Progreso</span>
@@ -304,6 +340,10 @@ function GoalCard({
                 </span>
               </div>
               <Progress value={progress} className="h-2" />
+              <div className="flex justify-between text-[10px] text-slate-600 mt-1">
+                <span>{goal.currentValue.toLocaleString()} / {goal.targetValue.toLocaleString()} {goal.unit}</span>
+                <span>{goal.targetValue > 0 ? Math.min(100, Math.round((goal.currentValue / goal.targetValue) * 100)) : 0}%</span>
+              </div>
               <p className="text-xs text-slate-500">
                 Período: {goal.period}
               </p>
@@ -1380,12 +1420,21 @@ export default function TeamsPage() {
                     >
                       <CardHeader className="border-b border-white/10">
                         <div className="flex items-start justify-between">
-                          <div>
-                            <CardTitle className="text-xl text-white flex items-center gap-2">
-                              <Users className="h-5 w-5 text-violet-400" />
-                              {team.name}
-                            </CardTitle>
-                            <p className="text-slate-400 mt-1 text-sm">{team.description || "Sin descripción"}</p>
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <div className="p-2.5 rounded-xl bg-violet-500/10 flex-shrink-0">
+                              <Building2 className="h-5 w-5 text-violet-400" strokeWidth={1.5} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <CardTitle className="text-base font-semibold text-white truncate">
+                                {team.name}
+                              </CardTitle>
+                              {team.description && (
+                                <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{team.description}</p>
+                              )}
+                              {!team.description && (
+                                <p className="text-xs text-slate-600 mt-0.5">Sin descripción</p>
+                              )}
+                            </div>
                           </div>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
@@ -1439,11 +1488,21 @@ export default function TeamsPage() {
                             </p>
                             <div className="flex -space-x-2">
                               {team.members.slice(0, 5).map((member) => (
-                                <Avatar key={member.id} className="h-8 w-8 border-2 border-slate-900">
-                                  <AvatarFallback className="bg-violet-500/20 text-violet-400 text-xs">
-                                    {member.user.name?.split(" ").map((n) => n[0]).join("") || "NA"}
-                                  </AvatarFallback>
-                                </Avatar>
+                                <TooltipProvider key={member.id} delayDuration={0}>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Avatar className="h-7 w-7 border-2 border-[#08090B] -ml-2 first:ml-0 ring-0 hover:z-10 hover:ring-1 hover:ring-violet-500/40 transition-all cursor-pointer">
+                                        <AvatarImage src={member.user.image ?? undefined} />
+                                        <AvatarFallback className="bg-violet-500/10 text-violet-300 text-[9px]">
+                                          {member.user.name?.slice(0, 2).toUpperCase() ?? "??"}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="text-xs">
+                                      {member.user.name ?? member.user.email ?? "Miembro"}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
                               ))}
                               {team.members.length > 5 && (
                                 <div className="h-8 w-8 rounded-full bg-slate-700 flex items-center justify-center text-xs text-slate-300 border-2 border-slate-900">
