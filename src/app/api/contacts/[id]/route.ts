@@ -223,8 +223,8 @@ export async function PUT(
 
     logger.info({ operation: 'updateContact', requestId, contactId: id, duration_ms: Date.now() - start }, 'Contact updated successfully');
 
-    revalidateTag('contacts');
-    revalidateTag('dashboard');
+    revalidateTag('contacts', 'max');
+    revalidateTag('dashboard', 'max');
 
     const response = NextResponse.json(contact);
     response.headers.set('x-request-id', requestId);
@@ -302,8 +302,8 @@ export async function DELETE(
 
     logger.info({ operation: 'deleteContact', requestId, contactId: id, duration_ms: Date.now() - start }, 'Contact deleted successfully');
 
-    revalidateTag('contacts');
-    revalidateTag('dashboard');
+    revalidateTag('contacts', 'max');
+    revalidateTag('dashboard', 'max');
 
     const response = NextResponse.json({ success: true });
     response.headers.set('x-request-id', requestId);
