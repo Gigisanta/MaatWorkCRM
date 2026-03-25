@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getUserFromSession } from '@/lib/auth-helpers';
 
 // Helper function to calculate next recurrence date
 function calculateNextRecurrence(recurrenceRule: string | null, currentDate: Date): Date | null {
@@ -45,6 +46,11 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const user = await getUserFromSession(request);
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = await params;
     const body = await request.json();
     const { createNextRecurrence } = body;

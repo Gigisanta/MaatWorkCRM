@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getUserFromSession } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
@@ -46,6 +47,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 // PUT /api/organizations/[id]/logo - Update organization logo
 export async function PUT(request: NextRequest, { params }: RouteParams) {
+  const user = await getUserFromSession(request);
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const start = Date.now();
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 

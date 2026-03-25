@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   }
 
   const googleAccount = await db.account.findFirst({
-    where: { userId: user.id, providerId: 'google' },
+    where: { userId: user.id, provider: 'google' },
   });
 
   const membership = await db.member.findFirst({

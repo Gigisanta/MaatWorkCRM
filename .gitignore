@@ -4,6 +4,7 @@
 .env.production
 .env.production.local
 .env.development.local
+.env.vercel
 
 # Logs
 *.log
@@ -66,3 +67,4 @@ test-results/
 
 # TypeScript incremental build
 *.tsbuildinfo
+.env*.local

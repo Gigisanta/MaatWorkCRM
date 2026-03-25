@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
         });
         const accounts = await db.account.findMany({
           where: { userId: session.user.id },
-          select: { providerId: true },
+          select: { provider: true },
         });
 
         return NextResponse.json({
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
             managerId: session.user.managerId,
             organizationId: membership?.organizationId || null,
             organizationRole: membership?.role || null,
-            linkedProviders: accounts.map((a) => a.providerId),
+            linkedProviders: accounts.map((a) => a.provider),
           },
           authenticated: true,
           session: { expiresAt: session.expiresAt.toISOString() },
@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
           });
           const accounts = await db.account.findMany({
             where: { userId: user.id },
-            select: { providerId: true },
+            select: { provider: true },
           });
 
           return NextResponse.json({
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
               managerId: user.managerId,
               organizationId: membership?.organizationId || null,
               organizationRole: membership?.role || null,
-              linkedProviders: accounts.map((a) => a.providerId),
+              linkedProviders: accounts.map((a) => a.provider),
             },
             authenticated: true,
             session: { expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() },

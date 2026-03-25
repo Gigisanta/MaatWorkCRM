@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getUserFromSession } from '@/lib/auth-helpers';
 import { logger } from '@/lib/logger';
 
 // GET /api/training/[id] - Get a single training material
@@ -12,6 +13,12 @@ export async function GET(
 
   try {
     logger.debug({ operation: 'getTrainingMaterial', requestId }, 'Fetching training material');
+
+    const user = await getUserFromSession(request);
+    if (!user) {
+      logger.warn({ operation: 'getTrainingMaterial', requestId }, 'Unauthorized access attempt');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: { 'x-request-id': requestId } });
+    }
 
     const { id } = await params;
 
@@ -43,6 +50,12 @@ export async function PUT(
 
   try {
     logger.debug({ operation: 'updateTrainingMaterial', requestId }, 'Updating training material');
+
+    const user = await getUserFromSession(request);
+    if (!user) {
+      logger.warn({ operation: 'updateTrainingMaterial', requestId }, 'Unauthorized access attempt');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: { 'x-request-id': requestId } });
+    }
 
     const { id } = await params;
     const body = await request.json();
@@ -84,6 +97,12 @@ export async function DELETE(
 
   try {
     logger.debug({ operation: 'deleteTrainingMaterial', requestId }, 'Deleting training material');
+
+    const user = await getUserFromSession(request);
+    if (!user) {
+      logger.warn({ operation: 'deleteTrainingMaterial', requestId }, 'Unauthorized access attempt');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: { 'x-request-id': requestId } });
+    }
 
     const { id } = await params;
 

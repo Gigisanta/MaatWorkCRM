@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getUserFromSession } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { getCachedUsers } from '@/lib/cache';
 
 // GET /api/users - List users for an organization
 export async function GET(request: NextRequest) {
+  const user = await getUserFromSession(request);
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: { 'x-request-id': request.headers.get('x-request-id') || '' } });
+  }
+
   const start = Date.now();
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
@@ -19,6 +25,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { error: 'organizationId es requerido' },
         { status: 400, headers: { 'x-request-id': requestId } }
+      );
+    }
+
+    // Verify session user belongs to the requested organization
+    if (organizationId !== user.organizationId) {
+      logger.warn({ operation: 'listUsers', requestId, organizationId }, 'Acceso denegado a organizacion');
+      return NextResponse.json(
+        { error: 'No perteneces a esta organización' },
+        { status: 403, headers: { 'x-request-id': requestId } }
       );
     }
 

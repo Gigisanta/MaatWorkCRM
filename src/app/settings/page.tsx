@@ -21,6 +21,12 @@ import {
   AlertTriangle,
   Palette,
   Link as LinkIcon,
+  Lightbulb,
+  Bug,
+  Zap,
+  CheckCircle2,
+  XCircle,
+  Clock,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
@@ -67,6 +73,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { canManageUsers, getRoleDisplayName, isManagerOrAdmin } from "@/lib/auth-helpers-client";
 import { ThemeToggle, ThemePreviewCard } from "@/components/theme-toggle";
+import { FeedbackManagement } from "./components/feedback-management";
 import Link from "next/link";
 
 // ============================================
@@ -528,6 +535,15 @@ export default function SettingsPage() {
                   <LinkIcon className="mr-2 h-4 w-4" />
                   Cuentas
                 </TabsTrigger>
+                {(user && (user.role === "owner" || user.role === "dueno" || user.organizationRole === "owner")) && (
+                  <TabsTrigger
+                    value="feedback"
+                    className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
+                  >
+                    <Lightbulb className="mr-2 h-4 w-4" />
+                    Feedback
+                  </TabsTrigger>
+                )}
               </TabsList>
 
               {/* ============================================ */}
@@ -1101,7 +1117,7 @@ export default function SettingsPage() {
                           className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl text-slate-300"
                           asChild
                         >
-                          <Link href="/settings/google-calendar">
+                          <Link href="/calendar">
                             Configurar
                           </Link>
                         </Button>
@@ -1129,6 +1145,28 @@ export default function SettingsPage() {
                           </Link>
                         </Button>
                       </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              {/* ============================================ */}
+              {/* Feedback Tab (Owner only) */}
+              {/* ============================================ */}
+              <TabsContent value="feedback">
+                <div className="space-y-6">
+                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <Lightbulb className="h-5 w-5 text-violet-400" />
+                        Feedback de Usuarios
+                      </CardTitle>
+                      <CardDescription className="text-slate-400">
+                        Revisa y gestiona el feedback enviado por tu equipo
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <FeedbackManagement />
                     </CardContent>
                   </Card>
                 </div>

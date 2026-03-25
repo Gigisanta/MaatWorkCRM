@@ -1,18 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { getUserFromSession } from '@/lib/auth-helpers';
 
 export async function POST(request: NextRequest) {
   const start = Date.now();
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
   try {
+    const sessionUser = await getUserFromSession(request);
+    if (!sessionUser) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401, headers: { 'x-request-id': requestId } });
+    }
+
     const body = await request.json();
-    const { userId, currentPassword, newPassword } = body;
+    const { currentPassword, newPassword } = body;
+    const userId = sessionUser.id;
 
     logger.info({ operation: 'changePassword', requestId, userId }, 'Password change attempt');
 
-    if (!userId || !currentPassword || !newPassword) {
+    if (!currentPassword || !newPassword) {
       logger.warn({ operation: 'changePassword', requestId, reason: 'missing_fields' }, 'Password change validation failed');
       return NextResponse.json(
         { error: 'Todos los campos son requeridos' },

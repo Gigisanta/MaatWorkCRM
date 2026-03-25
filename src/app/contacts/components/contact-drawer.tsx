@@ -185,7 +185,9 @@ export function ContactDrawer({
     queryFn: async () => {
       const response = await fetch(`/api/contacts/${contactId}`, { credentials: 'include' });
       if (!response.ok) throw new Error("Error al cargar contacto");
-      return response.json();
+      const data = await response.json();
+      // stageHistory is not returned by the API - provide empty array for compatibility
+      return { ...data, stageHistory: data.stageHistory || [] };
     },
     enabled: !!contactId && open,
   });
@@ -647,7 +649,7 @@ export function ContactDrawer({
                           <div className="space-y-2">
                             <p className="text-xs text-slate-500">Etiquetas</p>
                             <div className="flex flex-wrap gap-2">
-                              {contact.tags.length > 0 ? (
+                              {(contact.tags?.length ?? 0) > 0 ? (
                                 contact.tags.map((tag) => (
                                   <Badge
                                     key={tag.id}
@@ -706,7 +708,7 @@ export function ContactDrawer({
                       </Badge>
                     </div>
 
-                    {contact.deals.length > 0 && (
+                    {(contact.deals?.length ?? 0) > 0 && (
                       <div className="p-4 rounded-lg glass border-white/10">
                         <p className="text-sm font-medium text-white mb-2">Deals ({contact.deals.length})</p>
                         <div className="space-y-2">
@@ -714,7 +716,7 @@ export function ContactDrawer({
                             <div key={deal.id} className="flex items-center justify-between">
                               <span className="text-slate-400">{deal.title}</span>
                               <span className="text-white font-medium">
-                                ${deal.value.toLocaleString()}
+                                ${(deal.value ?? 0).toLocaleString()}
                               </span>
                             </div>
                           ))}

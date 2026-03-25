@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getUserFromSession } from '@/lib/auth-helpers';
 import { logger } from '@/lib/logger';
+import { isValidId } from '@/lib/id-validation';
 
 // DELETE /api/contacts/[id]/tags/[tagId] - Remove a tag from a contact
 export async function DELETE(
@@ -23,6 +24,12 @@ export async function DELETE(
     }
 
     const { id, tagId } = await params;
+
+    if (!isValidId(id) || !isValidId(tagId)) {
+      const response = NextResponse.json({ error: 'ID inválido' }, { status: 400 });
+      response.headers.set('x-request-id', requestId);
+      return response;
+    }
 
     const contactTag = await db.contactTag.findFirst({
       where: {

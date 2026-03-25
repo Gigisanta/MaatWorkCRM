@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { getUserFromSession } from '@/lib/auth-helpers';
 
 // GET /api/notes - List notes by entityType and entityId
 export async function GET(request: NextRequest) {
   const start = Date.now();
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
+
+  const user = await getUserFromSession(request);
+  if (!user) {
+    return NextResponse.json({ error: 'No autenticado' }, { status: 401, headers: { 'x-request-id': requestId } });
+  }
 
   try {
     logger.debug({ operation: 'listNotes', requestId }, 'Fetching notes');
@@ -24,6 +30,12 @@ export async function GET(request: NextRequest) {
         { error: 'organizationId es requerido' },
         { status: 400, headers: { 'x-request-id': requestId } }
       );
+    }
+
+    // Enforce organization isolation
+    if (organizationId !== user.organizationId) {
+      logger.warn({ operation: 'listNotes', requestId, organizationId, userOrgId: user.organizationId }, 'Acceso denegado: organizacion no corresponde');
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403, headers: { 'x-request-id': requestId } });
     }
 
     const skip = (page - 1) * limit;
@@ -96,6 +108,11 @@ export async function POST(request: NextRequest) {
   const start = Date.now();
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
+  const user = await getUserFromSession(request);
+  if (!user) {
+    return NextResponse.json({ error: 'No autenticado' }, { status: 401, headers: { 'x-request-id': requestId } });
+  }
+
   try {
     logger.debug({ operation: 'createNote', requestId }, 'Creating note');
 
@@ -105,7 +122,6 @@ export async function POST(request: NextRequest) {
       entityType,
       entityId,
       content,
-      authorId,
     } = body;
 
     if (!organizationId || !entityType || !entityId || !content) {
@@ -116,13 +132,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Enforce organization isolation
+    if (organizationId !== user.organizationId) {
+      logger.warn({ operation: 'createNote', requestId, organizationId, userOrgId: user.organizationId }, 'Acceso denegado: organizacion no corresponde');
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
+
     const note = await db.note.create({
       data: {
         organizationId,
         entityType,
         entityId,
         content,
-        authorId,
+        authorId: user.id,
       },
       include: {
         author: {

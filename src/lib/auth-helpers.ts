@@ -73,6 +73,10 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
       if (session && session.expiresAt > new Date() && session.user.isActive) {
         userId = session.user.id;
         const primaryMembership = session.user.members[0];
+        const accounts = await db.account.findMany({
+          where: { userId: session.user.id },
+          select: { provider: true },
+        });
 
         return {
           id: session.user.id,
@@ -84,6 +88,7 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
           managerId: session.user.managerId,
           organizationId: primaryMembership?.organizationId || null,
           organizationRole: primaryMembership?.role || null,
+          linkedProviders: accounts.map((a) => a.provider),
         };
       }
     }
@@ -114,6 +119,11 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
 
         if (user && user.isActive) {
           const primaryMembership = user.members[0];
+          const accounts = await db.account.findMany({
+            where: { userId: user.id },
+            select: { provider: true },
+          });
+
           return {
             id: user.id,
             email: user.email,
@@ -124,6 +134,7 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
             managerId: user.managerId,
             organizationId: primaryMembership?.organizationId || null,
             organizationRole: primaryMembership?.role || null,
+            linkedProviders: accounts.map((a) => a.provider),
           };
         }
       }

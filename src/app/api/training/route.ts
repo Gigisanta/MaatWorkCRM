@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getUserFromSession } from '@/lib/auth-helpers';
 import { logger } from '@/lib/logger';
 
 // GET /api/training - List training materials with category filter
@@ -9,6 +10,12 @@ export async function GET(request: NextRequest) {
 
   try {
     logger.debug({ operation: 'listTrainingMaterials', requestId }, 'Listing training materials');
+
+    const user = await getUserFromSession(request);
+    if (!user) {
+      logger.warn({ operation: 'listTrainingMaterials', requestId }, 'Unauthorized access attempt');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: { 'x-request-id': requestId } });
+    }
 
     const searchParams = request.nextUrl.searchParams;
     const organizationId = searchParams.get('organizationId');
@@ -32,8 +39,8 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
+        { title: { contains: search,  } },
+        { description: { contains: search,  } },
       ];
     }
 
@@ -82,6 +89,12 @@ export async function POST(request: NextRequest) {
 
   try {
     logger.debug({ operation: 'createTrainingMaterial', requestId }, 'Creating training material');
+
+    const user = await getUserFromSession(request);
+    if (!user) {
+      logger.warn({ operation: 'createTrainingMaterial', requestId }, 'Unauthorized access attempt');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: { 'x-request-id': requestId } });
+    }
 
     const body = await request.json();
     const {

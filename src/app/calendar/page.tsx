@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { signIn } from "next-auth/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,11 +23,18 @@ import {
   Trash2,
   Loader2,
   AlertCircle,
+  Settings,
+  RefreshCw,
+  Link2Off,
+  Check,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
 import { useSidebar } from "@/lib/sidebar-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -86,7 +94,14 @@ import {
   startOfWeek,
   endOfWeek,
   parseISO,
+  addDays,
+  addWeeks,
+  subWeeks,
+  getHours,
+  startOfDay,
+  isTomorrow,
 } from "date-fns";
+import { es } from "date-fns/locale";
 import { useAuth } from "@/lib/auth-context";
 
 // Types
@@ -127,6 +142,49 @@ interface EventsResponse {
   };
 }
 
+// Google Calendar types
+interface CalendarStatus {
+  connected: boolean;
+  email?: string;
+  lastSync?: string;
+  calendars: CalendarInfo[];
+}
+
+interface CalendarInfo {
+  id: string;
+  name: string;
+  selected: boolean;
+}
+
+// Google Calendar API functions
+async function fetchCalendarStatus(): Promise<CalendarStatus> {
+  const res = await fetch('/api/calendar/status');
+  if (!res.ok) throw new Error('Failed to fetch calendar status');
+  return res.json();
+}
+
+async function syncCalendar(): Promise<{ success: boolean; lastSync: string }> {
+  const res = await fetch('/api/calendar/sync', { method: 'POST' });
+  if (!res.ok) throw new Error('Failed to sync calendar');
+  return res.json();
+}
+
+async function updateCalendarPreferences(calendars: string[]): Promise<{ success: boolean }> {
+  const res = await fetch('/api/calendar/preferences', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ calendars }),
+  });
+  if (!res.ok) throw new Error('Failed to update preferences');
+  return res.json();
+}
+
+async function disconnectCalendar(): Promise<{ success: boolean }> {
+  const res = await fetch('/api/calendar/disconnect', { method: 'POST' });
+  if (!res.ok) throw new Error('Failed to disconnect calendar');
+  return res.json();
+}
+
 // Zod Schema
 const eventSchema = z.object({
   title: z.string().min(1, "El título es requerido").max(200, "El título es muy largo"),
@@ -155,6 +213,18 @@ const eventTypeConfig = {
   event: { color: "bg-violet-500", bgColor: "bg-violet-500/20", textColor: "text-violet-400", label: "Evento", icon: CalendarIcon },
   reminder: { color: "bg-amber-500", bgColor: "bg-amber-500/20", textColor: "text-amber-400", label: "Recordatorio", icon: Bell },
 };
+
+// Hex colors for inline styles (matching eventTypeConfig colors)
+const eventTypeHexColor: Record<string, string> = {
+  meeting: "#3b82f6",   // blue-500
+  call: "#10b981",      // emerald-500
+  event: "#8b5cf6",     // violet-500
+  reminder: "#f59e0b",  // amber-500
+};
+
+function getEventHexColor(event: CalendarEvent): string {
+  return eventTypeHexColor[event.type] ?? "#8b5cf6";
+}
 
 // API Functions
 async function fetchEvents(params: {
@@ -616,6 +686,8 @@ export default function CalendarPage() {
   const [selectedEvent, setSelectedEvent] = React.useState<CalendarEvent | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [eventToDelete, setEventToDelete] = React.useState<CalendarEvent | null>(null);
+  const [googleCalendarOpen, setGoogleCalendarOpen] = React.useState(false);
+  const [calendarView, setCalendarView] = React.useState<"month" | "week" | "agenda">("month");
   const { collapsed, setCollapsed } = useSidebar();
 
   // Calculate date range for current month view
@@ -650,6 +722,62 @@ export default function CalendarPage() {
     },
   });
 
+  // Google Calendar queries and mutations
+  const { data: calendarData, isLoading: calendarLoading } = useQuery({
+    queryKey: ['calendar-status'],
+    queryFn: fetchCalendarStatus,
+  });
+
+  const syncMutation = useMutation({
+    mutationFn: syncCalendar,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['calendar-status'] });
+      toast.success('Calendario sincronizado correctamente');
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    },
+  });
+
+  const preferencesMutation = useMutation({
+    mutationFn: updateCalendarPreferences,
+    onSuccess: () => {
+      toast.success('Preferencias guardadas');
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    },
+  });
+
+  const disconnectMutation = useMutation({
+    mutationFn: disconnectCalendar,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['calendar-status'] });
+      toast.success('Calendario desconectado');
+    },
+    onError: (err: Error) => {
+      toast.error(err.message);
+    },
+  });
+
+  const handleCalendarToggle = (calendarId: string, currentlySelected: boolean) => {
+    if (!calendarData) return;
+    const updatedCalendars = currentlySelected
+      ? calendarData.calendars.filter((c) => c.id !== calendarId).map((c) => c.id)
+      : [...calendarData.calendars.filter((c) => c.selected).map((c) => c.id), calendarId];
+    preferencesMutation.mutate(updatedCalendars);
+  };
+
+  const handleGoogleConnect = () => {
+    signIn('google', { callbackUrl: '/calendar' });
+  };
+
+  // Week days for week view (Monday-based)
+  const weekDays = React.useMemo(() => {
+    const start = startOfWeek(currentDate, { weekStartsOn: 1 });
+    return Array.from({ length: 7 }).map((_, i) => addDays(start, i));
+  }, [currentDate]);
+
   // Group events by date
   const eventsByDate = React.useMemo(() => {
     const map = new Map<string, CalendarEvent[]>();
@@ -683,6 +811,30 @@ export default function CalendarPage() {
       .slice(0, 5);
   }, [data]);
 
+  // Agenda days: next 14 days with events grouped per day
+  const agendaDays = React.useMemo(() => {
+    const allEvents = data?.events ?? [];
+    const days = Array.from({ length: 14 }).map((_, i) => addDays(startOfDay(new Date()), i));
+    return days.map((day) => ({
+      day,
+      events: allEvents
+        .filter((event) => isSameDay(parseISO(event.startAt), day))
+        .sort((a, b) => parseISO(a.startAt).getTime() - parseISO(b.startAt).getTime()),
+    }));
+  }, [data]);
+
+  // Events for a specific day+hour slot (week view)
+  const getEventsForSlot = React.useCallback(
+    (day: Date, hour: number): CalendarEvent[] => {
+      const allEvents = data?.events ?? [];
+      return allEvents.filter((event) => {
+        const eventDate = parseISO(event.startAt);
+        return isSameDay(eventDate, day) && getHours(eventDate) === hour;
+      });
+    },
+    [data]
+  );
+
   // Navigation handlers
   const goToToday = () => {
     setCurrentDate(new Date());
@@ -690,11 +842,19 @@ export default function CalendarPage() {
   };
 
   const previousMonth = () => {
-    setCurrentDate(subMonths(currentDate, 1));
+    if (calendarView === "week") {
+      setCurrentDate(subWeeks(currentDate, 1));
+    } else {
+      setCurrentDate(subMonths(currentDate, 1));
+    }
   };
 
   const nextMonth = () => {
-    setCurrentDate(addMonths(currentDate, 1));
+    if (calendarView === "week") {
+      setCurrentDate(addWeeks(currentDate, 1));
+    } else {
+      setCurrentDate(addMonths(currentDate, 1));
+    }
   };
 
   // Event handlers
@@ -783,6 +943,22 @@ export default function CalendarPage() {
                   Hoy
                 </Button>
                 <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setGoogleCalendarOpen(!googleCalendarOpen)}
+                  className={cn(
+                    "bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl gap-2",
+                    googleCalendarOpen ? "text-violet-400 border-violet-500/30" : "text-slate-300"
+                  )}
+                >
+                  <Settings className="h-4 w-4" />
+                  Google Calendar
+                  {calendarData?.connected ? (
+                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  ) : null}
+                  {googleCalendarOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                </Button>
+                <Button
                   className="bg-violet-500 hover:bg-violet-600"
                   onClick={() => {
                     setSelectedDate(null);
@@ -794,6 +970,134 @@ export default function CalendarPage() {
                 </Button>
               </div>
             </div>
+
+            {/* Google Calendar Settings Panel */}
+            <AnimatePresence>
+              {googleCalendarOpen && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
+                    <CardContent className="p-4">
+                      {calendarLoading ? (
+                        <div className="flex items-center justify-center py-8">
+                          <Loader2 className="h-6 w-6 animate-spin text-violet-500" />
+                        </div>
+                      ) : calendarData?.connected ? (
+                        <div className="space-y-4">
+                          {/* Connected status */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="bg-violet-500/10 p-2 rounded-lg">
+                                <svg className="h-5 w-5" viewBox="0 0 24 24">
+                                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                                </svg>
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-white">{calendarData.email}</p>
+                                <p className="text-xs text-slate-400">
+                                  Ultima sincronizacion: {calendarData.lastSync ? new Date(calendarData.lastSync).toLocaleString('es-ES') : 'Nunca'}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => syncMutation.mutate()}
+                                disabled={syncMutation.isPending}
+                                className="border-white/10 text-slate-300 hover:bg-white/5 hover:text-white"
+                              >
+                                {syncMutation.isPending ? (
+                                  <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                                ) : (
+                                  <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                                )}
+                                Sincronizar
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => disconnectMutation.mutate()}
+                                disabled={disconnectMutation.isPending}
+                                className="border-white/10 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                              >
+                                {disconnectMutation.isPending ? (
+                                  <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                                ) : (
+                                  <Link2Off className="h-3.5 w-3.5 mr-1" />
+                                )}
+                                Desconectar
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Calendars selection */}
+                          {calendarData.calendars && calendarData.calendars.length > 0 && (
+                            <div className="border-t border-white/5 pt-3">
+                              <p className="text-xs text-slate-400 mb-2">Calendarios a sincronizar:</p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {calendarData.calendars.map((calendar) => (
+                                  <div
+                                    key={calendar.id}
+                                    className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-white/5"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <Switch
+                                        checked={calendar.selected}
+                                        onCheckedChange={() => handleCalendarToggle(calendar.id, calendar.selected)}
+                                        disabled={preferencesMutation.isPending}
+                                        className="data-[state=checked]:bg-violet-500"
+                                      />
+                                      <span className="text-sm text-slate-300">{calendar.name}</span>
+                                    </div>
+                                    {calendar.selected && <Check className="h-4 w-4 text-violet-400" />}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-6 space-y-3">
+                          <div className="bg-violet-500/10 p-3 rounded-xl">
+                            <svg className="h-6 w-6" viewBox="0 0 24 24">
+                              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                            </svg>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm font-medium text-white">Calendario no conectado</p>
+                            <p className="text-xs text-slate-400 mt-0.5">Conecta Google Calendar para sincronizar eventos</p>
+                          </div>
+                          <Button
+                            onClick={handleGoogleConnect}
+                            className="bg-violet-500 hover:bg-violet-600 text-white"
+                          >
+                            <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
+                              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                            </svg>
+                            Conectar Google Calendar
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               {/* Calendar Grid */}

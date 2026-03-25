@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
   // Unlink Google account entirely
   await db.account.deleteMany({
-    where: { userId: user.id, providerId: 'google' },
+    where: { userId: user.id, provider: 'google' },
   });
 
   console.log(`[CalendarDisconnect] User ${user.id} disconnected successfully`);

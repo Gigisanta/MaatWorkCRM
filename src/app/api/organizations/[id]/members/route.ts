@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getUserFromSession } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 
 interface RouteParams {
@@ -7,6 +8,11 @@ interface RouteParams {
 
 // GET /api/organizations/[id]/members - List organization members
 export async function GET(request: NextRequest, { params }: RouteParams) {
+  const user = await getUserFromSession(request);
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
 
@@ -39,6 +45,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 // POST /api/organizations/[id]/members - Invite/add member to organization
 export async function POST(request: NextRequest, { params }: RouteParams) {
+  const user = await getUserFromSession(request);
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -116,6 +127,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
 // DELETE /api/organizations/[id]/members - Remove member from organization
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  const user = await getUserFromSession(request);
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     const { id } = await params;
     const { searchParams } = new URL(request.url);

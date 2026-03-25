@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getUserFromSession } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
@@ -7,6 +8,13 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const user = await getUserFromSession(request);
+  if (!user) {
+    const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    response.headers.set('x-request-id', request.headers.get('x-request-id') || '');
+    return response;
+  }
+
   const start = Date.now();
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
@@ -15,7 +23,7 @@ export async function POST(
 
     const { id } = await params;
     const body = await request.json();
-    const { toStageId, stageId, reason, changedByUserId, organizationId } = body;
+    const { toStageId, stageId } = body;
     const targetStageId = toStageId || stageId;
 
     if (!targetStageId) {
@@ -59,20 +67,6 @@ export async function POST(
         },
       },
     });
-
-    // Create stage history record
-    if (organizationId && currentDeal.contactId) {
-      await db.pipelineStageHistory.create({
-        data: {
-          organizationId,
-          contactId: currentDeal.contactId,
-          fromStageId,
-          toStageId: targetStageId,
-          reason: reason || `Deal "${currentDeal.title}" moved to ${updatedDeal.stage?.name || 'new stage'}`,
-          changedByUserId,
-        },
-      });
-    }
 
     logger.info({
       operation: 'moveDeal',

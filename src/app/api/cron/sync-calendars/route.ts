@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
         user: {
           include: {
             accounts: {
-              where: { providerId: 'google' },
+              where: { provider: 'google' },
               select: { access_token: true },
             },
             members: {

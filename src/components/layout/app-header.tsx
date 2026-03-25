@@ -6,10 +6,10 @@ import {
   Plus,
   CheckSquare,
   User,
-  Calendar,
-  CalendarDays,
   LogOut,
   Loader2,
+  Calendar,
+  Lightbulb,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,9 +30,12 @@ import Link from "next/link";
 
 export function AppHeader() {
   const { user, logout, isLoading } = useAuth();
-  const { setCreateContactOpen, setCreateTaskOpen } = useQuickActions();
+  const { setCreateContactOpen, setCreateTaskOpen, setFeedbackOpen } = useQuickActions();
   const [showCommandPalette, setShowCommandPalette] = React.useState(false);
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+
+  // Quick actions - these open modals so they don't need SSR
+  const [quickActionsReady] = React.useState(() => false);
 
   const getInitials = React.useCallback((name: string | null | undefined) => {
     if (!name) return "U";
@@ -72,42 +75,36 @@ export function AppHeader() {
             {/* Quick actions */}
             <div className="hidden md:flex items-center gap-1">
               <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setCreateContactOpen(true)}
-                  className="text-slate-400 hover:text-slate-200 bg-white/4 border border-white/8 rounded-lg hover:bg-white/8 hover:border-white/15 transition-all duration-200"
-                >
-                  <Plus className="h-4 w-4 mr-1 text-violet-400" />
-                  Contacto
-                </Button>
+                variant="ghost"
+                size="sm"
+                onClick={() => setCreateContactOpen(true)}
+                className="text-slate-400 hover:text-slate-200 bg-white/4 border border-white/8 rounded-lg hover:bg-white/8 hover:border-white/15 transition-all duration-200"
+              >
+                <Plus className="h-4 w-4 mr-1 text-violet-400" />
+                Contacto
+              </Button>
               <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setCreateTaskOpen(true)}
-                  className="text-slate-400 hover:text-slate-200 bg-white/4 border border-white/8 rounded-lg hover:bg-white/8 hover:border-white/15 transition-all duration-200"
-                >
-                  <Plus className="h-4 w-4 mr-1 text-violet-400" />
-                  Tarea
-                </Button>
+                variant="ghost"
+                size="sm"
+                onClick={() => setCreateTaskOpen(true)}
+                className="text-slate-400 hover:text-slate-200 bg-white/4 border border-white/8 rounded-lg hover:bg-white/8 hover:border-white/15 transition-all duration-200"
+              >
+                <Plus className="h-4 w-4 mr-1 text-violet-400" />
+                Tarea
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setFeedbackOpen(true)}
+                className="text-slate-400 hover:text-slate-200 bg-white/4 border border-white/8 rounded-lg hover:bg-white/8 hover:border-white/15 transition-all duration-200"
+              >
+                <Lightbulb className="h-4 w-4 mr-1 text-violet-400" />
+                Feedback
+              </Button>
             </div>
 
             {/* Notifications */}
             <NotificationBell />
-
-            {/* Google Calendar indicator */}
-            <Link href="/settings/google-calendar">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative h-9 w-9 rounded-full text-slate-400 hover:text-slate-200"
-                title="Google Calendar"
-              >
-                <svg className="h-5 w-5" viewBox="0 0 24 24">
-                  <path d="M19.5 4H5.5C4.67 4 4 4.67 4 5.5v13c0 .83.67 1.5 1.5 1.5h14c.83 0 1.5-.67 1.5-1.5v-13c0-.83-.67-1.5-1.5-1.5zm-4.5 13H8v-4h7v4zm0-5H8V8h7v4zm4.5 5h-3v-3h3v3zm0-5h-3V8h3v4z" fill="currentColor"/>
-                </svg>
-                <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-[#0E0F12]" />
-              </Button>
-            </Link>
 
             {/* User menu */}
             <DropdownMenu>

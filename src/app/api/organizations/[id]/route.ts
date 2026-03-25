@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getUserFromSession } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 
@@ -8,6 +9,11 @@ interface RouteParams {
 
 // GET /api/organizations/[id] - Get organization details
 export async function GET(request: NextRequest, { params }: RouteParams) {
+  const user = await getUserFromSession(request);
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const start = Date.now();
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
@@ -15,6 +21,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     logger.debug({ operation: 'getOrganization', requestId }, 'Fetching organization details');
 
     const { id } = await params;
+
+    // Verify user belongs to this organization
+    if (user.organizationId !== id) {
+      return NextResponse.json({ error: 'No perteneces a esta organización' }, { status: 403 });
+    }
 
     const organization = await db.organization.findUnique({
       where: { id },
@@ -72,6 +83,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 // PUT /api/organizations/[id] - Update organization
 export async function PUT(request: NextRequest, { params }: RouteParams) {
+  const user = await getUserFromSession(request);
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const start = Date.now();
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
@@ -81,6 +97,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
     const body = await request.json();
     const { name, logo } = body;
+
+    // Verify user belongs to this organization
+    if (user.organizationId !== id) {
+      return NextResponse.json({ error: 'No perteneces a esta organización' }, { status: 403 });
+    }
 
     // Check if organization exists
     const existing = await db.organization.findUnique({

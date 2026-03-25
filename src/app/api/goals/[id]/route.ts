@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getUserFromSession } from '@/lib/auth-helpers';
 import { logger } from '@/lib/logger';
 
 // GET /api/goals/[id] - Get a single goal
@@ -12,6 +13,12 @@ export async function GET(
 
   try {
     logger.debug({ operation: 'getGoal', requestId }, 'Fetching goal');
+
+    const user = await getUserFromSession(request);
+    if (!user) {
+      logger.warn({ operation: 'getGoal', requestId }, 'Unauthorized access attempt');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: { 'x-request-id': requestId } });
+    }
 
     const { id } = await params;
 
@@ -92,6 +99,12 @@ export async function PUT(
 
   try {
     logger.debug({ operation: 'updateGoal', requestId }, 'Updating goal');
+
+    const user = await getUserFromSession(request);
+    if (!user) {
+      logger.warn({ operation: 'updateGoal', requestId }, 'Unauthorized access attempt');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: { 'x-request-id': requestId } });
+    }
 
     const { id } = await params;
     const body = await request.json();
@@ -178,6 +191,12 @@ export async function DELETE(
 
   try {
     logger.debug({ operation: 'deleteGoal', requestId }, 'Deleting goal');
+
+    const user = await getUserFromSession(request);
+    if (!user) {
+      logger.warn({ operation: 'deleteGoal', requestId }, 'Unauthorized access attempt');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: { 'x-request-id': requestId } });
+    }
 
     const { id } = await params;
 

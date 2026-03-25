@@ -10,6 +10,21 @@ export async function POST(request: NextRequest) {
 
   const { providerId } = await request.json();
 
+  // Validate providerId is a supported provider
+  const validProviders = ['google'];
+  if (!validProviders.includes(providerId)) {
+    return NextResponse.json({ error: 'Proveedor no válido' }, { status: 400 });
+  }
+
+  // Check if the account exists before trying to delete
+  const account = await db.account.findFirst({
+    where: { userId: user.id, provider: providerId },
+  });
+
+  if (!account) {
+    return NextResponse.json({ error: 'Cuenta no encontrada' }, { status: 404 });
+  }
+
   // Verify user has alternative login method
   const accounts = await db.account.findMany({ where: { userId: user.id } });
   const hasPassword = await db.user.findUnique({ where: { id: user.id }, select: { password: true } });
@@ -19,7 +34,7 @@ export async function POST(request: NextRequest) {
   }
 
   await db.account.deleteMany({
-    where: { userId: user.id, providerId },
+    where: { userId: user.id, provider: providerId },
   });
 
   return NextResponse.json({ success: true });

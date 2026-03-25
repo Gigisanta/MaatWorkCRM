@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getUserFromSession } from '@/lib/auth-helpers';
 import { logger } from '@/lib/logger';
 import { taskCreateSchema } from '@/lib/schemas';
 import type { TaskCreateInput } from '@/lib/schemas';
@@ -11,6 +12,12 @@ export async function GET(request: NextRequest) {
 
   try {
     logger.debug({ operation: 'listTasks', requestId }, 'Fetching tasks');
+
+    const user = await getUserFromSession(request);
+    if (!user) {
+      logger.warn({ operation: 'listTasks', requestId }, 'Unauthorized access attempt');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: { 'x-request-id': requestId } });
+    }
 
     const { searchParams } = await request.nextUrl;
     const status = searchParams.get('status');
@@ -59,8 +66,8 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
+        { title: { contains: search } },
+        { description: { contains: search } },
       ];
     }
 
@@ -131,6 +138,12 @@ export async function POST(request: NextRequest) {
 
   try {
     logger.debug({ operation: 'createTask', requestId }, 'Creating task');
+
+    const user = await getUserFromSession(request);
+    if (!user) {
+      logger.warn({ operation: 'createTask', requestId }, 'Unauthorized access attempt');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: { 'x-request-id': requestId } });
+    }
 
     const body = await request.json();
     const {

@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
 
   const accounts = await db.account.findMany({
     where: { userId: user.id },
-    select: { providerId: true, providerType: true, createdAt: true },
+    select: { provider: true, type: true, createdAt: true },
   });
 
   const hasPassword = await db.user.findUnique({

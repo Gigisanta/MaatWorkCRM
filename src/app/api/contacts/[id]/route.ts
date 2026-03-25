@@ -6,6 +6,7 @@ import { contactUpdateSchema } from '@/lib/schemas';
 import type { ContactUpdateInput } from '@/lib/schemas';
 import { revalidateTag } from 'next/cache';
 import { logger } from '@/lib/logger';
+import { isValidId } from '@/lib/id-validation';
 
 // Helper to check if targetUserId is in the team managed by managerId
 async function isInTeam(targetUserId: string, managerId: string): Promise<boolean> {
@@ -39,6 +40,12 @@ export async function GET(
     }
 
     const { id } = await params;
+
+    if (!isValidId(id)) {
+      const response = NextResponse.json({ error: 'ID inválido' }, { status: 400 });
+      response.headers.set('x-request-id', requestId);
+      return response;
+    }
 
     const contact = await db.contact.findUnique({
       where: { id },
@@ -77,14 +84,6 @@ export async function GET(
               select: { id: true, name: true },
             },
           },
-        },
-        stageHistory: {
-          include: {
-            fromStage: true,
-            toStage: true,
-          },
-          orderBy: { changedAt: 'desc' },
-          take: 10,
         },
       },
     });
@@ -258,6 +257,13 @@ export async function DELETE(
     }
 
     const { id } = await params;
+
+    if (!isValidId(id)) {
+      const response = NextResponse.json({ error: 'ID inválido' }, { status: 400 });
+      response.headers.set('x-request-id', requestId);
+      return response;
+    }
+
     const userRole = normalizeRole(user.role);
 
     const existingContact = await db.contact.findUnique({
@@ -290,7 +296,6 @@ export async function DELETE(
 
     await db.$transaction([
       db.contactTag.deleteMany({ where: { contactId: id } }),
-      db.pipelineStageHistory.deleteMany({ where: { contactId: id } }),
       db.note.deleteMany({ where: { entityId: id, entityType: 'contact' } }),
       db.contact.delete({ where: { id } }),
     ]);

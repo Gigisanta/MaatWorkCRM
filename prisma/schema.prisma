@@ -6,8 +6,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
 // ============================================
@@ -43,10 +44,11 @@ model User {
   auditLogs     AuditLog[]
   createdEvents CalendarEvent[] @relation("EventCreator")
   members       Member[]
-  manager       User?          @relation("AdvisorManager", fields: [managerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  manager       User?          @relation("AdvisorManager", fields: [managerId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   advisors      User[]         @relation("AdvisorManager")
   calendarSyncStates CalendarSyncState[]
   calendarWebhooks CalendarWebhook[]
+  feedback Feedback[]
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -72,23 +74,23 @@ model Session {
 model Account {
   id                   String   @id @default(cuid())
   userId               String
-  providerType         String   // "oauth" | "credentials"
-  providerId           String   // "google" | "credentials"
+  type                 String   // "oauth" | "credentials"
+  provider             String   // "google" | "credentials"
   providerAccountId    String   // sub from Google OAuth
-  access_token         String?  @db.Text
-  refresh_token        String?  @db.Text
+  access_token         String?
+  refresh_token        String?
   expires_at           Int?
   token_type           String?
   scope                String?
-  id_token             String?  @db.Text
+  id_token             String?
 
   user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
-  @@unique([providerId, providerAccountId])
-  @@unique([userId, providerId])
+  @@unique([provider, providerAccountId])
+  @@unique([userId, provider])
 }
 
 model VerificationToken {
@@ -104,9 +106,6 @@ model Organization {
   name    String
   slug    String  @unique
   logo    String?
-
-  // Google Calendar preferences — which calendar IDs to sync
-  calendarPreferences Json?  @default("{\"selectedCalendarIds\":[\"primary\"]}")
 
   // Relations
   members          Member[]
@@ -124,7 +123,8 @@ model Organization {
   auditLogs        AuditLog[]
   instagramAccounts InstagramAccount[]
   automationConfigs AutomationConfig[]
-  
+  feedback Feedback[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -171,8 +171,6 @@ model Contact {
   tags           ContactTag[]
   deals          Deal[]
   tasks          Task[]
-  stageHistory   PipelineStageHistory[]
-  financialPlan  FinancialPlan?
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -208,33 +206,12 @@ model PipelineStage {
   // Relations
   contacts       Contact[]
   deals          Deal[]
-  historyFrom    PipelineStageHistory[] @relation("FromStage")
-  historyTo      PipelineStageHistory[] @relation("ToStage")
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   createdAt      DateTime @default(now())
 
   @@index([organizationId])
-}
-
-model PipelineStageHistory {
-  id              String   @id @default(cuid())
-  organizationId  String
-  contactId       String
-  fromStageId     String?
-  toStageId       String?
-  reason          String?
-  changedByUserId String?
-  changedAt       DateTime @default(now())
-
-  contact         Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  fromStage       PipelineStage? @relation("FromStage", fields: [fromStageId], references: [id])
-  toStage         PipelineStage? @relation("ToStage", fields: [toStageId], references: [id])
-
-  @@index([contactId])
-  @@index([organizationId])
-  @@index([changedAt])
 }
 
 model Deal {
@@ -300,8 +277,7 @@ model Tag {
   color          String   @default("#6366f1")
   icon           String?
   description    String?
-  value          Float    @default(0)
-  expectedCloseDate DateTime?
+  value          Float?   // Default value for this product/tag
 
   contactTags    ContactTag[]
 
@@ -316,6 +292,7 @@ model ContactTag {
   id         String  @id @default(cuid())
   contactId  String
   tagId      String
+  value      Float?  // Premium/value for this product on this specific contact
 
   contact    Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
   tag        Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
@@ -705,162 +682,27 @@ model AutomationConfig {
 }
 
 // ============================================
-// FINANCIAL PLANNING MODULE
+// FEEDBACK MODULE
 // ============================================
 
-model FinancialPlan {
-  id               String    @id @default(cuid())
-  contactId        String    @unique
-  contact          Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+model Feedback {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String?
+  type           String   @default("general") // general, bug, feature, improvement
+  subject        String
+  content        String
+  status         String   @default("pending") // pending, reviewed, implemented, dismissed
+  priority       String   @default("medium")  // low, medium, high
+  response       String?  // Owner's response
 
-  // Client profile
-  edad             Int?
-  profesion         String?
-  objetivo         String?
-  perfilRiesgo     String?   // conservador, moderado, agresivo
-  aporteMensual    Float?
-  aporteInicial    Float?
-  horizonteMeses   Int?
-  tipoAporte       String?   // mensual, trimestral, anual
+  user           User?    @relation(fields: [userId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  // Financial health
-  ingresosMensuales     Float?
-  gastosMensuales       Float?
-  fondoEmergenciaMeses  Int?
-  fondoEmergenciaActual Float?
-  patrimonioActivos     Float?
-  patrimonioDeudas      Float?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  // Advisor config
-  webUrl               String?
-  asesorNombre         String?
-  asesorTelefono       String?
-  asesorMensajePredefinido String?
-
-  // AI fields
-  terminoFinanciero   String?
-  usarTerminoIA       Boolean  @default(false)
-  consejoFinal        String?
-  usarConsejoIA       Boolean  @default(false)
-
-  // Branding
-  colorPrincipal       String   @default("#6366f1")
-  colorAcento          String   @default("#10b981")
-  logoUrl             String?
-
-  // Goal summary
-  proyeccionRetiro    String?
-  gastosPrincipales   String?
-  observaciones       String?
-
-  // Generation state
-  wizardStep          Int      @default(1)
-  generatedHtml       String?  // HTML completo generado
-  editableHtml        String?  // HTML editable por el usuario
-  version             Int      @default(1)
-  lastGeneratedAt     DateTime?
-
-  // Related plans
-  metasVida                 MetaVida[]
-  asignacionesEstrategicas AsignacionEstrategica[]
-  instrumentos             PlanInstrument[]
-  obligacionesNegociables   ObligacionNegociable[]
-  riesgos                  Riesgo[]
-
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-
-  @@index([contactId])
-}
-
-// Metas de vida linked to a FinancialPlan
-model MetaVida {
-  id              String        @id @default(cuid())
-  financialPlanId String
-  financialPlan   FinancialPlan @relation(fields: [financialPlanId], references: [id], onDelete: Cascade)
-  nombre          String
-  montoObjetivo   Float?
-  fechaEstimada   DateTime?
-  prioridad       String?       // baja, media, alta
-  notes           String?
-  order           Int           @default(0)
-
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-
-  @@index([financialPlanId])
-}
-
-// Asignaciones estrat gicas (asset allocation)
-model AsignacionEstrategica {
-  id              String        @id @default(cuid())
-  financialPlanId String
-  financialPlan   FinancialPlan @relation(fields: [financialPlanId], references: [id], onDelete: Cascade)
-  claseActivo     String        // Renta Fija, Renta Variable, Efectivo, Inmuebles, etc.
-  porcentaje      Float
-  descripcion     String?
-
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-
-  @@index([financialPlanId])
-}
-
-// Instrumentos financeiros seleccionados en el plan
-model PlanInstrument {
-  id              String        @id @default(cuid())
-  financialPlanId String
-  financialPlan   FinancialPlan @relation(fields: [financialPlanId], references: [id], onDelete: Cascade)
-  nombre          String
-  tipo            String?       // ETF, Fondo, ACCI N, BONO, DEPÓSITO, etc.
-  claseActivo     String?
-  emisor          String?
-  moneda          String?
-  rendimientoEsperado Float?
-  participacion   Float?        // % dentro del portfolio
-  isin            String?
-  notas           String?
-
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-
-  @@index([financialPlanId])
-}
-
-// Obligaciones negociables / deudas activas
-model ObligacionNegociable {
-  id              String        @id @default(cuid())
-  financialPlanId String
-  financialPlan   FinancialPlan @relation(fields: [financialPlanId], references: [id], onDelete: Cascade)
-  acreedor        String
-  tipo            String?       // hipoteca, pr stamo personal, tarjeta, etc.
-  saldoPendiente  Float?
-  tasaInteres     Float?
-  cuotaMensual    Float?
-  fechaVencimiento DateTime?
-  origen          String?
-  notas           String?
-
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-
-  @@index([financialPlanId])
-}
-
-// Riesgos identificados en el plan
-model Riesgo {
-  id              String        @id @default(cuid())
-  financialPlanId String
-  financialPlan   FinancialPlan @relation(fields: [financialPlanId], references: [id], onDelete: Cascade)
-  nombre          String
-  tipo            String?       // mercado, cr dito, liquidez, operativo
-  probabilidad   String?        // baja, media, alta
-  impacto         String?       // bajo, medio, alto
-  mitigacion      String?
-  severity        String?
-
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-
-  @@index([financialPlanId])
+  @@index([organizationId])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { getUserFromSession } from '@/lib/auth-helpers';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -12,6 +13,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
   try {
+    const sessionUser = await getUserFromSession(request);
+    if (!sessionUser) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401, headers: { 'x-request-id': requestId } });
+    }
+
     const { id } = await params;
 
     logger.debug({ operation: 'getUser', requestId }, 'Fetching user by ID');
@@ -72,7 +78,16 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
   try {
+    const user = await getUserFromSession(request);
+    if (!user) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401, headers: { 'x-request-id': requestId } });
+    }
+
     const { id } = await params;
+    if (user.id !== id) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
+
     const body = await request.json();
     const { name, email, phone, image, bio } = body;
 
@@ -144,7 +159,15 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
   try {
+    const user = await getUserFromSession(request);
+    if (!user) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401, headers: { 'x-request-id': requestId } });
+    }
+
     const { id } = await params;
+    if (user.id !== id) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
 
     logger.debug({ operation: 'deleteUser', requestId, userId: id }, 'Iniciando eliminacion de usuario');
 

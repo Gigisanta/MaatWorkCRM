@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { getUserFromSession } from '@/lib/auth-helpers';
 
 // GET /api/calendar-events/[id] - Get a single event
 export async function GET(
@@ -9,6 +10,11 @@ export async function GET(
 ) {
   const start = Date.now();
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
+
+  const user = await getUserFromSession(request);
+  if (!user) {
+    return NextResponse.json({ error: 'No autenticado' }, { status: 401, headers: { 'x-request-id': requestId } });
+  }
 
   try {
     logger.debug({ operation: 'getCalendarEvent', requestId }, 'Fetching calendar event');
@@ -41,6 +47,11 @@ export async function GET(
       return NextResponse.json({ error: 'Event not found' }, { status: 404, headers: { 'x-request-id': requestId } });
     }
 
+    if (event.organizationId !== user.organizationId) {
+      logger.warn({ operation: 'getCalendarEvent', requestId, eventId: id, eventOrgId: event.organizationId, userOrgId: user.organizationId }, 'Acceso denegado: evento no pertenece a la organizacion');
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
+
     logger.info({ operation: 'getCalendarEvent', requestId, eventId: id, duration_ms: Date.now() - start }, 'Calendar event fetched successfully');
 
     return NextResponse.json(event, { headers: { 'x-request-id': requestId } });
@@ -58,10 +69,25 @@ export async function PUT(
   const start = Date.now();
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
+  const user = await getUserFromSession(request);
+  if (!user) {
+    return NextResponse.json({ error: 'No autenticado' }, { status: 401, headers: { 'x-request-id': requestId } });
+  }
+
   try {
     logger.debug({ operation: 'updateCalendarEvent', requestId }, 'Updating calendar event');
 
     const { id } = await params;
+
+    const existing = await db.calendarEvent.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: 'Event not found' }, { status: 404, headers: { 'x-request-id': requestId } });
+    }
+    if (existing.organizationId !== user.organizationId) {
+      logger.warn({ operation: 'updateCalendarEvent', requestId, eventId: id, eventOrgId: existing.organizationId, userOrgId: user.organizationId }, 'Acceso denegado: evento no pertenece a la organizacion');
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
+
     const body = await request.json();
     const {
       title,
@@ -119,10 +145,24 @@ export async function DELETE(
   const start = Date.now();
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
+  const user = await getUserFromSession(request);
+  if (!user) {
+    return NextResponse.json({ error: 'No autenticado' }, { status: 401, headers: { 'x-request-id': requestId } });
+  }
+
   try {
     logger.debug({ operation: 'deleteCalendarEvent', requestId }, 'Deleting calendar event');
 
     const { id } = await params;
+
+    const existing = await db.calendarEvent.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: 'Event not found' }, { status: 404, headers: { 'x-request-id': requestId } });
+    }
+    if (existing.organizationId !== user.organizationId) {
+      logger.warn({ operation: 'deleteCalendarEvent', requestId, eventId: id, eventOrgId: existing.organizationId, userOrgId: user.organizationId }, 'Acceso denegado: evento no pertenece a la organizacion');
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
 
     await db.calendarEvent.delete({
       where: { id },

@@ -30,24 +30,38 @@ export function LineChartImpl({
   return (
     <ResponsiveContainer width="100%" height="100%">
       <RechartsLineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-        <XAxis dataKey="label" stroke="#64748b" fontSize={12} />
-        <YAxis stroke="#64748b" fontSize={12} />
+        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+        <XAxis
+          dataKey="label"
+          tick={{ fill: "#888888", fontSize: 11 }}
+          axisLine={{ stroke: "rgba(255,255,255,0.08)" }}
+          tickLine={false}
+        />
+        <YAxis
+          tick={{ fill: "#888888", fontSize: 11 }}
+          axisLine={{ stroke: "rgba(255,255,255,0.08)" }}
+          tickLine={false}
+        />
         <Tooltip
           contentStyle={{
-            backgroundColor: "rgba(15, 23, 42, 0.9)",
-            border: "1px solid rgba(255,255,255,0.1)",
+            background: "#0E0F12",
+            border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: "8px",
+            color: "#F0EFE9",
+            fontSize: "12px",
           }}
+          labelStyle={{ color: "#F0EFE9", marginBottom: "4px" }}
+          cursor={{ stroke: "rgba(139,92,246,0.3)", strokeWidth: 1 }}
         />
-        <Legend formatter={(value) => <span className="text-slate-300">{value}</span>} />
+        <Legend formatter={(value) => <span style={{ color: "#94a3b8", fontSize: "12px" }}>{value}</span>} />
         <Line
           type="monotone"
           dataKey={dataKey}
-          stroke="#6366f1"
+          stroke="#8B5CF6"
           strokeWidth={2}
           name={name}
-          dot={{ fill: "#6366f1" }}
+          dot={{ fill: "#8B5CF6", r: 3 }}
+          activeDot={{ fill: "#A78BFA", r: 5, stroke: "rgba(139,92,246,0.3)", strokeWidth: 4 }}
         />
       </RechartsLineChart>
     </ResponsiveContainer>

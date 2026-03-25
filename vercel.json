@@ -2,20 +2,6 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "regions": ["iad1"],
-  "functions": {
-    "api/**/*.ts": {
-      "memory": 1536,
-      "maxDuration": 10
-    },
-    "api/cron/sync-calendars/**/*.ts": {
-      "memory": 2048,
-      "maxDuration": 60
-    },
-    "api/cron/notifications/**/*.ts": {
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  },
   "headers": [
     {
       "source": "/api/tags/(.*)",
@@ -99,16 +85,7 @@
     },
     {
       "path": "/api/cron/sync-calendars",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 9 * * *"
     }
-  ],
-  "previewDeploymentAnnotations": [
-    "gitOwner",
-    "gitRepository",
-    "gitCommitRef",
-    "gitCommitSha",
-    "gitCommitMessage",
-    "gitCommitAuthorName",
-    "gitCommitAuthorLogin"
   ]
 }

@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { getCachedPipelineStages, invalidatePipelineStagesCache } from '@/lib/cache';
 import { getUserFromSession } from '@/lib/auth-helpers';
 import { logger } from '@/lib/logger';
+import { ensureDefaultPipelineStages } from '@/lib/pipeline-stages';
 
 // POST /api/pipeline-stages - Create a new pipeline stage
 export async function POST(request: NextRequest) {
@@ -90,6 +91,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'organizationId is required' }, { status: 400, headers: { 'x-request-id': requestId } });
     }
 
+    // Ensure default stages exist for this organization
+    await ensureDefaultPipelineStages(organizationId);
+
     // Fetch stages with contacts grouped, including tags and assignedUser
     const stages = await db.pipelineStage.findMany({
       where: { organizationId, isActive: true },
@@ -112,7 +116,7 @@ export async function GET(request: NextRequest) {
             tags: {
               select: {
                 tag: {
-                  select: { id: true, name: true, color: true, value: true, expectedCloseDate: true },
+                  select: { id: true, name: true, color: true, icon: true, description: true },
                 },
               },
             },
@@ -148,8 +152,8 @@ export async function GET(request: NextRequest) {
           id: ct.tag.id,
           name: ct.tag.name,
           color: ct.tag.color,
-          value: ct.tag.value,
-          expectedCloseDate: ct.tag.expectedCloseDate,
+          ...(ct.tag.icon && { icon: ct.tag.icon }),
+          ...(ct.tag.description && { description: ct.tag.description }),
         })),
         assignedUser: contact.assignedUser,
         createdAt: contact.createdAt,

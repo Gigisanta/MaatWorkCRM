@@ -1,6 +1,46 @@
-import type { MetaVida, PlanInstrument, AsignacionEstrategica, ObligacionNegociable, Riesgo } from '@prisma/client';
-
 // Paleta de colores CACTUS
+// Local type definitions (replacing non-existent Prisma models)
+interface AsignacionEstrategica {
+  claseActivo: string;
+  porcentaje: number;
+  descripcion?: string;
+}
+
+interface PlanInstrument {
+  nombre: string;
+  moneda?: string;
+  tipo?: string;
+  claseActivo?: string;
+  participacion?: number;
+  notas?: string;
+  emisor?: string;
+}
+
+interface ObligacionNegociable {
+  acreedor: string;
+  tipo?: string;
+  saldoPendiente?: number;
+  tasaInteres?: number;
+  cuotaMensual?: number;
+  fechaVencimiento?: string;
+}
+
+interface Riesgo {
+  nombre: string;
+  tipo?: string;
+  probabilidad?: 'alta' | 'media' | 'baja';
+  impacto?: 'alto' | 'medio' | 'bajo';
+  mitigacion?: string;
+}
+
+interface MetaVida {
+  nombre: string;
+  prioridad?: 'alta' | 'media' | 'baja';
+  montoObjetivo?: number;
+  fechaEstimada?: string;
+  notes?: string;
+}
+
 const COLORS = {
   cactusDark: '#2D5A4A',
   cactusMedium: '#3D7A5F',

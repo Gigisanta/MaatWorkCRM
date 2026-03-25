@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { revalidateTag } from 'next/cache';
 import { logger } from '@/lib/logger';
+import { isValidId } from '@/lib/id-validation';
+import { getUserFromSession } from '@/lib/auth-helpers';
 
 // GET /api/deals/[id] - Get a single deal
 export async function GET(
@@ -12,9 +14,18 @@ export async function GET(
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
   try {
+    const sessionUser = await getUserFromSession(request);
+    if (!sessionUser) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401, headers: { 'x-request-id': requestId } });
+    }
+
     logger.debug({ operation: 'getDeal', requestId }, 'Fetching deal');
 
     const { id } = await params;
+
+    if (!isValidId(id)) {
+      return NextResponse.json({ error: 'ID inválido' }, { status: 400, headers: { 'x-request-id': requestId } });
+    }
 
     const deal = await db.deal.findUnique({
       where: { id },
@@ -68,9 +79,33 @@ export async function PUT(
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
   try {
+    const sessionUser = await getUserFromSession(request);
+    if (!sessionUser) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401, headers: { 'x-request-id': requestId } });
+    }
+
     logger.debug({ operation: 'updateDeal', requestId }, 'Updating deal');
 
     const { id } = await params;
+
+    if (!isValidId(id)) {
+      return NextResponse.json({ error: 'ID inválido' }, { status: 400, headers: { 'x-request-id': requestId } });
+    }
+
+    // Ownership/organization check
+    const deal = await db.deal.findUnique({
+      where: { id },
+      include: { contact: true },
+    });
+    if (!deal) {
+      return NextResponse.json({ error: 'Deal no encontrado' }, { status: 404, headers: { 'x-request-id': requestId } });
+    }
+    const isSameOrg = deal.contact?.organizationId === sessionUser.organizationId;
+    const isAssignedUser = deal.assignedTo === sessionUser.id;
+    if (!isSameOrg && !isAssignedUser) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
+
     const body = await request.json();
     const {
       contactId,
@@ -82,7 +117,7 @@ export async function PUT(
       assignedTo,
     } = body;
 
-    const deal = await db.deal.update({
+    const updatedDeal = await db.deal.update({
       where: { id },
       data: {
         contactId,
@@ -111,7 +146,7 @@ export async function PUT(
 
     revalidateTag('deals', 'max');
 
-    const response = NextResponse.json(deal);
+    const response = NextResponse.json(updatedDeal);
     response.headers.set('x-request-id', requestId);
     return response;
   } catch (error) {
@@ -129,9 +164,32 @@ export async function DELETE(
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
   try {
+    const sessionUser = await getUserFromSession(request);
+    if (!sessionUser) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401, headers: { 'x-request-id': requestId } });
+    }
+
     logger.debug({ operation: 'deleteDeal', requestId }, 'Deleting deal');
 
     const { id } = await params;
+
+    if (!isValidId(id)) {
+      return NextResponse.json({ error: 'ID inválido' }, { status: 400, headers: { 'x-request-id': requestId } });
+    }
+
+    // Ownership/organization check
+    const deal = await db.deal.findUnique({
+      where: { id },
+      include: { contact: true },
+    });
+    if (!deal) {
+      return NextResponse.json({ error: 'Deal no encontrado' }, { status: 404, headers: { 'x-request-id': requestId } });
+    }
+    const isSameOrg = deal.contact?.organizationId === sessionUser.organizationId;
+    const isAssignedUser = deal.assignedTo === sessionUser.id;
+    if (!isSameOrg && !isAssignedUser) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
 
     await db.deal.delete({
       where: { id },

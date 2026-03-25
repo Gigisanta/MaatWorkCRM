@@ -13,8 +13,8 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 
 interface LinkedAccount {
-  providerId: string;
-  providerType: string;
+  provider: string;
+  type: string;
   createdAt: string;
 }
 
@@ -70,7 +70,7 @@ export default function ConnectedAccountsPage() {
     disconnectMutation.mutate(providerId);
   };
 
-  const googleAccount = data?.accounts.find((a) => a.providerId === 'google');
+  const googleAccount = data?.accounts.find((a) => a.provider === 'google');
   const canDisconnectGoogle = data && (data.accounts.length > 1 || data.hasPassword);
 
   if (isLoading) {

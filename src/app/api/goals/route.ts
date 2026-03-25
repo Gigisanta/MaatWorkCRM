@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getUserFromSession } from '@/lib/auth-helpers';
 import { logger } from '@/lib/logger';
 
 // GET /api/goals - List goals by teamId
@@ -9,6 +10,12 @@ export async function GET(request: NextRequest) {
 
   try {
     logger.debug({ operation: 'listGoals', requestId }, 'Fetching goals');
+
+    const user = await getUserFromSession(request);
+    if (!user) {
+      logger.warn({ operation: 'listGoals', requestId }, 'Unauthorized access attempt');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: { 'x-request-id': requestId } });
+    }
 
     const { searchParams } = await request.nextUrl;
     const teamId = searchParams.get('teamId');
@@ -88,6 +95,12 @@ export async function POST(request: NextRequest) {
 
   try {
     logger.debug({ operation: 'createGoal', requestId }, 'Creating goal');
+
+    const user = await getUserFromSession(request);
+    if (!user) {
+      logger.warn({ operation: 'createGoal', requestId }, 'Unauthorized access attempt');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: { 'x-request-id': requestId } });
+    }
 
     const body = await request.json();
     const {

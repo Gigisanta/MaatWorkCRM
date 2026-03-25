@@ -3,8 +3,8 @@ import { db } from '@/lib/db';
 import { revalidateTag } from 'next/cache';
 import { logger } from '@/lib/logger';
 import { getUserFromSession } from '@/lib/auth-helpers';
-import { dealCreateSchema } from '@/lib/schemas';
-import type { DealCreateInput } from '@/lib/schemas';
+import { dealCreateSchema } from '@/lib/schemas/deal';
+import type { DealCreateInput } from '@/lib/schemas/deal';
 
 export const revalidate = 300;
 
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
+        { title: { contains: search,  } },
       ];
     }
 

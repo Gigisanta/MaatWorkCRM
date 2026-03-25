@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, color, organizationId, value, expectedCloseDate } = body;
+    const { name, color, organizationId, icon, description, value } = body;
 
     if (!name || !organizationId) {
       logger.warn({ operation: 'createTag', requestId }, 'Validation failed: name and organizationId are required');
@@ -77,8 +77,9 @@ export async function POST(request: NextRequest) {
         name,
         color: color || '#6366f1',
         organizationId,
+        icon: icon ?? null,
+        description: description ?? null,
         value: value ?? 0,
-        expectedCloseDate: expectedCloseDate ?? null,
       },
     });
 

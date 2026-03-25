@@ -444,7 +444,6 @@ export async function processOverdueTasks(organizationId: string) {
 
   const notifications = await db.notification.createMany({
     data: notificationData,
-    skipDuplicates: true,
   });
 
   return notifications;
@@ -522,7 +521,6 @@ export async function processTasksDueSoon(organizationId: string) {
 
   const notifications = await db.notification.createMany({
     data: notificationData,
-    skipDuplicates: true,
   });
 
   return notifications;

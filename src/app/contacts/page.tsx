@@ -134,7 +134,7 @@ export default function ContactsPage() {
     ],
     queryFn: async () => {
       const params = new URLSearchParams();
-      params.set("organizationId", organizationId!);
+      if (!organizationId) return; params.set("organizationId", organizationId);
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (filterStage !== "all") params.set("stage", filterStage);
       params.set("page", page.toString());
@@ -259,11 +259,11 @@ export default function ContactsPage() {
 
   // Organization tag mutations
   const createOrgTagMutation = useMutation({
-    mutationFn: async ({ name, color }: { name: string; color?: string }) => {
+    mutationFn: async ({ name, color, value }: { name: string; color?: string; value?: number }) => {
       const response = await fetch('/api/tags', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, color, organizationId }),
+        body: JSON.stringify({ name, color, organizationId, value }),
         credentials: 'include',
       });
       if (!response.ok) {
@@ -303,8 +303,8 @@ export default function ContactsPage() {
     },
   });
 
-  const createOrgTag = (name: string, color?: string) => {
-    createOrgTagMutation.mutate({ name, color });
+  const createOrgTag = (name: string, color?: string, value?: number) => {
+    createOrgTagMutation.mutate({ name, color, value });
   };
 
   const deleteOrgTag = (tagId: string) => {
@@ -435,6 +435,62 @@ export default function ContactsPage() {
 
       {/* Planning Dialog */}
       <PlanningDialog />
+
+      {/* Floating Bulk Toolbar */}
+      <AnimatePresence>
+        {selectedContacts.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 24 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#0E0F12] border border-white/15 shadow-2xl shadow-black/60 backdrop-blur-sm"
+          >
+            {/* Count */}
+            <div className="flex items-center gap-2 pr-2 border-r border-white/10">
+              <div className="w-5 h-5 rounded-full bg-violet-500/20 flex items-center justify-center">
+                <span className="text-[10px] font-bold text-violet-400">{selectedContacts.length}</span>
+              </div>
+              <span className="text-sm text-slate-300 font-medium">
+                {selectedContacts.length === 1 ? "seleccionado" : "seleccionados"}
+              </span>
+            </div>
+
+            {/* Actions */}
+            <button
+              className="px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white hover:bg-white/8 rounded-lg transition-all duration-200"
+              onClick={() => {
+                toast.info(`${selectedContacts.length} contactos listos para exportar`);
+              }}
+            >
+              Exportar
+            </button>
+
+            <button
+              className="px-3 py-1.5 text-xs font-medium text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition-all duration-200"
+              onClick={() => {
+                if (confirm(`¿Eliminar ${selectedContacts.length} contactos?`)) {
+                  // TODO: implementar eliminación bulk
+                  setSelectedContacts([]);
+                }
+              }}
+            >
+              Eliminar
+            </button>
+
+            {/* Dismiss */}
+            <div className="border-l border-white/10 pl-2 ml-0">
+              <button
+                onClick={() => setSelectedContacts([])}
+                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/8 transition-all duration-200"
+                title="Deseleccionar todos"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
     </PlanningDialogProvider>
   );

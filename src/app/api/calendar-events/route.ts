@@ -1,16 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { getUserFromSession } from '@/lib/auth-helpers';
 
 // GET /api/calendar-events - List events with date range filter
 export async function GET(request: NextRequest) {
   const start = Date.now();
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
+  const user = await getUserFromSession(request);
+  if (!user) {
+    return NextResponse.json({ error: 'No autenticado' }, { status: 401, headers: { 'x-request-id': requestId } });
+  }
+
   try {
     logger.debug({ operation: 'listCalendarEvents', requestId }, 'Listing calendar events');
 
-    const searchParams = request.nextUrl.searchParams;
+    const { searchParams } = await request.nextUrl;
     const organizationId = searchParams.get('organizationId');
     const teamId = searchParams.get('teamId');
     const startDate = searchParams.get('startDate');
@@ -22,6 +28,12 @@ export async function GET(request: NextRequest) {
     if (!organizationId) {
       logger.warn({ operation: 'listCalendarEvents', requestId }, 'Validation failed: organizationId is required');
       return NextResponse.json({ error: 'organizationId is required' }, { status: 400, headers: { 'x-request-id': requestId } });
+    }
+
+    // Enforce organization isolation
+    if (organizationId !== user.organizationId) {
+      logger.warn({ operation: 'listCalendarEvents', requestId, organizationId, userOrgId: user.organizationId }, 'Acceso denegado: organizacion no corresponde');
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403, headers: { 'x-request-id': requestId } });
     }
 
     const skip = (page - 1) * limit;
@@ -106,6 +118,11 @@ export async function POST(request: NextRequest) {
   const start = Date.now();
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
+  const user = await getUserFromSession(request);
+  if (!user) {
+    return NextResponse.json({ error: 'No autenticado' }, { status: 401, headers: { 'x-request-id': requestId } });
+  }
+
   try {
     logger.debug({ operation: 'createCalendarEvent', requestId }, 'Creating calendar event');
 
@@ -119,7 +136,6 @@ export async function POST(request: NextRequest) {
       endAt,
       location,
       type,
-      createdBy,
     } = body;
 
     if (!organizationId || !title || !startAt || !endAt) {
@@ -128,6 +144,12 @@ export async function POST(request: NextRequest) {
         { error: 'organizationId, title, startAt, and endAt are required' },
         { status: 400, headers: { 'x-request-id': requestId } }
       );
+    }
+
+    // Enforce organization isolation
+    if (organizationId !== user.organizationId) {
+      logger.warn({ operation: 'createCalendarEvent', requestId, organizationId, userOrgId: user.organizationId }, 'Acceso denegado: organizacion no corresponde');
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403, headers: { 'x-request-id': requestId } });
     }
 
     const event = await db.calendarEvent.create({
@@ -140,7 +162,7 @@ export async function POST(request: NextRequest) {
         endAt: new Date(endAt),
         location,
         type: type || 'meeting',
-        createdBy,
+        createdBy: user.id,
       },
       include: {
         team: {

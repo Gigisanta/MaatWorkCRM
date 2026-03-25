@@ -33,7 +33,7 @@ function createCalendarClient(accessToken: string, refreshToken?: string | null)
 
 async function getUserTokens(userId: string) {
   const account = await db.account.findFirst({
-    where: { userId, providerId: 'google' },
+    where: { userId, provider: 'google' },
     select: { access_token: true, refresh_token: true },
   });
   if (!account?.access_token) return null;

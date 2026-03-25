@@ -47,14 +47,16 @@ export function BarChartImpl({
           <>
             <XAxis
               type="number"
-              stroke="rgba(255,255,255,0.2)"
+              axisLine={{ stroke: "rgba(255,255,255,0.08)" }}
+              tickLine={false}
               tick={{ fill: "#888888", fontSize: 11 }}
               tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
             />
             <YAxis
               dataKey={nameKey}
               type="category"
-              stroke="rgba(255,255,255,0.2)"
+              axisLine={{ stroke: "rgba(255,255,255,0.08)" }}
+              tickLine={false}
               tick={{ fill: "#888888", fontSize: 11 }}
               width={80}
             />
@@ -64,24 +66,27 @@ export function BarChartImpl({
             <XAxis
               dataKey={nameKey}
               type="category"
-              stroke="rgba(255,255,255,0.2)"
+              axisLine={{ stroke: "rgba(255,255,255,0.08)" }}
+              tickLine={false}
               tick={{ fill: "#888888", fontSize: 11 }}
             />
             <YAxis
               type="number"
-              stroke="rgba(255,255,255,0.2)"
+              axisLine={{ stroke: "rgba(255,255,255,0.08)" }}
+              tickLine={false}
               tick={{ fill: "#888888", fontSize: 11 }}
             />
           </>
         )}
         <Tooltip
           contentStyle={{
-            backgroundColor: "#0E0F12",
-            border: "1px solid rgba(255,255,255,0.1)",
+            background: "#0E0F12",
+            border: "1px solid rgba(255,255,255,0.08)",
             borderRadius: "8px",
             color: "#F0EFE9",
+            fontSize: "12px",
           }}
-          labelStyle={{ color: "#F0EFE9" }}
+          labelStyle={{ color: "#F0EFE9", marginBottom: "4px" }}
           itemStyle={{ color: "#A78BFA" }}
           cursor={{ fill: "rgba(139,92,246,0.08)" }}
         />

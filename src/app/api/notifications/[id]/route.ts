@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { getUserFromSession } from '@/lib/auth-helpers';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -12,6 +13,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
   const { id } = await params;
 
+  const user = await getUserFromSession(request);
+  if (!user) {
+    return NextResponse.json({ error: 'No autenticado' }, { status: 401, headers: { 'x-request-id': requestId } });
+  }
+
   try {
     logger.debug({ operation: 'getNotificationById', requestId, notificationId: id }, 'Obteniendo notificacion por ID');
 
@@ -22,6 +28,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     if (!notification) {
       logger.warn({ operation: 'getNotificationById', requestId, notificationId: id }, 'Notificacion no encontrada');
       return NextResponse.json({ error: 'Notificacion no encontrada' }, { status: 404, headers: { 'x-request-id': requestId } });
+    }
+
+    if (notification.userId !== user.id) {
+      logger.warn({ operation: 'getNotificationById', requestId, notificationId: id, userId: user.id }, 'Acceso denegado: notificacion no pertenece al usuario');
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403, headers: { 'x-request-id': requestId } });
     }
 
     logger.info({ operation: 'getNotificationById', requestId, notificationId: id, duration_ms: Date.now() - start }, 'Notificacion obtenida exitosamente');
@@ -38,6 +49,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
   const { id } = await params;
 
+  const user = await getUserFromSession(request);
+  if (!user) {
+    return NextResponse.json({ error: 'No autenticado' }, { status: 401, headers: { 'x-request-id': requestId } });
+  }
+
   try {
     logger.debug({ operation: 'updateNotification', requestId, notificationId: id }, 'Actualizando notificacion');
 
@@ -51,9 +67,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       },
     });
 
-    if (!notification) {
-      logger.warn({ operation: 'updateNotification', requestId, notificationId: id }, 'Notificacion no encontrada para actualizar');
-      return NextResponse.json({ error: 'Notificacion no encontrada' }, { status: 404, headers: { 'x-request-id': requestId } });
+    if (notification.userId !== user.id) {
+      logger.warn({ operation: 'updateNotification', requestId, notificationId: id, userId: user.id }, 'Acceso denegado: notificacion no pertenece al usuario');
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403, headers: { 'x-request-id': requestId } });
     }
 
     logger.info({ operation: 'updateNotification', requestId, notificationId: id, duration_ms: Date.now() - start }, 'Notificacion actualizada exitosamente');
@@ -70,12 +86,24 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
   const { id } = await params;
 
+  const user = await getUserFromSession(request);
+  if (!user) {
+    return NextResponse.json({ error: 'No autenticado' }, { status: 401, headers: { 'x-request-id': requestId } });
+  }
+
   try {
     logger.debug({ operation: 'deleteNotification', requestId, notificationId: id }, 'Eliminando notificacion');
 
-    await db.notification.delete({
-      where: { id },
-    });
+    const notification = await db.notification.findUnique({ where: { id } });
+    if (!notification) {
+      return NextResponse.json({ error: 'Notificacion no encontrada' }, { status: 404, headers: { 'x-request-id': requestId } });
+    }
+    if (notification.userId !== user.id) {
+      logger.warn({ operation: 'deleteNotification', requestId, notificationId: id, userId: user.id }, 'Acceso denegado: notificacion no pertenece al usuario');
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
+
+    await db.notification.delete({ where: { id } });
 
     logger.info({ operation: 'deleteNotification', requestId, notificationId: id, duration_ms: Date.now() - start }, 'Notificacion eliminada exitosamente');
     return NextResponse.json({ success: true }, { headers: { 'x-request-id': requestId } });

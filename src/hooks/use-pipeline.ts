@@ -54,13 +54,15 @@ export interface PipelineStage {
   };
 }
 
-// Product (formerly Deal/Tag)
+// Product (formerly Deal/Tag) - maps to Tag model
+// Note: value and expectedCloseDate were Deal fields, not Tag fields
+// They are optional here for backward compatibility with UI code
 export interface Product {
   id: string;
   name: string;
   color: string;
-  value: number;
-  expectedCloseDate: string | null;
+  value?: number;
+  expectedCloseDate?: string | null;
 }
 
 // Contact with products (tags)

@@ -34,8 +34,17 @@ export async function POST(request: NextRequest) {
       message: 'Sesión cerrada exitosamente',
     });
 
-    // Clear session cookie
+    // Clear session cookie (custom auth)
     response.cookies.set('session_token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/',
+    });
+
+    // Clear NextAuth session cookie (Google OAuth)
+    response.cookies.set('next-auth.session-token', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -53,6 +62,14 @@ export async function POST(request: NextRequest) {
     });
 
     response.cookies.set('session_token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/',
+    });
+
+    response.cookies.set('next-auth.session-token', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

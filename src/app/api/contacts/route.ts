@@ -73,10 +73,10 @@ export async function GET(request: NextRequest) {
 
       if (search) {
         where.OR = [
-          { name: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } },
-          { company: { contains: search, mode: 'insensitive' } },
-          { phone: { contains: search, mode: 'insensitive' } },
+          { name: { contains: search } },
+          { email: { contains: search } },
+          { company: { contains: search } },
+          { phone: { contains: search } },
         ];
       }
 
@@ -92,7 +92,6 @@ export async function GET(request: NextRequest) {
                     name: true,
                     color: true,
                     value: true,
-                    expectedCloseDate: true,
                   },
                 },
               },
@@ -119,9 +118,6 @@ export async function GET(request: NextRequest) {
                 tasks: true,
               },
             },
-            financialPlan: {
-              select: { id: true },
-            },
           },
           skip,
           take: limit,
@@ -136,11 +132,9 @@ export async function GET(request: NextRequest) {
           id: ct.tag.id,
           name: ct.tag.name,
           color: ct.tag.color,
-          value: ct.tag.value,
-          expectedCloseDate: ct.tag.expectedCloseDate,
+          value: ct.value ?? null,
         })),
         interactionCount: (contact._count?.deals || 0) + (contact._count?.tasks || 0),
-        hasFinancialPlan: !!contact.financialPlan,
       }));
 
       logger.info({ operation: 'getContacts', requestId, count: contacts.length, total, duration_ms: Date.now() - start }, 'Contacts fetched successfully');
@@ -198,10 +192,10 @@ export async function GET(request: NextRequest) {
       if (search) {
         where.OR = [
           ...where.OR as Array<Record<string, unknown>>,
-          { name: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } },
-          { company: { contains: search, mode: 'insensitive' } },
-          { phone: { contains: search, mode: 'insensitive' } },
+          { name: { contains: search } },
+          { email: { contains: search } },
+          { company: { contains: search } },
+          { phone: { contains: search } },
         ];
       }
 
@@ -217,7 +211,6 @@ export async function GET(request: NextRequest) {
                     name: true,
                     color: true,
                     value: true,
-                    expectedCloseDate: true,
                   },
                 },
               },
@@ -244,9 +237,6 @@ export async function GET(request: NextRequest) {
                 tasks: true,
               },
             },
-            financialPlan: {
-              select: { id: true },
-            },
           },
           skip,
           take: limit,
@@ -261,11 +251,9 @@ export async function GET(request: NextRequest) {
           id: ct.tag.id,
           name: ct.tag.name,
           color: ct.tag.color,
-          value: ct.tag.value,
-          expectedCloseDate: ct.tag.expectedCloseDate,
+          value: ct.value ?? null,
         })),
         interactionCount: (contact._count?.deals || 0) + (contact._count?.tasks || 0),
-        hasFinancialPlan: !!contact.financialPlan,
       }));
 
       logger.info({ operation: 'getContacts', requestId, count: contacts.length, total, duration_ms: Date.now() - start }, 'Contacts fetched successfully');
@@ -305,7 +293,7 @@ export async function GET(request: NextRequest) {
 
       const where: Record<string, unknown> = {
         organizationId: targetOrgId,
-        assignedToId: user.id,
+        assignedTo: user.id,
       };
 
       if (stage) {
@@ -318,10 +306,10 @@ export async function GET(request: NextRequest) {
 
       if (search) {
         where.OR = [
-          { name: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } },
-          { company: { contains: search, mode: 'insensitive' } },
-          { phone: { contains: search, mode: 'insensitive' } },
+          { name: { contains: search } },
+          { email: { contains: search } },
+          { company: { contains: search } },
+          { phone: { contains: search } },
         ];
       }
 
@@ -337,7 +325,6 @@ export async function GET(request: NextRequest) {
                     name: true,
                     color: true,
                     value: true,
-                    expectedCloseDate: true,
                   },
                 },
               },
@@ -364,9 +351,6 @@ export async function GET(request: NextRequest) {
                 tasks: true,
               },
             },
-            financialPlan: {
-              select: { id: true },
-            },
           },
           skip,
           take: limit,
@@ -381,11 +365,9 @@ export async function GET(request: NextRequest) {
           id: ct.tag.id,
           name: ct.tag.name,
           color: ct.tag.color,
-          value: ct.tag.value,
-          expectedCloseDate: ct.tag.expectedCloseDate,
+          value: ct.value ?? null,
         })),
         interactionCount: (contact._count?.deals || 0) + (contact._count?.tasks || 0),
-        hasFinancialPlan: !!contact.financialPlan,
       }));
 
       logger.info({ operation: 'getContacts', requestId, count: contacts.length, total, duration_ms: Date.now() - start }, 'Contacts fetched successfully');
@@ -504,8 +486,6 @@ export async function POST(request: NextRequest) {
                 id: true,
                 name: true,
                 color: true,
-                value: true,
-                expectedCloseDate: true,
               },
             },
           },
@@ -535,8 +515,6 @@ export async function POST(request: NextRequest) {
         id: ct.tag.id,
         name: ct.tag.name,
         color: ct.tag.color,
-        value: ct.tag.value,
-        expectedCloseDate: ct.tag.expectedCloseDate,
       })),
       interactionCount: 0,
     };

@@ -23,6 +23,7 @@ import {
   Loader2,
   ChevronRight,
 } from "lucide-react";
+import Link from "next/link";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
 import { useSidebar } from "@/lib/sidebar-context";
@@ -281,10 +282,10 @@ function TaskCard({
     >
       {/* Priority bar */}
       <div className={cn(
-        "absolute left-0 top-0 bottom-0 w-[3px]",
+        "absolute left-0 top-3 bottom-3 w-[3px] rounded-full",
         task.priority === "urgent" ? "bg-rose-500" :
         task.priority === "high" ? "bg-amber-500" :
-        task.priority === "medium" ? "bg-sky-500" : "bg-slate-700"
+        task.priority === "medium" ? "bg-sky-500" : "bg-slate-600"
       )} />
       <div className="flex items-start gap-3 pl-4">
         <Checkbox
@@ -336,14 +337,17 @@ function TaskCard({
 
           <div className="flex flex-wrap items-center gap-2 mt-3">
             {/* Priority */}
-            <div className={cn(
-              "flex items-center gap-1.5 px-2 py-0.5 rounded text-xs",
-              priorityConfig[task.priority].color + "/20",
-              priorityConfig[task.priority].textColor
+            <span className={cn(
+              "text-[10px] font-medium px-2 py-0.5 rounded-full border",
+              task.priority === "urgent" ? "bg-rose-500/10 text-rose-400 border-rose-500/20" :
+              task.priority === "high" ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
+              task.priority === "medium" ? "bg-sky-500/10 text-sky-400 border-sky-500/20" :
+              "bg-slate-500/10 text-slate-400 border-slate-500/20"
             )}>
-              {task.priority === "urgent" && <AlertCircle className="h-3 w-3" />}
-              {priorityConfig[task.priority].label}
-            </div>
+              {task.priority === "urgent" ? "Urgente" :
+               task.priority === "high" ? "Alta" :
+               task.priority === "medium" ? "Media" : "Baja"}
+            </span>
 
             {/* Due Date */}
             {dueDate && (
@@ -364,12 +368,16 @@ function TaskCard({
               </Badge>
             )}
 
-            {/* Contact */}
+            {/* Contact chip */}
             {task.contact && (
-              <div className="flex items-center gap-1 text-xs text-slate-400">
-                <span>{task.contact.emoji || "👤"}</span>
-                <span>{task.contact.name}</span>
-              </div>
+              <Link
+                href={`/contacts?contactId=${task.contact.id}`}
+                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-xs text-violet-300 hover:bg-violet-500/20 transition-colors"
+                onClick={e => e.stopPropagation()}
+              >
+                <span className="leading-none">{task.contact.emoji || "👤"}</span>
+                {task.contact.name}
+              </Link>
             )}
           </div>
 
@@ -447,22 +455,31 @@ function TaskGroup({
           {tasks.length}
         </span>
       </button>
-      {open && (
-        <AnimatePresence mode="popLayout">
-          <div className="space-y-2">
-            {tasks.map(task => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                onToggle={() => onToggle(task)}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                isToggling={togglingTasks.has(task.id)}
-              />
-            ))}
-          </div>
-        </AnimatePresence>
-      )}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key="group-content"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-2">
+              {tasks.map(task => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onToggle={() => onToggle(task)}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  isToggling={togglingTasks.has(task.id)}
+                />
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -1029,7 +1046,7 @@ function TasksPageContent() {
                       <SelectItem value="all">Todos</SelectItem>
                       {users.map((u) => (
                         <SelectItem key={u.id} value={u.id}>
-                          {u.name}
+                          {u.name || 'Sin nombre'}
                         </SelectItem>
                       ))}
                     </SelectContent>

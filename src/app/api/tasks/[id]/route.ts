@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { getUserFromSession } from '@/lib/auth-helpers';
+import { hasPermission, normalizeRole } from '@/lib/permissions';
+import { isValidId } from '@/lib/id-validation';
 
 // GET /api/tasks/[id] - Get a single task
 export async function GET(
@@ -13,7 +16,20 @@ export async function GET(
   try {
     logger.debug({ operation: 'getTask', requestId }, 'Fetching task');
 
+    const user = await getUserFromSession(request);
+    if (!user) {
+      logger.warn({ operation: 'getTask', requestId }, 'Unauthorized access attempt');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: { 'x-request-id': requestId } });
+    }
+
     const { id } = await params;
+
+    if (!isValidId(id)) {
+      return NextResponse.json(
+        { error: 'ID inválido' },
+        { status: 400, headers: { 'x-request-id': requestId } }
+      );
+    }
 
     const task = await db.task.findUnique({
       where: { id },
@@ -75,7 +91,21 @@ export async function PUT(
   try {
     logger.debug({ operation: 'updateTask', requestId }, 'Updating task');
 
+    const user = await getUserFromSession(request);
+    if (!user) {
+      logger.warn({ operation: 'updateTask', requestId }, 'Unauthorized access attempt');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: { 'x-request-id': requestId } });
+    }
+
     const { id } = await params;
+
+    if (!isValidId(id)) {
+      return NextResponse.json(
+        { error: 'ID inválido' },
+        { status: 400, headers: { 'x-request-id': requestId } }
+      );
+    }
+
     const body = await request.json();
     const {
       title,
@@ -152,7 +182,20 @@ export async function DELETE(
   try {
     logger.debug({ operation: 'deleteTask', requestId }, 'Deleting task');
 
+    const user = await getUserFromSession(request);
+    if (!user) {
+      logger.warn({ operation: 'deleteTask', requestId }, 'Unauthorized access attempt');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: { 'x-request-id': requestId } });
+    }
+
     const { id } = await params;
+
+    if (!isValidId(id)) {
+      return NextResponse.json(
+        { error: 'ID inválido' },
+        { status: 400, headers: { 'x-request-id': requestId } }
+      );
+    }
 
     await db.task.delete({
       where: { id },

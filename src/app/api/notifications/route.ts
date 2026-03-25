@@ -1,30 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { getUserFromSession } from '@/lib/auth-helpers';
 
 // POST /api/notifications - Create a notification
 export async function POST(request: NextRequest) {
   const start = Date.now();
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
+  const user = await getUserFromSession(request);
+  if (!user) {
+    return NextResponse.json({ error: 'No autenticado' }, { status: 401, headers: { 'x-request-id': requestId } });
+  }
+
   try {
     logger.debug({ operation: 'createNotification', requestId }, 'Creando notificacion');
 
     const body = await request.json();
-    const { userId, organizationId, type, title, message, actionUrl } = body;
+    const { type, title, message, actionUrl } = body;
 
-    if (!userId || !organizationId || !type || !title || !message) {
+    if (!type || !title || !message) {
       logger.warn({ operation: 'createNotification', requestId }, 'Faltan campos requeridos para crear notificacion');
       return NextResponse.json(
-        { error: 'userId, organizationId, type, title, and message are required' },
+        { error: 'type, title, and message are required' },
         { status: 400, headers: { 'x-request-id': requestId } }
       );
     }
 
     const notification = await db.notification.create({
       data: {
-        userId,
-        organizationId,
+        userId: user.id,
+        organizationId: user.organizationId ?? '',
         type,
         title,
         message,
@@ -46,25 +52,23 @@ export async function GET(request: NextRequest) {
   const start = Date.now();
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
+  const user = await getUserFromSession(request);
+  if (!user) {
+    return NextResponse.json({ error: 'No autenticado' }, { status: 401, headers: { 'x-request-id': requestId } });
+  }
+
   try {
     logger.debug({ operation: 'listNotifications', requestId }, 'Obteniendo lista de notificaciones');
 
     const { searchParams } = await request.nextUrl;
-    const userId = searchParams.get('userId');
-    const organizationId = searchParams.get('organizationId');
     const isRead = searchParams.get('isRead');
     const type = searchParams.get('type');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
 
-    if (!userId || !organizationId) {
-      logger.warn({ operation: 'listNotifications', requestId }, 'Faltan parametros requeridos: userId u organizationId');
-      return NextResponse.json({ error: 'userId and organizationId are required' }, { status: 400, headers: { 'x-request-id': requestId } });
-    }
-
     const skip = (page - 1) * limit;
 
-    const where: Record<string, unknown> = { userId, organizationId };
+    const where: Record<string, unknown> = { userId: user.id, organizationId: user.organizationId ?? '' };
 
     if (isRead !== null && isRead !== undefined) {
       where.isRead = isRead === 'true';
@@ -94,7 +98,7 @@ export async function GET(request: NextRequest) {
         orderBy: { createdAt: 'desc' },
       }),
       db.notification.count({ where }),
-      db.notification.count({ where: { userId, organizationId, isRead: false } }),
+      db.notification.count({ where: { userId: user.id, organizationId: user.organizationId ?? '', isRead: false } }),
     ]);
 
     logger.info({ operation: 'listNotifications', requestId, count: notifications.length, total, unreadCount, duration_ms: Date.now() - start }, 'Notificaciones obtenidas exitosamente');

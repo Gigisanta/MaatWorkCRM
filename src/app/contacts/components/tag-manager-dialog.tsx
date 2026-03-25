@@ -17,15 +17,16 @@ export interface Tag {
   id: string;
   name: string;
   color: string;
-  value: number;
-  expectedCloseDate: string | null;
+  icon?: string;
+  description?: string;
+  value?: number;
 }
 
 interface TagManagerDialogProps {
   open: boolean;
   onClose: () => void;
   tags: Tag[];
-  onCreateTag: (name: string, color?: string, value?: number, expectedCloseDate?: string | null) => void;
+  onCreateTag: (name: string, color?: string, value?: number) => void;
   onDeleteTag: (tagId: string) => void;
   isCreating: boolean;
   isDeleting: boolean;
@@ -41,9 +42,8 @@ export function TagManagerDialog({
   isDeleting,
 }: TagManagerDialogProps) {
   const [newTagName, setNewTagName] = React.useState('');
+  const [newTagValue, setNewTagValue] = React.useState('');
   const [selectedColor, setSelectedColor] = React.useState('#6366f1');
-  const [newTagValue, setNewTagValue] = React.useState(0);
-  const [newTagExpectedCloseDate, setNewTagExpectedCloseDate] = React.useState<string | null>(null);
 
   const colors = [
     '#6366f1', // indigo
@@ -59,11 +59,11 @@ export function TagManagerDialog({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newTagName.trim()) {
-      onCreateTag(newTagName.trim(), selectedColor, newTagValue || undefined, newTagExpectedCloseDate || undefined);
+      const value = newTagValue ? parseFloat(newTagValue) : undefined;
+      onCreateTag(newTagName.trim(), selectedColor, value);
       setNewTagName('');
+      setNewTagValue('');
       setSelectedColor('#6366f1');
-      setNewTagValue(0);
-      setNewTagExpectedCloseDate(null);
     }
   };
 
@@ -100,6 +100,13 @@ export function TagManagerDialog({
                 onChange={(e) => setNewTagName(e.target.value)}
                 className="flex-1 glass border-white/10 bg-white/5 text-white placeholder:text-slate-500"
               />
+              <Input
+                type="number"
+                placeholder="Valor ($)"
+                value={newTagValue}
+                onChange={(e) => setNewTagValue(e.target.value)}
+                className="w-24 glass border-white/10 bg-white/5 text-white placeholder:text-slate-500"
+              />
               <Button
                 type="submit"
                 disabled={!newTagName.trim() || isCreating}
@@ -108,28 +115,7 @@ export function TagManagerDialog({
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
-            <div className="flex gap-2">
-              <div className="flex-1 relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
-                <Input
-                  type="number"
-                  placeholder="Valor"
-                  value={newTagValue || ''}
-                  onChange={(e) => setNewTagValue(e.target.value ? Number(e.target.value) : 0)}
-                  className="pl-7 glass border-white/10 bg-white/5 text-white placeholder:text-slate-500"
-                  min="0"
-                  step="0.01"
-                />
-              </div>
-              <Input
-                type="date"
-                placeholder="Fecha cierre esperada"
-                value={newTagExpectedCloseDate || ''}
-                onChange={(e) => setNewTagExpectedCloseDate(e.target.value || null)}
-                className="flex-1 glass border-white/10 bg-white/5 text-white placeholder:text-slate-500"
-              />
-            </div>
-          </form>
+            </form>
 
           {/* Tags list */}
           <div className="max-h-64 overflow-y-auto space-y-2">
@@ -147,13 +133,8 @@ export function TagManagerDialog({
                       style={{ backgroundColor: tag.color }}
                     />
                     <span className="text-white text-sm">{tag.name}</span>
-                    {tag.value > 0 && (
-                      <span className="text-emerald-400 text-xs font-medium">${tag.value.toLocaleString()}</span>
-                    )}
-                    {tag.expectedCloseDate && (
-                      <span className="text-slate-400 text-xs">
-                        {new Date(tag.expectedCloseDate).toLocaleDateString()}
-                      </span>
+                    {tag.value !== undefined && tag.value !== null && (
+                      <span className="text-violet-400 text-xs">${tag.value.toLocaleString()}</span>
                     )}
                   </div>
                   <Button

@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
   }
 
   const googleAccount = await db.account.findFirst({
-    where: { userId: user.id, providerId: 'google' },
+    where: { userId: user.id, provider: 'google' },
   });
 
   const syncState = await db.calendarSyncState.findFirst({
@@ -47,16 +47,7 @@ export async function GET(request: NextRequest) {
   });
 
   let calendars: { id: string; name: string; selected: boolean }[] = [];
-  let calendarPreferences: string[] = ['primary'];
-
-  if (membership) {
-    const org = await db.organization.findUnique({
-      where: { id: membership.organizationId },
-      select: { calendarPreferences: true },
-    });
-    const prefs = (org?.calendarPreferences as { selectedCalendarIds?: string[] } | null);
-    calendarPreferences = prefs?.selectedCalendarIds ?? ['primary'];
-  }
+  let selectedCalendarIds: string[] = ['primary'];
 
   // If connected, fetch real calendar list from Google
   if (googleAccount?.access_token) {
@@ -67,7 +58,7 @@ export async function GET(request: NextRequest) {
     calendars = googleCalendars.map((cal) => ({
       id: cal.id ?? 'primary',
       name: cal.summary ?? cal.id ?? 'Unknown',
-      selected: (calendarPreferences).includes(cal.id ?? 'primary'),
+      selected: (selectedCalendarIds).includes(cal.id ?? 'primary'),
     }));
   }
 
@@ -78,6 +69,6 @@ export async function GET(request: NextRequest) {
     lastSyncedAt: syncState?.lastSyncedAt ?? null,
     errorCount: syncState?.errorCount ?? 0,
     calendars,
-    selectedCalendarIds: calendarPreferences,
+    selectedCalendarIds,
   });
 }

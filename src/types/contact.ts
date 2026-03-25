@@ -8,7 +8,6 @@ export interface ContactWithRelations extends Contact {
   assignedUser: Pick<User, 'id' | 'name' | 'email' | 'image'> | null;
   deals: DealWithStage[];
   tasks: TaskWithAssignee[];
-  stageHistory: PipelineStageHistoryWithStages[];
   organization: { id: string; name: string };
   _count?: {
     deals: number;
@@ -40,14 +39,6 @@ export interface TaskWithAssignee {
   dueDate: Date | null;
   assignedUser: Pick<User, 'id' | 'name' | 'email' | 'image'> | null;
   createdAt: Date;
-}
-
-export interface PipelineStageHistoryWithStages {
-  id: string;
-  fromStage: PipelineStage | null;
-  toStage: PipelineStage | null;
-  reason: string | null;
-  changedAt: Date;
 }
 
 // Contact Input/Update types (for API requests)

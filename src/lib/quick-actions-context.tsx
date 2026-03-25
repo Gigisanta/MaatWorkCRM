@@ -7,6 +7,8 @@ interface QuickActionsContextType {
   setCreateContactOpen: (open: boolean) => void;
   createTaskOpen: boolean;
   setCreateTaskOpen: (open: boolean) => void;
+  feedbackOpen: boolean;
+  setFeedbackOpen: (open: boolean) => void;
 }
 
 const QuickActionsContext = React.createContext<QuickActionsContextType>({
@@ -14,18 +16,23 @@ const QuickActionsContext = React.createContext<QuickActionsContextType>({
   setCreateContactOpen: () => {},
   createTaskOpen: false,
   setCreateTaskOpen: () => {},
+  feedbackOpen: false,
+  setFeedbackOpen: () => {},
 });
 
 export function QuickActionsProvider({ children }: { children: React.ReactNode }) {
   const [createContactOpen, setCreateContactOpen] = React.useState(false);
   const [createTaskOpen, setCreateTaskOpen] = React.useState(false);
+  const [feedbackOpen, setFeedbackOpen] = React.useState(false);
 
   const value = React.useMemo(() => ({
     createContactOpen,
     setCreateContactOpen,
     createTaskOpen,
     setCreateTaskOpen,
-  }), [createContactOpen, createTaskOpen]);
+    feedbackOpen,
+    setFeedbackOpen,
+  }), [createContactOpen, createTaskOpen, feedbackOpen]);
 
   return (
     <QuickActionsContext.Provider value={value}>

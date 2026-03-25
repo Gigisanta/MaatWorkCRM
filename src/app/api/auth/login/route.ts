@@ -2,12 +2,40 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { randomUUID } from 'crypto';
 import { logger } from '@/lib/logger';
+import { Ratelimit } from '@upstash/ratelimit';
+import { getRedis } from '@/lib/redis';
+
+// Rate limiter: 5 attempts per minute per IP (lazy - only when Redis is available)
+const ratelimit = (() => {
+  const redis = getRedis();
+  if (!redis) return null;
+  return new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, '1 m'),
+    analytics: true,
+    prefix: 'ratelimit:login',
+  });
+})();
 
 export async function POST(request: NextRequest) {
   const start = Date.now();
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
   try {
+    // Rate limiting
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+             || request.headers.get('x-real-ip') || 'unknown';
+    if (ratelimit) {
+      const { success, remaining } = await ratelimit.limit(ip);
+      if (!success) {
+        logger.warn({ operation: 'login', requestId, ip, reason: 'rate_limited' }, 'Login rate limited');
+        return NextResponse.json(
+          { error: 'Demasiados intentos. Intenta de nuevo en un minuto.' },
+          { status: 429 }
+        );
+      }
+    }
+
     const body = await request.json();
     const { identifier, password, rememberMe } = body;
 
@@ -28,9 +56,9 @@ export async function POST(request: NextRequest) {
     const user = await db.user.findFirst({
       where: {
         OR: [
-          { email: { equals: normalizedIdentifier, mode: 'insensitive' } },
-          { username: { contains: identifier.trim(), mode: 'insensitive' } },
-          { name: { contains: identifier.trim(), mode: 'insensitive' } },
+          { email: { equals: normalizedIdentifier } },
+          { username: { contains: normalizedIdentifier } },
+          { name: { contains: normalizedIdentifier } },
         ],
       },
     });
@@ -47,7 +75,7 @@ export async function POST(request: NextRequest) {
     if (!user.password) {
       logger.warn({ operation: 'login', requestId, userId: user.id, reason: 'no_password' }, 'Login failed');
       return NextResponse.json(
-        { error: 'Esta cuenta no tiene contraseña configurada' },
+        { error: 'Credenciales inválidas' },
         { status: 401 }
       );
     }

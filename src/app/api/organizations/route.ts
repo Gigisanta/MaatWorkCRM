@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getUserFromSession } from '@/lib/auth-helpers';
 import { logger } from '@/lib/logger';
+import { ensureDefaultPipelineStages } from '@/lib/pipeline-stages';
 
 // GET /api/organizations - List all organizations
 export async function GET(request: NextRequest) {
@@ -82,6 +83,9 @@ export async function POST(request: NextRequest) {
     });
 
     logger.info({ operation: 'createOrganization', requestId, organizationId: organization.id, duration_ms: Date.now() - start }, 'Organization created successfully');
+
+    // Create default pipeline stages for the new organization
+    await ensureDefaultPipelineStages(organization.id);
 
     return NextResponse.json({ organization }, { status: 201, headers: { 'x-request-id': requestId } });
   } catch (error) {

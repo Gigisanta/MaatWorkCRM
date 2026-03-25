@@ -6,6 +6,7 @@ import { useQuickActions } from '@/lib/quick-actions-context';
 import { useAuth } from '@/lib/auth-context';
 import { CreateContactModal } from '@/app/contacts/components/create-contact-modal';
 import { CreateTaskDialog } from '@/components/create-task-dialog';
+import { FeedbackDialog } from '@/components/feedback-dialog';
 
 interface PipelineStage {
   id: string;
@@ -21,7 +22,7 @@ interface PipelineStagesResponse {
 export function QuickActionsModals() {
   const { user } = useAuth();
   const organizationId = user?.organizationId || null;
-  const { createContactOpen, setCreateContactOpen, createTaskOpen, setCreateTaskOpen } = useQuickActions();
+  const { createContactOpen, setCreateContactOpen, createTaskOpen, setCreateTaskOpen, feedbackOpen, setFeedbackOpen } = useQuickActions();
 
   // Fetch pipeline stages for create contact modal
   const { data: stagesData } = useQuery<PipelineStagesResponse>({
@@ -48,6 +49,11 @@ export function QuickActionsModals() {
       <CreateTaskDialog
         open={createTaskOpen}
         onOpenChange={setCreateTaskOpen}
+      />
+
+      <FeedbackDialog
+        open={feedbackOpen}
+        onOpenChange={setFeedbackOpen}
       />
     </>
   );

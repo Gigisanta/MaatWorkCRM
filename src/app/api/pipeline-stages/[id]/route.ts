@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getUserFromSession } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { isValidId } from '@/lib/id-validation';
 
 // PUT /api/pipeline-stages/[id] - Update a pipeline stage
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const user = await getUserFromSession(request);
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: { 'x-request-id': request.headers.get('x-request-id') || '' } });
+  }
+
   const start = Date.now();
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
@@ -14,6 +21,11 @@ export async function PUT(
     logger.debug({ operation: 'updatePipelineStage', requestId }, 'Updating pipeline stage');
 
     const { id } = await params;
+
+    if (!isValidId(id)) {
+      return NextResponse.json({ error: 'ID inválido' }, { status: 400, headers: { 'x-request-id': requestId } });
+    }
+
     const body = await request.json();
     const {
       name,

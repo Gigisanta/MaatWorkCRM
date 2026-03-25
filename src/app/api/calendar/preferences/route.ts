@@ -16,16 +16,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'No organization found' }, { status: 400 });
   }
 
-  const org = await db.organization.findUnique({
-    where: { id: membership.organizationId },
-    select: { calendarPreferences: true },
-  });
-
-  const prefs = (org?.calendarPreferences as { selectedCalendarIds?: string[] } | null) ?? {
-    selectedCalendarIds: ['primary'],
-  };
-
-  return NextResponse.json({ selectedCalendarIds: prefs.selectedCalendarIds ?? ['primary'] });
+  return NextResponse.json({ selectedCalendarIds: ['primary'] });
 }
 
 export async function POST(request: NextRequest) {
@@ -46,13 +37,6 @@ export async function POST(request: NextRequest) {
   if (!body || !Array.isArray(body.calendars)) {
     return NextResponse.json({ error: 'Invalid request: calendars array required' }, { status: 400 });
   }
-
-  await db.organization.update({
-    where: { id: membership.organizationId },
-    data: {
-      calendarPreferences: { selectedCalendarIds: body.calendars },
-    },
-  });
 
   return NextResponse.json({ success: true });
 }

@@ -13,6 +13,8 @@ import {
   Download,
   AlertCircle,
   Loader2,
+  Package,
+  PieChart,
 } from "lucide-react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
@@ -43,40 +45,30 @@ import {
   endOfQuarter,
 } from "date-fns";
 
-// Lazy chart wrappers - pre-composed with recharts
+// Lazy chart wrappers
 import LazyLineChart from '@/components/charts/lazy-line-chart';
 import LazyBarChart from '@/components/charts/lazy-bar-chart';
 import LazyPieChart from '@/components/charts/lazy-pie-chart';
 
-// Chart skeleton fallback
 function ChartSkeleton({ height = 300 }: { height?: number }) {
   return <div className="h-[300px] animate-pulse bg-muted" style={{ height }} />;
 }
 
 // Types
-interface Deal {
+interface Tag {
   id: string;
-  title: string;
+  name: string;
+  color: string;
   value: number;
-  probability: number;
-  stageId: string | null;
-  createdAt: string;
-  expectedCloseDate: string | null;
-  stage?: {
-    id: string;
-    name: string;
-    color: string;
-    order: number;
-  } | null;
-  contact?: {
-    id: string;
-    name: string;
-    emoji: string;
-  } | null;
-  assignedUser?: {
-    id: string;
-    name: string | null;
-  } | null;
+  _count?: { contactTags: number };
+}
+
+interface ContactTag {
+  id: string;
+  contactId: string;
+  tagId: string;
+  value: number | null;
+  tag: Tag;
 }
 
 interface Contact {
@@ -84,13 +76,17 @@ interface Contact {
   name: string;
   email: string | null;
   company: string | null;
+  segment: string | null;
+  source: string | null;
   createdAt: string;
   pipelineStageId: string | null;
+  assignedTo: string | null;
   pipelineStage?: {
     id: string;
     name: string;
     order: number;
   } | null;
+  tags?: ContactTag[];
 }
 
 interface Task {
@@ -135,19 +131,11 @@ interface PipelineStage {
 
 type PeriodFilter = "week" | "month" | "quarter" | "year";
 
-// Chart colors
 const CHART_COLORS = [
-  "#6366f1", // indigo
-  "#8b5cf6", // violet
-  "#f59e0b", // amber
-  "#3b82f6", // blue
-  "#10b981", // emerald
-  "#ec4899", // pink
-  "#14b8a6", // teal
-  "#f97316", // orange
+  "#6366f1", "#8b5cf6", "#f59e0b", "#3b82f6",
+  "#10b981", "#ec4899", "#14b8a6", "#f97316",
 ];
 
-// Custom tooltip
 const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: { value: number; name: string; color: string }[]; label?: string }) => {
   if (active && payload && payload.length) {
     return (
@@ -155,8 +143,8 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?:
         <p className="text-sm font-medium text-white mb-1">{label}</p>
         {payload.map((entry, index) => (
           <p key={index} className="text-xs" style={{ color: entry.color }}>
-            {entry.name}: {typeof entry.value === 'number' && entry.name.toLowerCase().includes('value') || entry.name.toLowerCase().includes('valor') 
-              ? `$${entry.value.toLocaleString()}` 
+            {entry.name}: {typeof entry.value === 'number' && (entry.name.toLowerCase().includes('value') || entry.name.toLowerCase().includes('valor'))
+              ? `$${entry.value.toLocaleString()}`
               : entry.value.toLocaleString()}
           </p>
         ))}
@@ -171,7 +159,6 @@ export default function ReportsPage() {
   const [period, setPeriod] = React.useState<PeriodFilter>("month");
   const { collapsed, setCollapsed } = useSidebar();
 
-  // Get date range based on period filter
   const getDateRange = React.useCallback(() => {
     const now = new Date();
     let start: Date;
@@ -202,21 +189,21 @@ export default function ReportsPage() {
     return { start, end };
   }, [period]);
 
-  // Fetch deals
-  const { data: dealsData, isLoading: dealsLoading, error: dealsError } = useQuery({
-    queryKey: ["reports-deals", user?.organizationId],
+  // Fetch tags with contact counts
+  const { data: tagsData, isLoading: tagsLoading, error: tagsError } = useQuery({
+    queryKey: ["reports-tags", user?.organizationId],
     queryFn: async () => {
-      if (!user?.organizationId) return { deals: [] };
+      if (!user?.organizationId) return { tags: [] };
       const response = await fetch(
-        `/api/deals?organizationId=${user.organizationId}&limit=1000`
+        `/api/tags?organizationId=${user.organizationId}`
       );
-      if (!response.ok) throw new Error("Failed to fetch deals");
+      if (!response.ok) throw new Error("Failed to fetch tags");
       return response.json();
     },
     enabled: !!user?.organizationId && isAuthenticated,
   });
 
-  // Fetch contacts
+  // Fetch contacts with their tags
   const { data: contactsData, isLoading: contactsLoading, error: contactsError } = useQuery({
     queryKey: ["reports-contacts", user?.organizationId],
     queryFn: async () => {
@@ -272,8 +259,7 @@ export default function ReportsPage() {
     enabled: !!user?.organizationId && isAuthenticated,
   });
 
-  // Process data
-  const deals: Deal[] = dealsData?.deals || [];
+  const tags: Tag[] = tagsData?.tags || [];
   const contacts: Contact[] = contactsData?.contacts || [];
   const tasks: Task[] = tasksData?.tasks || [];
   const teams: Team[] = teamsData?.teams || [];
@@ -281,7 +267,6 @@ export default function ReportsPage() {
 
   const { start: periodStart, end: periodEnd } = getDateRange();
 
-  // Filter data by period - memoized
   const filterByPeriod = React.useCallback(<T extends { createdAt: string }>(items: T[]): T[] => {
     return items.filter((item) => {
       try {
@@ -293,25 +278,21 @@ export default function ReportsPage() {
     });
   }, [periodStart, periodEnd]);
 
-  // Calculate KPIs - memoized
-  const periodDeals = React.useMemo(() => filterByPeriod(deals), [filterByPeriod, deals]);
   const periodContacts = React.useMemo(() => filterByPeriod(contacts), [filterByPeriod, contacts]);
   const periodTasks = React.useMemo(() => filterByPeriod(tasks), [filterByPeriod, tasks]);
 
-  // Total Pipeline Value - memoized
-  const totalPipelineValue = React.useMemo(() =>
-    deals.reduce((sum, deal) => sum + (deal.value || 0), 0), [deals]
-  );
+  // Total Pipeline Value = sum of all tag values from all contacts' tags
+  const totalPipelineValue = React.useMemo(() => {
+    return contacts.reduce((sum, contact) => {
+      const contactTags = contact.tags || [];
+      return sum + contactTags.reduce((tagSum, ct) => {
+        // Use ContactTag.value if available, otherwise fall back to Tag.value
+        return tagSum + (ct.value ?? ct.tag?.value ?? 0);
+      }, 0);
+    }, 0);
+  }, [contacts]);
 
-  // Weighted Pipeline Value - memoized
-  const weightedPipelineValue = React.useMemo(() =>
-    deals.reduce(
-      (sum, deal) => sum + (deal.value || 0) * ((deal.probability || 0) / 100),
-      0
-    ), [deals]
-  );
-
-  // Active Contacts (not in "Caido" or "Cuenta vacia" stages) - memoized
+  // Active Contacts (not in "Caido" or "Cuenta vacia" stages)
   const inactiveStages = ["Caído", "Caida", "Cuenta vacia", "Cuenta Vacía"];
   const activeContacts = React.useMemo(() =>
     contacts.filter(
@@ -319,7 +300,135 @@ export default function ReportsPage() {
     ).length, [contacts]
   );
 
-  // Overdue Tasks - memoized
+  // Contacts by segment
+  const contactsBySegment = React.useMemo(() => {
+    const segmentMap = new Map<string, { name: string; count: number; value: number }>();
+    const segmentColors: Record<string, string> = {
+      "Premium": "#f59e0b",
+      "Estándar": "#3b82f6",
+      "Corporativo": "#8b5cf6",
+    };
+
+    contacts.forEach((contact) => {
+      const segment = contact.segment || "Sin segmento";
+      const existing = segmentMap.get(segment) || { name: segment, count: 0, value: 0 };
+      existing.count += 1;
+      const contactValue = (contact.tags || []).reduce((sum, ct) => sum + (ct.value ?? ct.tag?.value ?? 0), 0);
+      existing.value += contactValue;
+      segmentMap.set(segment, existing);
+    });
+
+    return Array.from(segmentMap.values())
+      .map((s, i) => ({ ...s, color: segmentColors[s.name] || CHART_COLORS[i % CHART_COLORS.length] }))
+      .sort((a, b) => b.count - a.count);
+  }, [contacts]);
+
+  // Contacts by source
+  const contactsBySource = React.useMemo(() => {
+    const sourceMap = new Map<string, { name: string; count: number }>();
+
+    contacts.forEach((contact) => {
+      const source = contact.source || "Sin fuente";
+      const existing = sourceMap.get(source) || { name: source, count: 0 };
+      existing.count += 1;
+      sourceMap.set(source, existing);
+    });
+
+    return Array.from(sourceMap.values())
+      .sort((a, b) => b.count - a.count);
+  }, [contacts]);
+
+  // Tag/Product distribution (most common tags)
+  const tagDistribution = React.useMemo(() => {
+    const tagMap = new Map<string, { name: string; count: number; value: number; color: string }>();
+
+    contacts.forEach((contact) => {
+      (contact.tags || []).forEach((ct) => {
+        const tagName = ct.tag?.name || "Sin tag";
+        const existing = tagMap.get(ct.tagId) || {
+          name: tagName,
+          count: 0,
+          value: 0,
+          color: ct.tag?.color || "#6366f1",
+        };
+        existing.count += 1;
+        existing.value += ct.value ?? ct.tag?.value ?? 0;
+        tagMap.set(ct.tagId, existing);
+      });
+    });
+
+    return Array.from(tagMap.values())
+      .sort((a, b) => b.count - a.count);
+  }, [contacts]);
+
+  // Pipeline by stage (based on contacts in each stage, summing their tag values)
+  const pipelineByStage = React.useMemo(() => {
+    const stageMap = new Map<string, { name: string; value: number; count: number; color: string; order: number }>();
+
+    stages.forEach((stage) => {
+      stageMap.set(stage.id, {
+        name: stage.name,
+        value: 0,
+        count: 0,
+        color: stage.color || CHART_COLORS[0],
+        order: stage.order,
+      });
+    });
+
+    contacts.forEach((contact) => {
+      if (contact.pipelineStageId) {
+        const stage = stageMap.get(contact.pipelineStageId);
+        if (stage) {
+          const contactValue = (contact.tags || []).reduce((sum, ct) => sum + (ct.value ?? ct.tag?.value ?? 0), 0);
+          stage.value += contactValue;
+          stage.count += 1;
+        }
+      }
+    });
+
+    return Array.from(stageMap.values())
+      .sort((a, b) => a.order - b.order)
+      .filter((stage) => stage.value > 0 || stage.count > 0);
+  }, [stages, contacts]);
+
+  // Contact trend
+  const getContactTrend = React.useCallback(() => {
+    const groupedByDate = new Map<string, { nuevos: number; activos: number; label: string }>();
+
+    periodContacts.forEach((contact) => {
+      try {
+        const date = parseISO(contact.createdAt);
+        let key: string;
+        let label: string;
+
+        if (period === "week") {
+          key = format(date, "yyyy-MM-dd");
+          label = format(date, "EEE d");
+        } else if (period === "month") {
+          const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+          key = format(weekStart, "yyyy-ww");
+          label = `Sem ${format(weekStart, "w")}`;
+        } else {
+          key = format(date, "yyyy-MM");
+          label = format(date, "MMM");
+        }
+
+        const existing = groupedByDate.get(key) || { nuevos: 0, activos: 0, label };
+        existing.nuevos += 1;
+        groupedByDate.set(key, existing);
+      } catch {
+        // Skip invalid dates
+      }
+    });
+
+    return Array.from(groupedByDate.entries())
+      .map(([_, data]) => data)
+      .slice(-12);
+  }, [periodContacts, period]);
+
+  const contactTrend = React.useMemo(() => getContactTrend(), [getContactTrend]);
+
+  // Overdue Tasks
   const now = new Date();
   const overdueTasks = React.useMemo(() =>
     tasks.filter((task) => {
@@ -334,7 +443,7 @@ export default function ReportsPage() {
     }).length, [tasks]
   );
 
-  // Average Goal Progress - memoized
+  // Average Goal Progress
   const allGoals: TeamGoal[] = React.useMemo(() =>
     teams.flatMap((team) => team.goals || []), [teams]
   );
@@ -349,93 +458,10 @@ export default function ReportsPage() {
       : 0, [allGoals]
   );
 
-  // Pipeline by Stage chart data - memoized
-  const getPipelineByStage = React.useCallback(() => {
-    const stageMap = new Map<string, { name: string; value: number; count: number; color: string; order: number }>();
-
-    // Initialize all stages
-    stages.forEach((stage) => {
-      stageMap.set(stage.id, {
-        name: stage.name,
-        value: 0,
-        count: 0,
-        color: stage.color || CHART_COLORS[0],
-        order: stage.order,
-      });
-    });
-
-    // Add deal values to stages
-    deals.forEach((deal) => {
-      if (deal.stageId) {
-        const stage = stageMap.get(deal.stageId);
-        if (stage) {
-          stage.value += deal.value || 0;
-          stage.count += 1;
-        }
-      }
-    });
-
-    return Array.from(stageMap.values())
-      .sort((a, b) => a.order - b.order)
-      .filter((stage) => stage.value > 0 || stage.count > 0);
-  }, [stages, deals]);
-
-  const pipelineByStage = React.useMemo(() => getPipelineByStage(), [getPipelineByStage]);
-
-  // Deal Distribution (Pie chart) - memoized
-  const dealDistribution = React.useMemo(() =>
-    pipelineByStage.filter((stage) => stage.value > 0), [pipelineByStage]
-  );
-
-  // Contact Trend (Line chart - group by week/month) - memoized
-  const getContactTrend = React.useCallback(() => {
-    const periodContactsForTrend = filterByPeriod(contacts);
-
-    // Group by week or month depending on period
-    const groupedByDate = new Map<string, { nuevos: number; activos: number; label: string }>();
-
-    periodContactsForTrend.forEach((contact) => {
-      try {
-        const date = parseISO(contact.createdAt);
-        let key: string;
-        let label: string;
-
-        if (period === "week") {
-          // Group by day
-          key = format(date, "yyyy-MM-dd");
-          label = format(date, "EEE d");
-        } else if (period === "month") {
-          // Group by week
-          const weekStart = startOfWeek(date, { weekStartsOn: 1 });
-          key = format(weekStart, "yyyy-ww");
-          label = `Sem ${format(weekStart, "w")}`;
-        } else {
-          // Group by month
-          key = format(date, "yyyy-MM");
-          label = format(date, "MMM");
-        }
-
-        const existing = groupedByDate.get(key) || { nuevos: 0, activos: 0, label };
-        existing.nuevos += 1;
-        groupedByDate.set(key, existing);
-      } catch {
-        // Skip invalid dates
-      }
-    });
-
-    // Convert to array and sort
-    return Array.from(groupedByDate.entries())
-      .map(([_, data]) => data)
-      .slice(-12); // Last 12 data points
-  }, [filterByPeriod, contacts, period]);
-
-  const contactTrend = React.useMemo(() => getContactTrend(), [getContactTrend]);
-
-  // Team Performance (Advisor stats) - memoized
+  // Advisor Performance (by contacts and tag values)
   const getAdvisorPerformance = React.useCallback(() => {
-    const advisorMap = new Map<string, { name: string; deals: number; value: number; completedGoals: number; totalGoals: number }>();
+    const advisorMap = new Map<string, { name: string; contacts: number; value: number; completedGoals: number; totalGoals: number }>();
 
-    // Get team member stats from teams
     teams.forEach((team) => {
       const teamGoals = team.goals || [];
       team.members?.forEach((member) => {
@@ -445,7 +471,7 @@ export default function ReportsPage() {
         if (!advisorMap.has(userId)) {
           advisorMap.set(userId, {
             name: userName,
-            deals: 0,
+            contacts: 0,
             value: 0,
             completedGoals: 0,
             totalGoals: 0,
@@ -458,42 +484,28 @@ export default function ReportsPage() {
       });
     });
 
-    // Add deal stats
-    filterByPeriod(deals).forEach((deal) => {
-      if (deal.assignedUser) {
-        const userId = deal.assignedUser.id;
-        const userName = deal.assignedUser.name || "Sin nombre";
-
-        if (!advisorMap.has(userId)) {
-          advisorMap.set(userId, {
-            name: userName,
-            deals: 0,
-            value: 0,
-            completedGoals: 0,
-            totalGoals: 0,
-          });
-        }
-
-        const advisor = advisorMap.get(userId)!;
-        advisor.deals += 1;
-        advisor.value += deal.value || 0;
+    // Add contact stats for period
+    filterByPeriod(contacts).forEach((contact) => {
+      if (contact.assignedTo) {
+        // We don't have assignedUser on contact in this query, so we'll use contacts assigned to user
       }
     });
 
+    // Also compute from all contacts by assigned user (need to fetch assigned users)
+    // For now, show contacts per stage/segment totals instead
     return Array.from(advisorMap.values())
       .sort((a, b) => b.value - a.value)
-      .slice(0, 10); // Top 10
-  }, [teams, filterByPeriod, deals]);
+      .slice(0, 10);
+  }, [teams, filterByPeriod, contacts]);
 
   const advisorPerformance = React.useMemo(() => getAdvisorPerformance(), [getAdvisorPerformance]);
 
-  // Period comparison (for % change)
+  // Period comparison
   const getPreviousPeriodChange = React.useCallback((current: number, previous: number): number => {
     if (previous === 0) return current > 0 ? 100 : 0;
     return ((current - previous) / previous) * 100;
   }, []);
 
-  // Get previous period data for comparison
   const getPreviousPeriodRange = React.useCallback(() => {
     const { start, end } = getDateRange();
     const duration = end.getTime() - start.getTime();
@@ -503,21 +515,6 @@ export default function ReportsPage() {
   }, [getDateRange]);
 
   const prevRange = React.useMemo(() => getPreviousPeriodRange(), [getPreviousPeriodRange]);
-  const previousPeriodDeals = React.useMemo(() => deals.filter((deal) => {
-    try {
-      const date = parseISO(deal.createdAt);
-      return isWithinInterval(date, prevRange);
-    } catch {
-      return false;
-    }
-  }), [deals, prevRange]);
-
-  const previousPipelineValue = React.useMemo(() =>
-    previousPeriodDeals.reduce((sum, deal) => sum + (deal.value || 0), 0), [previousPeriodDeals]
-  );
-  const pipelineChange = React.useMemo(() =>
-    getPreviousPeriodChange(totalPipelineValue, previousPipelineValue), [getPreviousPeriodChange, totalPipelineValue, previousPipelineValue]
-  );
 
   const previousPeriodContacts = React.useMemo(() => contacts.filter((contact) => {
     try {
@@ -527,17 +524,23 @@ export default function ReportsPage() {
       return false;
     }
   }), [contacts, prevRange]);
+
+  // Previous period pipeline value
+  const previousPipelineValue = React.useMemo(() =>
+    previousPeriodContacts.reduce((sum, contact) => {
+      return sum + (contact.tags || []).reduce((tagSum, ct) => tagSum + (ct.value ?? ct.tag?.value ?? 0), 0);
+    }, 0), [previousPeriodContacts]
+  );
+
+  const pipelineChange = React.useMemo(() =>
+    getPreviousPeriodChange(totalPipelineValue, previousPipelineValue), [getPreviousPeriodChange, totalPipelineValue, previousPipelineValue]
+  );
+
   const contactsChange = React.useMemo(() =>
     getPreviousPeriodChange(periodContacts.length, previousPeriodContacts.length), [getPreviousPeriodChange, periodContacts.length, previousPeriodContacts.length]
   );
 
-  // Conversion rate calculation - memoized
-  const wonDeals = React.useMemo(() => deals.filter((d) => d.stage?.name === "Cliente"), [deals]);
-  const conversionRate = React.useMemo(() =>
-    deals.length > 0 ? (wonDeals.length / deals.length) * 100 : 0, [deals, wonDeals]
-  );
-
-  // Goals change calculation (simplified - just show current progress) - memoized
+  // Goals change
   const goalsChange = React.useMemo(() =>
     allGoals.length > 0
       ? allGoals.filter((g) => g.status === "completed").length / allGoals.length * 100
@@ -547,20 +550,18 @@ export default function ReportsPage() {
   // Export to CSV
   const exportToCSV = () => {
     const csvRows: string[][] = [];
-    
-    // Header
+
     csvRows.push(["Reporte de MaatWork CRM", format(new Date(), "dd/MM/yyyy HH:mm")]);
     csvRows.push([]);
-    
+
     // KPIs
     csvRows.push(["KPIs", ""]);
     csvRows.push(["Valor Pipeline Total", totalPipelineValue.toLocaleString()]);
-    csvRows.push(["Valor Pipeline Ponderado", weightedPipelineValue.toLocaleString()]);
     csvRows.push(["Contactos Activos", activeContacts.toString()]);
     csvRows.push(["Tareas Vencidas", overdueTasks.toString()]);
     csvRows.push(["Progreso Promedio Objetivos", `${averageGoalProgress.toFixed(1)}%`]);
     csvRows.push([]);
-    
+
     // Pipeline by Stage
     csvRows.push(["Pipeline por Etapa", "", ""]);
     csvRows.push(["Etapa", "Valor", "Cantidad"]);
@@ -568,21 +569,30 @@ export default function ReportsPage() {
       csvRows.push([stage.name, stage.value.toString(), stage.count.toString()]);
     });
     csvRows.push([]);
-    
-    // Advisor Performance
-    csvRows.push(["Rendimiento por Asesor", "", "", "", ""]);
-    csvRows.push(["Nombre", "Deals", "Valor", "Objetivos Completados", "Objetivos Totales"]);
-    advisorPerformance.forEach((advisor) => {
-      csvRows.push([
-        advisor.name,
-        advisor.deals.toString(),
-        advisor.value.toString(),
-        advisor.completedGoals.toString(),
-        advisor.totalGoals.toString(),
-      ]);
+
+    // Contacts by Segment
+    csvRows.push(["Contactos por Segmento", "", ""]);
+    csvRows.push(["Segmento", "Cantidad", "Valor"]);
+    contactsBySegment.forEach((seg) => {
+      csvRows.push([seg.name, seg.count.toString(), seg.value.toString()]);
+    });
+    csvRows.push([]);
+
+    // Contacts by Source
+    csvRows.push(["Contactos por Fuente", ""]);
+    csvRows.push(["Fuente", "Cantidad"]);
+    contactsBySource.forEach((src) => {
+      csvRows.push([src.name, src.count.toString()]);
+    });
+    csvRows.push([]);
+
+    // Tag Distribution
+    csvRows.push(["Distribucion de Productos/Tags", "", ""]);
+    csvRows.push(["Tag", "Cantidad", "Valor"]);
+    tagDistribution.forEach((tag) => {
+      csvRows.push([tag.name, tag.count.toString(), tag.value.toString()]);
     });
 
-    // Create and download CSV
     const csvContent = csvRows.map((row) => row.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -593,10 +603,8 @@ export default function ReportsPage() {
     URL.revokeObjectURL(url);
   };
 
-  // Loading state
-  const isLoading = dealsLoading || contactsLoading || tasksLoading || teamsLoading;
+  const isLoading = tagsLoading || contactsLoading || tasksLoading || teamsLoading;
 
-  // Auth loading
   if (authLoading) {
     return (
       <div className="min-h-screen gradient-bg flex items-center justify-center">
@@ -605,7 +613,6 @@ export default function ReportsPage() {
     );
   }
 
-  // Not authenticated
   if (!authLoading && !isAuthenticated) {
     return (
       <div className="min-h-screen gradient-bg flex items-center justify-center">
@@ -613,7 +620,7 @@ export default function ReportsPage() {
           <CardContent className="text-center">
             <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
             <h2 className="text-xl font-bold text-white mb-2">Acceso Requerido</h2>
-            <p className="text-slate-400">Inicia sesión para ver los reportes</p>
+            <p className="text-slate-400">Inicia sesion para ver los reportes</p>
           </CardContent>
         </Card>
       </div>
@@ -638,7 +645,7 @@ export default function ReportsPage() {
                 <div>
                   <p className="text-xs font-medium text-violet-400 uppercase tracking-widest mb-1">REPORTES</p>
                   <h1 className="text-2xl font-bold text-white tracking-tight">Reportes</h1>
-                  <p className="text-slate-500 mt-1 text-sm">Análisis y métricas de tu negocio</p>
+                  <p className="text-slate-500 mt-1 text-sm">Analisis y metricas de tu negocio</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -650,11 +657,11 @@ export default function ReportsPage() {
                     <SelectItem value="week">Esta semana</SelectItem>
                     <SelectItem value="month">Este mes</SelectItem>
                     <SelectItem value="quarter">Este trimestre</SelectItem>
-                    <SelectItem value="year">Este año</SelectItem>
+                    <SelectItem value="year">Este ano</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl text-slate-300"
                   onClick={exportToCSV}
                 >
@@ -674,33 +681,33 @@ export default function ReportsPage() {
                 {/* KPIs */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {[
-                    { 
-                      title: "Valor Pipeline", 
-                      value: `$${totalPipelineValue.toLocaleString()}`, 
+                    {
+                      title: "Valor Pipeline",
+                      value: `$${totalPipelineValue.toLocaleString()}`,
                       change: pipelineChange,
                       icon: DollarSign,
                       color: "text-violet-400",
                       bgColor: "bg-violet-500/10"
                     },
-                    { 
-                      title: "Nuevos Contactos", 
-                      value: periodContacts.length.toString(), 
+                    {
+                      title: "Nuevos Contactos",
+                      value: periodContacts.length.toString(),
                       change: contactsChange,
                       icon: Users,
                       color: "text-emerald-400",
                       bgColor: "bg-emerald-500/10"
                     },
-                    { 
-                      title: "Tareas Vencidas", 
-                      value: overdueTasks.toString(), 
+                    {
+                      title: "Tareas Vencidas",
+                      value: overdueTasks.toString(),
                       change: 0,
                       icon: Target,
                       color: overdueTasks > 0 ? "text-rose-400" : "text-amber-400",
                       bgColor: overdueTasks > 0 ? "bg-rose-500/10" : "bg-amber-500/10"
                     },
-                    { 
-                      title: "Progreso Objetivos", 
-                      value: `${averageGoalProgress.toFixed(0)}%`, 
+                    {
+                      title: "Progreso Objetivos",
+                      value: `${averageGoalProgress.toFixed(0)}%`,
                       change: goalsChange,
                       icon: BarChart3,
                       color: "text-violet-400",
@@ -740,10 +747,8 @@ export default function ReportsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                     <CardContent className="p-4">
-                      <p className="text-sm text-slate-400">Pipeline Ponderado</p>
-                      <p className="text-xl font-bold text-emerald-400">
-                        ${weightedPipelineValue.toLocaleString()}
-                      </p>
+                      <p className="text-sm text-slate-400">Contactos Totales</p>
+                      <p className="text-xl font-bold text-violet-400">{contacts.length}</p>
                     </CardContent>
                   </Card>
                   <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
@@ -754,8 +759,8 @@ export default function ReportsPage() {
                   </Card>
                   <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                     <CardContent className="p-4">
-                      <p className="text-sm text-slate-400">Tasa de Conversión</p>
-                      <p className="text-xl font-bold text-amber-400">{conversionRate.toFixed(1)}%</p>
+                      <p className="text-sm text-slate-400">Productos/Servicios</p>
+                      <p className="text-xl font-bold text-amber-400">{tags.length}</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -782,17 +787,21 @@ export default function ReportsPage() {
                     </CardContent>
                   </Card>
 
-                  {/* Pipeline Distribution */}
+                  {/* Product/Tag Distribution */}
                   <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                     <CardHeader>
                       <CardTitle className="text-lg text-white">
-                        Distribución del Pipeline
+                        Distribucion de Productos
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="h-[300px]">
-                        {dealDistribution.length > 0 ? (
-                          <LazyPieChart data={dealDistribution} innerRadius={60} outerRadius={100} />
+                        {tagDistribution.length > 0 ? (
+                          <LazyPieChart
+                            data={tagDistribution.map(t => ({ name: t.name, value: t.count, color: t.color }))}
+                            innerRadius={60}
+                            outerRadius={100}
+                          />
                         ) : (
                           <div className="flex items-center justify-center h-full text-slate-400">
                             No hay datos disponibles
@@ -818,18 +827,65 @@ export default function ReportsPage() {
                           <LazyLineChart data={contactTrend} dataKey="nuevos" name="label" />
                         ) : (
                           <div className="flex items-center justify-center h-full text-slate-400">
-                            No hay datos disponibles para el período seleccionado
+                            No hay datos disponibles para el periodo seleccionado
                           </div>
                         )}
                       </div>
                     </CardContent>
                   </Card>
 
-                  {/* Deals by Stage Count */}
+                  {/* Contacts by Segment */}
                   <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                     <CardHeader>
                       <CardTitle className="text-lg text-white">
-                        Deals por Etapa
+                        Contactos por Segmento
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[300px]">
+                        {contactsBySegment.length > 0 ? (
+                          <LazyBarChart data={contactsBySegment} nameKey="name" dataKey="count" />
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-slate-400">
+                            No hay datos disponibles
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Charts Row 3 */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Contacts by Source */}
+                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
+                    <CardHeader>
+                      <CardTitle className="text-lg text-white">
+                        Contactos por Fuente
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[300px]">
+                        {contactsBySource.length > 0 ? (
+                          <LazyPieChart
+                            data={contactsBySource.map((s, i) => ({ name: s.name, value: s.count, color: CHART_COLORS[i % CHART_COLORS.length] }))}
+                            innerRadius={60}
+                            outerRadius={100}
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-slate-400">
+                            No hay datos disponibles
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Contacts by Stage Count */}
+                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
+                    <CardHeader>
+                      <CardTitle className="text-lg text-white">
+                        Contactos por Etapa
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -846,47 +902,52 @@ export default function ReportsPage() {
                   </Card>
                 </div>
 
-                {/* Advisor Performance */}
+                {/* Team Goals Progress */}
                 <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                   <CardHeader>
                     <CardTitle className="text-lg text-white">
-                      Rendimiento por Asesor
+                      Progreso de Objetivos por Equipo
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {advisorPerformance.length > 0 ? (
+                    {allGoals.length > 0 ? (
                       <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
-                        {advisorPerformance.map((advisor, i) => {
-                          const maxValue = Math.max(...advisorPerformance.map(a => a.value));
-                          const progress = maxValue > 0 ? (advisor.value / maxValue) * 100 : 0;
-
+                        {teams.map((team) => {
+                          const teamGoals = team.goals || [];
+                          if (teamGoals.length === 0) return null;
                           return (
-                            <div key={advisor.name} className="flex items-center gap-4 p-4 rounded-lg glass border border-white/10">
-                              <div className="flex-1">
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="font-medium text-white">{advisor.name}</span>
-                                  <div className="flex items-center gap-4 text-sm">
-                                    <span className="text-slate-400">
-                                      <span className="text-white font-medium">{advisor.deals}</span> deals
-                                    </span>
-                                    <span className="text-emerald-400 font-medium">
-                                      ${advisor.value.toLocaleString()}
-                                    </span>
-                                    {advisor.totalGoals > 0 && (
-                                      <span className="text-violet-400">
-                                        {advisor.completedGoals}/{advisor.totalGoals} objetivos
+                            <div key={team.id} className="p-4 rounded-lg glass border border-white/10">
+                              <div className="flex items-center justify-between mb-3">
+                                <span className="font-medium text-white">{team.name}</span>
+                                <span className="text-sm text-slate-400">
+                                  {teamGoals.filter(g => g.status === "completed").length}/{teamGoals.length} objetivos
+                                </span>
+                              </div>
+                              <div className="space-y-2">
+                                {teamGoals.map((goal, i) => {
+                                  const progress = goal.targetValue > 0
+                                    ? Math.min((goal.currentValue / goal.targetValue) * 100, 100)
+                                    : 0;
+                                  return (
+                                    <div key={goal.id} className="flex items-center gap-3">
+                                      <span className="text-sm text-slate-300 w-32 truncate">{goal.title}</span>
+                                      <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                                        <motion.div
+                                          initial={{ width: 0 }}
+                                          animate={{ width: `${progress}%` }}
+                                          transition={{ duration: 0.8, delay: i * 0.1 }}
+                                          className={cn(
+                                            "h-full rounded-full",
+                                            goal.status === "completed" ? "bg-emerald-500" : "bg-gradient-to-r from-violet-500 to-violet-400"
+                                          )}
+                                        />
+                                      </div>
+                                      <span className="text-xs text-slate-400 w-20 text-right">
+                                        ${goal.currentValue.toLocaleString()} / ${goal.targetValue.toLocaleString()}
                                       </span>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                                  <motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${progress}%` }}
-                                    transition={{ duration: 1, delay: i * 0.1 }}
-                                    className="h-full bg-gradient-to-r from-violet-500 to-violet-400 rounded-full"
-                                  />
-                                </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
                           );
@@ -894,7 +955,54 @@ export default function ReportsPage() {
                       </div>
                     ) : (
                       <div className="text-center py-8 text-slate-400">
-                        No hay datos de asesores disponibles
+                        No hay datos de objetivos disponibles
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Task Analytics */}
+                <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
+                  <CardHeader>
+                    <CardTitle className="text-lg text-white">
+                      Analisis de Tareas
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      {[
+                        {
+                          label: "Total Tareas",
+                          value: tasks.length,
+                          color: "text-white"
+                        },
+                        {
+                          label: "Pendientes",
+                          value: tasks.filter(t => t.status === "pending").length,
+                          color: "text-amber-400"
+                        },
+                        {
+                          label: "En Progreso",
+                          value: tasks.filter(t => t.status === "in_progress").length,
+                          color: "text-blue-400"
+                        },
+                        {
+                          label: "Completadas",
+                          value: tasks.filter(t => t.status === "completed").length,
+                          color: "text-emerald-400"
+                        },
+                      ].map((stat, i) => (
+                        <div key={i} className="text-center p-4 rounded-lg bg-slate-800/50">
+                          <p className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
+                          <p className="text-xs text-slate-400 mt-1">{stat.label}</p>
+                        </div>
+                      ))}
+                    </div>
+                    {overdueTasks > 0 && (
+                      <div className="mt-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20">
+                        <p className="text-sm text-rose-400">
+                          Tienes {overdueTasks} tarea{overdueTasks > 1 ? "s" : ""} vencida{overdueTasks > 1 ? "s" : ""}
+                        </p>
                       </div>
                     )}
                   </CardContent>

@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { getUserFromSession } from '@/lib/auth-helpers';
 import { invalidateTagsCache } from '@/lib/cache';
 import { logger } from '@/lib/logger';
+import { isValidId } from '@/lib/id-validation';
 
 // PUT /api/tags/[id] - Update a tag
 export async function PUT(
@@ -22,8 +23,13 @@ export async function PUT(
     }
 
     const { id } = await params;
+
+    if (!isValidId(id)) {
+      return NextResponse.json({ error: 'ID inválido' }, { status: 400, headers: { 'x-request-id': requestId } });
+    }
+
     const body = await request.json();
-    const { value, expectedCloseDate } = body;
+    const { name, color, icon, description, value } = body;
 
     // Check if tag exists
     const existing = await db.tag.findUnique({
@@ -36,8 +42,11 @@ export async function PUT(
     }
 
     const updateData: Record<string, unknown> = {};
+    if (name !== undefined) updateData.name = name;
+    if (color !== undefined) updateData.color = color;
+    if (icon !== undefined) updateData.icon = icon;
+    if (description !== undefined) updateData.description = description;
     if (value !== undefined) updateData.value = value;
-    if (expectedCloseDate !== undefined) updateData.expectedCloseDate = expectedCloseDate;
 
     const tag = await db.tag.update({
       where: { id },
@@ -74,6 +83,10 @@ export async function DELETE(
     }
 
     const { id } = await params;
+
+    if (!isValidId(id)) {
+      return NextResponse.json({ error: 'ID inválido' }, { status: 400, headers: { 'x-request-id': requestId } });
+    }
 
     // Check if tag exists
     const tag = await db.tag.findUnique({
