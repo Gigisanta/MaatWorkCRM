@@ -53,15 +53,18 @@ export default async function middleware(request: NextRequest) {
   const url = new URL(request.url);
   const nonce = generateStableNonce();
 
-  // Security headers configuration with nonce
+  // Security headers configuration
+  // Note: 'strict-dynamic' is not used because Next.js 16 + Turbopack injects script tags
+  // at runtime that don't carry the CSP nonce. Instead we allow explicit host sources.
+  const vercelUrl = process.env.VERCEL_URL || 'maatworkcrm.vercel.app';
   const securityHeaders = {
     'Content-Security-Policy': [
       "default-src 'self'",
-      `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://${process.env.VERCEL_URL || 'maatworkcrm.vercel.app'}`,
-      `style-src 'self' 'nonce-${nonce}'`,
+      `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://${vercelUrl} https://*.vercel.app`,
+      `style-src 'self' 'unsafe-inline' https://${vercelUrl}`,
       "img-src 'self' data: https: blob:",
       "font-src 'self' data:",
-      `connect-src 'self' http://localhost:* ws://localhost:* https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://www.accounts.google.com https://${process.env.VERCEL_URL || 'maatworkcrm.vercel.app'}`,
+      `connect-src 'self' http://localhost:* ws://localhost:* https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://www.accounts.google.com https://${vercelUrl} https://*.vercel.app`,
       "frame-ancestors 'none'",
       "form-action 'self'",
       "base-uri 'self'",
