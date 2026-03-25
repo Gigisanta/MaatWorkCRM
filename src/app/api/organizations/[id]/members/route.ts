@@ -78,13 +78,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Find or create user
-    let user = await db.user.findUnique({
+    let targetUser = await db.user.findUnique({
       where: { email },
     });
 
-    if (!user) {
+    if (!targetUser) {
       // Create a placeholder user (they can register later)
-      user = await db.user.create({
+      targetUser = await db.user.create({
         data: {
           email,
           name: name || email.split('@')[0],
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const existingMember = await db.member.findFirst({
       where: {
         organizationId: id,
-        userId: user.id,
+        userId: targetUser.id,
       },
     });
 
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const member = await db.member.create({
       data: {
         organizationId: id,
-        userId: user.id,
+        userId: targetUser.id,
         role,
       },
       include: {

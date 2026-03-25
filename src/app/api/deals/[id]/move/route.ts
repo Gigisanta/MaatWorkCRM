@@ -36,7 +36,7 @@ export async function POST(
     // Get current deal
     const currentDeal = await db.deal.findUnique({
       where: { id },
-      include: { stage: true },
+      include: { stage: true, contact: true },
     });
 
     if (!currentDeal) {
