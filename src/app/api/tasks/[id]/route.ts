@@ -62,6 +62,15 @@ export async function GET(
       );
     }
 
+    // Organization ownership check
+    if (task.organizationId !== user.organizationId) {
+      logger.warn({ operation: 'getTask', requestId, taskId: id }, 'Access denied - org mismatch');
+      return NextResponse.json(
+        { error: 'Forbidden' },
+        { status: 403, headers: { 'x-request-id': requestId } }
+      );
+    }
+
     logger.info(
       { operation: 'getTask', requestId, taskId: task.id, duration_ms: Date.now() - start },
       'Task fetched successfully'
@@ -118,6 +127,16 @@ export async function PUT(
       isRecurrent,
       recurrenceRule,
     } = body;
+
+    // Fetch task first to verify ownership
+    const existingTask = await db.task.findUnique({ where: { id } });
+    if (!existingTask) {
+      return NextResponse.json({ error: 'Tarea no encontrada' }, { status: 404, headers: { 'x-request-id': requestId } });
+    }
+    if (existingTask.organizationId !== user.organizationId) {
+      logger.warn({ operation: 'updateTask', requestId, taskId: id }, 'Access denied - org mismatch');
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
 
     const task = await db.task.update({
       where: { id },
@@ -195,6 +214,16 @@ export async function DELETE(
         { error: 'ID inválido' },
         { status: 400, headers: { 'x-request-id': requestId } }
       );
+    }
+
+    // Fetch task first to verify ownership
+    const existingTask = await db.task.findUnique({ where: { id } });
+    if (!existingTask) {
+      return NextResponse.json({ error: 'Tarea no encontrada' }, { status: 404, headers: { 'x-request-id': requestId } });
+    }
+    if (existingTask.organizationId !== user.organizationId) {
+      logger.warn({ operation: 'deleteTask', requestId, taskId: id }, 'Access denied - org mismatch');
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
     }
 
     await db.task.delete({

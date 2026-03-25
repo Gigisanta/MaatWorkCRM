@@ -1,3 +1,22 @@
+// Sanitization helpers
+const SAFE_PHONE_REGEX = /^[+\d\s\-().]+$/;
+const SAFE_URL_REGEX = /^https?:\/\//;
+
+function sanitizePhone(phone: string | undefined): string {
+  if (!phone) return '';
+  // Remove any javascript: or other dangerous protocols
+  if (!SAFE_PHONE_REGEX.test(phone)) return '';
+  return phone;
+}
+
+function sanitizeUrl(url: string | undefined): string {
+  if (!url) return '#';
+  if (!SAFE_URL_REGEX.test(url)) return '#';
+  // Block javascript: and other dangerous schemes
+  if (url.trim().toLowerCase().startsWith('javascript:')) return '#';
+  return url;
+}
+
 // Paleta de colores CACTUS
 // Local type definitions (replacing non-existent Prisma models)
 interface AsignacionEstrategica {
@@ -133,7 +152,7 @@ export function generatePlanHTML(data: PlanData): string {
 
   // Platform links
   const platformLinksHTML = (data.platformLinks || []).map(link =>
-    `<a href="${link.url}" target="_blank" class="account-link">
+    `<a href="${sanitizeUrl(link.url)}" target="_blank" class="account-link">
       <span class="link-icon">🔗</span>
       ${link.name}
     </a>`
@@ -145,7 +164,7 @@ export function generatePlanHTML(data: PlanData): string {
     const isWhatsapp = link.icon === 'whatsapp' || link.name.toLowerCase().includes('whatsapp');
     const className = isInstagram ? 'footer-link instagram' : (isWhatsapp ? 'footer-link whatsapp' : 'footer-link');
     const icon = isInstagram ? '📸' : (isWhatsapp ? '💬' : '🔗');
-    return `<a href="${link.url}" target="_blank" class="${className}">
+    return `<a href="${sanitizeUrl(link.url)}" target="_blank" class="${className}">
       <span class="icon">${icon}</span>
       ${link.name}
     </a>`;
@@ -153,7 +172,7 @@ export function generatePlanHTML(data: PlanData): string {
 
 
   // WhatsApp Share URL
-  const whatsappMsg = data.asesorMensajePredefinido || `Hola, te comparto el contacto de mi asesor financiero ${asesorNombre} (Tel: ${data.asesorTelefono || ''}).`;
+  const whatsappMsg = data.asesorMensajePredefinido || `Hola, te comparto el contacto de mi asesor financiero ${asesorNombre} (Tel: ${sanitizePhone(data.asesorTelefono)}).`;
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappMsg)}`;
 
   // Floating button HTML

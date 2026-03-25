@@ -179,7 +179,7 @@ function ContactModal({
   const [assignedTo, setAssignedTo] = React.useState("unassigned");
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const { data: users = [] } = useUsers(organizationId || 'demo-org');
+  const { data: users = [] } = useUsers(organizationId || '');
 
   const isEditing = !!contact;
 
@@ -307,7 +307,7 @@ function PipelineContent() {
   const searchParams = useSearchParams();
   const contactId = searchParams.get("contact");
 
-  const { stages, isLoading, error, refetch } = usePipelineData(organizationId || 'demo-org');
+  const { stages, isLoading, error, refetch } = usePipelineData(organizationId || '');
   const moveContact = useMoveContact();
 
   const [pipelineView, setPipelineView] = React.useState<"kanban" | "list">("kanban");

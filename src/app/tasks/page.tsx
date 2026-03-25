@@ -794,7 +794,7 @@ function TasksPageContent() {
   // Update task status mutation (for uncompleting)
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) =>
-      updateTask(id, { priority: status as TaskFormData["priority"] }),
+      updateTask(id, { status: status as TaskFormData["status"] }),
     onMutate: ({ id }) => {
       setTogglingTasks(prev => new Set(prev).add(id));
     },

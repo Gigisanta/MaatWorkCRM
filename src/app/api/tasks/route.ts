@@ -168,6 +168,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Organization ownership check
+    if (user.organizationId !== organizationId) {
+      logger.warn({ operation: 'createTask', requestId, organizationId }, 'Access denied - org mismatch');
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
+
     const task = await db.task.create({
       data: {
         organizationId,

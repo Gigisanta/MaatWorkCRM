@@ -32,7 +32,10 @@ import { NextResponse } from 'next/server';
  * - Vercel deployment URL for API callbacks
  */
 
-const CSP_SECRET = process.env.CSP_SECRET || process.env.AUTH_SECRET || 'default-csp-secret-change-in-production';
+const CSP_SECRET = process.env.CSP_SECRET || process.env.AUTH_SECRET;
+if (!CSP_SECRET) {
+  throw new Error('CRITICAL: CSP_SECRET or AUTH_SECRET environment variable is required');
+}
 
 // Generate a deterministic nonce from the secret (stable across requests)
 function generateStableNonce(): string {

@@ -59,16 +59,16 @@ export async function getCachedUsers(organizationId: string) {
 
 // Invalidate cache after mutations
 export function invalidatePipelineStagesCache(organizationId: string) {
-  revalidateTag(CACHE_TAGS.PIPELINE_STAGES, 'max');
-  revalidateTag(`pipeline-stages-${organizationId}`, 'max');
+  revalidateTag(CACHE_TAGS.PIPELINE_STAGES);
+  revalidateTag(`pipeline-stages-${organizationId}`);
 }
 
 export function invalidateTagsCache(organizationId: string) {
-  revalidateTag(CACHE_TAGS.TAGS, 'max');
-  revalidateTag(`tags-${organizationId}`, 'max');
+  revalidateTag(CACHE_TAGS.TAGS);
+  revalidateTag(`tags-${organizationId}`);
 }
 
 export function invalidateUsersCache(organizationId: string) {
-  revalidateTag(CACHE_TAGS.USERS, 'max');
-  revalidateTag(`users-${organizationId}`, 'max');
+  revalidateTag(CACHE_TAGS.USERS);
+  revalidateTag(`users-${organizationId}`);
 }
