@@ -289,6 +289,7 @@ function TaskCard({
       )} />
       <div className="flex items-start gap-3 pl-4">
         <Checkbox
+          id={`task-${task.id}`}
           checked={task.status === "completed"}
           onCheckedChange={() => onToggle(task.id)}
           disabled={isToggling}
