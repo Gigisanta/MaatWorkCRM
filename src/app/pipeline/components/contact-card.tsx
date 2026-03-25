@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Pencil, AlertTriangle } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { ProductSubCard } from "./product-sub-card";
 import type { ContactWithProducts, Product } from "@/hooks/use-pipeline";
@@ -96,22 +98,31 @@ export function ContactCard({
         </div>
       )}
 
-      {/* Footer: assigned user */}
-      {contact.assignedUser && (
-        <div className="mt-2.5 flex items-center gap-1.5 pt-2 border-t border-white/5">
-          <div className="h-4 w-4 rounded-full bg-violet-500/15 flex items-center justify-center flex-shrink-0">
-            <span className="text-[9px] text-violet-300 font-semibold leading-none">
-              {contact.assignedUser.name
-                ?.split(" ")
-                .map((n) => n[0])
-                .join("") || contact.assignedUser.email?.[0]?.toUpperCase() || "?"}
+      {/* Footer: assigned user + last updated */}
+      <div className="mt-2.5 flex items-center justify-between pt-2 border-t border-white/5">
+        {contact.assignedUser ? (
+          <div className="flex items-center gap-1.5">
+            <div className="h-4 w-4 rounded-full bg-violet-500/15 flex items-center justify-center flex-shrink-0">
+              <span className="text-[9px] text-violet-300 font-semibold leading-none">
+                {contact.assignedUser.name
+                  ?.split(" ")
+                  .map((n) => n[0])
+                  .join("") || contact.assignedUser.email?.[0]?.toUpperCase() || "?"}
+              </span>
+            </div>
+            <span className="text-[10px] text-slate-500 truncate">
+              {contact.assignedUser.name || contact.assignedUser.email}
             </span>
           </div>
-          <span className="text-[10px] text-slate-500 truncate">
-            {contact.assignedUser.name || contact.assignedUser.email}
+        ) : (
+          <span />
+        )}
+        {contact.updatedAt && (
+          <span className="text-[10px] text-slate-600 tabular-nums flex-shrink-0">
+            {formatDistanceToNow(new Date(contact.updatedAt), { addSuffix: true, locale: es })}
           </span>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Edit button */}
       <button

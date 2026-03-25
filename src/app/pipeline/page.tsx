@@ -27,6 +27,8 @@ import {
   Pencil,
   X,
   Loader2,
+  LayoutGrid,
+  List,
 } from "lucide-react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
@@ -77,7 +79,7 @@ const StageColumn = React.memo(function StageColumn({
   const isOverWipLimit = stage.wipLimit !== null && stage.contacts.length > stage.wipLimit;
 
   const columnValue = stage.contacts.reduce((sum: number, c: ContactWithProducts) =>
-    sum + (c.tags || []).reduce((ps: number, p: Product) => ps + (p.value || 0), 0)
+    sum + (c.tags || []).reduce((ps: number, p: Product) => ps + ((p as { value?: number }).value || 0), 0)
   , 0);
 
   return (
@@ -308,6 +310,7 @@ function PipelineContent() {
   const { stages, isLoading, error, refetch } = usePipelineData(organizationId || 'demo-org');
   const moveContact = useMoveContact();
 
+  const [pipelineView, setPipelineView] = React.useState<"kanban" | "list">("kanban");
   const [activeContact, setActiveContact] = React.useState<ContactWithProducts | null>(null);
   const [search, setSearch] = React.useState("");
   const [filterAssignee, setFilterAssignee] = React.useState("all");
@@ -354,7 +357,7 @@ function PipelineContent() {
       contacts: stage.contacts.filter(contact => {
         const matchesSearch = !search ||
           contact.name.toLowerCase().includes(search.toLowerCase()) ||
-          contact.tags.some(tag => tag.name.toLowerCase().includes(search.toLowerCase()));
+          (contact.tags || []).some(tag => tag.name.toLowerCase().includes(search.toLowerCase()));
         const matchesAssignee = filterAssignee === "all" ||
           (filterAssignee === "me" && contact.assignedUser?.id) ||
           contact.assignedUser?.id === filterAssignee;
@@ -560,12 +563,110 @@ function PipelineContent() {
                   <SelectItem value="me">Mis contactos</SelectItem>
                 </SelectContent>
               </Select>
+
+              {/* View Toggle */}
+              <div className="flex items-center gap-1 bg-white/4 p-1 rounded-lg border border-white/8">
+                <button
+                  onClick={() => setPipelineView("kanban")}
+                  className={cn(
+                    "p-1.5 rounded-md transition-all duration-200",
+                    pipelineView === "kanban"
+                      ? "bg-violet-500/20 text-violet-400 border border-violet-500/30"
+                      : "text-slate-500 hover:text-slate-300 hover:bg-white/6"
+                  )}
+                  title="Vista Kanban"
+                >
+                  <LayoutGrid className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={() => setPipelineView("list")}
+                  className={cn(
+                    "p-1.5 rounded-md transition-all duration-200",
+                    pipelineView === "list"
+                      ? "bg-violet-500/20 text-violet-400 border border-violet-500/30"
+                      : "text-slate-500 hover:text-slate-300 hover:bg-white/6"
+                  )}
+                  title="Vista Lista"
+                >
+                  <List className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
 
             {/* Loading State */}
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
+              </div>
+            ) : pipelineView === "list" ? (
+              /* List View */
+              <div className="rounded-xl border border-white/8 bg-[#0E0F12]/80 backdrop-blur-sm overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-white/8">
+                      <th className="text-left px-4 py-3 text-xs text-slate-500 font-medium uppercase tracking-wider">Contacto</th>
+                      <th className="text-left px-4 py-3 text-xs text-slate-500 font-medium uppercase tracking-wider">Etapa</th>
+                      <th className="text-left px-4 py-3 text-xs text-slate-500 font-medium uppercase tracking-wider">Valor</th>
+                      <th className="text-left px-4 py-3 text-xs text-slate-500 font-medium uppercase tracking-wider">Última actividad</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredStages.flatMap((s: StageWithContacts) =>
+                      s.contacts.map((c: ContactWithProducts) => {
+                        const contactValue = (c.tags || []).reduce(
+                          (sum: number, p: Product) => sum + (p.value || 0),
+                          0
+                        );
+                        return (
+                          <tr
+                            key={c.id}
+                            className="border-b border-white/4 hover:bg-white/3 transition-colors cursor-pointer"
+                            onClick={() => handleEditContact(c)}
+                          >
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2.5">
+                                <span className="text-base leading-none">{c.emoji || "👤"}</span>
+                                <div>
+                                  <p className="text-sm font-medium text-white">{c.name}</p>
+                                  {c.company && <p className="text-xs text-slate-500">{c.company}</p>}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span
+                                className="text-xs px-2 py-1 rounded-full border"
+                                style={{
+                                  backgroundColor: `${s.color}15`,
+                                  color: s.color,
+                                  borderColor: `${s.color}30`,
+                                }}
+                              >
+                                {s.name}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-slate-300 font-mono">
+                              {contactValue > 0
+                                ? `$${contactValue.toLocaleString("es-MX")}`
+                                : "—"}
+                            </td>
+                            <td className="px-4 py-3 text-xs text-slate-500">
+                              {c.updatedAt
+                                ? new Date(c.updatedAt).toLocaleDateString("es-MX", {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
+                                  })
+                                : "—"}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+                {filteredStages.flatMap((s: StageWithContacts) => s.contacts).length === 0 && (
+                  <p className="text-center py-12 text-slate-500 text-sm">No hay contactos en el pipeline</p>
+                )}
               </div>
             ) : (
               /* Kanban Board */
