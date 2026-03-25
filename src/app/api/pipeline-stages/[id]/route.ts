@@ -38,6 +38,19 @@ export async function PUT(
       isActive,
     } = body;
 
+    // Fetch the stage first to verify ownership
+    const existingStage = await db.pipelineStage.findUnique({
+      where: { id },
+    });
+
+    if (!existingStage) {
+      return NextResponse.json({ error: 'Pipeline stage not found' }, { status: 404, headers: { 'x-request-id': requestId } });
+    }
+
+    if (existingStage.organizationId !== user.organizationId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
+
     const stage = await db.pipelineStage.update({
       where: { id },
       data: {

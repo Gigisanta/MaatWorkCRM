@@ -16,6 +16,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
 
+    // Organization ownership check
+    if (user.organizationId !== id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const members = await db.member.findMany({
       where: { organizationId: id },
       include: {
@@ -59,7 +64,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Email es requerido' }, { status: 400 });
     }
 
-    // Check if organization exists
+    // Check if organization exists and user belongs to it
+    if (user.organizationId !== id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const organization = await db.organization.findUnique({
       where: { id },
     });
@@ -135,7 +144,12 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const userId = await Promise.resolve(searchParams.get('userId'));
+
+    // Organization ownership check
+    if (user.organizationId !== id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     if (!userId) {
       return NextResponse.json({ error: 'userId es requerido' }, { status: 400 });

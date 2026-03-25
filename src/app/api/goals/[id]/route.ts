@@ -60,6 +60,12 @@ export async function GET(
       );
     }
 
+    // Organization ownership check
+    if (goal.team.organizationId !== user.organizationId) {
+      logger.warn({ operation: 'getGoal', requestId, goalId: id }, 'Access denied - org mismatch');
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
+
     // Calculate progress percentage
     const progressPercentage = goal.targetValue > 0
       ? Math.min(100, (goal.currentValue / goal.targetValue) * 100)
@@ -107,6 +113,21 @@ export async function PUT(
     }
 
     const { id } = await params;
+
+    // Organization ownership check
+    const existingGoal = await db.teamGoal.findUnique({
+      where: { id },
+      include: { team: true },
+    });
+
+    if (!existingGoal) {
+      return NextResponse.json({ error: 'Meta no encontrada' }, { status: 404, headers: { 'x-request-id': requestId } });
+    }
+
+    if (existingGoal.team.organizationId !== user.organizationId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
+
     const body = await request.json();
     const {
       title,
@@ -199,6 +220,20 @@ export async function DELETE(
     }
 
     const { id } = await params;
+
+    // Organization ownership check
+    const existingGoal = await db.teamGoal.findUnique({
+      where: { id },
+      include: { team: true },
+    });
+
+    if (!existingGoal) {
+      return NextResponse.json({ error: 'Meta no encontrada' }, { status: 404, headers: { 'x-request-id': requestId } });
+    }
+
+    if (existingGoal.team.organizationId !== user.organizationId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
 
     await db.teamGoal.delete({
       where: { id },

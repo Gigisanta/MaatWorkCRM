@@ -1,26 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import { getUserFromSession } from '@/lib/auth-helpers';
 
 // POST /api/notifications/read-all - Mark all notifications as read
 export async function POST(request: NextRequest) {
   const start = Date.now();
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
+  const user = await getUserFromSession(request);
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: { 'x-request-id': requestId } });
+  }
+
   try {
     logger.debug({ operation: 'markAllNotificationsAsRead', requestId }, 'Marcando todas las notificaciones como leidas');
 
-    const body = await request.json();
-    const { userId, organizationId } = body;
+    const body = await request.json().catch(() => ({}));
+    const { organizationId } = body;
 
-    if (!userId || !organizationId) {
-      logger.warn({ operation: 'markAllNotificationsAsRead', requestId }, 'Faltan parametros requeridos: userId u organizationId');
-      return NextResponse.json({ error: 'userId and organizationId are required' }, { status: 400, headers: { 'x-request-id': requestId } });
+    if (!organizationId) {
+      logger.warn({ operation: 'markAllNotificationsAsRead', requestId }, 'Falta organizationId');
+      return NextResponse.json({ error: 'organizationId is required' }, { status: 400, headers: { 'x-request-id': requestId } });
     }
 
+    // Use session userId, not from body - prevents marking other users' notifications
     const result = await db.notification.updateMany({
       where: {
-        userId,
+        userId: user.id,
         organizationId,
         isRead: false,
       },

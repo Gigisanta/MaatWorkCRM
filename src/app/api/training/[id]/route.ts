@@ -31,6 +31,12 @@ export async function GET(
       return NextResponse.json({ error: 'Training material not found' }, { status: 404, headers: { 'x-request-id': requestId } });
     }
 
+    // Organization ownership check
+    if (material.organizationId !== user.organizationId) {
+      logger.warn({ operation: 'getTrainingMaterial', requestId, materialId: id }, 'Access denied - org mismatch');
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
+
     logger.info({ operation: 'getTrainingMaterial', requestId, materialId: id, duration_ms: Date.now() - start }, 'Training material fetched successfully');
 
     return NextResponse.json(material, { headers: { 'x-request-id': requestId } });
@@ -58,6 +64,20 @@ export async function PUT(
     }
 
     const { id } = await params;
+
+    // Organization ownership check
+    const existingMaterial = await db.trainingMaterial.findUnique({
+      where: { id },
+    });
+
+    if (!existingMaterial) {
+      return NextResponse.json({ error: 'Training material not found' }, { status: 404, headers: { 'x-request-id': requestId } });
+    }
+
+    if (existingMaterial.organizationId !== user.organizationId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
+
     const body = await request.json();
     const {
       title,
@@ -105,6 +125,19 @@ export async function DELETE(
     }
 
     const { id } = await params;
+
+    // Organization ownership check
+    const existingMaterial = await db.trainingMaterial.findUnique({
+      where: { id },
+    });
+
+    if (!existingMaterial) {
+      return NextResponse.json({ error: 'Training material not found' }, { status: 404, headers: { 'x-request-id': requestId } });
+    }
+
+    if (existingMaterial.organizationId !== user.organizationId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
 
     await db.trainingMaterial.delete({
       where: { id },

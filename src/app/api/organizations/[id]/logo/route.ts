@@ -17,6 +17,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const { id } = await params;
 
+    // Organization ownership check
+    const user = await getUserFromSession(request);
+    if (!user || user.organizationId !== id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const organization = await db.organization.findUnique({
       where: { id },
       select: {
@@ -67,7 +73,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Logo es requerido' }, { status: 400 });
     }
 
-    // Check if organization exists
+    // Check if organization exists and user belongs to it
+    if (user.organizationId !== id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const existing = await db.organization.findUnique({
       where: { id },
     });
@@ -99,6 +109,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
 // DELETE /api/organizations/[id]/logo - Delete organization logo
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  const user = await getUserFromSession(request);
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const start = Date.now();
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
 
@@ -106,6 +121,11 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     logger.debug({ operation: 'deleteOrganizationLogo', requestId }, 'Deleting organization logo');
 
     const { id } = await params;
+
+    // Organization ownership check
+    if (user.organizationId !== id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     // Check if organization exists
     const existing = await db.organization.findUnique({

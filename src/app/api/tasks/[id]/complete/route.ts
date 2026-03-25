@@ -64,6 +64,11 @@ export async function POST(
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
 
+    // Organization ownership check
+    if (currentTask.organizationId !== user.organizationId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     // Update task as completed
     const updatedTask = await db.task.update({
       where: { id },

@@ -63,13 +63,19 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 // PUT /api/users/[id]/settings - Update user settings
 export async function PUT(request: NextRequest, { params }: RouteParams) {
-  const user = await getUserFromSession(request);
-  if (!user) {
+  const sessionUser = await getUserFromSession(request);
+  if (!sessionUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
     const { id } = await params;
+
+    // Ownership check - users can only update their own settings
+    if (sessionUser.id !== id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const settings: UserSettings = await request.json();
 
     // Check if user exists
@@ -81,11 +87,14 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
     }
 
-    // Update user settings - use raw query to avoid select issues
-    await db.$executeRaw`
-      UPDATE User SET settings = ${JSON.stringify(settings)}, updatedAt = ${new Date().toISOString()}
-      WHERE id = ${id}
-    `;
+    // Update user settings using Prisma's typed API
+    await db.user.update({
+      where: { id },
+      data: {
+        // @ts-ignore - settings field exists in database schema
+        settings: JSON.stringify(settings),
+      },
+    });
 
     return NextResponse.json({ settings });
   } catch (error) {
