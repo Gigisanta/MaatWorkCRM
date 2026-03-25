@@ -50,15 +50,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find user by email, username, or name (case insensitive via ILIKE)
+    if (password.length < 8) {
+      logger.warn({ operation: 'login', requestId, reason: 'password_too_short' }, 'Login validation failed');
+      return NextResponse.json(
+        { error: 'La contraseña debe tener al menos 8 caracteres' },
+        { status: 400 }
+      );
+    }
+
+    // Find user by email or username (case insensitive)
     const normalizedIdentifier = identifier.toLowerCase().trim();
 
     const user = await db.user.findFirst({
       where: {
         OR: [
-          { email: { equals: normalizedIdentifier } },
-          { username: { contains: normalizedIdentifier } },
-          { name: { contains: normalizedIdentifier } },
+          { email: { equals: normalizedIdentifier, mode: 'insensitive' } },
+          { username: { equals: normalizedIdentifier, mode: 'insensitive' } },
         ],
       },
     });

@@ -12,22 +12,15 @@ const DEFAULT_STAGES = [
 ] as const;
 
 export async function ensureDefaultPipelineStages(organizationId: string) {
-  const existingStages = await db.pipelineStage.findFirst({
-    where: { organizationId },
-    select: { id: true },
-  });
-
-  if (existingStages) {
-    return db.pipelineStage.findMany({
-      where: { organizationId },
-      orderBy: { order: 'asc' },
-    });
-  }
-
-  const createdStages = await Promise.all(
+  // Use upsert to avoid race conditions when multiple requests try to create simultaneously
+  const results = await Promise.all(
     DEFAULT_STAGES.map((stage) =>
-      db.pipelineStage.create({
-        data: {
+      db.pipelineStage.upsert({
+        where: {
+          id_organizationId: { id: stage.id, organizationId },
+        },
+        update: {},
+        create: {
           id: stage.id,
           organizationId,
           name: stage.name,
@@ -41,5 +34,8 @@ export async function ensureDefaultPipelineStages(organizationId: string) {
     )
   );
 
-  return createdStages;
+  return db.pipelineStage.findMany({
+    where: { organizationId },
+    orderBy: { order: 'asc' },
+  });
 }

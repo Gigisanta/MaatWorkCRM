@@ -33,7 +33,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   developer: ['contacts:read:all', 'contacts:create', 'contacts:update:all', 'contacts:delete:all', 'team:view', 'users:manage', 'settings:view', 'settings:manage'],
   owner: ['contacts:read:all', 'contacts:create', 'contacts:update:all', 'contacts:delete:all', 'team:view', 'users:manage', 'settings:view', 'settings:manage'],
   manager: ['contacts:read:own', 'contacts:read:team', 'contacts:create', 'contacts:update:own', 'contacts:update:team', 'contacts:delete:own', 'contacts:delete:team', 'team:view'],
-  staff: ['contacts:read:all', 'contacts:create', 'contacts:update:all', 'contacts:delete:all'],
+  staff: ['contacts:read:own', 'contacts:create', 'contacts:update:own'],
   advisor: ['contacts:read:own', 'contacts:create', 'contacts:update:own'],
   member: ['contacts:read:own', 'contacts:create', 'contacts:update:own'],
 };

@@ -18,11 +18,12 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = await request.nextUrl;
-    const teamId = searchParams.get('teamId');
-    const status = searchParams.get('status');
-    const period = searchParams.get('period');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const params = await searchParams;
+    const teamId = params.get('teamId');
+    const status = params.get('status');
+    const period = params.get('period');
+    const page = parseInt(params.get('page') || '1');
+    const limit = parseInt(params.get('limit') || '20');
 
     if (!teamId) {
       logger.warn({ operation: 'listGoals', requestId }, 'teamId is required');
@@ -30,6 +31,18 @@ export async function GET(request: NextRequest) {
         { error: 'teamId es requerido' },
         { status: 400, headers: { 'x-request-id': requestId } }
       );
+    }
+
+    // Verify team belongs to user's organization
+    const team = await db.team.findUnique({
+      where: { id: teamId },
+      select: { id: true, organizationId: true },
+    });
+    if (!team) {
+      return NextResponse.json({ error: 'Equipo no encontrado' }, { status: 404, headers: { 'x-request-id': requestId } });
+    }
+    if (team.organizationId !== user.organizationId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
     }
 
     const skip = (page - 1) * limit;
@@ -125,6 +138,18 @@ export async function POST(request: NextRequest) {
         { error: 'teamId, title, type y targetValue son requeridos' },
         { status: 400, headers: { 'x-request-id': requestId } }
       );
+    }
+
+    // Verify team belongs to user's organization
+    const team = await db.team.findUnique({
+      where: { id: teamId },
+      select: { id: true, organizationId: true },
+    });
+    if (!team) {
+      return NextResponse.json({ error: 'Equipo no encontrado' }, { status: 404, headers: { 'x-request-id': requestId } });
+    }
+    if (team.organizationId !== user.organizationId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
     }
 
     const goal = await db.teamGoal.create({

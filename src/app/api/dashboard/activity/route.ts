@@ -36,7 +36,7 @@ export async function GET(request: Request) {
         take: 3,
         select: { id: true, title: true, completedAt: true },
       }),
-      // Last 2 notes (entityType = contact)
+      // Last 2 notes (entityType = contact) — fail loudly so we know something broke
       db.note.findMany({
         where: { organizationId, entityType: "contact" },
         orderBy: { createdAt: "desc" },
@@ -47,7 +47,7 @@ export async function GET(request: Request) {
           createdAt: true,
           entityId: true,
         },
-      }).catch(() => [] as Array<{ id: string; content: string; createdAt: Date; entityId: string }>),
+      }),
     ]);
 
     // Combine and sort by date

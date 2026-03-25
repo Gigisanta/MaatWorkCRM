@@ -19,7 +19,15 @@ export async function GET(request: NextRequest) {
 
     logger.debug({ operation: 'listOrganizations', requestId }, 'Fetching organizations list');
 
+    // Only return organizations the user is a member of
+    const memberships = await db.member.findMany({
+      where: { userId: session.id },
+      select: { organizationId: true },
+    });
+    const orgIds = memberships.map((m) => m.organizationId);
+
     const organizations = await db.organization.findMany({
+      where: { id: { in: orgIds } },
       select: {
         id: true,
         name: true,

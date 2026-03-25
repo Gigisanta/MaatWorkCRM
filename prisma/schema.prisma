@@ -211,6 +211,7 @@ model PipelineStage {
 
   createdAt      DateTime @default(now())
 
+  @@unique([id, organizationId])
   @@index([organizationId])
 }
 

@@ -59,6 +59,12 @@ export async function GET(
       return response;
     }
 
+    // Organization ownership check
+    if (deal.organizationId !== sessionUser.organizationId) {
+      logger.warn({ operation: 'getDeal', requestId, dealId: id }, 'Access denied - org mismatch');
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
+
     logger.info({ operation: 'getDeal', requestId, dealId: id, duration_ms: Date.now() - start }, 'Deal fetched successfully');
 
     const response = NextResponse.json(deal);
@@ -92,15 +98,14 @@ export async function PUT(
       return NextResponse.json({ error: 'ID inválido' }, { status: 400, headers: { 'x-request-id': requestId } });
     }
 
-    // Ownership/organization check
+    // Ownership/organization check using deal's own organizationId field
     const deal = await db.deal.findUnique({
       where: { id },
-      include: { contact: true },
     });
     if (!deal) {
       return NextResponse.json({ error: 'Deal no encontrado' }, { status: 404, headers: { 'x-request-id': requestId } });
     }
-    const isSameOrg = deal.contact?.organizationId === sessionUser.organizationId;
+    const isSameOrg = deal.organizationId === sessionUser.organizationId;
     const isAssignedUser = deal.assignedTo === sessionUser.id;
     if (!isSameOrg && !isAssignedUser) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403, headers: { 'x-request-id': requestId } });
@@ -177,15 +182,14 @@ export async function DELETE(
       return NextResponse.json({ error: 'ID inválido' }, { status: 400, headers: { 'x-request-id': requestId } });
     }
 
-    // Ownership/organization check
+    // Ownership/organization check using deal's own organizationId field
     const deal = await db.deal.findUnique({
       where: { id },
-      include: { contact: true },
     });
     if (!deal) {
       return NextResponse.json({ error: 'Deal no encontrado' }, { status: 404, headers: { 'x-request-id': requestId } });
     }
-    const isSameOrg = deal.contact?.organizationId === sessionUser.organizationId;
+    const isSameOrg = deal.organizationId === sessionUser.organizationId;
     const isAssignedUser = deal.assignedTo === sessionUser.id;
     if (!isSameOrg && !isAssignedUser) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403, headers: { 'x-request-id': requestId } });
