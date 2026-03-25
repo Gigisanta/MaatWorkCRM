@@ -32,26 +32,32 @@ import { NextResponse } from 'next/server';
  * - Vercel deployment URL for API callbacks
  */
 
-const JWT_SECRET = process.env.JWT_SECRET
-  ? new TextEncoder().encode(process.env.JWT_SECRET)
-  : null; // Optional: if not set, skip server-side JWT validation
+const CSP_SECRET = process.env.CSP_SECRET || process.env.AUTH_SECRET || 'default-csp-secret-change-in-production';
 
-// Generate a random nonce for CSP
-function generateNonce(): string {
-  const array = new Uint8Array(16);
-  crypto.getRandomValues(array);
-  return btoa(String.fromCharCode(...array));
+// Generate a deterministic nonce from the secret (stable across requests)
+function generateStableNonce(): string {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(CSP_SECRET + '-maatwork-csp-nonce');
+  // Use a hash-like transformation for the nonce
+  let hash = 0;
+  const str = CSP_SECRET.slice(0, 32);
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return btoa(String.fromCharCode(...new Uint8Array([...str].map(c => c.charCodeAt(0) ^ (hash & 0xFF))))).slice(0, 24);
 }
 
 export default async function middleware(request: NextRequest) {
   const url = new URL(request.url);
-  const nonce = generateNonce();
+  const nonce = generateStableNonce();
 
   // Security headers configuration with nonce
   const securityHeaders = {
     'Content-Security-Policy': [
       "default-src 'self'",
-      `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+      `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://${process.env.VERCEL_URL || 'maatworkcrm.vercel.app'}`,
       `style-src 'self' 'nonce-${nonce}'`,
       "img-src 'self' data: https: blob:",
       "font-src 'self' data:",
