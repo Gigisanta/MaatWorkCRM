@@ -17,7 +17,11 @@ export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const dbToken = cookieStore.get('session_token')?.value;
-    const nextAuthToken = cookieStore.get('next-auth.session-token')?.value;
+    // NextAuth uses __Secure- prefix in production (HTTPS), without in development
+    let nextAuthToken = cookieStore.get('next-auth.session-token')?.value;
+    if (!nextAuthToken) {
+      nextAuthToken = cookieStore.get('__Secure-next-auth.session-token')?.value;
+    }
 
     if (!dbToken && !nextAuthToken) {
       return NextResponse.json({ user: null, authenticated: false });
