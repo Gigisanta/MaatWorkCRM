@@ -172,6 +172,15 @@ model Contact {
   deals          Deal[]
   tasks          Task[]
 
+  // Lead Scoring (R&D Council Revenue Initiative)
+  budgetScore    Int       @default(0)   // 1-10: capacidad de presupuesto
+  industryScore  Int       @default(0)   // 1-10: fit con MaatWork (gym, pool, salon)
+  urgencyScore   Int       @default(0)   // 1-10: urgencia de compra
+  leadScore      Int       @default(0)   // Computed: budgetScore + industryScore + urgencyScore (max 30)
+  budgetLevel    String?   // low | medium | high
+  industryType   String?   // gym | pool | salon | other
+  urgencyLevel   String?   // low | medium | high
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -189,6 +198,7 @@ model Contact {
   @@index([organizationId, createdAt(sort: Desc)])
   @@index([organizationId, updatedAt(sort: Desc)])
   @@index([organizationId, segment])
+  @@index([leadScore])
 }
 
 model PipelineStage {
