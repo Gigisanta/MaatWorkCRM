@@ -1,23 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { cookies } from 'next/headers';
-import { jwtVerify, decodeJwt } from 'jose';
 
-async function getUserFromNextAuthToken(token: string) {
+async function getUserFromNextAuthSession(token: string) {
+  // With PrismaAdapter, NextAuth stores sessions in the database.
+  // The session-token cookie contains a database session token, not a JWT.
   try {
-    console.info('[Session] JWT token received, length:', token.length);
-    const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET!);
+    console.info('[Session] Looking up NextAuth session in DB, token length:', token.length);
+    const session = await db.session.findFirst({
+      where: {
+        token: token,
+        expiresAt: { gt: new Date() },
+      },
+      include: {
+        user: {
+          select: {
+            id: true, email: true, username: true, name: true,
+            image: true, role: true, isActive: true, managerId: true,
+          },
+        },
+      },
+    });
 
-    // First, let's just decode without verification to see the payload
-    const decoded = decodeJwt(token);
-    console.info('[Session] Decoded JWT payload:', JSON.stringify(decoded));
+    if (session?.user && session.user.isActive) {
+      console.info('[Session] Found user via NextAuth DB session:', session.user.email);
+      return {
+        user: session.user,
+        expiresAt: session.expiresAt,
+      };
+    }
 
-    // Now verify
-    const { payload } = await jwtVerify(token, secret);
-    console.info('[Session] Verified JWT payload id:', payload.id, 'sub:', payload.sub);
-    return (payload.id as string) || (payload.sub as string) || null;
+    console.info('[Session] No valid NextAuth session found in DB');
+    return null;
   } catch (err) {
-    console.error('[Session] JWT verification error:', err);
+    console.error('[Session] NextAuth session lookup error:', err);
     return null;
   }
 }
@@ -88,57 +104,40 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // NextAuth JWT token (from Google OAuth)
+    // NextAuth session token (from Google OAuth via PrismaAdapter)
     if (nextAuthToken) {
-      console.info('[Session] Processing NextAuth JWT token');
-      let userId: string | null = null;
-      try {
-        userId = await getUserFromNextAuthToken(nextAuthToken);
-      } catch (tokenErr) {
-        console.error('[Session] getUserFromNextAuthToken threw:', tokenErr);
-      }
-      console.info('[Session] User ID from JWT:', userId);
+      console.info('[Session] Processing NextAuth session token');
+      const result = await getUserFromNextAuthSession(nextAuthToken);
 
-      if (userId) {
-        const user = await db.user.findUnique({
-          where: { id: userId },
-          select: {
-            id: true, email: true, username: true, name: true,
-            image: true, role: true, isActive: true, managerId: true,
-          },
+      if (result?.user) {
+        const { user, expiresAt } = result;
+        const membership = await db.member.findFirst({
+          where: { userId: user.id },
+          select: { organizationId: true, role: true },
+        });
+        const accounts = await db.account.findMany({
+          where: { userId: user.id },
+          select: { provider: true },
         });
 
-        console.info('[Session] User from DB:', user?.email, 'isActive:', user?.isActive);
-
-        if (user?.isActive) {
-          const membership = await db.member.findFirst({
-            where: { userId: user.id },
-            select: { organizationId: true, role: true },
-          });
-          const accounts = await db.account.findMany({
-            where: { userId: user.id },
-            select: { provider: true },
-          });
-
-          console.info('[Session] Returning authenticated user:', user.email);
-          return NextResponse.json({
-            user: {
-              id: user.id,
-              email: user.email,
-              username: user.username,
-              name: user.name,
-              image: user.image,
-              role: user.role,
-              isActive: user.isActive,
-              managerId: user.managerId,
-              organizationId: membership?.organizationId || null,
-              organizationRole: membership?.role || null,
-              linkedProviders: accounts.map((a) => a.provider),
-            },
-            authenticated: true,
-            session: { expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() },
-          });
-        }
+        console.info('[Session] Returning authenticated user:', user.email);
+        return NextResponse.json({
+          user: {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            name: user.name,
+            image: user.image,
+            role: user.role,
+            isActive: user.isActive,
+            managerId: user.managerId,
+            organizationId: membership?.organizationId || null,
+            organizationRole: membership?.role || null,
+            linkedProviders: accounts.map((a) => a.provider),
+          },
+          authenticated: true,
+          session: { expiresAt: expiresAt.toISOString() },
+        });
       }
     }
 
