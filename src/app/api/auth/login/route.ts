@@ -50,14 +50,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find user by email, username, or name (case insensitive via SQL LOWER)
-    // Note: Prisma's mode:insensitive only works with contains/search, not equals.
-    // We use a raw query approach for case-insensitive email/username matching.
+    // Find user by email, username, or name (case insensitive)
     const normalizedIdentifier = identifier.trim();
 
     let user = await db.user.findFirst({
       where: {
-        email: { equals: normalizedIdentifier },
+        email: { equals: normalizedIdentifier, mode: 'insensitive' },
       },
     });
 
@@ -65,7 +63,7 @@ export async function POST(request: NextRequest) {
     if (!user) {
       user = await db.user.findFirst({
         where: {
-          username: { equals: normalizedIdentifier },
+          username: { equals: normalizedIdentifier, mode: 'insensitive' },
         },
       });
     }
@@ -74,7 +72,7 @@ export async function POST(request: NextRequest) {
     if (!user) {
       user = await db.user.findFirst({
         where: {
-          name: { equals: normalizedIdentifier },
+          name: { equals: normalizedIdentifier, mode: 'insensitive' },
         },
       });
     }
