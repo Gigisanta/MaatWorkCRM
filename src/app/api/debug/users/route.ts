@@ -5,7 +5,29 @@ import { db } from '@/lib/db';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { identifier } = body;
+    const { identifier, activate } = body;
+
+    // If activate is set, activate the user
+    if (activate) {
+      const normalizedIdentifier = identifier.trim();
+      let user = await db.user.findFirst({
+        where: { email: { equals: normalizedIdentifier, mode: 'insensitive' } },
+      });
+      if (!user) {
+        user = await db.user.findFirst({
+          where: { username: { equals: normalizedIdentifier, mode: 'insensitive' } },
+        });
+      }
+      if (!user) {
+        return NextResponse.json({ error: 'user_not_found' }, { status: 404 });
+      }
+      const updated = await db.user.update({
+        where: { id: user.id },
+        data: { isActive: true },
+        select: { id: true, email: true, isActive: true },
+      });
+      return NextResponse.json({ activated: true, user: updated });
+    }
 
     const normalizedIdentifier = identifier.trim();
 
@@ -42,7 +64,7 @@ export async function POST(request: NextRequest) {
         role: user.role,
         isActive: user.isActive,
         hasPassword: !!user.password,
-        hasOAuth: false, // Can't easily determine without Account table
+        hasOAuth: false,
       }
     });
   } catch (error) {
