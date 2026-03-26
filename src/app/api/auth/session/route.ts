@@ -91,7 +91,12 @@ export async function GET(request: NextRequest) {
     // NextAuth JWT token (from Google OAuth)
     if (nextAuthToken) {
       console.info('[Session] Processing NextAuth JWT token');
-      const userId = await getUserFromNextAuthToken(nextAuthToken);
+      let userId: string | null = null;
+      try {
+        userId = await getUserFromNextAuthToken(nextAuthToken);
+      } catch (tokenErr) {
+        console.error('[Session] getUserFromNextAuthToken threw:', tokenErr);
+      }
       console.info('[Session] User ID from JWT:', userId);
 
       if (userId) {
