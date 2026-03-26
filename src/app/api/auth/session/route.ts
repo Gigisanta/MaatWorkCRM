@@ -1,14 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { cookies } from 'next/headers';
-import { jwtVerify } from 'jose';
+import { jwtVerify, decodeJwt } from 'jose';
 
 async function getUserFromNextAuthToken(token: string) {
   try {
+    console.info('[Session] JWT token received, length:', token.length);
     const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET!);
+
+    // First, let's just decode without verification to see the payload
+    const decoded = decodeJwt(token);
+    console.info('[Session] Decoded JWT payload:', JSON.stringify(decoded));
+
+    // Now verify
     const { payload } = await jwtVerify(token, secret);
-    return payload.id as string || null;
-  } catch {
+    console.info('[Session] Verified JWT payload id:', payload.id, 'sub:', payload.sub);
+    return (payload.id as string) || (payload.sub as string) || null;
+  } catch (err) {
+    console.error('[Session] JWT verification error:', err);
     return null;
   }
 }
@@ -23,7 +32,14 @@ export async function GET(request: NextRequest) {
       nextAuthToken = cookieStore.get('__Secure-next-auth.session-token')?.value;
     }
 
+    console.info('[Session] Request cookies:', {
+      hasDbToken: !!dbToken,
+      hasNextAuthToken: !!nextAuthToken,
+      nextAuthTokenLength: nextAuthToken?.length || 0,
+    });
+
     if (!dbToken && !nextAuthToken) {
+      console.info('[Session] No tokens found, returning unauthenticated');
       return NextResponse.json({ user: null, authenticated: false });
     }
 
@@ -51,6 +67,7 @@ export async function GET(request: NextRequest) {
           select: { provider: true },
         });
 
+        console.info('[Session] Found user via DB session:', session.user.email);
         return NextResponse.json({
           user: {
             id: session.user.id,
@@ -73,7 +90,10 @@ export async function GET(request: NextRequest) {
 
     // NextAuth JWT token (from Google OAuth)
     if (nextAuthToken) {
+      console.info('[Session] Processing NextAuth JWT token');
       const userId = await getUserFromNextAuthToken(nextAuthToken);
+      console.info('[Session] User ID from JWT:', userId);
+
       if (userId) {
         const user = await db.user.findUnique({
           where: { id: userId },
@@ -82,6 +102,8 @@ export async function GET(request: NextRequest) {
             image: true, role: true, isActive: true, managerId: true,
           },
         });
+
+        console.info('[Session] User from DB:', user?.email, 'isActive:', user?.isActive);
 
         if (user?.isActive) {
           const membership = await db.member.findFirst({
@@ -93,6 +115,7 @@ export async function GET(request: NextRequest) {
             select: { provider: true },
           });
 
+          console.info('[Session] Returning authenticated user:', user.email);
           return NextResponse.json({
             user: {
               id: user.id,
@@ -114,6 +137,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    console.info('[Session] No valid session found');
     return NextResponse.json({ user: null, authenticated: false });
   } catch (error) {
     console.error('Session validation error:', error);
