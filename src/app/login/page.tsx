@@ -117,7 +117,7 @@ function LoginContent() {
                   <Input
                     id="identifier"
                     type="text"
-                    placeholder="gio o tu@email.com"
+                    placeholder="tu@email.com"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
                     className="pl-10 bg-[#08090B] border-[#1C1D21] text-[#F0EFE9] placeholder:text-[#666666] focus:border-[#8B5CF6]"

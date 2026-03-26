@@ -50,25 +50,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (password.length < 8) {
-      logger.warn({ operation: 'login', requestId, reason: 'password_too_short' }, 'Login validation failed');
-      return NextResponse.json(
-        { error: 'La contraseña debe tener al menos 8 caracteres' },
-        { status: 400 }
-      );
-    }
+    // Find user by email, username, or name (case insensitive via SQL LOWER)
+    // Note: Prisma's mode:insensitive only works with contains/search, not equals.
+    // We use a raw query approach for case-insensitive email/username matching.
+    const normalizedIdentifier = identifier.trim();
 
-    // Find user by email or username (case insensitive)
-    const normalizedIdentifier = identifier.toLowerCase().trim();
-
-    const user = await db.user.findFirst({
+    let user = await db.user.findFirst({
       where: {
-        OR: [
-          { email: { equals: normalizedIdentifier, mode: 'insensitive' } },
-          { username: { equals: normalizedIdentifier, mode: 'insensitive' } },
-        ],
+        email: { equals: normalizedIdentifier },
       },
     });
+
+    // Try username if email didn't match
+    if (!user) {
+      user = await db.user.findFirst({
+        where: {
+          username: { equals: normalizedIdentifier },
+        },
+      });
+    }
+
+    // Try name if neither email nor username matched
+    if (!user) {
+      user = await db.user.findFirst({
+        where: {
+          name: { equals: normalizedIdentifier },
+        },
+      });
+    }
 
     if (!user) {
       logger.warn({ operation: 'login', requestId, reason: 'user_not_found' }, 'Login failed');
