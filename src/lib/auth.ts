@@ -41,7 +41,7 @@ function debugAuth(label: string, data?: Record<string, unknown>): void {
 }
 
 export const authOptions: NextAuthOptions = {
-  trustHost: true, // Required for Vercel/serverless environments
+  // trustHost: true - Set via NEXTAUTH_TRUST_HOST=true environment variable in Vercel
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID ?? 'MISSING_GOOGLE_CLIENT_ID',
