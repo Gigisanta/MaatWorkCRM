@@ -42,12 +42,12 @@ export function BarChartImpl({
   return (
     <ResponsiveContainer width="100%" height="100%">
       <RechartsBarChart data={data} layout={layout}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+        <CartesianGrid stroke="rgba(255,255,255,0.05)" strokeDasharray="3 3" vertical={false} />
         {layout === "horizontal" ? (
           <>
             <XAxis
               type="number"
-              axisLine={{ stroke: "rgba(255,255,255,0.08)" }}
+              axisLine={false}
               tickLine={false}
               tick={{ fill: "#888888", fontSize: 11 }}
               tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
@@ -55,7 +55,7 @@ export function BarChartImpl({
             <YAxis
               dataKey={nameKey}
               type="category"
-              axisLine={{ stroke: "rgba(255,255,255,0.08)" }}
+              axisLine={false}
               tickLine={false}
               tick={{ fill: "#888888", fontSize: 11 }}
               width={80}
@@ -66,13 +66,13 @@ export function BarChartImpl({
             <XAxis
               dataKey={nameKey}
               type="category"
-              axisLine={{ stroke: "rgba(255,255,255,0.08)" }}
+              axisLine={false}
               tickLine={false}
               tick={{ fill: "#888888", fontSize: 11 }}
             />
             <YAxis
               type="number"
-              axisLine={{ stroke: "rgba(255,255,255,0.08)" }}
+              axisLine={false}
               tickLine={false}
               tick={{ fill: "#888888", fontSize: 11 }}
             />
@@ -85,6 +85,7 @@ export function BarChartImpl({
             borderRadius: "8px",
             color: "#F0EFE9",
             fontSize: "12px",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
           }}
           labelStyle={{ color: "#F0EFE9", marginBottom: "4px" }}
           itemStyle={{ color: "#A78BFA" }}

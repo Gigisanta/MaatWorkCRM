@@ -16,6 +16,7 @@ import {
   Package,
   PieChart,
 } from "lucide-react";
+import { toast } from "sonner";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
 import { useSidebar } from "@/lib/sidebar-context";
@@ -51,7 +52,15 @@ import LazyBarChart from '@/components/charts/lazy-bar-chart';
 import LazyPieChart from '@/components/charts/lazy-pie-chart';
 
 function ChartSkeleton({ height = 300 }: { height?: number }) {
-  return <div className="h-[300px] animate-pulse bg-muted" style={{ height }} />;
+  return (
+    <div
+      className="rounded-lg animate-pulse"
+      style={{
+        height,
+        background: 'linear-gradient(135deg, rgba(139,92,246,0.04) 0%, rgba(139,92,246,0.08) 50%, rgba(139,92,246,0.04) 100%)',
+      }}
+    />
+  );
 }
 
 // Types
@@ -132,8 +141,8 @@ interface PipelineStage {
 type PeriodFilter = "week" | "month" | "quarter" | "year";
 
 const CHART_COLORS = [
-  "#6366f1", "#8b5cf6", "#f59e0b", "#3b82f6",
-  "#10b981", "#ec4899", "#14b8a6", "#f97316",
+  "#8B5CF6", "#4ADE80", "#FBBF24", "#38BDF8",
+  "#F87171", "#A78BFA", "#10b981", "#f97316",
 ];
 
 const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: { value: number; name: string; color: string }[]; label?: string }) => {
@@ -548,60 +557,86 @@ export default function ReportsPage() {
   );
 
   // Export to CSV
-  const exportToCSV = () => {
-    const csvRows: string[][] = [];
+  const exportToCSV = React.useCallback(() => {
+    if (!contacts || contacts.length === 0) {
+      toast.info("No hay datos para exportar");
+      return;
+    }
 
-    csvRows.push(["Reporte de MaatWork CRM", format(new Date(), "dd/MM/yyyy HH:mm")]);
-    csvRows.push([]);
+    const escapeCell = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
+    const row = (cells: string[]) => cells.map(escapeCell).join(",");
+
+    const csvRows: string[] = [];
+
+    csvRows.push(row(["Reporte de MaatWork CRM", format(new Date(), "dd/MM/yyyy HH:mm")]));
+    csvRows.push("");
 
     // KPIs
-    csvRows.push(["KPIs", ""]);
-    csvRows.push(["Valor Pipeline Total", totalPipelineValue.toLocaleString()]);
-    csvRows.push(["Contactos Activos", activeContacts.toString()]);
-    csvRows.push(["Tareas Vencidas", overdueTasks.toString()]);
-    csvRows.push(["Progreso Promedio Objetivos", `${averageGoalProgress.toFixed(1)}%`]);
-    csvRows.push([]);
+    csvRows.push(row(["KPIs", ""]));
+    csvRows.push(row(["Valor Pipeline Total", totalPipelineValue.toLocaleString()]));
+    csvRows.push(row(["Contactos Activos", activeContacts.toString()]));
+    csvRows.push(row(["Tareas Vencidas", overdueTasks.toString()]));
+    csvRows.push(row(["Progreso Promedio Objetivos", `${averageGoalProgress.toFixed(1)}%`]));
+    csvRows.push("");
+
+    // Contacts detail
+    csvRows.push(row(["Nombre", "Email", "Empresa", "Segmento", "Fuente", "Etapa", "Fecha creacion"]));
+    contacts.forEach((c) => {
+      csvRows.push(row([
+        c.name ?? "",
+        c.email ?? "",
+        c.company ?? "",
+        c.segment ?? "",
+        c.source ?? "",
+        c.pipelineStage?.name ?? "",
+        c.createdAt ? new Date(c.createdAt).toLocaleDateString("es-MX") : "",
+      ]));
+    });
+    csvRows.push("");
 
     // Pipeline by Stage
-    csvRows.push(["Pipeline por Etapa", "", ""]);
-    csvRows.push(["Etapa", "Valor", "Cantidad"]);
+    csvRows.push(row(["Pipeline por Etapa", "", ""]));
+    csvRows.push(row(["Etapa", "Valor", "Cantidad"]));
     pipelineByStage.forEach((stage) => {
-      csvRows.push([stage.name, stage.value.toString(), stage.count.toString()]);
+      csvRows.push(row([stage.name, stage.value.toString(), stage.count.toString()]));
     });
-    csvRows.push([]);
+    csvRows.push("");
 
     // Contacts by Segment
-    csvRows.push(["Contactos por Segmento", "", ""]);
-    csvRows.push(["Segmento", "Cantidad", "Valor"]);
+    csvRows.push(row(["Contactos por Segmento", "", ""]));
+    csvRows.push(row(["Segmento", "Cantidad", "Valor"]));
     contactsBySegment.forEach((seg) => {
-      csvRows.push([seg.name, seg.count.toString(), seg.value.toString()]);
+      csvRows.push(row([seg.name, seg.count.toString(), seg.value.toString()]));
     });
-    csvRows.push([]);
+    csvRows.push("");
 
     // Contacts by Source
-    csvRows.push(["Contactos por Fuente", ""]);
-    csvRows.push(["Fuente", "Cantidad"]);
+    csvRows.push(row(["Contactos por Fuente", ""]));
+    csvRows.push(row(["Fuente", "Cantidad"]));
     contactsBySource.forEach((src) => {
-      csvRows.push([src.name, src.count.toString()]);
+      csvRows.push(row([src.name, src.count.toString()]));
     });
-    csvRows.push([]);
+    csvRows.push("");
 
     // Tag Distribution
-    csvRows.push(["Distribucion de Productos/Tags", "", ""]);
-    csvRows.push(["Tag", "Cantidad", "Valor"]);
+    csvRows.push(row(["Distribucion de Productos/Tags", "", ""]));
+    csvRows.push(row(["Tag", "Cantidad", "Valor"]));
     tagDistribution.forEach((tag) => {
-      csvRows.push([tag.name, tag.count.toString(), tag.value.toString()]);
+      csvRows.push(row([tag.name, tag.count.toString(), tag.value.toString()]));
     });
 
-    const csvContent = csvRows.map((row) => row.join(",")).join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const csvContent = csvRows.join("\n");
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `reporte-maatwork-${format(new Date(), "yyyy-MM-dd")}.csv`);
-    link.click();
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `reporte-maatwork-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  };
+    toast.success("Reporte exportado");
+  }, [contacts, totalPipelineValue, activeContacts, overdueTasks, averageGoalProgress, pipelineByStage, contactsBySegment, contactsBySource, tagDistribution]);
 
   const isLoading = tagsLoading || contactsLoading || tasksLoading || teamsLoading;
 

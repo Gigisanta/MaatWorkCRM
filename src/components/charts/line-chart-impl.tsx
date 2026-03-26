@@ -30,16 +30,16 @@ export function LineChartImpl({
   return (
     <ResponsiveContainer width="100%" height="100%">
       <RechartsLineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+        <CartesianGrid stroke="rgba(255,255,255,0.05)" strokeDasharray="3 3" vertical={false} />
         <XAxis
           dataKey="label"
           tick={{ fill: "#888888", fontSize: 11 }}
-          axisLine={{ stroke: "rgba(255,255,255,0.08)" }}
+          axisLine={false}
           tickLine={false}
         />
         <YAxis
           tick={{ fill: "#888888", fontSize: 11 }}
-          axisLine={{ stroke: "rgba(255,255,255,0.08)" }}
+          axisLine={false}
           tickLine={false}
         />
         <Tooltip
@@ -49,6 +49,7 @@ export function LineChartImpl({
             borderRadius: "8px",
             color: "#F0EFE9",
             fontSize: "12px",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
           }}
           labelStyle={{ color: "#F0EFE9", marginBottom: "4px" }}
           cursor={{ stroke: "rgba(139,92,246,0.3)", strokeWidth: 1 }}
@@ -60,8 +61,8 @@ export function LineChartImpl({
           stroke="#8B5CF6"
           strokeWidth={2}
           name={name}
-          dot={{ fill: "#8B5CF6", r: 3 }}
-          activeDot={{ fill: "#A78BFA", r: 5, stroke: "rgba(139,92,246,0.3)", strokeWidth: 4 }}
+          dot={false}
+          activeDot={{ r: 4, fill: "#8B5CF6" }}
         />
       </RechartsLineChart>
     </ResponsiveContainer>
