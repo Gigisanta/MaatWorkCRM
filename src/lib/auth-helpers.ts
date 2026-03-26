@@ -41,7 +41,12 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
   try {
     // Try database session token first (UUID from custom auth)
     const dbSessionToken = request.cookies.get('session_token')?.value;
-    const nextAuthToken = request.cookies.get('next-auth.session-token')?.value;
+    // Try NextAuth JWT token (from Google OAuth)
+    // Check both possible cookie names: with __Secure- prefix (production) and without (development)
+    let nextAuthToken = request.cookies.get('next-auth.session-token')?.value;
+    if (!nextAuthToken) {
+      nextAuthToken = request.cookies.get('__Secure-next-auth.session-token')?.value;
+    }
 
     let userId: string | null = null;
 

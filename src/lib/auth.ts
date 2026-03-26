@@ -4,9 +4,6 @@ import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { db } from '@/lib/db';
-import { encryptToken } from '@/lib/crypto';
-import { calendarSyncEngine } from '@/lib/google-calendar/sync-engine';
-import { ensureDefaultPipelineStages } from '@/lib/pipeline-stages';
 
 const GOOGLE_SCOPES =
   'openid email profile https://www.googleapis.com/auth/calendar';
@@ -48,7 +45,9 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID ?? 'MISSING_GOOGLE_CLIENT_ID',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? 'MISSING_GOOGLE_CLIENT_SECRET',
-      authorization: { params: { scope: GOOGLE_SCOPES } },
+      authorization: { params: { scope: GOOGLE_SCOPES, access_type: 'offline', prompt: 'consent' } },
+      // Use PKCE instead of state - more reliable in serverless environments
+      checks: ['pkce'],
     }),
     CredentialsProvider({
       id: 'credentials',
@@ -100,113 +99,77 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    async jwt({ token, user, account }) {
-      debugAuth('jwt callback', {
+    async signIn({ user, account, profile }) {
+      console.info('[Auth] signIn callback', {
+        hasUser: !!user,
+        userEmail: user?.email,
+        hasAccount: !!account,
+        accountProvider: account?.provider,
+      });
+
+      // Always allow OAuth sign-ins
+      return true;
+    },
+    async jwt({ token, user, account, isNewUser }) {
+      console.info('[Auth] jwt callback', {
         hasAccount: !!account,
         accountType: account?.type,
         accountProvider: account?.provider,
         hasUser: !!user,
+        isNewUser,
+        hasTokenId: !!token?.id,
+        tokenHasId: !!token?.id,
+        userId: user?.id,
+        tokenSub: token?.sub,
       });
 
-      if (account) {
-        if (account.type === 'oauth') {
-          // Encrypt and store OAuth tokens for Google
-          token.googleAccessToken = encryptToken(account.access_token ?? '');
-          token.googleRefreshToken = encryptToken(
-            account.refresh_token ?? ''
-          );
+      try {
+        // For OAuth sign-in, set token.id from user.id
+        if (user?.id) {
+          token.id = user.id;
+        } else if (token?.sub) {
+          // Fallback to existing token.sub
+          token.id = token.sub;
         }
-      }
 
-      if (user) {
-        token.id = user.id;
+        return token;
+      } catch (err) {
+        console.error('[Auth] jwt callback error:', err);
+        throw err;
       }
-
-      return token;
     },
     async session({ session, token }) {
-      debugAuth('session callback', {
+      console.info('[Auth] session callback', {
         hasToken: !!token,
         hasSessionUser: !!session.user,
         tokenId: token?.id ? '[REDACTED]' : undefined,
       });
 
-      if (token && session.user) {
-        session.user.id = token.id as string;
+      try {
+        if (token?.id && session.user) {
+          session.user.id = token.id as string;
+        }
 
-        // Fetch linked providers for the user — NO tokens exposed to client
-        const accounts = await db.account.findMany({
-          where: { userId: token.id as string },
-          select: { provider: true },
-        });
-        (session as any).linkedProviders = accounts.map((a) => a.provider);
-        // Tokens are stored encrypted in JWT (transport) and in db.account (persistence).
-        // Calendar API reads directly from db.account via getUserTokens().
-        // Client NEVER receives Google access/refresh tokens.
+        return session;
+      } catch (err) {
+        console.error('[Auth] session callback error:', err);
+        throw err;
       }
-
-      return session;
     },
   },
   events: {
     async signIn({ user, account }) {
-      console.info(`[Auth] signIn event: user=${user.email ?? user.id}, provider=${account?.provider}`);
-
-      if (account?.provider === 'google') {
-        // Update email verified timestamp for Google sign ins
-        await db.user.update({
-          where: { id: user.id },
-          data: { emailVerified: new Date() },
-        });
-
-        // Check or create membership for this user
-        let membership = await db.member.findFirst({
-          where: { userId: user.id },
-        });
-
-        // If no membership exists, create one with default organization
-        if (!membership) {
-          // Find or create default organization
-          let defaultOrg = await db.organization.findFirst({
-            where: { slug: 'maatwork-demo' },
-          });
-
-          if (!defaultOrg) {
-            defaultOrg = await db.organization.create({
-              data: {
-                id: 'org_maatwork_demo',
-                name: 'MaatWork Demo',
-                slug: 'maatwork-demo',
-              },
-            });
-          }
-
-          membership = await db.member.create({
-            data: {
-              userId: user.id,
-              organizationId: defaultOrg.id,
-              role: 'owner',
-            },
-          });
-
-          // Create default pipeline stages for the new organization
-          await ensureDefaultPipelineStages(defaultOrg.id);
-        }
-
-        // Trigger initial calendar sync and webhook registration (non-blocking)
-        if (membership) {
-          const orgId = membership.organizationId;
-
-          // Register webhook first so we receive push notifications
-          calendarSyncEngine.registerWebhook(user.id, 'primary').catch((err: Error) => {
-            console.error('[Auth] Failed to register calendar webhook:', err.message);
-          });
-
-          // Initial full sync — fire-and-forget, doesn't block the sign-in
-          calendarSyncEngine.initialSync(user.id, orgId, 'primary').catch((err: Error) => {
-            console.error('[Auth] Initial calendar sync failed:', err.message);
-          });
-        }
+      try {
+        console.info(`[Auth] signIn: user=${user?.email ?? user?.id}, provider=${account?.provider}`);
+      } catch (err) {
+        console.error('[Auth] signIn event error:', err);
+      }
+    },
+    async signOut({ session }) {
+      try {
+        console.info(`[Auth] signOut: userId=${session?.user?.id}`);
+      } catch (err) {
+        console.error('[Auth] signOut event error:', err);
       }
     },
   },

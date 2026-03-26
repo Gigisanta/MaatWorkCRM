@@ -27,6 +27,22 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/';
+  const oauthError = searchParams.get('error');
+
+  // Show OAuth error as toast when redirected back from Google
+  React.useEffect(() => {
+    if (oauthError) {
+      const errorMessages: Record<string, string> = {
+        google: 'No se pudo iniciar sesión con Google. Verifica que la cuenta exista o intenta con otro método.',
+        OAuthCallback: 'Error en el callback de OAuth. Intenta de nuevo.',
+        OAuthSignin: 'Error al iniciar sesión con OAuth. Intenta de nuevo.',
+        OAuthCreateAccount: 'No se pudo crear la cuenta. Intenta de nuevo.',
+        Callback: 'Error en el callback. Intenta de nuevo.',
+        AccountNotLinked: 'La cuenta no está vinculada.',
+      };
+      toast.error(errorMessages[oauthError] || `Error de autenticación: ${oauthError}`);
+    }
+  }, [oauthError]);
 
   // Redirect if already authenticated
   React.useEffect(() => {
