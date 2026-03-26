@@ -672,6 +672,184 @@ function EventDetailDrawer({
   );
 }
 
+// Week View Component
+function WeekView({
+  events,
+  weekDays,
+  getEventsForSlot,
+  onEventClick,
+}: {
+  events: CalendarEvent[];
+  weekDays: Date[];
+  getEventsForSlot: (day: Date, hour: number) => CalendarEvent[];
+  onEventClick: (event: CalendarEvent) => void;
+}) {
+  const hours = Array.from({ length: 14 }, (_, i) => i + 7); // 7:00–20:00
+
+  return (
+    <div className="overflow-auto">
+      {/* Day headers */}
+      <div className="grid grid-cols-8 border-b border-white/8 sticky top-0 bg-[#0E0F12] z-10">
+        <div className="py-2 px-3 text-xs text-slate-600" />
+        {weekDays.map((day) => (
+          <div
+            key={day.toISOString()}
+            className={cn("py-2 text-center", isToday(day) && "bg-violet-500/5")}
+          >
+            <p className="text-xs text-slate-500 uppercase">
+              {format(day, "EEE", { locale: es })}
+            </p>
+            <p
+              className={cn(
+                "text-sm font-semibold mt-0.5",
+                isToday(day) ? "text-violet-400" : "text-slate-300"
+              )}
+            >
+              {format(day, "d")}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Hour rows */}
+      <div>
+        {hours.map((hour) => (
+          <div
+            key={hour}
+            className="grid grid-cols-8 border-b border-white/4 min-h-[60px]"
+          >
+            <div className="py-2 px-3 text-xs text-slate-600 text-right flex-shrink-0 pt-2">
+              {hour}:00
+            </div>
+            {weekDays.map((day) => {
+              const slotEvents = getEventsForSlot(day, hour);
+              return (
+                <div
+                  key={day.toISOString()}
+                  className={cn(
+                    "border-l border-white/4 p-1 relative",
+                    isToday(day) && "bg-violet-500/[0.03]"
+                  )}
+                >
+                  {slotEvents.map((event) => {
+                    const config = eventTypeConfig[event.type];
+                    return (
+                      <div
+                        key={event.id}
+                        onClick={() => onEventClick(event)}
+                        className={cn(
+                          "text-xs px-1.5 py-1 rounded truncate mb-1 cursor-pointer transition-opacity hover:opacity-80",
+                          config.bgColor
+                        )}
+                      >
+                        <span className="text-white">{event.title}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Agenda View Component
+function AgendaView({
+  agendaDays,
+  onEventClick,
+}: {
+  agendaDays: { day: Date; events: CalendarEvent[] }[];
+  onEventClick: (event: CalendarEvent) => void;
+}) {
+  const daysWithEvents = agendaDays.filter((d) => d.events.length > 0);
+
+  if (daysWithEvents.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <CalendarIcon
+          className="h-10 w-10 text-violet-400/30 mb-3"
+          strokeWidth={1.5}
+        />
+        <p className="text-slate-400">Sin eventos en los próximos 14 días</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4 overflow-auto max-h-[600px] custom-scrollbar">
+      {daysWithEvents.map(({ day, events }) => (
+        <div key={day.toISOString()}>
+          {/* Day label */}
+          <div className="flex items-center gap-3 mb-2">
+            <div
+              className={cn(
+                "flex items-center justify-center w-9 h-9 rounded-xl text-sm font-bold flex-shrink-0",
+                isToday(day)
+                  ? "bg-violet-500 text-white"
+                  : "bg-white/8 text-slate-300"
+              )}
+            >
+              {format(day, "d")}
+            </div>
+            <div>
+              <p className="text-sm font-medium text-white capitalize">
+                {format(day, "EEEE", { locale: es })}
+              </p>
+              <p className="text-xs text-slate-500">
+                {format(day, "d 'de' MMMM", { locale: es })}
+              </p>
+            </div>
+          </div>
+
+          {/* Events for the day */}
+          <div className="ml-12 space-y-2">
+            {events.map((event) => {
+              const config = eventTypeConfig[event.type];
+              return (
+                <div
+                  key={event.id}
+                  onClick={() => onEventClick(event)}
+                  className="flex items-start gap-3 p-3 rounded-lg bg-white/4 border border-white/8 hover:border-violet-500/20 cursor-pointer transition-colors"
+                >
+                  <div
+                    className={cn(
+                      "w-1.5 min-h-[36px] rounded-full flex-shrink-0 mt-0.5",
+                      config.color
+                    )}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white truncate">
+                      {event.title}
+                    </p>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {format(parseISO(event.startAt), "HH:mm")}
+                      {" – "}
+                      {format(parseISO(event.endAt), "HH:mm")}
+                      {event.location && ` · ${event.location}`}
+                    </p>
+                  </div>
+                  <div
+                    className={cn(
+                      "text-[10px] px-2 py-0.5 rounded-full flex-shrink-0 mt-0.5",
+                      config.bgColor,
+                      config.textColor
+                    )}
+                  >
+                    {config.label}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // Main Page
 export default function CalendarPage() {
   const { user } = useAuth();
@@ -1114,7 +1292,9 @@ export default function CalendarPage() {
                         <ChevronLeft className="h-5 w-5" />
                       </Button>
                       <h2 className="text-lg font-semibold text-white capitalize">
-                        {format(currentDate, "MMMM yyyy")}
+                        {calendarView === "week"
+                          ? `${format(weekDays[0], "d MMM")} – ${format(weekDays[6], "d MMM yyyy")}`
+                          : format(currentDate, "MMMM yyyy")}
                       </h2>
                       <Button
                         variant="ghost"
@@ -1126,7 +1306,25 @@ export default function CalendarPage() {
                       </Button>
                     </div>
                     <div className="flex items-center gap-2">
-                      {Object.entries(eventTypeConfig).map(([type, config]) => (
+                      {/* View toggle */}
+                      <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1 border border-white/8">
+                        {(["month", "week", "agenda"] as const).map((view) => (
+                          <button
+                            key={view}
+                            onClick={() => setCalendarView(view)}
+                            className={cn(
+                              "px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200",
+                              calendarView === view
+                                ? "bg-violet-500/20 text-violet-300 border border-violet-500/30"
+                                : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
+                            )}
+                          >
+                            {view === "month" ? "Mes" : view === "week" ? "Semana" : "Agenda"}
+                          </button>
+                        ))}
+                      </div>
+                      {/* Legend (month view only) */}
+                      {calendarView === "month" && Object.entries(eventTypeConfig).map(([type, config]) => (
                         <div key={type} className="flex items-center gap-1">
                           <div className={cn("w-2 h-2 rounded-full", config.color)} />
                           <span className="text-xs text-slate-400 hidden sm:inline">
@@ -1138,85 +1336,108 @@ export default function CalendarPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-4">
-                  {/* Weekday Headers */}
-                  <div className="grid grid-cols-7 mb-2">
-                    {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map((day) => (
-                      <div
-                        key={day}
-                        className="text-center text-sm font-medium text-slate-400 py-2"
-                      >
-                        {day}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Calendar Days */}
-                  {isLoading ? (
-                    <CalendarSkeleton />
-                  ) : (
-                    <div className="grid grid-cols-7 gap-1">
-                      {days.map((day, index) => {
-                        const dayEvents = getEventsForDay(day);
-                        const isCurrentMonth = isSameMonth(day, currentDate);
-                        const isSelected = selectedDate && isSameDay(day, selectedDate);
-                        const isTodayDate = isToday(day);
-
-                        return (
-                          <motion.button
-                            key={index}
-                            whileHover={{ scale: 1.02 }}
-                            onClick={() => handleDayClick(day)}
-                            onDoubleClick={() => handleCreateFromDay(day)}
-                            className={cn(
-                              "relative min-h-[80px] p-2 rounded-lg text-left transition-all",
-                              "hover:bg-white/10",
-                              !isCurrentMonth && "opacity-30",
-                              isSelected && "bg-violet-500/20 border border-violet-500/50",
-                              isTodayDate && !isSelected && "bg-white/5 border border-white/20"
-                            )}
+                  {/* Month View */}
+                  {calendarView === "month" && (
+                    <>
+                      {/* Weekday Headers */}
+                      <div className="grid grid-cols-7 mb-2">
+                        {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map((day) => (
+                          <div
+                            key={day}
+                            className="text-center text-sm font-medium text-slate-400 py-2"
                           >
-                            <span
-                              className={cn(
-                                "text-sm font-medium",
-                                isTodayDate
-                                  ? "text-violet-400"
-                                  : isCurrentMonth
-                                  ? "text-white"
-                                  : "text-slate-500"
-                              )}
-                            >
-                              {format(day, "d")}
-                            </span>
-                            <div className="mt-1 space-y-1">
-                              {dayEvents.slice(0, 2).map((event) => {
-                                const config = eventTypeConfig[event.type];
-                                return (
-                                  <div
-                                    key={event.id}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleEventClick(event);
-                                    }}
-                                    className={cn(
-                                      "text-xs px-1.5 py-0.5 rounded truncate cursor-pointer",
-                                      config.bgColor,
-                                      "hover:opacity-80 transition-opacity"
-                                    )}
-                                  >
-                                    <span className="text-white">{event.title}</span>
-                                  </div>
-                                );
-                              })}
-                              {dayEvents.length > 2 && (
-                                <div className="text-xs text-slate-500">
-                                  +{dayEvents.length - 2} más
+                            {day}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Calendar Days */}
+                      {isLoading ? (
+                        <CalendarSkeleton />
+                      ) : (
+                        <div className="grid grid-cols-7 gap-1">
+                          {days.map((day, index) => {
+                            const dayEvents = getEventsForDay(day);
+                            const isCurrentMonth = isSameMonth(day, currentDate);
+                            const isSelected = selectedDate && isSameDay(day, selectedDate);
+                            const isTodayDate = isToday(day);
+
+                            return (
+                              <motion.button
+                                key={index}
+                                whileHover={{ scale: 1.02 }}
+                                onClick={() => handleDayClick(day)}
+                                onDoubleClick={() => handleCreateFromDay(day)}
+                                className={cn(
+                                  "relative min-h-[80px] p-2 rounded-lg text-left transition-all",
+                                  "hover:bg-white/10",
+                                  !isCurrentMonth && "opacity-30",
+                                  isSelected && "bg-violet-500/20 border border-violet-500/50",
+                                  isTodayDate && !isSelected && "bg-white/5 border border-white/20"
+                                )}
+                              >
+                                <span
+                                  className={cn(
+                                    "text-sm font-medium",
+                                    isTodayDate
+                                      ? "text-violet-400"
+                                      : isCurrentMonth
+                                      ? "text-white"
+                                      : "text-slate-500"
+                                  )}
+                                >
+                                  {format(day, "d")}
+                                </span>
+                                <div className="mt-1 space-y-0.5">
+                                  {dayEvents.slice(0, 2).map((event) => {
+                                    const config = eventTypeConfig[event.type];
+                                    return (
+                                      <div
+                                        key={event.id}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleEventClick(event);
+                                        }}
+                                        className={cn(
+                                          "text-[10px] px-1.5 py-0.5 rounded truncate cursor-pointer",
+                                          config.bgColor,
+                                          "hover:opacity-80 transition-opacity"
+                                        )}
+                                      >
+                                        <span className="text-white">{event.title}</span>
+                                      </div>
+                                    );
+                                  })}
+                                  {dayEvents.length > 2 && (
+                                    <div className="text-[10px] text-slate-500 px-1">
+                                      +{dayEvents.length - 2} más
+                                    </div>
+                                  )}
                                 </div>
-                              )}
-                            </div>
-                          </motion.button>
-                        );
-                      })}
-                    </div>
+                              </motion.button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Week View */}
+                  {calendarView === "week" && (
+                    <WeekView
+                      events={data?.events ?? []}
+                      weekDays={weekDays}
+                      getEventsForSlot={getEventsForSlot}
+                      onEventClick={handleEventClick}
+                    />
+                  )}
+
+                  {/* Agenda View */}
+                  {calendarView === "agenda" && (
+                    <AgendaView
+                      agendaDays={agendaDays}
+                      onEventClick={handleEventClick}
+                    />
                   )}
                 </CardContent>
               </Card>
