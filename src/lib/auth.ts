@@ -47,8 +47,8 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID ?? 'MISSING_GOOGLE_CLIENT_ID',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? 'MISSING_GOOGLE_CLIENT_SECRET',
       authorization: { params: { scope: GOOGLE_SCOPES, access_type: 'offline', prompt: 'consent' } },
-      // Use PKCE instead of state - more reliable in serverless environments
-      checks: ['pkce'],
+      // PKCE temporarily disabled for debugging
+      checks: [],
     }),
     CredentialsProvider({
       id: 'credentials',
@@ -96,7 +96,7 @@ export const authOptions: NextAuthOptions = {
   ],
   adapter: PrismaAdapter(db) as NextAuthOptions['adapter'],
   session: {
-    strategy: 'jwt',
+    strategy: 'database',
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
