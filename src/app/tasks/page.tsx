@@ -452,7 +452,7 @@ function TaskGroup({
           open && "rotate-90"
         )} />
         <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest">{label}</span>
-        <span className={cn("h-4 min-w-[16px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center", badgeColor)}>
+        <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full border ml-1", badgeColor)}>
           {tasks.length}
         </span>
       </button>
@@ -1069,7 +1069,7 @@ function TasksPageContent() {
                   <TaskGroup
                     label="Vencidas"
                     tasks={groupedTasks.overdue}
-                    badgeColor="bg-rose-500/20 text-rose-400"
+                    badgeColor="bg-rose-500/15 text-rose-400 border-rose-500/25"
                     onToggle={handleToggleTask}
                     onEdit={handleEditTask}
                     onDelete={handleDeleteClick}
@@ -1078,7 +1078,7 @@ function TasksPageContent() {
                   <TaskGroup
                     label="Hoy"
                     tasks={groupedTasks.today}
-                    badgeColor="bg-amber-500/20 text-amber-400"
+                    badgeColor="bg-amber-500/15 text-amber-400 border-amber-500/25"
                     onToggle={handleToggleTask}
                     onEdit={handleEditTask}
                     onDelete={handleDeleteClick}
@@ -1087,7 +1087,7 @@ function TasksPageContent() {
                   <TaskGroup
                     label="Mañana"
                     tasks={groupedTasks.tomorrow}
-                    badgeColor="bg-sky-500/20 text-sky-400"
+                    badgeColor="bg-sky-500/15 text-sky-400 border-sky-500/25"
                     onToggle={handleToggleTask}
                     onEdit={handleEditTask}
                     onDelete={handleDeleteClick}
@@ -1096,7 +1096,7 @@ function TasksPageContent() {
                   <TaskGroup
                     label="Esta semana"
                     tasks={groupedTasks.thisWeek}
-                    badgeColor="bg-violet-500/20 text-violet-400"
+                    badgeColor="bg-violet-500/15 text-violet-400 border-violet-500/25"
                     onToggle={handleToggleTask}
                     onEdit={handleEditTask}
                     onDelete={handleDeleteClick}
@@ -1105,7 +1105,7 @@ function TasksPageContent() {
                   <TaskGroup
                     label="Más adelante"
                     tasks={groupedTasks.later}
-                    badgeColor="bg-slate-500/20 text-slate-400"
+                    badgeColor="bg-white/8 text-slate-400 border-white/10"
                     onToggle={handleToggleTask}
                     onEdit={handleEditTask}
                     onDelete={handleDeleteClick}
@@ -1114,7 +1114,7 @@ function TasksPageContent() {
                   <TaskGroup
                     label="Completadas"
                     tasks={groupedTasks.completed}
-                    badgeColor="bg-emerald-500/20 text-emerald-400"
+                    badgeColor="bg-emerald-500/15 text-emerald-400 border-emerald-500/25"
                     defaultOpen={false}
                     onToggle={handleToggleTask}
                     onEdit={handleEditTask}
