@@ -111,14 +111,13 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
     async jwt({ token, user, account, isNewUser }) {
-      console.info('[Auth] jwt callback', {
+      console.info('[Auth] jwt callback START', {
         hasAccount: !!account,
         accountType: account?.type,
         accountProvider: account?.provider,
         hasUser: !!user,
         isNewUser,
         hasTokenId: !!token?.id,
-        tokenHasId: !!token?.id,
         userId: user?.id,
         tokenSub: token?.sub,
       });
@@ -126,12 +125,16 @@ export const authOptions: NextAuthOptions = {
       try {
         // For OAuth sign-in, set token.id from user.id
         if (user?.id) {
+          console.info('[Auth] jwt: setting token.id from user.id =', user.id);
           token.id = user.id;
         } else if (token?.sub) {
-          // Fallback to existing token.sub
+          console.info('[Auth] jwt: setting token.id from token.sub =', token.sub);
           token.id = token.sub;
+        } else {
+          console.warn('[Auth] jwt: no user.id or token.sub available');
         }
 
+        console.info('[Auth] jwt callback END, returning token');
         return token;
       } catch (err) {
         console.error('[Auth] jwt callback error:', err);
@@ -139,7 +142,7 @@ export const authOptions: NextAuthOptions = {
       }
     },
     async session({ session, token }) {
-      console.info('[Auth] session callback', {
+      console.info('[Auth] session callback START', {
         hasToken: !!token,
         hasSessionUser: !!session.user,
         tokenId: token?.id ? '[REDACTED]' : undefined,
@@ -148,8 +151,12 @@ export const authOptions: NextAuthOptions = {
       try {
         if (token?.id && session.user) {
           session.user.id = token.id as string;
+          console.info('[Auth] session callback: set session.user.id from token.id');
+        } else {
+          console.warn('[Auth] session callback: token.id or session.user is missing');
         }
 
+        console.info('[Auth] session callback END');
         return session;
       } catch (err) {
         console.error('[Auth] session callback error:', err);
