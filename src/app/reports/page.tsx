@@ -358,7 +358,7 @@ export default function ReportsPage() {
           name: tagName,
           count: 0,
           value: 0,
-          color: ct.tag?.color || "#6366f1",
+          color: ct.tag?.color || "#8B5CF6",
         };
         existing.count += 1;
         existing.value += ct.value ?? ct.tag?.value ?? 0;
@@ -639,6 +639,7 @@ export default function ReportsPage() {
   }, [contacts, totalPipelineValue, activeContacts, overdueTasks, averageGoalProgress, pipelineByStage, contactsBySegment, contactsBySource, tagDistribution]);
 
   const isLoading = tagsLoading || contactsLoading || tasksLoading || teamsLoading;
+  const hasError = tagsError || contactsError || tasksError || teamsError;
 
   if (authLoading) {
     return (
@@ -706,16 +707,35 @@ export default function ReportsPage() {
               </div>
             </div>
 
-            {/* Loading State */}
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
+            {/* Error State */}
+            {hasError && (
+              <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+                <div className="p-4 rounded-full bg-red-500/10">
+                  <AlertCircle className="h-8 w-8 text-red-400" />
+                </div>
+                <div className="text-center">
+                  <p className="text-white font-medium">Error al cargar reportes</p>
+                  <p className="text-slate-400 text-sm mt-1">No se pudo obtener los datos. Intenta recargar la página.</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => window.location.reload()} className="border-white/15 text-slate-300 hover:bg-white/5">
+                  Recargar
+                </Button>
               </div>
-            ) : (
-              <>
-                {/* KPIs */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {[
+            )}
+
+            {/* KPIs */}
+            {!hasError && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {isLoading ? (
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <Card key={i} className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
+                      <CardContent className="p-6">
+                        <ChartSkeleton height={80} />
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  [
                     {
                       title: "Valor Pipeline",
                       value: `$${totalPipelineValue.toLocaleString()}`,
@@ -775,274 +795,318 @@ export default function ReportsPage() {
                         </div>
                       </CardContent>
                     </Card>
-                  ))}
-                </div>
+                  ))
+                )}
+              </div>
+            )}
 
-                {/* Additional KPIs Row */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
-                    <CardContent className="p-4">
-                      <p className="text-sm text-slate-400">Contactos Totales</p>
-                      <p className="text-xl font-bold text-violet-400">{contacts.length}</p>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
-                    <CardContent className="p-4">
-                      <p className="text-sm text-slate-400">Contactos Activos</p>
-                      <p className="text-xl font-bold text-blue-400">{activeContacts}</p>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
-                    <CardContent className="p-4">
-                      <p className="text-sm text-slate-400">Productos/Servicios</p>
-                      <p className="text-xl font-bold text-amber-400">{tags.length}</p>
-                    </CardContent>
-                  </Card>
-                </div>
+            {/* Additional KPIs Row */}
+            {!hasError && (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {isLoading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <Card key={i} className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
+                      <CardContent className="p-4">
+                        <ChartSkeleton height={48} />
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <>
+                    <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
+                      <CardContent className="p-4">
+                        <p className="text-sm text-slate-400">Contactos Totales</p>
+                        <p className="text-xl font-bold text-violet-400">{contacts.length}</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
+                      <CardContent className="p-4">
+                        <p className="text-sm text-slate-400">Contactos Activos</p>
+                        <p className="text-xl font-bold text-blue-400">{activeContacts}</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
+                      <CardContent className="p-4">
+                        <p className="text-sm text-slate-400">Productos/Servicios</p>
+                        <p className="text-xl font-bold text-amber-400">{tags.length}</p>
+                      </CardContent>
+                    </Card>
+                  </>
+                )}
+              </div>
+            )}
 
-                {/* Charts Row 1 */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Pipeline by Stage */}
-                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
-                    <CardHeader>
-                      <CardTitle className="text-lg text-white">
-                        Pipeline por Etapa
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="h-[300px]">
-                        {pipelineByStage.length > 0 ? (
-                          <LazyBarChart data={pipelineByStage} layout="vertical" dataKey="value" nameKey="name" />
-                        ) : (
-                          <div className="flex items-center justify-center h-full text-slate-400">
-                            No hay datos disponibles
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Product/Tag Distribution */}
-                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
-                    <CardHeader>
-                      <CardTitle className="text-lg text-white">
-                        Distribucion de Productos
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="h-[300px]">
-                        {tagDistribution.length > 0 ? (
-                          <LazyPieChart
-                            data={tagDistribution.map(t => ({ name: t.name, value: t.count, color: t.color }))}
-                            innerRadius={60}
-                            outerRadius={100}
-                          />
-                        ) : (
-                          <div className="flex items-center justify-center h-full text-slate-400">
-                            No hay datos disponibles
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Charts Row 2 */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Contact Trend */}
-                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
-                    <CardHeader>
-                      <CardTitle className="text-lg text-white">
-                        Tendencia de Contactos Nuevos
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="h-[300px]">
-                        {contactTrend.length > 0 ? (
-                          <LazyLineChart data={contactTrend} dataKey="nuevos" name="label" />
-                        ) : (
-                          <div className="flex items-center justify-center h-full text-slate-400">
-                            No hay datos disponibles para el periodo seleccionado
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Contacts by Segment */}
-                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
-                    <CardHeader>
-                      <CardTitle className="text-lg text-white">
-                        Contactos por Segmento
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="h-[300px]">
-                        {contactsBySegment.length > 0 ? (
-                          <LazyBarChart data={contactsBySegment} nameKey="name" dataKey="count" />
-                        ) : (
-                          <div className="flex items-center justify-center h-full text-slate-400">
-                            No hay datos disponibles
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Charts Row 3 */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Contacts by Source */}
-                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
-                    <CardHeader>
-                      <CardTitle className="text-lg text-white">
-                        Contactos por Fuente
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="h-[300px]">
-                        {contactsBySource.length > 0 ? (
-                          <LazyPieChart
-                            data={contactsBySource.map((s, i) => ({ name: s.name, value: s.count, color: CHART_COLORS[i % CHART_COLORS.length] }))}
-                            innerRadius={60}
-                            outerRadius={100}
-                          />
-                        ) : (
-                          <div className="flex items-center justify-center h-full text-slate-400">
-                            No hay datos disponibles
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Contacts by Stage Count */}
-                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
-                    <CardHeader>
-                      <CardTitle className="text-lg text-white">
-                        Contactos por Etapa
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="h-[300px]">
-                        {pipelineByStage.length > 0 ? (
-                          <LazyBarChart data={pipelineByStage} nameKey="name" dataKey="count" />
-                        ) : (
-                          <div className="flex items-center justify-center h-full text-slate-400">
-                            No hay datos disponibles
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Team Goals Progress */}
+            {/* Charts Row 1 */}
+            {!hasError && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Pipeline by Stage */}
                 <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
                   <CardHeader>
                     <CardTitle className="text-lg text-white">
-                      Progreso de Objetivos por Equipo
+                      Pipeline por Etapa
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {allGoals.length > 0 ? (
-                      <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
-                        {teams.map((team) => {
-                          const teamGoals = team.goals || [];
-                          if (teamGoals.length === 0) return null;
-                          return (
-                            <div key={team.id} className="p-4 rounded-lg glass border border-white/10">
-                              <div className="flex items-center justify-between mb-3">
-                                <span className="font-medium text-white">{team.name}</span>
-                                <span className="text-sm text-slate-400">
-                                  {teamGoals.filter(g => g.status === "completed").length}/{teamGoals.length} objetivos
-                                </span>
-                              </div>
-                              <div className="space-y-2">
-                                {teamGoals.map((goal, i) => {
-                                  const progress = goal.targetValue > 0
-                                    ? Math.min((goal.currentValue / goal.targetValue) * 100, 100)
-                                    : 0;
-                                  return (
-                                    <div key={goal.id} className="flex items-center gap-3">
-                                      <span className="text-sm text-slate-300 w-32 truncate">{goal.title}</span>
-                                      <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
-                                        <motion.div
-                                          initial={{ width: 0 }}
-                                          animate={{ width: `${progress}%` }}
-                                          transition={{ duration: 0.8, delay: i * 0.1 }}
-                                          className={cn(
-                                            "h-full rounded-full",
-                                            goal.status === "completed" ? "bg-emerald-500" : "bg-gradient-to-r from-violet-500 to-violet-400"
-                                          )}
-                                        />
-                                      </div>
-                                      <span className="text-xs text-slate-400 w-20 text-right">
-                                        ${goal.currentValue.toLocaleString()} / ${goal.targetValue.toLocaleString()}
-                                      </span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-slate-400">
-                        No hay datos de objetivos disponibles
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Task Analytics */}
-                <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
-                  <CardHeader>
-                    <CardTitle className="text-lg text-white">
-                      Analisis de Tareas
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                      {[
-                        {
-                          label: "Total Tareas",
-                          value: tasks.length,
-                          color: "text-white"
-                        },
-                        {
-                          label: "Pendientes",
-                          value: tasks.filter(t => t.status === "pending").length,
-                          color: "text-amber-400"
-                        },
-                        {
-                          label: "En Progreso",
-                          value: tasks.filter(t => t.status === "in_progress").length,
-                          color: "text-blue-400"
-                        },
-                        {
-                          label: "Completadas",
-                          value: tasks.filter(t => t.status === "completed").length,
-                          color: "text-emerald-400"
-                        },
-                      ].map((stat, i) => (
-                        <div key={i} className="text-center p-4 rounded-lg bg-slate-800/50">
-                          <p className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
-                          <p className="text-xs text-slate-400 mt-1">{stat.label}</p>
+                    <div className="h-[300px]">
+                      {isLoading ? (
+                        <ChartSkeleton height={300} />
+                      ) : pipelineByStage.length > 0 ? (
+                        <LazyBarChart data={pipelineByStage} layout="vertical" dataKey="value" nameKey="name" />
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-slate-400">
+                          No hay datos disponibles
                         </div>
-                      ))}
+                      )}
                     </div>
-                    {overdueTasks > 0 && (
-                      <div className="mt-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20">
-                        <p className="text-sm text-rose-400">
-                          Tienes {overdueTasks} tarea{overdueTasks > 1 ? "s" : ""} vencida{overdueTasks > 1 ? "s" : ""}
-                        </p>
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
-              </>
+
+                {/* Product/Tag Distribution */}
+                <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
+                  <CardHeader>
+                    <CardTitle className="text-lg text-white">
+                      Distribucion de Productos
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[300px]">
+                      {isLoading ? (
+                        <ChartSkeleton height={300} />
+                      ) : tagDistribution.length > 0 ? (
+                        <LazyPieChart
+                          data={tagDistribution.map(t => ({ name: t.name, value: t.count, color: t.color }))}
+                          innerRadius={60}
+                          outerRadius={100}
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-slate-400">
+                          No hay datos disponibles
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Charts Row 2 */}
+            {!hasError && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Contact Trend */}
+                <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
+                  <CardHeader>
+                    <CardTitle className="text-lg text-white">
+                      Tendencia de Contactos Nuevos
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[300px]">
+                      {isLoading ? (
+                        <ChartSkeleton height={300} />
+                      ) : contactTrend.length > 0 ? (
+                        <LazyLineChart data={contactTrend} dataKey="nuevos" name="label" />
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-slate-400">
+                          No hay datos disponibles para el periodo seleccionado
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Contacts by Segment */}
+                <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
+                  <CardHeader>
+                    <CardTitle className="text-lg text-white">
+                      Contactos por Segmento
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[300px]">
+                      {isLoading ? (
+                        <ChartSkeleton height={300} />
+                      ) : contactsBySegment.length > 0 ? (
+                        <LazyBarChart data={contactsBySegment} nameKey="name" dataKey="count" />
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-slate-400">
+                          No hay datos disponibles
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Charts Row 3 */}
+            {!hasError && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Contacts by Source */}
+                <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
+                  <CardHeader>
+                    <CardTitle className="text-lg text-white">
+                      Contactos por Fuente
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[300px]">
+                      {isLoading ? (
+                        <ChartSkeleton height={300} />
+                      ) : contactsBySource.length > 0 ? (
+                        <LazyPieChart
+                          data={contactsBySource.map((s, i) => ({ name: s.name, value: s.count, color: CHART_COLORS[i % CHART_COLORS.length] }))}
+                          innerRadius={60}
+                          outerRadius={100}
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-slate-400">
+                          No hay datos disponibles
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Contacts by Stage Count */}
+                <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
+                  <CardHeader>
+                    <CardTitle className="text-lg text-white">
+                      Contactos por Etapa
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[300px]">
+                      {isLoading ? (
+                        <ChartSkeleton height={300} />
+                      ) : pipelineByStage.length > 0 ? (
+                        <LazyBarChart data={pipelineByStage} nameKey="name" dataKey="count" />
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-slate-400">
+                          No hay datos disponibles
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Team Goals Progress */}
+            {!hasError && (
+              <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
+                <CardHeader>
+                  <CardTitle className="text-lg text-white">
+                    Progreso de Objetivos por Equipo
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isLoading ? (
+                    <ChartSkeleton height={200} />
+                  ) : allGoals.length > 0 ? (
+                    <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
+                      {teams.map((team) => {
+                        const teamGoals = team.goals || [];
+                        if (teamGoals.length === 0) return null;
+                        return (
+                          <div key={team.id} className="p-4 rounded-lg glass border border-white/10">
+                            <div className="flex items-center justify-between mb-3">
+                              <span className="font-medium text-white">{team.name}</span>
+                              <span className="text-sm text-slate-400">
+                                {teamGoals.filter(g => g.status === "completed").length}/{teamGoals.length} objetivos
+                              </span>
+                            </div>
+                            <div className="space-y-2">
+                              {teamGoals.map((goal, i) => {
+                                const progress = goal.targetValue > 0
+                                  ? Math.min((goal.currentValue / goal.targetValue) * 100, 100)
+                                  : 0;
+                                return (
+                                  <div key={goal.id} className="flex items-center gap-3">
+                                    <span className="text-sm text-slate-300 w-32 truncate">{goal.title}</span>
+                                    <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+                                      <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${progress}%` }}
+                                        transition={{ duration: 0.8, delay: i * 0.1 }}
+                                        className={cn(
+                                          "h-full rounded-full",
+                                          goal.status === "completed" ? "bg-emerald-500" : "bg-gradient-to-r from-violet-500 to-violet-400"
+                                        )}
+                                      />
+                                    </div>
+                                    <span className="text-xs text-slate-400 w-20 text-right">
+                                      ${goal.currentValue.toLocaleString()} / ${goal.targetValue.toLocaleString()}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-slate-400">
+                      No hay datos de objetivos disponibles
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Task Analytics */}
+            {!hasError && (
+              <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
+                <CardHeader>
+                  <CardTitle className="text-lg text-white">
+                    Analisis de Tareas
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isLoading ? (
+                    <ChartSkeleton height={120} />
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        {[
+                          {
+                            label: "Total Tareas",
+                            value: tasks.length,
+                            color: "text-white"
+                          },
+                          {
+                            label: "Pendientes",
+                            value: tasks.filter(t => t.status === "pending").length,
+                            color: "text-amber-400"
+                          },
+                          {
+                            label: "En Progreso",
+                            value: tasks.filter(t => t.status === "in_progress").length,
+                            color: "text-blue-400"
+                          },
+                          {
+                            label: "Completadas",
+                            value: tasks.filter(t => t.status === "completed").length,
+                            color: "text-emerald-400"
+                          },
+                        ].map((stat, i) => (
+                          <div key={i} className="text-center p-4 rounded-lg bg-slate-800/50">
+                            <p className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
+                            <p className="text-xs text-slate-400 mt-1">{stat.label}</p>
+                          </div>
+                        ))}
+                      </div>
+                      {overdueTasks > 0 && (
+                        <div className="mt-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/20">
+                          <p className="text-sm text-rose-400">
+                            Tienes {overdueTasks} tarea{overdueTasks > 1 ? "s" : ""} vencida{overdueTasks > 1 ? "s" : ""}
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </CardContent>
+              </Card>
             )}
           </motion.div>
         </main>

@@ -1,7 +1,7 @@
 // Auth helper functions for MaatWork CRM
 import { NextRequest } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 import { db } from '@/lib/db';
-import { jwtVerify } from 'jose';
 
 export type UserRole = 'admin' | 'manager' | 'advisor' | 'owner' | 'staff' | 'member' | 'developer' | 'dueno' | 'asesor';
 
@@ -17,19 +17,6 @@ export interface AuthUser {
   organizationRole?: string | null;
   googleAccessToken?: string | null;
   linkedProviders?: string[];
-}
-
-/**
- * Decode NextAuth JWT token to get user ID
- */
-async function getUserIdFromNextAuthToken(token: string): Promise<string | null> {
-  try {
-    const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET!);
-    const { payload } = await jwtVerify(token, secret);
-    return payload.id as string || null;
-  } catch {
-    return null;
-  }
 }
 
 /**
@@ -98,50 +85,60 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
       }
     }
 
-    // Try NextAuth JWT token (from Google OAuth)
+    // Try NextAuth JWE token (from Google OAuth)
     if (nextAuthToken) {
-      const nextAuthUserId = await getUserIdFromNextAuthToken(nextAuthToken);
-      if (nextAuthUserId) {
-        const user = await db.user.findUnique({
-          where: { id: nextAuthUserId },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            role: true,
-            isActive: true,
-            image: true,
-            managerId: true,
-            members: {
-              take: 1,
-              select: {
-                organizationId: true,
-                role: true,
+      try {
+        // Use getToken from next-auth/jwt which properly handles JWE encryption
+        const token = await getToken({
+          req: request as any,
+          secret: process.env.NEXTAUTH_SECRET,
+        });
+        const nextAuthUserId = token?.id as string | undefined;
+
+        if (nextAuthUserId) {
+          const user = await db.user.findUnique({
+            where: { id: nextAuthUserId },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              role: true,
+              isActive: true,
+              image: true,
+              managerId: true,
+              members: {
+                take: 1,
+                select: {
+                  organizationId: true,
+                  role: true,
+                },
               },
             },
-          },
-        });
-
-        if (user && user.isActive) {
-          const primaryMembership = user.members[0];
-          const accounts = await db.account.findMany({
-            where: { userId: user.id },
-            select: { provider: true },
           });
 
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-            isActive: user.isActive,
-            image: user.image,
-            managerId: user.managerId,
-            organizationId: primaryMembership?.organizationId || null,
-            organizationRole: primaryMembership?.role || null,
-            linkedProviders: accounts.map((a) => a.provider),
-          };
+          if (user && user.isActive) {
+            const primaryMembership = user.members[0];
+            const accounts = await db.account.findMany({
+              where: { userId: user.id },
+              select: { provider: true },
+            });
+
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              role: user.role,
+              isActive: user.isActive,
+              image: user.image,
+              managerId: user.managerId,
+              organizationId: primaryMembership?.organizationId || null,
+              organizationRole: primaryMembership?.role || null,
+              linkedProviders: accounts.map((a) => a.provider),
+            };
+          }
         }
+      } catch (jwtError) {
+        console.error('[getUserFromSession] NextAuth token decode error:', jwtError);
       }
     }
 

@@ -111,7 +111,7 @@ export function PlanningPreview({ html, isGenerating, onGeneratePreview }: Plann
         {isGenerating ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center space-y-4">
-              <Loader2 className="w-12 h-12 animate-spin text-indigo-500 mx-auto" />
+              <Loader2 className="w-12 h-12 animate-spin text-violet-500 mx-auto" />
               <p className="text-slate-400">Generando vista previa...</p>
             </div>
           </div>
@@ -139,7 +139,7 @@ export function PlanningPreview({ html, isGenerating, onGeneratePreview }: Plann
               {onGeneratePreview && (
                 <Button
                   onClick={onGeneratePreview}
-                  className="bg-indigo-500 hover:bg-indigo-600"
+                  className="bg-violet-500 hover:bg-violet-600"
                 >
                   Generar Vista Previa
                 </Button>

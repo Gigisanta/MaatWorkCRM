@@ -10,6 +10,7 @@ import { Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -145,6 +146,9 @@ export function CreateContactModal({
       <DialogContent className="glass border-white/10 bg-slate-900 max-w-md">
         <DialogHeader>
           <DialogTitle className="text-white">Nuevo Contacto</DialogTitle>
+          <DialogDescription className="sr-only">
+            Formulario para crear un nuevo contacto
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -289,7 +293,7 @@ export function CreateContactModal({
               <Button
                 type="submit"
                 disabled={createMutation.isPending}
-                className="bg-indigo-500 hover:bg-indigo-600"
+                className="bg-violet-500 hover:bg-violet-600"
               >
                 {createMutation.isPending && (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />

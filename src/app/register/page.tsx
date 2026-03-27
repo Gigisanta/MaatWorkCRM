@@ -117,7 +117,7 @@ export default function RegisterPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen gradient-bg flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
       </div>
     );
   }
@@ -126,7 +126,7 @@ export default function RegisterPage() {
     <div className="min-h-screen gradient-bg flex items-center justify-center p-4 py-8">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-violet-500/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-violet-500/10 rounded-full blur-3xl" />
       </div>
 
@@ -169,7 +169,7 @@ export default function RegisterPage() {
                     placeholder="Juan Pérez"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-indigo-500"
+                    className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-violet-500"
                     disabled={isLoading}
                     autoComplete="name"
                   />
@@ -189,7 +189,7 @@ export default function RegisterPage() {
                     placeholder="tu@email.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-indigo-500"
+                    className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-violet-500"
                     disabled={isLoading}
                     autoComplete="email"
                   />
@@ -267,7 +267,7 @@ export default function RegisterPage() {
                     placeholder="Mínimo 6 caracteres"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-indigo-500"
+                    className="pl-10 pr-10 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-violet-500"
                     disabled={isLoading}
                     autoComplete="new-password"
                   />
@@ -299,7 +299,7 @@ export default function RegisterPage() {
                     placeholder="Confirma tu contraseña"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-indigo-500"
+                    className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-violet-500"
                     disabled={isLoading}
                     autoComplete="new-password"
                   />
@@ -344,7 +344,7 @@ export default function RegisterPage() {
                 ¿Ya tienes una cuenta?{' '}
                 <Link
                   href="/login"
-                  className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+                  className="text-violet-400 hover:text-violet-300 font-medium transition-colors"
                 >
                   Iniciar sesión
                 </Link>

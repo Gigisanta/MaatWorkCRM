@@ -297,15 +297,12 @@ export function ContactDrawer({
   // Remove tag mutation
   const removeTagMutation = useMutation({
     mutationFn: async (tagId: string) => {
-      console.log(`[DEBUG DRAWER] Removing tag: contactId=${contactId}, tagId=${tagId}`);
       const response = await fetch(`/api/contacts/${contactId}/tags/${tagId}`, {
         method: "DELETE",
         credentials: 'include',
       });
-      console.log(`[DEBUG DRAWER] Response status: ${response.status}`);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error(`[DEBUG DRAWER] Error response:`, errorData);
         throw new Error(errorData?.error || "Error al eliminar etiqueta");
       }
       return response.json();
@@ -316,7 +313,6 @@ export function ContactDrawer({
       toast.success("Etiqueta eliminada");
     },
     onError: (error) => {
-      console.error(`[DEBUG DRAWER] Mutation error:`, error);
       toast.error(error instanceof Error ? error.message : "Error al eliminar etiqueta");
     },
   });
@@ -331,13 +327,15 @@ export function ContactDrawer({
     <>
       <Dialog open={open} onOpenChange={onClose}>
         <DialogContent className="glass border-white/10 bg-slate-900/95 backdrop-blur-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-          <DialogHeader className="border-b border-white/10 px-6 py-4 shrink-0">
+          <DialogHeader className="border-b border-white/10 px-6 py-4 shrink-0 bg-gradient-to-br from-violet-500/5 to-transparent">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {isLoading ? (
                   <Skeleton className="h-10 w-10 rounded-full" />
                 ) : (
-                  <div className="text-4xl">{contact?.emoji || "👤"}</div>
+                  <div className="h-14 w-14 rounded-2xl bg-white/5 border border-white/8 flex items-center justify-center text-2xl flex-shrink-0">
+                    {contact?.emoji || "👤"}
+                  </div>
                 )}
                 <div>
                   <DialogTitle className="text-xl font-semibold text-white">
@@ -351,8 +349,8 @@ export function ContactDrawer({
                     <div className="flex items-center gap-2 mt-1">
                       <Badge
                         style={{
-                          backgroundColor: (contact.pipelineStage?.color || "#6366f1") + "20",
-                          color: contact.pipelineStage?.color || "#6366f1",
+                          backgroundColor: (contact.pipelineStage?.color || "#8B5CF6") + "20",
+                          color: contact.pipelineStage?.color || "#8B5CF6",
                         }}
                         className="text-xs"
                       >
@@ -382,32 +380,32 @@ export function ContactDrawer({
                   <TabsList className="bg-transparent h-12 gap-4">
                     <TabsTrigger
                       value="details"
-                      className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
+                      className="data-[state=active]:bg-violet-500/15 data-[state=active]:text-violet-300 data-[state=active]:border-b-2 data-[state=active]:border-violet-500 text-slate-400"
                     >
                       Detalles
                     </TabsTrigger>
                     <TabsTrigger
                       value="pipeline"
-                      className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
+                      className="data-[state=active]:bg-violet-500/15 data-[state=active]:text-violet-300 data-[state=active]:border-b-2 data-[state=active]:border-violet-500 text-slate-400"
                     >
                       Pipeline
                     </TabsTrigger>
                     <TabsTrigger
                       value="tasks"
-                      className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
+                      className="data-[state=active]:bg-violet-500/15 data-[state=active]:text-violet-300 data-[state=active]:border-b-2 data-[state=active]:border-violet-500 text-slate-400"
                     >
                       Tareas
                     </TabsTrigger>
                     <TabsTrigger
                       value="activity"
-                      className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
+                      className="data-[state=active]:bg-violet-500/15 data-[state=active]:text-violet-300 data-[state=active]:border-b-2 data-[state=active]:border-violet-500 text-slate-400"
                     >
                       Actividad
                     </TabsTrigger>
                     {financialPlan && (
                       <TabsTrigger
                         value="planning"
-                        className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
+                        className="data-[state=active]:bg-violet-500/15 data-[state=active]:text-violet-300 data-[state=active]:border-b-2 data-[state=active]:border-violet-500 text-slate-400"
                       >
                         Plan Financiero
                       </TabsTrigger>
@@ -443,7 +441,7 @@ export function ContactDrawer({
                           "glass border-white/10",
                           financialPlan
                             ? "border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
-                            : "border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10"
+                            : "border-violet-500/30 text-violet-400 hover:bg-violet-500/10"
                         )}
                         onClick={() => openDialog(contactId!, contact?.name)}
                       >
@@ -599,7 +597,7 @@ export function ContactDrawer({
                             <Button
                               type="submit"
                               disabled={updateMutation.isPending}
-                              className="bg-indigo-500 hover:bg-indigo-600"
+                              className="bg-violet-500 hover:bg-violet-600"
                             >
                               {updateMutation.isPending && (
                                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -633,7 +631,7 @@ export function ContactDrawer({
                             <p className="text-xs text-slate-500">Asignado a</p>
                             <div className="flex items-center gap-2">
                               <Avatar className="h-6 w-6">
-                                <AvatarFallback className="bg-indigo-500/20 text-indigo-400 text-xs">
+                                <AvatarFallback className="bg-violet-500/20 text-violet-400 text-xs">
                                   {contact.assignedUser?.name
                                     ?.split(" ")
                                     .map((n) => n[0])
@@ -684,7 +682,7 @@ export function ContactDrawer({
                                 size="sm"
                                 onClick={() => newTag && addTagMutation.mutate(newTag)}
                                 disabled={!newTag || addTagMutation.isPending}
-                                className="bg-indigo-500 hover:bg-indigo-600 h-8"
+                                className="bg-violet-500 hover:bg-violet-600 h-8"
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -700,8 +698,8 @@ export function ContactDrawer({
                       <p className="text-sm font-medium text-white mb-2">Etapa actual</p>
                       <Badge
                         style={{
-                          backgroundColor: (contact.pipelineStage?.color || "#6366f1") + "20",
-                          color: contact.pipelineStage?.color || "#6366f1",
+                          backgroundColor: (contact.pipelineStage?.color || "#8B5CF6") + "20",
+                          color: contact.pipelineStage?.color || "#8B5CF6",
                         }}
                       >
                         {contact.pipelineStage?.name || "Sin etapa"}
@@ -730,7 +728,7 @@ export function ContactDrawer({
                         <div className="space-y-2 max-h-64 overflow-y-auto">
                           {contact.stageHistory.map((item) => (
                             <div key={item.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5">
-                              <div className="w-2 h-2 rounded-full bg-indigo-500" />
+                              <div className="w-2 h-2 rounded-full bg-violet-500" />
                               <div className="flex-1">
                                 <p className="text-sm text-white">
                                   {item.fromStage?.name || "Inicio"} → {item.toStage?.name || "Sin etapa"}
@@ -910,7 +908,7 @@ export function ContactDrawer({
                             <div className="mt-2 space-y-1">
                               {financialPlan.metas.slice(0, 3).map((meta: any, idx: number) => (
                                 <div key={idx} className="flex items-center gap-2">
-                                  <div className="w-2 h-2 rounded-full bg-indigo-500" />
+                                  <div className="w-2 h-2 rounded-full bg-violet-500" />
                                   <span className="text-sm text-white">{meta.nombre}</span>
                                 </div>
                               ))}
@@ -926,7 +924,7 @@ export function ContactDrawer({
                           <Button
                             variant="outline"
                             size="sm"
-                            className="flex-1 glass border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10"
+                            className="flex-1 glass border-violet-500/30 text-violet-400 hover:bg-violet-500/10"
                             onClick={() => openDialog(contactId!, contact?.name)}
                           >
                             <FileText className="h-4 w-4 mr-2" />
@@ -939,7 +937,7 @@ export function ContactDrawer({
                         <FileText className="h-12 w-12 text-slate-600 mx-auto mb-3" />
                         <p className="text-slate-400 mb-4">Este contacto no tiene un plan financiero</p>
                         <Button
-                          className="bg-indigo-500 hover:bg-indigo-600"
+                          className="bg-violet-500 hover:bg-violet-600"
                           onClick={() => openDialog(contactId!, contact?.name)}
                         >
                           <Sparkles className="h-4 w-4 mr-2" />

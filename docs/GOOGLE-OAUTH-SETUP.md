@@ -89,14 +89,11 @@ Agregar emails de las personas que van a usar el login con Google:
 # Google OAuth
 GOOGLE_CLIENT_ID=tu-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=tu-client-secret
-GOOGLE_REDIRECT_URI=https://crm.maat.work/api/auth/callback/google
 
-# NextAuth
+# NextAuth (requerido)
 NEXTAUTH_URL=https://crm.maat.work
 NEXTAUTH_SECRET=<openssl rand -base64 32>
-
-# Encriptación de tokens OAuth (32 bytes = 64 hex chars)
-TOKEN_ENCRYPTION_KEY=<openssl rand -hex 32>
+NEXTAUTH_TRUST_HOST=true
 
 # CRON para sync de calendarios
 CRON_SECRET=<openssl rand -base64 32>
@@ -111,7 +108,7 @@ CALENDAR_WEBHOOK_VERIFY_TOKEN=<openssl rand -hex 32>
 # NEXTAUTH_SECRET y CRON_SECRET
 openssl rand -base64 32
 
-# TOKEN_ENCRYPTION_KEY y CALENDAR_WEBHOOK_VERIFY_TOKEN
+# CALENDAR_WEBHOOK_VERIFY_TOKEN
 openssl rand -hex 32
 ```
 
@@ -120,10 +117,9 @@ openssl rand -hex 32
 ```
 GOOGLE_CLIENT_ID=YOUR_CLIENT_ID.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=YOUR_CLIENT_SECRET
-GOOGLE_REDIRECT_URI=https://crm.maat.work/api/auth/callback/google
 NEXTAUTH_URL=https://crm.maat.work
 NEXTAUTH_SECRET=YOUR_NEXTAUTH_SECRET
-TOKEN_ENCRYPTION_KEY=YOUR_TOKEN_ENCRYPTION_KEY
+NEXTAUTH_TRUST_HOST=true
 CRON_SECRET=YOUR_CRON_SECRET
 CALENDAR_WEBHOOK_VERIFY_TOKEN=YOUR_WEBHOOK_VERIFY_TOKEN
 ```
@@ -187,17 +183,17 @@ src/
 ```
 1. Usuario clickea "Continuar con Google"
    ↓
-2. NextAuth → Google OAuth → callback /api/auth/callback/google
+2. NextAuth → Google OAuth (PKCE + state validation)
    ↓
-3. NextAuth busca Account con providerAccountId de Google
+3. Google redirect a /api/auth/callback/google
+   → NextAuth busca Account con providerAccountId de Google
    ├── Existe → sign in normal
    └── No existe → busca User con mismo email
        ├── Existe → link automático (Account + User)
        └── No existe → crea User + Account (registro)
    ↓
-4. Tokens OAuth encriptados con AES-256-GCM → JWT (NEXTAUTH_SECRET)
-5. Tokens también almacenados en db.account (para refresh)
-   ↓
+4. NextAuth genera JWE (JSON Web Encryption) con NEXTAUTH_SECRET
+5. JWE almacenado en cookie __Secure-next-auth.session-token
 6. Session callback retorna: id, email, name, linkedProviders
    (tokens NUNCA expuestos al cliente)
 ```
@@ -351,17 +347,17 @@ model CalendarEvent {
    - Retorna: id, email, name, image, linkedProviders
 
 ✅Tokens almacenados:
-   - En JWT: encriptados con AES-256-GCM (TOKEN_ENCRYPTION_KEY)
-   - En db.account: texto plano (PrismaAdapter los necesita)
+   - En JWE (cookie): encriptados por NextAuth con NEXTAUTH_SECRET
+   - En db.account: texto plano (PrismaAdapter los necesita para refresh)
 ```
 
-### Encriptación AES-256-GCM
+### Encriptación JWE (NextAuth)
 
-```typescript
-// encryptToken() → iv:ciphertext:tag (todos en base64)
-// decryptTokenIfSet() → null en vez de throw en error
-// Log en decrypt failure para debugging
-```
+NextAuth usa JWE (JSON Web Encryption) en lugar de JWT simple:
+- `alg: dir` (direct encryption)
+- `enc: A256GCM` (AES-256-GCM)
+- La encriptación/desencriptación la maneja NextAuth internamente
+- No requiere TOKEN_ENCRYPTION_KEY separado
 
 ### Cron Secret
 
@@ -392,11 +388,18 @@ if (token !== process.env.CALENDAR_WEBHOOK_VERIFY_TOKEN) {
 
 **Solución**: Agregar email del usuario en **Usuarios de prueba** en Google Cloud Console.
 
-### Login con Google no funciona
+### Error: `checks.state argument is missing`
 
-1. Verificar `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` en `.env.local`
-2. Verificar `NEXTAUTH_URL` coincide con dominio de producción
-3. Verificar `GOOGLE_REDIRECT_URI` en Google Cloud Console = `https://crm.maat.work/api/auth/callback/google`
+**Causa**: Usaste `checks: []` en GoogleProvider
+**Solución**: NO usar `checks: []` - NextAuth maneja state y PKCE automáticamente
+
+### Login con Google no funciona (silent fail, redirige a /login)
+
+1. Verificar `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET` en variables de entorno de Vercel
+2. Verificar `NEXTAUTH_URL=https://crm.maat.work` en producción
+3. Verificar `NEXTAUTH_TRUST_HOST=true` está configurado
+4. Verificar `GOOGLE_REDIRECT_URI` en Google Cloud Console = `https://crm.maat.work/api/auth/callback/google`
+5. Revisar logs de Vercel: `vercel logs crm.maat.work`
 
 ### Sincronización no happen
 
@@ -462,8 +465,8 @@ vercel --prod
 
 ### Verificación OAuth
 
-- [ ] Login con Google funciona en desarrollo (`localhost:3000/login`)
-- [ ] Login con Google funciona en producción (`crm.maat.work/login`)
+- [x] Login con Google funciona en desarrollo (`localhost:3000/login`)
+- [x] Login con Google funciona en producción (`crm.maat.work/login`) ✅
 - [ ] Cuenta Google aparece en `db.account`
 - [ ] Settings > Connected Accounts muestra Google como vinculado
 

@@ -31,6 +31,7 @@ import { ContactDrawerSkeleton } from "./components/contact-drawer-skeleton";
 import { PlanningDialogProvider } from "./components/PlanningDialogContext";
 import { type Contact, type PipelineStage } from "./components/contact-table";
 import { type Tag } from "./components/tag-manager-dialog";
+import { MobileFAB } from "@/components/ui/mobile-fab";
 
 // Dynamic imports for modal/dialog components (code splitting)
 const ContactDrawer = dynamic(
@@ -435,6 +436,17 @@ export default function ContactsPage() {
 
       {/* Planning Dialog */}
       <PlanningDialog />
+
+      {/* Mobile FAB */}
+      <MobileFAB
+        actions={[
+          {
+            label: "Nuevo contacto",
+            icon: Plus,
+            onClick: () => setCreateModalOpen(true),
+          },
+        ]}
+      />
 
       {/* Floating Bulk Toolbar */}
       <AnimatePresence>

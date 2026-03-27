@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     const tag = await db.tag.create({
       data: {
         name,
-        color: color || '#6366f1',
+        color: color || '#8B5CF6',
         organizationId,
         icon: icon ?? null,
         description: description ?? null,

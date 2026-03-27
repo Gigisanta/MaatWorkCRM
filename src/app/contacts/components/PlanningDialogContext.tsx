@@ -207,7 +207,7 @@ const defaultFormData: PlanningFormData = {
   perfilRiesgo: 'moderado',
   usarTerminoIA: false,
   usarConsejoIA: false,
-  colorPrincipal: '#6366f1',
+  colorPrincipal: '#8B5CF6',
   colorAcento: '#10b981',
 };
 

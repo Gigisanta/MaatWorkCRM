@@ -47,8 +47,8 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID ?? 'MISSING_GOOGLE_CLIENT_ID',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? 'MISSING_GOOGLE_CLIENT_SECRET',
       authorization: { params: { scope: GOOGLE_SCOPES, access_type: 'offline', prompt: 'consent' } },
-      // PKCE temporarily disabled for debugging
-      checks: [],
+      // Use default NextAuth checks (state + PKCE)
+      // checks: [],
     }),
     CredentialsProvider({
       id: 'credentials',
@@ -96,7 +96,7 @@ export const authOptions: NextAuthOptions = {
   ],
   adapter: PrismaAdapter(db) as NextAuthOptions['adapter'],
   session: {
-    strategy: 'database',
+    strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
@@ -147,11 +147,13 @@ export const authOptions: NextAuthOptions = {
         hasToken: !!token,
         hasSessionUser: !!session.user,
         tokenId: token?.id ? '[REDACTED]' : undefined,
+        sessionUserId: (session as any)?.user?.id || (token as any)?.id,
       });
 
       try {
-        if (token?.id && session.user) {
-          session.user.id = token.id as string;
+        // With JWT strategy, token.id is set by jwt callback and copied here
+        if (session.user && (token as any)?.id) {
+          session.user.id = (token as any).id as string;
           console.info('[Auth] session callback: set session.user.id from token.id');
         } else {
           console.warn('[Auth] session callback: token.id or session.user is missing');

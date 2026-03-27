@@ -70,6 +70,7 @@ import {
 import { cn } from "@/lib/utils";
 import { format, isToday, isTomorrow, isPast, parseISO, startOfDay, addDays } from "date-fns";
 import { useAuth } from "@/lib/auth-context";
+import { MobileFAB } from "@/components/ui/mobile-fab";
 
 // Types
 interface TaskUser {
@@ -1149,6 +1150,17 @@ function TasksPageContent() {
         task={selectedTask}
         onSuccess={() => setSelectedTask(null)}
         users={users}
+      />
+
+      {/* Mobile FAB */}
+      <MobileFAB
+        actions={[
+          {
+            label: "Nueva tarea",
+            icon: Plus,
+            onClick: () => setCreateDialogOpen(true),
+          },
+        ]}
       />
 
       {/* Delete Confirmation Dialog */}

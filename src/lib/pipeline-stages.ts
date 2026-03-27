@@ -1,7 +1,7 @@
 import { db } from '@/lib/db';
 
 const DEFAULT_STAGES = [
-  { id: 'stage-prospecto', name: 'Prospecto', color: '#6366f1', order: 1, isDefault: true, wipLimit: null },
+  { id: 'stage-prospecto', name: 'Prospecto', color: '#8B5CF6', order: 1, isDefault: true, wipLimit: null },
   { id: 'stage-contactado', name: 'Contactado', color: '#8b5cf6', order: 2, isDefault: false, wipLimit: 10 },
   { id: 'stage-primera-reunion', name: 'Primera reunión', color: '#f59e0b', order: 3, isDefault: false, wipLimit: 8 },
   { id: 'stage-segunda-reunion', name: 'Segunda reunión', color: '#3b82f6', order: 4, isDefault: false, wipLimit: 5 },

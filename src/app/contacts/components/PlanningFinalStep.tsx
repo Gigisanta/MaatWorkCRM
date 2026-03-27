@@ -307,7 +307,7 @@ export function PlanningFinalStep({ data, onUpdate }: PlanningFinalStepProps) {
                 </div>
                 <div className="flex justify-end gap-2 mt-3">
                   <Button variant="outline" size="sm" onClick={() => { setEditingObligacionId(null); setIsAddingObligacion(false); obligacionForm.reset(); }} className="glass border-white/10 h-8">Cancelar</Button>
-                  <Button size="sm" onClick={obligacionForm.handleSubmit(editingObligacionId ? handleUpdateObligacion : handleAddObligacion)} className="bg-indigo-500 hover:bg-indigo-600 h-8">{editingObligacionId ? 'Actualizar' : 'Agregar'}</Button>
+                  <Button size="sm" onClick={obligacionForm.handleSubmit(editingObligacionId ? handleUpdateObligacion : handleAddObligacion)} className="bg-violet-500 hover:bg-violet-600 h-8">{editingObligacionId ? 'Actualizar' : 'Agregar'}</Button>
                 </div>
               </Form>
             </motion.div>
@@ -425,7 +425,7 @@ export function PlanningFinalStep({ data, onUpdate }: PlanningFinalStepProps) {
                 </div>
                 <div className="flex justify-end gap-2 mt-3">
                   <Button variant="outline" size="sm" onClick={() => { setEditingRiesgoId(null); setIsAddingRiesgo(false); riesgoForm.reset(); }} className="glass border-white/10 h-8">Cancelar</Button>
-                  <Button size="sm" onClick={riesgoForm.handleSubmit(editingRiesgoId ? handleUpdateRiesgo : handleAddRiesgo)} className="bg-indigo-500 hover:bg-indigo-600 h-8">{editingRiesgoId ? 'Actualizar' : 'Agregar'}</Button>
+                  <Button size="sm" onClick={riesgoForm.handleSubmit(editingRiesgoId ? handleUpdateRiesgo : handleAddRiesgo)} className="bg-violet-500 hover:bg-violet-600 h-8">{editingRiesgoId ? 'Actualizar' : 'Agregar'}</Button>
                 </div>
               </Form>
             </motion.div>
@@ -479,7 +479,7 @@ export function PlanningFinalStep({ data, onUpdate }: PlanningFinalStepProps) {
       <Card className="glass border-white/10 p-4">
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <Palette className="w-4 h-4 text-indigo-400" />
+            <Palette className="w-4 h-4 text-violet-400" />
             <h4 className="text-sm font-medium text-slate-300">Branding del Plan</h4>
           </div>
 
@@ -487,8 +487,8 @@ export function PlanningFinalStep({ data, onUpdate }: PlanningFinalStepProps) {
             <div className="space-y-2">
               <label className="text-xs text-slate-400">Color Principal</label>
               <div className="flex gap-2">
-                <input type="color" value={data.colorPrincipal || '#6366f1'} onChange={(e) => onUpdate({ colorPrincipal: e.target.value })} className="w-10 h-10 rounded cursor-pointer border border-white/10" />
-                <Input value={data.colorPrincipal || '#6366f1'} onChange={(e) => onUpdate({ colorPrincipal: e.target.value })} className="glass border-white/10 bg-white/5 text-white h-10" />
+                <input type="color" value={data.colorPrincipal || '#8B5CF6'} onChange={(e) => onUpdate({ colorPrincipal: e.target.value })} className="w-10 h-10 rounded cursor-pointer border border-white/10" />
+                <Input value={data.colorPrincipal || '#8B5CF6'} onChange={(e) => onUpdate({ colorPrincipal: e.target.value })} className="glass border-white/10 bg-white/5 text-white h-10" />
               </div>
             </div>
 

@@ -43,11 +43,10 @@ export function TagManagerDialog({
 }: TagManagerDialogProps) {
   const [newTagName, setNewTagName] = React.useState('');
   const [newTagValue, setNewTagValue] = React.useState('');
-  const [selectedColor, setSelectedColor] = React.useState('#6366f1');
+  const [selectedColor, setSelectedColor] = React.useState('#8B5CF6');
 
   const colors = [
-    '#6366f1', // indigo
-    '#8b5cf6', // violet
+    '#8B5CF6', // violet
     '#f59e0b', // amber
     '#10b981', // emerald
     '#ef4444', // red
@@ -63,7 +62,7 @@ export function TagManagerDialog({
       onCreateTag(newTagName.trim(), selectedColor, value);
       setNewTagName('');
       setNewTagValue('');
-      setSelectedColor('#6366f1');
+      setSelectedColor('#8B5CF6');
     }
   };
 
@@ -110,7 +109,7 @@ export function TagManagerDialog({
               <Button
                 type="submit"
                 disabled={!newTagName.trim() || isCreating}
-                className="bg-indigo-500 hover:bg-indigo-600"
+                className="bg-violet-500 hover:bg-violet-600"
               >
                 <Plus className="h-4 w-4" />
               </Button>

@@ -201,7 +201,7 @@ export function PlanningGoalsStep({ data, onUpdate }: PlanningGoalsStepProps) {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
           >
-            <Card className="glass border-indigo-500/30 p-4 space-y-4">
+            <Card className="glass border-violet-500/30 p-4 space-y-4">
               <Form {...form}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField
@@ -307,7 +307,7 @@ export function PlanningGoalsStep({ data, onUpdate }: PlanningGoalsStepProps) {
                   </Button>
                   <Button
                     onClick={form.handleSubmit(editingGoalId ? handleUpdateGoal : handleAddGoal)}
-                    className="bg-indigo-500 hover:bg-indigo-600"
+                    className="bg-violet-500 hover:bg-violet-600"
                   >
                     {editingGoalId ? 'Actualizar' : 'Agregar'} Meta
                   </Button>

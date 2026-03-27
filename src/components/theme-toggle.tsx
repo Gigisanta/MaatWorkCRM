@@ -57,7 +57,7 @@ export function ThemeToggle({
               <Sun className="h-5 w-5" />
             )}
             {theme === "system" && (
-              <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-indigo-500" />
+              <span className="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-violet-500" />
             )}
           </Button>
         </DropdownMenuTrigger>
@@ -72,7 +72,7 @@ export function ThemeToggle({
               <Sun className="h-4 w-4" />
               <span>Claro</span>
             </div>
-            {theme === "light" && <Check className="h-4 w-4 text-indigo-500" />}
+            {theme === "light" && <Check className="h-4 w-4 text-violet-500" />}
           </DropdownMenuItem>
           <DropdownMenuItem 
             onClick={() => setTheme("dark")}
@@ -82,7 +82,7 @@ export function ThemeToggle({
               <Moon className="h-4 w-4" />
               <span>Oscuro</span>
             </div>
-            {theme === "dark" && <Check className="h-4 w-4 text-indigo-500" />}
+            {theme === "dark" && <Check className="h-4 w-4 text-violet-500" />}
           </DropdownMenuItem>
           <DropdownMenuItem 
             onClick={() => setTheme("system")}
@@ -92,7 +92,7 @@ export function ThemeToggle({
               <Monitor className="h-4 w-4" />
               <span>Sistema</span>
             </div>
-            {theme === "system" && <Check className="h-4 w-4 text-indigo-500" />}
+            {theme === "system" && <Check className="h-4 w-4 text-violet-500" />}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -184,7 +184,7 @@ export function ThemeToggle({
             <Sun className="h-4 w-4" />
             <span>Claro</span>
           </div>
-          {theme === "light" && <Check className="h-4 w-4 text-indigo-500" />}
+          {theme === "light" && <Check className="h-4 w-4 text-violet-500" />}
         </DropdownMenuItem>
         <DropdownMenuItem 
           onClick={() => setTheme("dark")}
@@ -194,7 +194,7 @@ export function ThemeToggle({
             <Moon className="h-4 w-4" />
             <span>Oscuro</span>
           </div>
-          {theme === "dark" && <Check className="h-4 w-4 text-indigo-500" />}
+          {theme === "dark" && <Check className="h-4 w-4 text-violet-500" />}
         </DropdownMenuItem>
         <DropdownMenuItem 
           onClick={() => setTheme("system")}
@@ -204,7 +204,7 @@ export function ThemeToggle({
             <Monitor className="h-4 w-4" />
             <span>Sistema</span>
           </div>
-          {theme === "system" && <Check className="h-4 w-4 text-indigo-500" />}
+          {theme === "system" && <Check className="h-4 w-4 text-violet-500" />}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -258,7 +258,7 @@ export function ThemePreviewCard({
         "relative flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200",
         "hover:scale-[1.02] active:scale-[0.98]",
         isActive
-          ? "border-indigo-500 ring-2 ring-indigo-500/20"
+          ? "border-violet-500 ring-2 ring-violet-500/20"
           : "border-transparent",
         isLight
           ? "bg-slate-100 text-slate-900"
@@ -281,7 +281,7 @@ export function ThemePreviewCard({
         <div className="p-2 space-y-1">
           <div className={cn("h-2 rounded w-3/4", isLight ? "bg-slate-200" : "bg-slate-700")} />
           <div className={cn("h-2 rounded w-1/2", isLight ? "bg-slate-200" : "bg-slate-700")} />
-          <div className={cn("h-2 rounded w-2/3", isLight ? "bg-indigo-200" : "bg-indigo-500/30")} />
+          <div className={cn("h-2 rounded w-2/3", isLight ? "bg-violet-200" : "bg-violet-500/30")} />
         </div>
       </div>
 
@@ -289,14 +289,14 @@ export function ThemePreviewCard({
       <div className={cn(
         "mb-1",
         isActive 
-          ? isLight ? "text-indigo-600" : "text-indigo-400"
+          ? isLight ? "text-violet-600" : "text-violet-400"
           : isLight ? "text-slate-600" : "text-slate-300"
       )}>
         {icons[themeMode]}
       </div>
       <span className={cn(
         "font-medium text-sm",
-        isActive && (isLight ? "text-indigo-600" : "text-indigo-400")
+        isActive && (isLight ? "text-violet-600" : "text-violet-400")
       )}>
         {labels[themeMode]}
       </span>
@@ -311,7 +311,7 @@ export function ThemePreviewCard({
       {isActive && (
         <div className={cn(
           "absolute top-2 right-2 h-5 w-5 rounded-full flex items-center justify-center",
-          isLight ? "bg-indigo-500" : "bg-indigo-500"
+          isLight ? "bg-violet-500" : "bg-violet-500"
         )}>
           <Check className="h-3 w-3 text-white" />
         </div>

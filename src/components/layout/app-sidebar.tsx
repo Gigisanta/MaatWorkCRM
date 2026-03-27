@@ -187,7 +187,7 @@ export function AppSidebar({ collapsed, onCollapsedChange }: AppSidebarProps) {
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4 overflow-y-auto overflow-x-hidden">
           {navigationGroups.map((group, groupIndex) => (
-            <React.Fragment key={groupIndex}>
+            <React.Fragment key={group.label}>
               {groupIndex > 0 && (
                 <div className="my-2 mx-1 border-t border-white/5" />
               )}
@@ -264,13 +264,32 @@ export function AppSidebar({ collapsed, onCollapsedChange }: AppSidebarProps) {
         <div className="border-t border-white/5 p-3">
           <div className="group flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/5 transition-all duration-200 cursor-pointer">
             <div className="relative flex-shrink-0">
-              <Avatar className="h-9 w-9 border border-white/10">
-                <AvatarImage src={user?.image || undefined} />
-                <AvatarFallback className="bg-violet-500/20 text-violet-300 text-sm font-medium">
-                  {userInitials}
-                </AvatarFallback>
-              </Avatar>
-              <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-[#08090B]" />
+              {collapsed ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="relative">
+                      <Avatar className="h-9 w-9 border border-white/10">
+                        <AvatarImage src={user?.image || undefined} />
+                        <AvatarFallback className="bg-violet-500/20 text-violet-300 text-sm font-medium">
+                          {userInitials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-[#08090B]" />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">{user?.name ?? "Usuario"}</TooltipContent>
+                </Tooltip>
+              ) : (
+                <div className="relative">
+                  <Avatar className="h-9 w-9 border border-white/10">
+                    <AvatarImage src={user?.image || undefined} />
+                    <AvatarFallback className="bg-violet-500/20 text-violet-300 text-sm font-medium">
+                      {userInitials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-[#08090B]" />
+                </div>
+              )}
             </div>
             <AnimatePresence mode="wait">
               {!collapsed && (
@@ -289,7 +308,20 @@ export function AppSidebar({ collapsed, onCollapsedChange }: AppSidebarProps) {
                 </motion.div>
               )}
             </AnimatePresence>
-            {!collapsed && (
+            {collapsed ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={async (e) => { e.stopPropagation(); await logout(); }}
+                    className="p-2 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors w-full flex justify-center"
+                    aria-label="Cerrar sesión"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right">Cerrar sesión</TooltipContent>
+              </Tooltip>
+            ) : (
               <button
                 onClick={async (e) => { e.stopPropagation(); await logout(); }}
                 className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 rounded-md hover:bg-white/10 text-slate-500 hover:text-rose-400 flex-shrink-0"

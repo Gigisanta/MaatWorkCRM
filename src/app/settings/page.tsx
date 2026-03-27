@@ -9,6 +9,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   User,
   Building,
+  Building2,
   Bell,
   Shield,
   Camera,
@@ -493,40 +494,40 @@ export default function SettingsPage() {
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
               <TabsList className="glass border border-white/10 bg-transparent p-1">
-                <TabsTrigger 
-                  value="profile" 
-                  className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
+                <TabsTrigger
+                  value="profile"
+                  className="flex items-center gap-2 data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
                 >
-                  <User className="h-4 w-4 mr-2" />
-                  Perfil
+                  <User className="h-4 w-4" />
+                  <span>Perfil</span>
                 </TabsTrigger>
-                <TabsTrigger 
+                <TabsTrigger
                   value="organization"
-                  className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
+                  className="flex items-center gap-2 data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
                 >
-                  <Building className="h-4 w-4 mr-2" />
-                  Organización
+                  <Building2 className="h-4 w-4" />
+                  <span>Organización</span>
                 </TabsTrigger>
-                <TabsTrigger 
+                <TabsTrigger
                   value="notifications"
-                  className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
+                  className="flex items-center gap-2 data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
                 >
-                  <Bell className="h-4 w-4 mr-2" />
-                  Notificaciones
+                  <Bell className="h-4 w-4" />
+                  <span>Notificaciones</span>
                 </TabsTrigger>
-                <TabsTrigger 
+                <TabsTrigger
                   value="security"
-                  className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
+                  className="flex items-center gap-2 data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
                 >
-                  <Shield className="h-4 w-4 mr-2" />
-                  Seguridad
+                  <Shield className="h-4 w-4" />
+                  <span>Seguridad</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="appearance"
-                  className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
+                  className="flex items-center gap-2 data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
                 >
-                  <Palette className="h-4 w-4 mr-2" />
-                  Apariencia
+                  <Palette className="h-4 w-4" />
+                  <span>Apariencia</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="accounts"
@@ -1060,7 +1061,7 @@ export default function SettingsPage() {
                     <CardContent>
                       <div className="flex flex-wrap gap-3">
                         {[
-                          { name: 'Indigo', color: '#6366f1', active: true },
+                          { name: 'Violeta', color: '#8B5CF6', active: true },
                           { name: 'Violet', color: '#8b5cf6', active: false },
                           { name: 'Blue', color: '#3b82f6', active: false },
                           { name: 'Emerald', color: '#10b981', active: false },

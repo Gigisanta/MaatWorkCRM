@@ -37,7 +37,7 @@ export function PlanningStepper({ currentStep, onStepClick }: PlanningStepperPro
                   className={cn(
                     'relative w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-300',
                     isCompleted && 'bg-emerald-500 text-white cursor-pointer hover:bg-emerald-600',
-                    isActive && 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/50 cursor-pointer',
+                    isActive && 'bg-violet-500 text-white shadow-lg shadow-violet-500/50 cursor-pointer',
                     isPending && 'bg-slate-700 text-slate-400 cursor-not-allowed'
                   )}
                 >
@@ -56,7 +56,7 @@ export function PlanningStepper({ currentStep, onStepClick }: PlanningStepperPro
                   {/* Active ring animation */}
                   {isActive && (
                     <motion.div
-                      className="absolute inset-0 rounded-full border-2 border-indigo-500"
+                      className="absolute inset-0 rounded-full border-2 border-violet-500"
                       initial={{ scale: 1, opacity: 1 }}
                       animate={{ scale: 1.5, opacity: 0 }}
                       transition={{ duration: 1.5, repeat: Infinity }}
@@ -69,7 +69,7 @@ export function PlanningStepper({ currentStep, onStepClick }: PlanningStepperPro
                   className={cn(
                     'mt-2 text-xs font-medium transition-colors duration-200',
                     isCompleted && 'text-emerald-400',
-                    isActive && 'text-indigo-400',
+                    isActive && 'text-violet-400',
                     isPending && 'text-slate-500'
                   )}
                 >

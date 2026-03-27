@@ -126,7 +126,7 @@ export function AppHeader() {
                 <DropdownMenuLabel>
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium">{user?.name || "Usuario"}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-slate-400">
                       {user?.email || ""}
                     </p>
                   </div>

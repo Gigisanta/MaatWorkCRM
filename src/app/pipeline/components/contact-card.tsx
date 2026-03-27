@@ -40,6 +40,7 @@ export function ContactCard({
   // Tags are the products
   const products: Product[] = contact.tags || [];
   const hasProducts = products.length > 0;
+  const totalValue = products.reduce((sum, p) => sum + (p.value ?? 0), 0);
 
   return (
     <motion.div
@@ -117,16 +118,24 @@ export function ContactCard({
         ) : (
           <span />
         )}
-        {contact.updatedAt && (
-          <span className="text-[10px] text-slate-600 tabular-nums flex-shrink-0">
-            {formatDistanceToNow(new Date(contact.updatedAt), { addSuffix: true, locale: es })}
-          </span>
-        )}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {totalValue > 0 && (
+            <span className="text-xs font-semibold text-emerald-400 tabular-nums">
+              ${totalValue.toLocaleString("es-MX")}
+            </span>
+          )}
+          {contact.updatedAt && (
+            <span className="text-[10px] text-slate-600 tabular-nums">
+              {formatDistanceToNow(new Date(contact.updatedAt), { addSuffix: true, locale: es })}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Edit button */}
       <button
-        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-150 p-1 rounded-md bg-white/8 hover:bg-white/15 border border-white/8"
+        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-150 p-1 rounded-md bg-white/8 hover:bg-white/15 border border-white/8 cursor-pointer"
+        aria-label="Editar contacto"
         onClick={(e) => {
           e.stopPropagation();
           onEdit(contact);

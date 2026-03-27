@@ -46,10 +46,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await fetch('/api/auth/session', { credentials: 'include' });
       const data = await response.json();
-      
-      if (data.authenticated && data.user) {
-        setUser(data.user);
-        setSession(data.session || null);
+
+      // NextAuth returns { user: {...}, expires: "..." } format
+      // Also handle our custom format { authenticated: true, user: {...}, session: {...} }
+      if ((data.authenticated && data.user) || (data.user && data.expires)) {
+        // Fetch additional user data (organization, linkedProviders) if using NextAuth session
+        let userData = data.user;
+        if (data.user && !data.organizationId) {
+          try {
+            const profileRes = await fetch('/api/auth/user-profile', { credentials: 'include' });
+            const profileData = await profileRes.json();
+            if (profileData.user) {
+              userData = { ...data.user, ...profileData.user };
+            }
+          } catch {
+            // Ignore profile fetch errors
+          }
+        }
+        setUser(userData);
+        setSession(data.session || (data.expires ? { expiresAt: data.expires } : null));
       } else {
         setUser(null);
         setSession(null);

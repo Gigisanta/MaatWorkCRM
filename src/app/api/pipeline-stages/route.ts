@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         description,
-        color: color || '#6366f1',
+        color: color || '#8B5CF6',
         order: stageOrder,
         wipLimit,
         slaHours,

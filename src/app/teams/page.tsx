@@ -18,7 +18,6 @@ import {
   X,
   Edit,
   Trash2,
-  Loader2,
   AlertCircle,
   Building2,
 } from "lucide-react";
@@ -83,6 +82,7 @@ import {
 } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
@@ -278,7 +278,7 @@ function GoalCard({
     if (p >= 100) return "#22c55e";
     if (p >= 80) return "#10b981";
     if (p >= 50) return "#f59e0b";
-    return "#6366f1";
+    return "#8B5CF6";
   };
 
   const getTypeLabel = (type: string) => {
@@ -1358,8 +1358,38 @@ export default function TeamsPage() {
 
             {/* Loading State */}
             {isLoading && (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="rounded-xl border border-white/8 bg-[#0E0F12]/80 p-5 space-y-4">
+                    {/* Team header */}
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <Skeleton className="h-5 w-36 bg-white/5" />
+                        <Skeleton className="h-3 w-24 bg-white/5" />
+                      </div>
+                      <Skeleton className="h-8 w-8 rounded-lg bg-white/5" />
+                    </div>
+                    {/* Stats row */}
+                    <div className="flex gap-4">
+                      <Skeleton className="h-10 w-20 bg-white/5" />
+                      <Skeleton className="h-10 w-20 bg-white/5" />
+                    </div>
+                    {/* Progress bar */}
+                    <div className="space-y-1">
+                      <div className="flex justify-between">
+                        <Skeleton className="h-3 w-16 bg-white/5" />
+                        <Skeleton className="h-3 w-8 bg-white/5" />
+                      </div>
+                      <Skeleton className="h-2 w-full bg-white/5 rounded-full" />
+                    </div>
+                    {/* Avatar row */}
+                    <div className="flex -space-x-2">
+                      {[1, 2, 3].map((j) => (
+                        <Skeleton key={j} className="h-7 w-7 rounded-full bg-white/5 ring-2 ring-[#08090B]" />
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 

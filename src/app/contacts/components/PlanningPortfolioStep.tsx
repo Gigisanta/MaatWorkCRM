@@ -204,7 +204,7 @@ export function PlanningPortfolioStep({ data, onUpdate }: PlanningPortfolioStepP
                     <div className="flex items-center gap-2">
                       <h4 className="font-medium text-white">{instrument.nombre}</h4>
                       {instrument.tipo && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/30">
                           {instrument.tipo}
                         </span>
                       )}
@@ -259,7 +259,7 @@ export function PlanningPortfolioStep({ data, onUpdate }: PlanningPortfolioStepP
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
             >
-              <Card className="glass border-indigo-500/30 p-4 space-y-4">
+              <Card className="glass border-violet-500/30 p-4 space-y-4">
                 <Form {...instrumentoForm}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
@@ -424,7 +424,7 @@ export function PlanningPortfolioStep({ data, onUpdate }: PlanningPortfolioStepP
                     </Button>
                     <Button
                       onClick={instrumentoForm.handleSubmit(editingInstrumentId ? handleUpdateInstrument : handleAddInstrument)}
-                      className="bg-indigo-500 hover:bg-indigo-600"
+                      className="bg-violet-500 hover:bg-violet-600"
                     >
                       {editingInstrumentId ? 'Actualizar' : 'Agregar'} Instrumento
                     </Button>
@@ -481,7 +481,7 @@ export function PlanningPortfolioStep({ data, onUpdate }: PlanningPortfolioStepP
               className="flex items-center gap-4 p-3 rounded-lg glass border-white/10"
             >
               <span className="flex-1 text-white">{asignacion.claseActivo}</span>
-              <span className="text-lg font-semibold text-indigo-400">{asignacion.porcentaje}%</span>
+              <span className="text-lg font-semibold text-violet-400">{asignacion.porcentaje}%</span>
               <Button
                 variant="ghost"
                 size="icon"
@@ -502,7 +502,7 @@ export function PlanningPortfolioStep({ data, onUpdate }: PlanningPortfolioStepP
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
             >
-              <Card className="glass border-indigo-500/30 p-4 space-y-4">
+              <Card className="glass border-violet-500/30 p-4 space-y-4">
                 <Form {...asignacionForm}>
                   <div className="grid grid-cols-3 gap-4">
                     <FormField
@@ -565,7 +565,7 @@ export function PlanningPortfolioStep({ data, onUpdate }: PlanningPortfolioStepP
                     </Button>
                     <Button
                       onClick={asignacionForm.handleSubmit(handleAddAsignacion)}
-                      className="bg-indigo-500 hover:bg-indigo-600"
+                      className="bg-violet-500 hover:bg-violet-600"
                     >
                       Agregar
                     </Button>

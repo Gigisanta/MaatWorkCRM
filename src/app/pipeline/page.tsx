@@ -47,11 +47,13 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -63,6 +65,7 @@ import {
   type Product,
 } from "@/hooks/use-pipeline";
 import { ContactCard } from "./components/contact-card";
+import { MobileFAB } from "@/components/ui/mobile-fab";
 
 // Stage Column Component
 const StageColumn = React.memo(function StageColumn({
@@ -231,6 +234,9 @@ function ContactModal({
       <DialogContent className="glass border-white/10 bg-slate-900 text-white max-w-md">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Editar Contacto" : "Nuevo Contacto"}</DialogTitle>
+          <DialogDescription className="sr-only">
+            {isEditing ? "Editar etapa y asignación del contacto" : "Crear nuevo contacto en el pipeline"}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -595,8 +601,27 @@ function PipelineContent() {
 
             {/* Loading State */}
             {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
+              <div className="flex gap-4 overflow-x-auto pb-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="flex-shrink-0 w-[280px] space-y-3">
+                    {/* Column header skeleton */}
+                    <div className="flex items-center justify-between px-1">
+                      <Skeleton className="h-5 w-28 bg-white/5" />
+                      <Skeleton className="h-5 w-8 bg-white/5 rounded-full" />
+                    </div>
+                    {/* Card skeletons */}
+                    {[1, 2, 3].map((j) => (
+                      <div key={j} className="rounded-xl border border-white/8 bg-[#0E0F12]/80 p-3 space-y-2">
+                        <Skeleton className="h-4 w-3/4 bg-white/5" />
+                        <Skeleton className="h-3 w-1/2 bg-white/5" />
+                        <div className="flex gap-2 pt-1">
+                          <Skeleton className="h-6 w-6 rounded-full bg-white/5" />
+                          <Skeleton className="h-6 w-16 bg-white/5" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ))}
               </div>
             ) : pipelineView === "list" ? (
               /* List View */
@@ -733,6 +758,17 @@ function PipelineContent() {
         onSuccess={refetch}
         organizationId={organizationId}
       />
+
+      {/* Mobile FAB - only shown on mobile */}
+      <MobileFAB
+        actions={[
+          {
+            label: "Nueva oportunidad",
+            icon: Plus,
+            onClick: () => toast.info("Usa la tabla de contactos para crear nuevos contactos"),
+          },
+        ]}
+      />
     </div>
   );
 }
@@ -744,8 +780,25 @@ function LoadingFallback() {
       <div className="lg:pl-[220px]">
         <AppHeader />
         <main className="p-4 lg:p-6">
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
+          <div className="flex gap-4 overflow-x-auto pb-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex-shrink-0 w-[280px] space-y-3">
+                <div className="flex items-center justify-between px-1">
+                  <Skeleton className="h-5 w-28 bg-white/5" />
+                  <Skeleton className="h-5 w-8 bg-white/5 rounded-full" />
+                </div>
+                {[1, 2, 3].map((j) => (
+                  <div key={j} className="rounded-xl border border-white/8 bg-[#0E0F12]/80 p-3 space-y-2">
+                    <Skeleton className="h-4 w-3/4 bg-white/5" />
+                    <Skeleton className="h-3 w-1/2 bg-white/5" />
+                    <div className="flex gap-2 pt-1">
+                      <Skeleton className="h-6 w-6 rounded-full bg-white/5" />
+                      <Skeleton className="h-6 w-16 bg-white/5" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
           </div>
         </main>
       </div>

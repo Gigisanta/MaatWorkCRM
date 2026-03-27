@@ -101,7 +101,7 @@ function DashboardData({ user }: { user: any }) {
   const { setCreateContactOpen, setCreateTaskOpen } = useQuickActions();
 
   // Fetch dashboard stats
-  const { data: stats } = useQuery({
+  const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["dashboard-stats", user?.organizationId],
     queryFn: async () => {
       if (!user?.organizationId) return null;
@@ -256,15 +256,19 @@ function DashboardData({ user }: { user: any }) {
             </div>
           </motion.div>
 
-          {/* KPI Cards - loads first, wrapped in Suspense */}
-          <Suspense fallback={<KPICardsSkeleton />}>
-            <KPISection
-              kpiConfig={kpiConfig}
-              kpiValues={kpiValues}
-              stats={stats}
-              renderTrend={renderTrend}
-            />
-          </Suspense>
+          {/* KPI Cards - loads first, show skeleton while stats are loading */}
+          {statsLoading ? (
+            <KPICardsSkeleton />
+          ) : (
+            <Suspense fallback={<KPICardsSkeleton />}>
+              <KPISection
+                kpiConfig={kpiConfig}
+                kpiValues={kpiValues}
+                stats={stats}
+                renderTrend={renderTrend}
+              />
+            </Suspense>
+          )}
 
           {/* Bottom section - Pipeline, Tasks and Calendar can load in parallel */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
@@ -401,6 +405,8 @@ function PipelineSummary({
       transition={{ duration: 0.4, delay: 0.5 }}
       className="relative overflow-hidden rounded-xl border border-white/8 bg-[#0E0F12]/80 backdrop-blur-sm"
     >
+      {/* Top accent line */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500/60 via-violet-400/40 to-transparent rounded-t-xl" />
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold text-white">Estado del Pipeline</h2>
@@ -459,6 +465,8 @@ function TasksAndGoals({
       transition={{ duration: 0.4, delay: 0.6 }}
       className="relative overflow-hidden rounded-xl border border-white/8 bg-[#0E0F12]/80 backdrop-blur-sm"
     >
+      {/* Top accent line */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500/60 via-violet-400/40 to-transparent rounded-t-xl" />
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold text-white">Mis Tareas</h2>
@@ -559,6 +567,8 @@ function MiniCalendar({ events }: { events: any[] }) {
       transition={{ duration: 0.4, delay: 0.7 }}
       className="relative overflow-hidden rounded-xl border border-white/8 bg-[#0E0F12]/80 backdrop-blur-sm"
     >
+      {/* Top accent line */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-violet-500/60 via-violet-400/40 to-transparent rounded-t-xl" />
       <div className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold text-white">Calendario</h2>

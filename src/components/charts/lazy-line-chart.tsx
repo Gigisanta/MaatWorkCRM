@@ -19,7 +19,7 @@ const LineChartImpl = dynamic(
     loading: () => (
       <div className="flex items-center justify-center w-full h-full min-h-[200px]">
         <div className="animate-pulse flex flex-col items-center gap-2">
-          <div className="w-8 h-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+          <div className="w-8 h-8 rounded-full border-2 border-violet-500 border-t-transparent animate-spin" />
           <span className="text-xs text-slate-400">Cargando gráfico...</span>
         </div>
       </div>

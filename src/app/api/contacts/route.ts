@@ -11,10 +11,12 @@ export const dynamic = 'force-dynamic';
 
 // Helper to get team member IDs for a manager
 async function getTeamMemberIds(managerId: string): Promise<string[]> {
+  logger.debug({ operation: 'getTeamMemberIds', managerId }, 'Getting team members');
   const team = await db.user.findMany({
     where: { managerId },
     select: { id: true },
   });
+  logger.debug({ operation: 'getTeamMemberIds', managerId, count: team.length }, 'Team members fetched');
   return team.map(u => u.id);
 }
 
@@ -38,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     // Admin/Staff/Owner/Developer see all contacts in organization
     if (hasPermission(userRole, 'contacts:read:all')) {
-      const searchParams = request.nextUrl.searchParams;
+      const searchParams = await request.nextUrl.searchParams;
       const organizationId = searchParams.get('organizationId');
 
       const targetOrgId = organizationId || user.organizationId;
@@ -154,7 +156,7 @@ export async function GET(request: NextRequest) {
 
     // Manager sees team + own contacts
     if (hasPermission(userRole, 'contacts:read:team')) {
-      const searchParams = request.nextUrl.searchParams;
+      const searchParams = await request.nextUrl.searchParams;
       const organizationId = searchParams.get('organizationId');
 
       const targetOrgId = organizationId || user.organizationId;
@@ -273,7 +275,7 @@ export async function GET(request: NextRequest) {
 
     // Advisor/Member see only their own contacts
     if (hasPermission(userRole, 'contacts:read:own')) {
-      const searchParams = request.nextUrl.searchParams;
+      const searchParams = await request.nextUrl.searchParams;
       const organizationId = searchParams.get('organizationId');
 
       const targetOrgId = organizationId || user.organizationId;
@@ -390,8 +392,18 @@ export async function GET(request: NextRequest) {
     forbiddenResponse.headers.set('x-request-id', requestId);
     return forbiddenResponse;
   } catch (error) {
-    logger.error({ err: error, operation: 'getContacts', requestId, duration_ms: Date.now() - start }, 'Failed to fetch contacts');
-    const errorResponse = NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
+    logger.error({
+      err: error,
+      operation: 'getContacts',
+      requestId,
+      duration_ms: Date.now() - start,
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorStack: error instanceof Error ? error.stack : undefined,
+    }, 'Failed to fetch contacts');
+    const errorResponse = NextResponse.json({
+      error: 'Error interno del servidor',
+      requestId,
+    }, { status: 500 });
     errorResponse.headers.set('x-request-id', requestId);
     return errorResponse;
   }

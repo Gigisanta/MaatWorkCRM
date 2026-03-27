@@ -23,9 +23,11 @@ Cliente (Next.js)                 API (Next.js Routes)
 
 ### Tecnologías
 
-- **Auth:** next-auth v4 (credenciales)
+- **Auth:** next-auth v4 con PrismaAdapter
+- **Providers:** Google OAuth 2.0 (PKCE + state) + Credentials (email/password)
+- **Estrategia de sesión:** JWT (JWE encriptado en cookies)
 - **Estado:** React Context (AuthContext)
-- **Storage:** httpOnly cookies para tokens
+- **Storage:** httpOnly cookies para tokens (cookie `__Secure-next-auth.session-token` en producción)
 - **API:** Next.js API Routes en `/api/auth/*`
 
 ---
@@ -74,14 +76,35 @@ interface RegisterData {
 
 **Archivo:** `src/app/login/page.tsx`
 
-### Campos
+### Login con Google OAuth
+
+El login con Google OAuth funciona mediante NextAuth:
+
+```
+1. Usuario click "Continuar con Google"
+   → signIn('google', { callbackUrl: '/dashboard' })
+
+2. Redirect a Google OAuth → usuario autoriza
+
+3. Google redirect a /api/auth/callback/google
+   → NextAuth crea/encuentra User en BD
+   → Crea Account para el provider Google
+   → Genera JWE token y lo guarda en cookie
+
+4. Cookie seteada: __Secure-next-auth.session-token (prod)
+   → El valor es un JWE (JSON Web Encryption) encriptado
+
+5. Redirect a /dashboard
+```
+
+### Campos (Credentials)
 
 | Campo | Tipo | Validación |
 |-------|------|------------|
 | identifier | string | Requerido (email o username) |
 | password | string | Requerido |
 
-### Flujo
+### Flujo (Credentials)
 
 ```typescript
 // 1. Llamar API
@@ -171,6 +194,7 @@ interface UseRequireAuthOptions {
 | POST | `/api/auth/register` | Registro de usuario |
 | POST | `/api/auth/logout` | Cerrar sesión |
 | GET | `/api/auth/session` | Obtener sesión actual |
+| GET | `/api/auth/user-profile` | Obtener datos extendidos del usuario (org, providers) |
 | POST | `/api/auth/change-password` | Cambiar contraseña |
 | GET | `/api/auth/managers` | Lista de managers |
 

@@ -203,8 +203,8 @@ export function ContactTable({
                         <Badge
                           style={{
                             backgroundColor:
-                              (contact.pipelineStage?.color || "#6366f1") + "20",
-                            color: contact.pipelineStage?.color || "#6366f1",
+                              (contact.pipelineStage?.color || "#8B5CF6") + "20",
+                            color: contact.pipelineStage?.color || "#8B5CF6",
                           }}
                           className="text-xs cursor-pointer hover:opacity-80 transition-opacity max-w-[100px] truncate"
                           onClick={() => router.push(`/pipeline?contact=${contact.id}`)}

@@ -103,7 +103,7 @@ function LoginContent() {
           <MaatWorkLogo size="2xl" showWordmark showTagline />
         </motion.div>
 
-        <Card className="bg-[#0E0F12]/90 backdrop-blur-xl border-[#1C1D21]">
+        <Card className="bg-[#0E0F12]/90 backdrop-blur-xl border-white/8">
           <CardHeader className="space-y-1 text-center pb-2">
             <motion.div
               initial={{ scale: 0.9 }}
@@ -136,7 +136,7 @@ function LoginContent() {
                     placeholder="tu@email.com"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    className="pl-10 bg-[#08090B] border-[#1C1D21] text-[#F0EFE9] placeholder:text-[#666666] focus:border-[#8B5CF6]"
+                    className="pl-10 bg-[#08090B] border-[#1C1D21] text-[#F0EFE9] placeholder:text-[#666666] focus:border-[#8B5CF6] focus-visible:ring-2 focus-visible:ring-violet-500/30 focus-visible:ring-offset-0 focus-visible:outline-none"
                     disabled={isLoading}
                     autoComplete="username"
                   />
@@ -156,7 +156,7 @@ function LoginContent() {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10 bg-[#08090B] border-[#1C1D21] text-[#F0EFE9] placeholder:text-[#666666] focus:border-[#8B5CF6]"
+                    className="pl-10 pr-10 bg-[#08090B] border-[#1C1D21] text-[#F0EFE9] placeholder:text-[#666666] focus:border-[#8B5CF6] focus-visible:ring-2 focus-visible:ring-violet-500/30 focus-visible:ring-offset-0 focus-visible:outline-none"
                     disabled={isLoading}
                     autoComplete="current-password"
                   />

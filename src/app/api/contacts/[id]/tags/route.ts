@@ -98,7 +98,7 @@ export async function POST(
         const newTag = await db.tag.create({
           data: {
             name: tagName,
-            color: tagColor || '#6366f1',
+            color: tagColor || '#8B5CF6',
             organizationId,
           },
         });

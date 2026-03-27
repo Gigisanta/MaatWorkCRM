@@ -193,7 +193,8 @@ function NotificationCard({
         "hover:border-white/20 transition-all duration-200 cursor-pointer",
         !notification.isRead
           ? "border-l-2 border-l-violet-500 border border-white/8 bg-violet-500/5"
-          : "border border-white/8"
+          : "border border-white/8",
+        notification.isRead && "opacity-60"
       )}
     >
       <div className="flex items-start gap-4">
@@ -232,7 +233,7 @@ function NotificationCard({
           <Button
             variant="ghost"
             size="sm"
-            className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white"
+            className="opacity-30 group-hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 text-slate-400 hover:text-white"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -342,11 +343,41 @@ export default function NotificationsPage() {
   // Mark all as read mutation
   const markAllAsReadMutation = useMutation({
     mutationFn: () => markAllAsRead(user!.id, user!.organizationId!),
+    onMutate: async () => {
+      // Cancel in-flight queries to avoid overwriting optimistic update
+      await queryClient.cancelQueries({
+        queryKey: ["notifications", user?.id, user?.organizationId, filterRead, filterType, page],
+      });
+      // Snapshot previous state for rollback
+      const previousData = queryClient.getQueryData<NotificationsResponse>([
+        "notifications", user?.id, user?.organizationId, filterRead, filterType, page,
+      ]);
+      // Optimistically mark all notifications as read
+      queryClient.setQueryData<NotificationsResponse>(
+        ["notifications", user?.id, user?.organizationId, filterRead, filterType, page],
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            unreadCount: 0,
+            notifications: old.notifications.map((n) => ({ ...n, isRead: true })),
+          };
+        }
+      );
+      return { previousData };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       toast.success("Todas las notificaciones marcadas como leídas");
     },
-    onError: () => {
+    onError: (_err, _vars, context) => {
+      // Rollback to previous state if the request fails
+      if (context?.previousData) {
+        queryClient.setQueryData(
+          ["notifications", user?.id, user?.organizationId, filterRead, filterType, page],
+          context.previousData
+        );
+      }
       toast.error("Error al marcar notificaciones como leídas");
     },
   });
@@ -358,10 +389,37 @@ export default function NotificationsPage() {
   // Delete notification mutation
   const deleteNotificationMutation = useMutation({
     mutationFn: deleteNotification,
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({
+        queryKey: ["notifications", user?.id, user?.organizationId, filterRead, filterType, page],
+      });
+      const previousData = queryClient.getQueryData<NotificationsResponse>([
+        "notifications", user?.id, user?.organizationId, filterRead, filterType, page,
+      ]);
+      queryClient.setQueryData<NotificationsResponse>(
+        ["notifications", user?.id, user?.organizationId, filterRead, filterType, page],
+        (old) => {
+          if (!old) return old;
+          const removed = old.notifications.find((n) => n.id === id);
+          return {
+            ...old,
+            unreadCount: removed && !removed.isRead ? old.unreadCount - 1 : old.unreadCount,
+            notifications: old.notifications.filter((n) => n.id !== id),
+          };
+        }
+      );
+      return { previousData };
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
-    onError: () => {
+    onError: (_err, _id, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(
+          ["notifications", user?.id, user?.organizationId, filterRead, filterType, page],
+          context.previousData
+        );
+      }
       toast.error("Error al eliminar notificación");
     },
   });
