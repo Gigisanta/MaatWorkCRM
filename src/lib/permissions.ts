@@ -37,7 +37,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   manager: ['contacts:read:own', 'contacts:read:team', 'contacts:create', 'contacts:update:own', 'contacts:update:team', 'contacts:delete:own', 'contacts:delete:team', 'team:view', 'role:request'],
   staff: ['contacts:read:own', 'contacts:create', 'contacts:update:own', 'role:request'],
   advisor: ['contacts:read:own', 'contacts:create', 'contacts:update:own', 'role:request'],
-  member: ['contacts:read:own', 'contacts:create', 'contacts:update:own', 'role:request'],
+  member: ['contacts:read:own', 'contacts:create', 'contacts:update:own', 'team:view', 'role:request'],
 };
 
 export function hasPermission(role: string, permission: Permission): boolean {
