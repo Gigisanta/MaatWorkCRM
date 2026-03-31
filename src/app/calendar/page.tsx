@@ -163,10 +163,19 @@ async function fetchCalendarStatus(): Promise<CalendarStatus> {
   return res.json();
 }
 
-async function syncCalendar(): Promise<{ success: boolean; lastSync: string }> {
+async function syncCalendar(): Promise<{ success: boolean; lastSync: string; needsReauth?: boolean; error?: string }> {
   const res = await fetch('/api/calendar/sync', { method: 'POST' });
-  if (!res.ok) throw new Error('Failed to sync calendar');
-  return res.json();
+  const data = await res.json();
+  if (!res.ok) {
+    if (data.needsReauth) {
+      throw new Error('Tokens de Google Calendar expirados. Por favor reconnecta tu cuenta.');
+    }
+    throw new Error(data.error || 'Failed to sync calendar');
+  }
+  if (data.needsReauth) {
+    throw new Error('Tokens de Google Calendar expirados. Por favor reconnecta tu cuenta.');
+  }
+  return data;
 }
 
 async function updateCalendarPreferences(calendars: string[]): Promise<{ success: boolean }> {

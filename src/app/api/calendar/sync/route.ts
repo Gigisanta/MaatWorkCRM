@@ -29,6 +29,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, action, synced, direction });
     }
   } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Sync failed' }, { status: 500 });
+    const errorMessage = error?.message || 'Sync failed';
+    const errorCode = error?.code || error?.status || '';
+
+    // Token errors (401, 403) mean tokens are expired/invalid
+    const isTokenError =
+      errorCode === 401 ||
+      errorCode === 403 ||
+      errorMessage.includes('Token') ||
+      errorMessage.includes('invalid') ||
+      errorMessage.includes('expired') ||
+      errorMessage.includes(' unauthorized') ||
+      errorMessage.includes('Daily Limit Exceeded');
+
+    if (isTokenError) {
+      // Clear sync state so next sync starts fresh
+      await db.calendarSyncState.updateMany({
+        where: { userId: user.id },
+        data: { syncStatus: 'idle', errorCount: 0, syncToken: null },
+      });
+
+      return NextResponse.json({
+        needsReauth: true,
+        error: 'Google Calendar tokens expired. Please reconnect your account.',
+      }, { status: 401 });
+    }
+
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
