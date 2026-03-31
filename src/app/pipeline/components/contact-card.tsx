@@ -4,18 +4,20 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Pencil, AlertTriangle } from "lucide-react";
+import { GripVertical, Pencil, AlertTriangle, ChevronRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { ProductSubCard } from "./product-sub-card";
-import type { ContactWithProducts, Product } from "@/hooks/use-pipeline";
+import type { ContactWithProducts, Product, StageWithContacts } from "@/hooks/use-pipeline";
 
 interface ContactCardProps {
   contact: ContactWithProducts;
   isDragging?: boolean;
   isHighlighted?: boolean;
   onEdit: (contact: ContactWithProducts) => void;
+  stages?: StageWithContacts[];
+  onUpdateStage?: (contactId: string, stageId: string) => void;
 }
 
 export function ContactCard({
@@ -23,6 +25,8 @@ export function ContactCard({
   isDragging,
   isHighlighted,
   onEdit,
+  stages,
+  onUpdateStage,
 }: ContactCardProps) {
   const {
     attributes,
@@ -143,6 +147,26 @@ export function ContactCard({
       >
         <Pencil className="h-3 w-3 text-slate-300" />
       </button>
+
+      {/* Stage advance button */}
+      {stages && onUpdateStage && (() => {
+        const currentStage = stages.find(s => s.id === contact.pipelineStageId);
+        const currentOrder = currentStage?.order ?? 0;
+        const nextStage = stages.find(s => s.order === currentOrder + 1 && s.isActive !== false);
+        if (!nextStage) return null;
+        return (
+          <button
+            className="absolute top-2 right-10 opacity-0 group-hover:opacity-100 transition-all duration-150 p-1 rounded-md bg-violet-500/20 hover:bg-violet-500/30 border border-violet-500/30 cursor-pointer"
+            aria-label={`Avanzar a ${nextStage.name}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onUpdateStage(contact.id, nextStage.id);
+            }}
+          >
+            <ChevronRight className="h-3 w-3 text-violet-400" />
+          </button>
+        );
+      })()}
     </motion.div>
   );
 }

@@ -14,6 +14,7 @@ import {
   useSensor,
   useSensors,
   closestCorners,
+  closestCenter,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -29,6 +30,7 @@ import {
   Loader2,
   LayoutGrid,
   List,
+  ChevronRight,
 } from "lucide-react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
@@ -73,11 +75,15 @@ const StageColumn = React.memo(function StageColumn({
   onEditContact,
   highlightedContactId,
   onAddContact,
+  stages,
+  onUpdateStage,
 }: {
   stage: StageWithContacts;
   onEditContact: (contact: ContactWithProducts) => void;
   highlightedContactId?: string | null;
   onAddContact: (stageId: string) => void;
+  stages: StageWithContacts[];
+  onUpdateStage: (contactId: string, stageId: string) => void;
 }) {
   const isOverWipLimit = stage.wipLimit !== null && stage.contacts.length > stage.wipLimit;
 
@@ -131,6 +137,8 @@ const StageColumn = React.memo(function StageColumn({
                 contact={contact}
                 onEdit={onEditContact}
                 isHighlighted={highlightedContactId === contact.id}
+                stages={stages}
+                onUpdateStage={onUpdateStage}
               />
             ))}
           </AnimatePresence>
@@ -486,6 +494,10 @@ function PipelineContent() {
     toast.info("Usa la tabla de contactos para crear nuevos contactos");
   };
 
+  const handleUpdateStage = React.useCallback((contactId: string, stageId: string) => {
+    moveContact.mutate({ contactId, pipelineStageId: stageId });
+  }, [moveContact]);
+
   // Error state
   if (error) {
     return (
@@ -697,7 +709,7 @@ function PipelineContent() {
               /* Kanban Board */
               <DndContext
                 sensors={sensors}
-                collisionDetection={closestCorners}
+                collisionDetection={closestCenter}
                 onDragStart={handleDragStart}
                 onDragOver={handleDragOver}
                 onDragEnd={handleDragEnd}
@@ -711,6 +723,8 @@ function PipelineContent() {
                         onEditContact={handleEditContact}
                         highlightedContactId={highlightedContactId}
                         onAddContact={handleAddContact}
+                        stages={stages}
+                        onUpdateStage={handleUpdateStage}
                       />
                     ))}
                   </div>

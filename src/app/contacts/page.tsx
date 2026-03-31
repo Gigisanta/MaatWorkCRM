@@ -88,8 +88,9 @@ export default function ContactsPage() {
   const [showTagManager, setShowTagManager] = React.useState(false);
   const { collapsed, setCollapsed } = useSidebar();
 
-  // Check if user is advisor (should not see assigned to column)
-  const isAdvisor = user?.role === 'advisor' || user?.role === 'asesor';
+  // Check if user can reassign contacts (should not see assigned to column in table)
+  const canReassign = user?.role === 'owner' || user?.role === 'admin' || user?.role === 'developer';
+  const isAdvisor = user?.role === 'advisor' || user?.role === 'asesor' || canReassign;
 
   // Debounced search
   const debouncedSearch = useDebounce(search, 300);

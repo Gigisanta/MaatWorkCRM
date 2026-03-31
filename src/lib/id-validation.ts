@@ -3,8 +3,9 @@
  * Validates CUID and UUID formats for route parameter validation
  */
 
-// CUID pattern: starts with "cuid" followed by alphanumeric characters (typically 25 chars)
-const CUID_REGEX = /^cuid[a-z0-9]{20,25}$/i;
+// CUID pattern: starts with "c" followed by alphanumeric characters (typically 25 chars)
+// Prisma CUIDs look like: cmneufsxp0001l104e4k1gi2z (starts with 'c', 25 chars)
+const CUID_REGEX = /^c[a-z0-9]{23,24}$/i;
 
 // UUID pattern: 8-4-4-4-12 format with hex characters
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
