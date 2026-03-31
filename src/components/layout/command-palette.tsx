@@ -504,7 +504,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
         {/* Two-key shortcut indicator */}
         {isSecondKey && firstKey && (
-          <div className="p-2 border-t border-white/10">
+          <div className="p-2 border-t border-white/8">
             <div className="flex items-center justify-center gap-2 text-sm text-slate-400">
               <kbd className="px-2 py-0.5 bg-white/10 rounded text-xs">{firstKey.toUpperCase()}</kbd>
               <span>+</span>
@@ -519,7 +519,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       </CommandList>
 
       {/* Footer with help */}
-      <div className="border-t border-white/10 p-2 flex items-center justify-between text-xs text-slate-500">
+      <div className="border-t border-white/8 p-2 flex items-center justify-between text-xs text-slate-500">
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
             <kbd className="px-1.5 py-0.5 bg-white/10 rounded">↑↓</kbd>

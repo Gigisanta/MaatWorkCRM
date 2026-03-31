@@ -3,7 +3,15 @@ import { db } from '@/lib/db';
 import { calendarSyncEngine } from '@/lib/google-calendar/sync-engine';
 
 export async function GET(request: NextRequest) {
-  const cronSecret = request.headers.get('x-cron-secret');
+  // Vercel Cron sends Bearer token in Authorization header
+  const authHeader = request.headers.get('authorization');
+  const cronSecret = authHeader?.replace('Bearer ', '');
+
+  if (!process.env.CRON_SECRET) {
+    console.error('CRON_SECRET environment variable is not set');
+    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+  }
+
   if (cronSecret !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

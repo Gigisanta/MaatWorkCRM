@@ -44,27 +44,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchSession = useCallback(async () => {
     try {
-      const response = await fetch('/api/auth/session', { credentials: 'include' });
-      const data = await response.json();
+      // Try NextAuth session endpoint first
+      let userData: AuthUser | null = null;
+      let sessionData: SessionData | null = null;
 
-      // NextAuth returns { user: {...}, expires: "..." } format
-      // Also handle our custom format { authenticated: true, user: {...}, session: {...} }
-      if ((data.authenticated && data.user) || (data.user && data.expires)) {
-        // Fetch additional user data (organization, linkedProviders) if using NextAuth session
-        let userData = data.user;
-        if (data.user && !data.organizationId) {
-          try {
-            const profileRes = await fetch('/api/auth/user-profile', { credentials: 'include' });
-            const profileData = await profileRes.json();
-            if (profileData.user) {
-              userData = { ...data.user, ...profileData.user };
-            }
-          } catch {
-            // Ignore profile fetch errors
-          }
+      try {
+        const response = await fetch('/api/auth/session', { credentials: 'include' });
+        const data = await response.json();
+
+        if ((data.authenticated && data.user) || (data.user && data.expires)) {
+          userData = data.user;
+          sessionData = data.session || (data.expires ? { expiresAt: data.expires } : null);
         }
+      } catch {
+        // NextAuth session failed, continue to custom session
+      }
+
+      // If NextAuth session returned nothing, try custom session endpoint
+      // This handles the custom credentials login (session_token cookie)
+      if (!userData) {
+        try {
+          const customRes = await fetch('/api/auth/session-custom', { credentials: 'include' });
+          const customData = await customRes.json();
+
+          if (customData.authenticated && customData.user) {
+            userData = customData.user;
+            sessionData = customData.session || null;
+          }
+        } catch {
+          // Custom session also failed
+        }
+      }
+
+      if (userData) {
         setUser(userData);
-        setSession(data.session || (data.expires ? { expiresAt: data.expires } : null));
+        setSession(sessionData);
       } else {
         setUser(null);
         setSession(null);

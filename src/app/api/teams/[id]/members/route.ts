@@ -46,6 +46,11 @@ export async function POST(
       return NextResponse.json({ error: 'Team not found' }, { status: 404, headers: { 'x-request-id': requestId } });
     }
 
+    if (team.organizationId !== user.organizationId) {
+      logger.warn({ operation: 'addTeamMember', requestId, teamId: id }, 'Forbidden: organization mismatch');
+      return NextResponse.json({ error: 'No tienes acceso a esta organización' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
+
     // Check if user is already a member
     const existingMember = await db.teamMember.findFirst({
       where: {

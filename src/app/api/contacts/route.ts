@@ -51,6 +51,13 @@ export async function GET(request: NextRequest) {
         return response;
       }
 
+      if (targetOrgId !== user.organizationId) {
+        logger.warn({ operation: 'getContacts', requestId, targetOrgId }, 'Forbidden: organization mismatch');
+        const response = NextResponse.json({ error: 'No tienes acceso a esta organización' }, { status: 403 });
+        response.headers.set('x-request-id', requestId);
+        return response;
+      }
+
       const stage = searchParams.get('stage');
       const segment = searchParams.get('segment');
       const assignedTo = searchParams.get('assignedTo');
@@ -286,6 +293,13 @@ export async function GET(request: NextRequest) {
         return response;
       }
 
+      if (targetOrgId !== user.organizationId) {
+        logger.warn({ operation: 'getContacts', requestId, targetOrgId }, 'Forbidden: organization mismatch');
+        const response = NextResponse.json({ error: 'No tienes acceso a esta organización' }, { status: 403 });
+        response.headers.set('x-request-id', requestId);
+        return response;
+      }
+
       const stage = searchParams.get('stage');
       const segment = searchParams.get('segment');
       const search = searchParams.get('search');
@@ -457,6 +471,17 @@ export async function POST(request: NextRequest) {
       const response = NextResponse.json(
         { error: 'organizationId es requerido' },
         { status: 400 }
+      );
+      response.headers.set('x-request-id', requestId);
+      return response;
+    }
+
+    // Enforce organization isolation
+    if (targetOrgId !== user.organizationId) {
+      logger.warn({ operation: 'createContact', requestId, targetOrgId, userOrgId: user.organizationId }, 'Access denied: org mismatch');
+      const response = NextResponse.json(
+        { error: 'Forbidden' },
+        { status: 403 }
       );
       response.headers.set('x-request-id', requestId);
       return response;

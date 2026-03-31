@@ -107,7 +107,7 @@ export function AppSidebar({ collapsed, onCollapsedChange }: AppSidebarProps) {
       <Button
         variant="ghost"
         size="icon"
-        className="fixed top-4 left-4 z-50 lg:hidden glass border-white/10"
+        className="fixed top-4 left-4 z-50 lg:hidden glass border-white/8"
         onClick={() => setMobileOpen(!mobileOpen)}
         aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
       >
@@ -246,7 +246,7 @@ export function AppSidebar({ collapsed, onCollapsedChange }: AppSidebarProps) {
                         <TooltipTrigger asChild>
                           {navItem}
                         </TooltipTrigger>
-                        <TooltipContent side="right" className="font-medium bg-[#0E0F12] border-white/10">
+                        <TooltipContent side="right" className="font-medium bg-[#0E0F12] border-white/8">
                           {item.name}
                         </TooltipContent>
                       </Tooltip>
@@ -268,7 +268,7 @@ export function AppSidebar({ collapsed, onCollapsedChange }: AppSidebarProps) {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div className="relative">
-                      <Avatar className="h-9 w-9 border border-white/10">
+                      <Avatar className="h-9 w-9 border border-white/8">
                         <AvatarImage src={user?.image || undefined} />
                         <AvatarFallback className="bg-violet-500/20 text-violet-300 text-sm font-medium">
                           {userInitials}
@@ -281,7 +281,7 @@ export function AppSidebar({ collapsed, onCollapsedChange }: AppSidebarProps) {
                 </Tooltip>
               ) : (
                 <div className="relative">
-                  <Avatar className="h-9 w-9 border border-white/10">
+                  <Avatar className="h-9 w-9 border border-white/8">
                     <AvatarImage src={user?.image || undefined} />
                     <AvatarFallback className="bg-violet-500/20 text-violet-300 text-sm font-medium">
                       {userInitials}

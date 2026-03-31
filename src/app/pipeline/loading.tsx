@@ -30,7 +30,7 @@ export default function PipelineLoading() {
                 </div>
                 {/* Contact cards */}
                 {[1, 2, 3].map((card) => (
-                  <Card key={card} className="glass border-white/10">
+                  <Card key={card} className="glass border-white/8">
                     <CardContent className="p-3 space-y-2">
                       <div className="flex items-center justify-between">
                         <Skeleton className="h-4 w-24 bg-white/5" />

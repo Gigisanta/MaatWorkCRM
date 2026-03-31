@@ -71,6 +71,7 @@ import { cn } from "@/lib/utils";
 import { format, isToday, isTomorrow, isPast, parseISO, startOfDay, addDays } from "date-fns";
 import { useAuth } from "@/lib/auth-context";
 import { MobileFAB } from "@/components/ui/mobile-fab";
+import { EmptyState } from "@/components/ui/empty-state";
 
 // Types
 interface TaskUser {
@@ -276,8 +277,8 @@ function TaskCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       className={cn(
-        "group p-4 rounded-lg glass border border-white/10 relative overflow-hidden",
-        "hover:border-white/20 transition-all duration-200",
+        "group p-4 rounded-lg glass border border-white/8 relative overflow-hidden",
+        "hover:border-white/15 transition-all duration-200",
         task.status === "completed" && "opacity-60"
       )}
     >
@@ -574,7 +575,7 @@ function TaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900/95 max-w-md">
+      <DialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl max-w-md">
         <DialogHeader>
           <DialogTitle className="text-white">
             {isEditing ? "Editar Tarea" : "Crear Nueva Tarea"}
@@ -1123,10 +1124,11 @@ function TasksPageContent() {
                     togglingTasks={togglingTasks}
                   />
                   {filteredTasks.length === 0 && (
-                    <div className="py-16 text-center">
-                      <CheckCircle2 className="h-12 w-12 text-slate-600 mx-auto mb-3" />
-                      <p className="text-slate-500">No hay tareas que coincidan</p>
-                    </div>
+                    <EmptyState
+                      icon={CheckCircle2}
+                      title="No hay tareas que coincidan"
+                      description={taskSearch ? `No se encontraron tareas para "${taskSearch}"` : "No hay tareas en esta sección"}
+                    />
                   )}
                 </CardContent>
               </Card>

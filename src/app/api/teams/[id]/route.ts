@@ -68,6 +68,11 @@ export async function GET(
       return NextResponse.json({ error: 'Team not found' }, { status: 404, headers: { 'x-request-id': requestId } });
     }
 
+    if (team.organizationId !== user.organizationId) {
+      logger.warn({ operation: 'getTeam', requestId, teamId: id }, 'Forbidden: organization mismatch');
+      return NextResponse.json({ error: 'No tienes acceso a esta organización' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
+
     logger.info({ operation: 'getTeam', requestId, teamId: id, duration_ms: Date.now() - start }, 'Team fetched successfully');
 
     return NextResponse.json(team, { headers: { 'x-request-id': requestId } });
@@ -104,6 +109,18 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
     const { name, description, leaderId } = body;
+
+    // Fetch team first to verify organization
+    const existingTeam = await db.team.findUnique({ where: { id } });
+    if (!existingTeam) {
+      logger.warn({ operation: 'updateTeam', requestId, teamId: id }, 'Team not found');
+      return NextResponse.json({ error: 'Team not found' }, { status: 404, headers: { 'x-request-id': requestId } });
+    }
+
+    if (existingTeam.organizationId !== user.organizationId) {
+      logger.warn({ operation: 'updateTeam', requestId, teamId: id }, 'Forbidden: organization mismatch');
+      return NextResponse.json({ error: 'No tienes acceso a esta organización' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
 
     const team = await db.team.update({
       where: { id },
@@ -170,6 +187,18 @@ export async function DELETE(
     }
 
     const { id } = await params;
+
+    // Fetch team first to verify organization
+    const existingTeam = await db.team.findUnique({ where: { id } });
+    if (!existingTeam) {
+      logger.warn({ operation: 'deleteTeam', requestId, teamId: id }, 'Team not found');
+      return NextResponse.json({ error: 'Team not found' }, { status: 404, headers: { 'x-request-id': requestId } });
+    }
+
+    if (existingTeam.organizationId !== user.organizationId) {
+      logger.warn({ operation: 'deleteTeam', requestId, teamId: id }, 'Forbidden: organization mismatch');
+      return NextResponse.json({ error: 'No tienes acceso a esta organización' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
 
     // Delete team members first
     await db.teamMember.deleteMany({

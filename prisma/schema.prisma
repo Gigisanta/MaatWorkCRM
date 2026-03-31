@@ -50,6 +50,9 @@ model User {
   calendarWebhooks CalendarWebhook[]
   feedback Feedback[]
 
+  roleChangeRequests RoleChangeRequest[] @relation("RoleChangeRequestUser")
+  reviewedRoleRequests RoleChangeRequest[] @relation("RoleChangeReviewer")
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -124,6 +127,7 @@ model Organization {
   instagramAccounts InstagramAccount[]
   automationConfigs AutomationConfig[]
   feedback Feedback[]
+  roleChangeRequests RoleChangeRequest[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -180,6 +184,9 @@ model Contact {
   budgetLevel    String?   // low | medium | high
   industryType   String?   // gym | pool | salon | other
   urgencyLevel   String?   // low | medium | high
+
+  // Financial planning
+  financialPlan  FinancialPlan?
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -696,6 +703,132 @@ model AutomationConfig {
 // FEEDBACK MODULE
 // ============================================
 
+model FinancialPlan {
+  id             String   @id @default(cuid())
+  contactId      String   @unique
+  edad           Int?
+  profesion      String?
+  objetivo       String?
+  perfilRiesgo   String?  // Conservador, Moderado, Agresivo
+  aporteMensual  Float?
+  aporteInicial  Float?
+  horizonteMeses Int?
+  tipoAporte     String?  // mensual, trimestral, anual, unico, semanal, quincenal
+  ingresosMensuales Float?
+  gastosMensuales    Float?
+  fondoEmergenciaMeses  Int?
+  fondoEmergenciaActual  Float?
+  patrimonioActivos     Float?
+  patrimonioDeudas      Float?
+  config         String?  // JSON: webUrl, asesorNombre, asesorTelefono, colorPrincipal, colorAcento, logoUrl
+  ia             String?  // JSON: terminoFinanciero, usarTerminoIA, consejoFinal, usarConsejoIA
+  proyeccion    String?  // JSON: proyeccionRetiro, gastosPrincipales, observaciones
+
+  // Relations
+  contact                   Contact                    @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  metasVida                 MetaVida[]
+  instruments               PlanInstrument[]
+  asignacionesEstrategicas   AsignacionEstrategica[]
+  obligacionesNegociables   ObligacionNegociable[]
+  riesgos                   Riesgo[]
+
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  @@index([contactId])
+}
+
+model MetaVida {
+  id              String   @id @default(cuid())
+  financialPlanId String
+  nombre          String
+  montoObjetivo   Float?
+  fechaEstimada   DateTime?
+  prioridad       String?  // baja, media, alta
+  notes           String?
+
+  financialPlan   FinancialPlan @relation(fields: [financialPlanId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([financialPlanId])
+}
+
+model PlanInstrument {
+  id                  String   @id @default(cuid())
+  financialPlanId      String
+  nombre              String
+  tipo                String?  // ETF, Fondo, ACCIÓN, BONO, DEPÓSITO
+  claseActivo         String?
+  emisor              String?
+  moneda              String?
+  rendimientoEsperado Float?
+  participacion       Float?   // 0-100
+  isin                String?
+  notas               String?
+
+  financialPlan       FinancialPlan @relation(fields: [financialPlanId], references: [id], onDelete: Cascade)
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([financialPlanId])
+}
+
+model AsignacionEstrategica {
+  id              String   @id @default(cuid())
+  financialPlanId String
+  claseActivo     String
+  porcentaje      Float    // 0-100
+  descripcion     String?
+
+  financialPlan   FinancialPlan @relation(fields: [financialPlanId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([financialPlanId])
+}
+
+model ObligacionNegociable {
+  id                  String   @id @default(cuid())
+  financialPlanId      String
+  acreedor            String
+  tipo                String?  // hipoteca, préstamo personal, tarjeta
+  saldoPendiente      Float?
+  tasaInteres         Float?
+  cuotaMensual        Float?
+  fechaVencimiento     DateTime?
+  origen              String?
+  notas               String?
+
+  financialPlan       FinancialPlan @relation(fields: [financialPlanId], references: [id], onDelete: Cascade)
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([financialPlanId])
+}
+
+model Riesgo {
+  id             String   @id @default(cuid())
+  financialPlanId String
+  nombre         String
+  tipo           String?  // mercado, crédito, liquidez, operativo
+  probabilidad   String?  // baja, media, alta
+  impacto        String?  // bajo, medio, alto
+  mitigacion     String?
+  severity       String?
+
+  financialPlan  FinancialPlan @relation(fields: [financialPlanId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([financialPlanId])
+}
+
 model Feedback {
   id             String   @id @default(cuid())
   organizationId String
@@ -716,4 +849,30 @@ model Feedback {
   @@index([organizationId])
   @@index([status])
   @@index([createdAt(sort: Desc)])
+}
+
+// ============================================
+// ROLE CHANGE REQUEST MODULE
+// ============================================
+
+model RoleChangeRequest {
+  id             String   @id @default(cuid())
+  userId         String
+  requestedRole  String   // The system role being requested: 'admin', 'manager', 'advisor', 'staff', 'member'
+  reason         String?
+  status         String   @default("pending") // pending, approved, rejected
+  reviewedBy     String?
+  reviewedAt     DateTime?
+  reviewedReason String?
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user         User         @relation("RoleChangeRequestUser", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer     User?        @relation("RoleChangeReviewer", fields: [reviewedBy], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([status])
 }

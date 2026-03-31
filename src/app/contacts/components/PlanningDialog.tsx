@@ -7,8 +7,6 @@ import { X, Save, Eye, ChevronLeft, ChevronRight, Loader2, User, FileDown } from
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogClose,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -129,13 +127,13 @@ export function PlanningDialog({ contactId, contactName, open: controlledOpen, o
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent
         className={cn(
-          'glass border-white/10 bg-[#0E0F12]/95 backdrop-blur-xl text-white',
+          'glass border-white/8 bg-[#0E0F12]/95 backdrop-blur-xl text-white',
           'w-[95vw] h-[90vh] max-w-[1400px] overflow-hidden flex flex-col',
           isMobile ? 'max-w-full h-full' : ''
         )}
       >
         {/* Header - Minimalist with integrated client selector */}
-        <div className="border-b border-white/10 px-6 py-3 shrink-0">
+        <div className="border-b border-white/8 px-6 py-3 shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               {/* Client Selector in Header */}
@@ -153,13 +151,13 @@ export function PlanningDialog({ contactId, contactName, open: controlledOpen, o
                       }
                     }}
                   >
-                    <SelectTrigger className="w-[240px] h-9 bg-white/5 border-white/10 text-white text-sm">
+                    <SelectTrigger className="w-[240px] h-9 bg-white/5 border-white/8 text-white text-sm">
                       <div className="flex items-center gap-2">
                         <span>{contacts.find(c => c.id === activeContactId)?.emoji || '👤'}</span>
                         <SelectValue />
                       </div>
                     </SelectTrigger>
-                    <SelectContent className="glass border-white/10 bg-[#0E0F12]">
+                    <SelectContent className="glass border-white/8 bg-[#0E0F12]">
                       {contacts.map(contact => (
                         <SelectItem key={contact.id} value={contact.id}>
                           <div className="flex items-center gap-2">
@@ -186,10 +184,10 @@ export function PlanningDialog({ contactId, contactName, open: controlledOpen, o
                       }
                     }}
                   >
-                    <SelectTrigger className="w-[240px] h-9 bg-white/5 border-white/10 text-white text-sm">
+                    <SelectTrigger className="w-[240px] h-9 bg-white/5 border-white/8 text-white text-sm">
                       <SelectValue placeholder="Seleccionar cliente..." />
                     </SelectTrigger>
-                    <SelectContent className="glass border-white/10 bg-[#0E0F12] max-h-[300px]">
+                    <SelectContent className="glass border-white/8 bg-[#0E0F12] max-h-[300px]">
                       {contacts.map(contact => (
                         <SelectItem key={contact.id} value={contact.id}>
                           <div className="flex items-center gap-2">
@@ -256,7 +254,7 @@ export function PlanningDialog({ contactId, contactName, open: controlledOpen, o
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}
-              className="mt-6 pt-6 border-t border-white/10"
+              className="mt-6 pt-6 border-t border-white/8"
             >
               <PlanningPreview
                 html={previewHtml}
@@ -267,7 +265,7 @@ export function PlanningDialog({ contactId, contactName, open: controlledOpen, o
         </div>
 
         {/* Footer - Minimalistic with primary actions */}
-        <div className="border-t border-white/10 px-6 py-3 shrink-0 bg-[#0E0F12]/50">
+        <div className="border-t border-white/8 px-6 py-3 shrink-0 bg-[#0E0F12]/50">
           <div className="flex items-center justify-between gap-4">
             {/* Navigation */}
             <div className="flex items-center gap-2">

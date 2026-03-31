@@ -20,12 +20,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: { 'x-request-id': requestId } });
     }
 
-    const searchParams = request.nextUrl.searchParams;
+    const searchParams = await request.nextUrl.searchParams;
     const organizationId = searchParams.get('organizationId') || user.organizationId;
 
     if (!organizationId) {
       logger.warn({ operation: 'listTags', requestId }, 'Validation failed: organizationId is required');
       return NextResponse.json({ error: 'organizationId is required' }, { status: 400, headers: { 'x-request-id': requestId } });
+    }
+
+    if (organizationId !== user.organizationId) {
+      logger.warn({ operation: 'listTags', requestId, organizationId, userOrgId: user.organizationId }, 'Access denied: org mismatch');
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
     }
 
     // Use cached query
@@ -60,6 +65,11 @@ export async function POST(request: NextRequest) {
     if (!name || !organizationId) {
       logger.warn({ operation: 'createTag', requestId }, 'Validation failed: name and organizationId are required');
       return NextResponse.json({ error: 'name and organizationId are required' }, { status: 400, headers: { 'x-request-id': requestId } });
+    }
+
+    if (organizationId !== user.organizationId) {
+      logger.warn({ operation: 'createTag', requestId, organizationId, userOrgId: user.organizationId }, 'Access denied: org mismatch');
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
     }
 
     // Check if tag already exists

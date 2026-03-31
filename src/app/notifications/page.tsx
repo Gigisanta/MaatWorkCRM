@@ -506,7 +506,7 @@ export default function NotificationsPage() {
                   size="sm"
                   onClick={() => markAllAsReadMutation.mutate()}
                   disabled={markAllAsReadMutation.isPending}
-                  className="text-xs border-white/10 text-slate-400 hover:text-white hover:border-white/20"
+                  className="text-xs border-white/8 text-slate-400 hover:text-white hover:border-white/20"
                 >
                   {markAllAsReadMutation.isPending ? (
                     <Loader2 className="h-3 w-3 mr-1.5 animate-spin" />
@@ -580,7 +580,7 @@ export default function NotificationsPage() {
                 <div className="flex items-center gap-4">
                   <Filter className="h-4 w-4 text-slate-500" />
                   <Select value={filterRead} onValueChange={setFilterRead}>
-                    <SelectTrigger className="w-[160px] bg-white/5 border border-white/10 text-white">
+                    <SelectTrigger className="w-[160px] bg-white/5 border border-white/8 text-white">
                       <SelectValue placeholder="Estado" />
                     </SelectTrigger>
                     <SelectContent>
@@ -590,7 +590,7 @@ export default function NotificationsPage() {
                     </SelectContent>
                   </Select>
                   <Select value={filterType} onValueChange={setFilterType}>
-                    <SelectTrigger className="w-[160px] bg-white/5 border border-white/10 text-white">
+                    <SelectTrigger className="w-[160px] bg-white/5 border border-white/8 text-white">
                       <SelectValue placeholder="Tipo" />
                     </SelectTrigger>
                     <SelectContent>
@@ -666,7 +666,7 @@ export default function NotificationsPage() {
               <div className="flex items-center justify-center gap-4">
                 <Button
                   variant="outline"
-                  className="bg-white/4 border border-white/10 text-slate-400 hover:text-white"
+                  className="bg-white/4 border border-white/8 text-slate-400 hover:text-white"
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
                 >
@@ -677,7 +677,7 @@ export default function NotificationsPage() {
                 </span>
                 <Button
                   variant="outline"
-                  className="bg-white/4 border border-white/10 text-slate-400 hover:text-white"
+                  className="bg-white/4 border border-white/8 text-slate-400 hover:text-white"
                   onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
                   disabled={page === pagination.totalPages}
                 >

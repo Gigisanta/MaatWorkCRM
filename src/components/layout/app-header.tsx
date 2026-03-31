@@ -64,7 +64,7 @@ export function AppHeader() {
             >
               <Search className="h-4 w-4 flex-shrink-0 text-slate-600 group-hover:text-slate-400 transition-colors duration-200" />
               <span className="truncate">Buscar contactos, tareas, deals...</span>
-              <kbd className="hidden sm:inline-flex ml-auto px-2 py-0.5 text-xs bg-white/8 border border-white/10 rounded-md flex-shrink-0">
+              <kbd className="hidden sm:inline-flex ml-auto px-2 py-0.5 text-xs bg-white/8 border border-white/8 rounded-md flex-shrink-0">
                 ⌘K
               </kbd>
             </button>

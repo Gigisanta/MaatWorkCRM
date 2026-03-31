@@ -31,12 +31,50 @@ export async function DELETE(
       return response;
     }
 
+    // Verify contact belongs to user's organization before removing tag
+    const contact = await db.contact.findUnique({
+      where: { id },
+      select: { organizationId: true },
+    });
+
+    if (!contact) {
+      const response = NextResponse.json({ error: 'Contacto no encontrado' }, { status: 404 });
+      response.headers.set('x-request-id', requestId);
+      return response;
+    }
+
+    if (contact.organizationId !== user.organizationId) {
+      logger.warn({ operation: 'removeTagFromContact', requestId, contactId: id, orgMismatch: true }, 'Access denied: contact org mismatch');
+      const response = NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      response.headers.set('x-request-id', requestId);
+      return response;
+    }
+
     const contactTag = await db.contactTag.findFirst({
       where: {
         contactId: id,
         tagId,
       },
+      include: {
+        tag: {
+          select: { organizationId: true },
+        },
+      },
     });
+
+    if (!contactTag) {
+      logger.warn({ operation: 'removeTagFromContact', requestId, contactId: id, tagId }, 'Tag not associated with contact');
+      const response = NextResponse.json({ error: 'Tag no asociado con el contacto' }, { status: 404 });
+      response.headers.set('x-request-id', requestId);
+      return response;
+    }
+
+    if (contactTag.tag.organizationId !== user.organizationId) {
+      logger.warn({ operation: 'removeTagFromContact', requestId, contactId: id, tagId, orgMismatch: true }, 'Access denied: tag org mismatch');
+      const response = NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      response.headers.set('x-request-id', requestId);
+      return response;
+    }
 
     if (!contactTag) {
       logger.warn({ operation: 'removeTagFromContact', requestId, contactId: id, tagId }, 'Tag not associated with contact');

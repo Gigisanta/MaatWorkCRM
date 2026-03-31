@@ -60,17 +60,22 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const body = await request.json();
     const { isRead } = body;
 
+    // Check ownership BEFORE mutation to prevent unauthorized updates
+    const existing = await db.notification.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: 'Notificacion no encontrada' }, { status: 404, headers: { 'x-request-id': requestId } });
+    }
+    if (existing.userId !== user.id) {
+      logger.warn({ operation: 'updateNotification', requestId, notificationId: id, userId: user.id }, 'Acceso denegado: notificacion no pertenece al usuario');
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
+
     const notification = await db.notification.update({
       where: { id },
       data: {
         ...(isRead !== undefined && { isRead }),
       },
     });
-
-    if (notification.userId !== user.id) {
-      logger.warn({ operation: 'updateNotification', requestId, notificationId: id, userId: user.id }, 'Acceso denegado: notificacion no pertenece al usuario');
-      return NextResponse.json({ error: 'No autorizado' }, { status: 403, headers: { 'x-request-id': requestId } });
-    }
 
     logger.info({ operation: 'updateNotification', requestId, notificationId: id, duration_ms: Date.now() - start }, 'Notificacion actualizada exitosamente');
     return NextResponse.json(notification, { headers: { 'x-request-id': requestId } });

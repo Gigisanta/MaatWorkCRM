@@ -91,23 +91,62 @@ export async function POST(request: NextRequest) {
     const bcrypt = await import('bcryptjs');
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
-    const user = await db.user.create({
+    // Generate unique slug for the new organization
+    const baseSlug = email.toLowerCase().split('@')[0].replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    const uniqueSuffix = Math.random().toString(36).substring(2, 8);
+    const orgSlug = `${baseSlug}-${uniqueSuffix}`;
+    const orgName = `${fullName}'s Organization`;
+
+    // Create user and organization
+    const newUser = await db.user.create({
       data: {
         email: email.toLowerCase(),
         name: fullName,
         password: hashedPassword,
         role,
         managerId: role === 'advisor' ? managerId : null,
-        isActive: false,
+        isActive: true,
       },
     });
 
-    logger.info({ operation: 'register', requestId, userId: user.id, email: user.email, role: user.role, duration_ms: Date.now() - start }, 'Registration success');
+    const organization = await db.organization.create({
+      data: {
+        name: orgName,
+        slug: orgSlug,
+      },
+    });
+
+    await db.member.create({
+      data: {
+        userId: newUser.id,
+        organizationId: organization.id,
+        role: 'owner',
+      },
+    });
+
+    // Seed pipeline stages (no slug field in schema)
+    const stageNames = [
+      { name: 'Prospecto', order: 0, color: '#8B5CF6', isDefault: true, isActive: true },
+      { name: 'Contactado', order: 1, color: '#3B82F6', isDefault: false, isActive: true },
+      { name: 'Primera Reunión', order: 2, color: '#F59E0B', isDefault: false, isActive: true },
+      { name: 'Segunda Reunión', order: 3, color: '#10B981', isDefault: false, isActive: true },
+      { name: 'Apertura', order: 4, color: '#6366F1', isDefault: false, isActive: true },
+      { name: 'Cliente', order: 5, color: '#22C55E', isDefault: false, isActive: true },
+      { name: 'Caído', order: 6, color: '#EF4444', isDefault: false, isActive: true },
+      { name: 'Cuenta Vacía', order: 7, color: '#6B7280', isDefault: false, isActive: true },
+    ];
+
+    for (const stage of stageNames) {
+      await db.pipelineStage.create({
+        data: { ...stage, organizationId: organization.id },
+      });
+    }
+
+    logger.info({ operation: 'register', requestId, userId: newUser.id, email: newUser.email, role: newUser.role, duration_ms: Date.now() - start }, 'Registration success');
 
     return NextResponse.json({
-      message: 'Cuenta creada exitosamente. Pendiente de aprobación.',
-      userId: user.id,
+      message: 'Cuenta creada exitosamente.',
+      userId: newUser.id,
     });
   } catch (error) {
     logger.error({ err: error, operation: 'register', requestId, duration_ms: Date.now() - start }, 'Registration failed');

@@ -3,6 +3,10 @@ import { db } from '@/lib/db';
 import { getUserFromSession } from '@/lib/auth-helpers';
 import { hasPermission, normalizeRole } from '@/lib/permissions';
 import { logger } from '@/lib/logger';
+import {
+  financialPlanSchema,
+  financialPlanUpdateSchema,
+} from '@/lib/schemas/planning';
 
 // Helper to check if targetUserId is in the team managed by managerId
 async function isInTeam(targetUserId: string, managerId: string): Promise<boolean> {
@@ -37,7 +41,6 @@ export async function GET(
 
     const { id: contactId } = await params;
 
-    // Get contact to check permissions
     const contact = await db.contact.findUnique({
       where: { id: contactId },
       select: { assignedTo: true, organizationId: true },
@@ -56,22 +59,30 @@ export async function GET(
       ? await isInTeam(contact.assignedTo, user.id)
       : false;
 
-    // Check read permissions
     if (!isOwner) {
       if (hasPermission(userRole, 'contacts:read:team') && isTeamMember) {
         // Allow
       } else if (!hasPermission(userRole, 'contacts:read:all')) {
-        logger.warn({ operation: 'getFinancialPlan', requestId, contactId }, 'Forbidden: insufficient permissions');
+        logger.warn({ operation: 'getFinancialPlan', requestId, contactId }, 'Forbidden');
         const response = NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         response.headers.set('x-request-id', requestId);
         return response;
       }
     }
 
-    // Planning models (financialPlan, metaVida, planInstrument, asignacionEstrategica,
-    // obligacionNegociable, riesgo) do not exist in the schema — return empty response
-    logger.info({ operation: 'getFinancialPlan', requestId, contactId, duration_ms: Date.now() - start }, 'Financial plan fetched successfully');
-    const response = NextResponse.json(null);
+    const financialPlan = await db.financialPlan.findUnique({
+      where: { contactId },
+      include: {
+        metasVida: true,
+        instruments: true,
+        asignacionesEstrategicas: true,
+        obligacionesNegociables: true,
+        riesgos: true,
+      },
+    });
+
+    logger.info({ operation: 'getFinancialPlan', requestId, contactId, duration_ms: Date.now() - start }, 'Financial plan fetched');
+    const response = NextResponse.json(financialPlan);
     response.headers.set('x-request-id', requestId);
     return response;
   } catch (error) {
@@ -103,7 +114,6 @@ export async function POST(
 
     const { id: contactId } = await params;
 
-    // Get contact to check permissions
     const contact = await db.contact.findUnique({
       where: { id: contactId },
       select: { assignedTo: true, organizationId: true },
@@ -122,25 +132,165 @@ export async function POST(
       ? await isInTeam(contact.assignedTo, user.id)
       : false;
 
-    // Check update permissions
     if (!isOwner) {
       if (hasPermission(userRole, 'contacts:update:team') && isTeamMember) {
         // Allow
       } else if (!hasPermission(userRole, 'contacts:update:all')) {
-        logger.warn({ operation: 'upsertFinancialPlan', requestId, contactId }, 'Forbidden: insufficient permissions');
+        logger.warn({ operation: 'upsertFinancialPlan', requestId, contactId }, 'Forbidden');
         const response = NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         response.headers.set('x-request-id', requestId);
         return response;
       }
     }
 
-    // Planning models (financialPlan, metaVida, planInstrument, asignacionEstrategica,
-    // obligacionNegociable, riesgo) do not exist in the schema — return not implemented
-    logger.info({ operation: 'upsertFinancialPlan', requestId, contactId, duration_ms: Date.now() - start }, 'Financial plan upsert skipped — models not in schema');
-    const response = NextResponse.json(
-      { error: 'Planning feature unavailable — models not defined in schema' },
-      { status: 501 }
-    );
+    const body = await request.json();
+    const parsed = financialPlanSchema.safeParse(body);
+    if (!parsed.success) {
+      logger.warn({ operation: 'upsertFinancialPlan', requestId, errors: parsed.error.flatten() }, 'Validation failed');
+      return NextResponse.json({ error: 'Datos inválidos', details: parsed.error.flatten() }, { status: 400 });
+    }
+
+    const data = parsed.data;
+
+    // Upsert: delete existing related records and create new ones
+    const existing = await db.financialPlan.findUnique({ where: { contactId } });
+
+    const plan = await db.financialPlan.upsert({
+      where: { contactId },
+      create: {
+        contactId,
+        edad: data.edad,
+        profesion: data.profesion,
+        objetivo: data.objetivo,
+        perfilRiesgo: data.perfilRiesgo ?? null,
+        aporteMensual: data.aporteMensual ?? null,
+        aporteInicial: data.aporteInicial ?? null,
+        horizonteMeses: data.horizonteMeses ?? null,
+        tipoAporte: data.tipoAporte ?? null,
+        ingresosMensuales: data.ingresosMensuales ?? null,
+        gastosMensuales: data.gastosMensuales ?? null,
+        fondoEmergenciaMeses: data.fondoEmergenciaMeses ?? null,
+        fondoEmergenciaActual: data.fondoEmergenciaActual ?? null,
+        patrimonioActivos: data.patrimonioActivos ?? null,
+        patrimonioDeudas: data.patrimonioDeudas ?? null,
+        config: data.config ? JSON.stringify(data.config) : null,
+        ia: data.ia ? JSON.stringify(data.ia) : null,
+        proyeccion: data.proyeccion ? JSON.stringify(data.proyeccion) : null,
+      },
+      update: {
+        edad: data.edad,
+        profesion: data.profesion,
+        objetivo: data.objetivo,
+        perfilRiesgo: data.perfilRiesgo ?? null,
+        aporteMensual: data.aporteMensual ?? null,
+        aporteInicial: data.aporteInicial ?? null,
+        horizonteMeses: data.horizonteMeses ?? null,
+        tipoAporte: data.tipoAporte ?? null,
+        ingresosMensuales: data.ingresosMensuales ?? null,
+        gastosMensuales: data.gastosMensuales ?? null,
+        fondoEmergenciaMeses: data.fondoEmergenciaMeses ?? null,
+        fondoEmergenciaActual: data.fondoEmergenciaActual ?? null,
+        patrimonioActivos: data.patrimonioActivos ?? null,
+        patrimonioDeudas: data.patrimonioDeudas ?? null,
+        config: data.config ? JSON.stringify(data.config) : null,
+        ia: data.ia ? JSON.stringify(data.ia) : null,
+        proyeccion: data.proyeccion ? JSON.stringify(data.proyeccion) : null,
+      },
+    });
+
+    // Delete existing related records
+    await db.metaVida.deleteMany({ where: { financialPlanId: plan.id } });
+    await db.planInstrument.deleteMany({ where: { financialPlanId: plan.id } });
+    await db.asignacionEstrategica.deleteMany({ where: { financialPlanId: plan.id } });
+    await db.obligacionNegociable.deleteMany({ where: { financialPlanId: plan.id } });
+    await db.riesgo.deleteMany({ where: { financialPlanId: plan.id } });
+
+    // Create related records
+    if (data.metasVida && data.metasVida.length > 0) {
+      await db.metaVida.createMany({
+        data: data.metasVida.map(m => ({
+          financialPlanId: plan.id,
+          nombre: m.nombre,
+          montoObjetivo: m.montoObjetivo ?? null,
+          fechaEstimada: m.fechaEstimada ? new Date(m.fechaEstimada) : null,
+          prioridad: m.prioridad ?? null,
+          notes: m.notes ?? null,
+        })),
+      });
+    }
+
+    if (data.instruments && data.instruments.length > 0) {
+      await db.planInstrument.createMany({
+        data: data.instruments.map(i => ({
+          financialPlanId: plan.id,
+          nombre: i.nombre,
+          tipo: i.tipo ?? null,
+          claseActivo: i.claseActivo ?? null,
+          emisor: i.emisor ?? null,
+          moneda: i.moneda ?? null,
+          rendimientoEsperado: i.rendimientoEsperado ?? null,
+          participacion: i.participacion ?? null,
+          isin: i.isin ?? null,
+          notas: i.notas ?? null,
+        })),
+      });
+    }
+
+    if (data.asignacionesEstrategicas && data.asignacionesEstrategicas.length > 0) {
+      await db.asignacionEstrategica.createMany({
+        data: data.asignacionesEstrategicas.map(a => ({
+          financialPlanId: plan.id,
+          claseActivo: a.claseActivo,
+          porcentaje: a.porcentaje,
+          descripcion: a.descripcion ?? null,
+        })),
+      });
+    }
+
+    if (data.obligacionesNegociables && data.obligacionesNegociables.length > 0) {
+      await db.obligacionNegociable.createMany({
+        data: data.obligacionesNegociables.map(o => ({
+          financialPlanId: plan.id,
+          acreedor: o.acreedor,
+          tipo: o.tipo ?? null,
+          saldoPendiente: o.saldoPendiente ?? null,
+          tasaInteres: o.tasaInteres ?? null,
+          cuotaMensual: o.cuotaMensual ?? null,
+          fechaVencimiento: o.fechaVencimiento ? new Date(o.fechaVencimiento) : null,
+          origen: o.origen ?? null,
+          notas: o.notas ?? null,
+        })),
+      });
+    }
+
+    if (data.riesgos && data.riesgos.length > 0) {
+      await db.riesgo.createMany({
+        data: data.riesgos.map(r => ({
+          financialPlanId: plan.id,
+          nombre: r.nombre,
+          tipo: r.tipo ?? null,
+          probabilidad: r.probabilidad ?? null,
+          impacto: r.impacto ?? null,
+          mitigacion: r.mitigacion ?? null,
+          severity: r.severity ?? null,
+        })),
+      });
+    }
+
+    // Fetch complete plan with relations
+    const completePlan = await db.financialPlan.findUnique({
+      where: { id: plan.id },
+      include: {
+        metasVida: true,
+        instruments: true,
+        asignacionesEstrategicas: true,
+        obligacionesNegociables: true,
+        riesgos: true,
+      },
+    });
+
+    logger.info({ operation: 'upsertFinancialPlan', requestId, contactId, planId: plan.id, duration_ms: Date.now() - start }, 'Financial plan upserted');
+    const response = NextResponse.json(completePlan);
     response.headers.set('x-request-id', requestId);
     return response;
   } catch (error) {
@@ -172,7 +322,6 @@ export async function DELETE(
 
     const { id: contactId } = await params;
 
-    // Get contact to check permissions
     const contact = await db.contact.findUnique({
       where: { id: contactId },
       select: { assignedTo: true },
@@ -191,25 +340,21 @@ export async function DELETE(
       ? await isInTeam(contact.assignedTo, user.id)
       : false;
 
-    // Check delete permissions
     if (!isOwner) {
       if (hasPermission(userRole, 'contacts:delete:team') && isTeamMember) {
         // Allow
       } else if (!hasPermission(userRole, 'contacts:delete:all')) {
-        logger.warn({ operation: 'deleteFinancialPlan', requestId, contactId }, 'Forbidden: insufficient permissions');
+        logger.warn({ operation: 'deleteFinancialPlan', requestId, contactId }, 'Forbidden');
         const response = NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         response.headers.set('x-request-id', requestId);
         return response;
       }
     }
 
-    // Planning models (financialPlan, metaVida, planInstrument, asignacionEstrategica,
-    // obligacionNegociable, riesgo) do not exist in the schema — return not implemented
-    logger.info({ operation: 'deleteFinancialPlan', requestId, contactId, duration_ms: Date.now() - start }, 'Financial plan delete skipped — models not in schema');
-    const response = NextResponse.json(
-      { error: 'Planning feature unavailable — models not defined in schema' },
-      { status: 501 }
-    );
+    await db.financialPlan.deleteMany({ where: { contactId } });
+
+    logger.info({ operation: 'deleteFinancialPlan', requestId, contactId, duration_ms: Date.now() - start }, 'Financial plan deleted');
+    const response = NextResponse.json({ ok: true });
     response.headers.set('x-request-id', requestId);
     return response;
   } catch (error) {

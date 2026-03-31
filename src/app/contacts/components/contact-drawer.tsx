@@ -345,6 +345,9 @@ export function ContactDrawer({
                       contact?.name
                     )}
                   </DialogTitle>
+                  <DialogDescription className="sr-only">
+                    Detalle del contacto: {contact?.name}
+                  </DialogDescription>
                   {!isLoading && contact && (
                     <div className="flex items-center gap-2 mt-1">
                       <Badge

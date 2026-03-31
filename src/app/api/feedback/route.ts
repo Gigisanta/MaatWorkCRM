@@ -72,6 +72,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'subject, content and organizationId are required' }, { status: 400, headers: { 'x-request-id': requestId } });
     }
 
+    // Enforce organization isolation
+    if (organizationId !== user.organizationId) {
+      logger.warn({ operation: 'createFeedback', requestId, organizationId, userOrgId: user.organizationId }, 'Access denied - org mismatch');
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
+
     const feedback = await db.feedback.create({
       data: {
         type: type || 'general',

@@ -59,8 +59,8 @@ function AuthSkeleton() {
 // Skeleton for KPI cards section
 function KPICardsSkeleton() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {Array.from({ length: 4 }).map((_, i) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {Array.from({ length: 3 }).map((_, i) => (
         <div
           key={i}
           className="h-[140px] rounded-xl bg-white/5 animate-pulse"
@@ -179,7 +179,7 @@ function DashboardData({ user }: { user: any }) {
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
       const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString();
       const res = await fetch(
-        `/api/calendar/events?organizationId=${user.organizationId}&start=${startOfMonth}&end=${endOfMonth}`,
+        `/api/calendar-events?organizationId=${user.organizationId}&start=${startOfMonth}&end=${endOfMonth}`,
         { credentials: 'include' }
       );
       if (!res.ok) return { events: [] };

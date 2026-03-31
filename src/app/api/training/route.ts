@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401, headers: { 'x-request-id': requestId } });
     }
 
-    const searchParams = request.nextUrl.searchParams;
+    const searchParams = await request.nextUrl.searchParams;
     const organizationId = searchParams.get('organizationId');
     const category = searchParams.get('category');
     const search = searchParams.get('search');
@@ -27,6 +27,11 @@ export async function GET(request: NextRequest) {
     if (!organizationId) {
       logger.warn({ operation: 'listTrainingMaterials', requestId }, 'Validation failed: organizationId is required');
       return NextResponse.json({ error: 'organizationId is required' }, { status: 400, headers: { 'x-request-id': requestId } });
+    }
+
+    if (organizationId !== user.organizationId) {
+      logger.warn({ operation: 'listTrainingMaterials', requestId, organizationId, userOrgId: user.organizationId }, 'Access denied: org mismatch');
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
     }
 
     const skip = (page - 1) * limit;

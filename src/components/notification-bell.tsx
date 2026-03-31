@@ -172,7 +172,7 @@ export function NotificationBell() {
           </AnimatePresence>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 p-0 bg-[#0E0F12] border border-white/10 shadow-2xl shadow-black/40 rounded-xl overflow-hidden">
+      <DropdownMenuContent align="end" className="w-80 p-0 bg-[#0E0F12] border border-white/8 shadow-2xl shadow-black/40 rounded-xl overflow-hidden">
         <div className="flex items-center justify-between px-3 py-3 border-b border-white/8 bg-white/2">
           <span className="text-sm font-semibold text-white">Notificaciones</span>
           {unreadCount > 0 && (
@@ -271,7 +271,7 @@ export function NotificationBell() {
             </ScrollArea>
 
             {/* Footer with actions */}
-            <div className="flex items-center justify-between p-2 border-t border-white/10 bg-white/5">
+            <div className="flex items-center justify-between p-2 border-t border-white/8 bg-white/5">
               <Button
                 variant="ghost"
                 size="sm"

@@ -4,6 +4,7 @@ import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import { db } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 const GOOGLE_SCOPES =
   'openid email profile https://www.googleapis.com/auth/calendar';
@@ -37,6 +38,49 @@ validateAuthConfig();
 function debugAuth(label: string, data?: Record<string, unknown>): void {
   if (process.env.LOG_LEVEL === 'debug' || process.env.NODE_ENV === 'development') {
     console.debug(`[Auth] ${label}`, data ?? '');
+  }
+}
+
+// ─── OAuth New User Onboarding ───────────────────────────────────────────────
+// Creates Organization + Member + PipelineStages when a new Google user signs in
+async function onboardNewOAuthUser(userId: string, email: string, name: string | null | undefined) {
+  try {
+    const baseSlug = (email || 'user').toLowerCase().split('@')[0].replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    const uniqueSuffix = Math.random().toString(36).substring(2, 8);
+    const orgSlug = `${baseSlug}-${uniqueSuffix}`;
+    const orgName = name ? `${name}'s Organization` : 'My Organization';
+
+    const organization = await db.organization.create({
+      data: { name: orgName, slug: orgSlug },
+    });
+
+    await db.member.create({
+      data: { userId, organizationId: organization.id, role: 'owner' },
+    });
+
+    const stageNames = [
+      { name: 'Prospecto', color: '#8B5CF6', order: 0, isDefault: true, isActive: true, wipLimit: null },
+      { name: 'Contactado', color: '#3B82F6', order: 1, isDefault: false, isActive: true, wipLimit: 10 },
+      { name: 'Primera Reunión', color: '#F59E0B', order: 2, isDefault: false, isActive: true, wipLimit: 8 },
+      { name: 'Segunda Reunión', color: '#10B981', order: 3, isDefault: false, isActive: true, wipLimit: 5 },
+      { name: 'Apertura', color: '#6366F1', order: 4, isDefault: false, isActive: true, wipLimit: null },
+      { name: 'Cliente', color: '#22C55E', order: 5, isDefault: false, isActive: true, wipLimit: null },
+      { name: 'Caído', color: '#EF4444', order: 6, isDefault: false, isActive: true, wipLimit: null },
+      { name: 'Cuenta Vacía', color: '#6B7280', order: 7, isDefault: false, isActive: true, wipLimit: null },
+    ];
+
+    await Promise.all(
+      stageNames.map((stage) =>
+        db.pipelineStage.create({
+          data: { organizationId: organization.id, ...stage },
+        })
+      )
+    );
+
+    logger.info({ operation: 'onboardNewOAuthUser', userId, organizationId: organization.id }, 'OAuth user onboarded successfully');
+  } catch (err) {
+    logger.error({ err, operation: 'onboardNewOAuthUser', userId }, 'Failed to onboard OAuth user');
+    // Don't throw - don't block auth flow if onboarding fails
   }
 }
 
@@ -101,68 +145,78 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async signIn({ user, account, profile }) {
-      console.info('[Auth] signIn callback', {
-        hasUser: !!user,
-        userEmail: user?.email,
-        hasAccount: !!account,
-        accountProvider: account?.provider,
-      });
+      logger.debug({ operation: 'signIn', userEmail: user?.email, accountProvider: account?.provider }, '[Auth] signIn callback');
 
       // Always allow OAuth sign-ins
       return true;
     },
     async jwt({ token, user, account, isNewUser }) {
-      console.info('[Auth] jwt callback START', {
-        hasAccount: !!account,
-        accountType: account?.type,
-        accountProvider: account?.provider,
-        hasUser: !!user,
-        isNewUser,
-        hasTokenId: !!token?.id,
-        userId: user?.id,
-        tokenSub: token?.sub,
-      });
+      logger.debug({ operation: 'jwt', hasAccount: !!account, accountProvider: account?.provider, hasUser: !!user, isNewUser }, '[Auth] jwt callback START');
 
       try {
         // For OAuth sign-in, set token.id from user.id
         if (user?.id) {
-          console.info('[Auth] jwt: setting token.id from user.id =', user.id);
+          logger.debug({ operation: 'jwt', userId: user.id }, '[Auth] jwt: setting token.id from user.id');
           token.id = user.id;
+
+          // Onboard new OAuth users: create org + member + pipeline stages
+          // Await the onboarding so the JWT token includes the correct organizationId
+          if (isNewUser && account?.provider === 'google' && user.email) {
+            logger.debug({ operation: 'jwt', userId: user.id }, '[Auth] jwt: new Google user, starting onboarding');
+            await onboardNewOAuthUser(user.id, user.email, user.name);
+          }
         } else if (token?.sub) {
-          console.info('[Auth] jwt: setting token.id from token.sub =', token.sub);
+          logger.debug({ operation: 'jwt', tokenSub: token.sub }, '[Auth] jwt: setting token.id from token.sub');
           token.id = token.sub;
         } else {
-          console.warn('[Auth] jwt: no user.id or token.sub available');
+          logger.warn({ operation: 'jwt' }, '[Auth] jwt: no user.id or token.sub available');
         }
 
-        console.info('[Auth] jwt callback END, returning token');
+        // Set organizationId in token for immediate availability after OAuth sign-in
+        // (only if we have a user id to work with)
+        if (token.id) {
+          const userWithMembers = await db.user.findUnique({
+            where: { id: token.id as string },
+            include: {
+              members: {
+                take: 1,
+                select: { organizationId: true },
+              },
+            },
+          });
+          if (userWithMembers) {
+            token.organizationId = userWithMembers.members[0]?.organizationId || null;
+          }
+        }
+
+        logger.debug({ operation: 'jwt' }, '[Auth] jwt callback END, returning token');
         return token;
       } catch (err) {
-        console.error('[Auth] jwt callback error:', err);
+        logger.error({ err, operation: 'jwt' }, '[Auth] jwt callback error');
         throw err;
       }
     },
     async session({ session, token }) {
-      console.info('[Auth] session callback START', {
-        hasToken: !!token,
-        hasSessionUser: !!session.user,
-        tokenId: token?.id ? '[REDACTED]' : undefined,
-        sessionUserId: (session as any)?.user?.id || (token as any)?.id,
-      });
+      logger.debug({ operation: 'session', hasToken: !!token, hasSessionUser: !!session.user }, '[Auth] session callback START');
 
       try {
         // With JWT strategy, token.id is set by jwt callback and copied here
         if (session.user && (token as any)?.id) {
           session.user.id = (token as any).id as string;
-          console.info('[Auth] session callback: set session.user.id from token.id');
+          logger.debug({ operation: 'session' }, '[Auth] session callback: set session.user.id from token.id');
         } else {
-          console.warn('[Auth] session callback: token.id or session.user is missing');
+          logger.warn({ operation: 'session' }, '[Auth] session callback: token.id or session.user is missing');
         }
 
-        console.info('[Auth] session callback END');
+        // Propagate organizationId from token to session for immediate availability
+        if ((token as any)?.organizationId) {
+          (session.user as any).organizationId = (token as any).organizationId;
+        }
+
+        logger.debug({ operation: 'session' }, '[Auth] session callback END');
         return session;
       } catch (err) {
-        console.error('[Auth] session callback error:', err);
+        logger.error({ err, operation: 'session' }, '[Auth] session callback error');
         throw err;
       }
     },
@@ -170,16 +224,16 @@ export const authOptions: NextAuthOptions = {
   events: {
     async signIn({ user, account }) {
       try {
-        console.info(`[Auth] signIn: user=${user?.email ?? user?.id}, provider=${account?.provider}`);
+        logger.debug({ operation: 'signIn', userId: user?.id, provider: account?.provider }, `[Auth] signIn event`);
       } catch (err) {
-        console.error('[Auth] signIn event error:', err);
+        logger.error({ err, operation: 'signIn' }, '[Auth] signIn event error');
       }
     },
     async signOut({ session }) {
       try {
-        console.info(`[Auth] signOut: userId=${session?.user?.id}`);
+        logger.debug({ operation: 'signOut', userId: session?.user?.id }, `[Auth] signOut event`);
       } catch (err) {
-        console.error('[Auth] signOut event error:', err);
+        logger.error({ err, operation: 'signOut' }, '[Auth] signOut event error');
       }
     },
   },

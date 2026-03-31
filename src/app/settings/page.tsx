@@ -28,6 +28,10 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
+  ShieldCheck,
+  ChevronDown,
+  UserCog,
+  Send,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
@@ -127,6 +131,10 @@ export default function SettingsPage() {
   const [deleteAccountOpen, setDeleteAccountOpen] = React.useState(false);
   const [inviteMemberOpen, setInviteMemberOpen] = React.useState(false);
   const [removeMemberId, setRemoveMemberId] = React.useState<string | null>(null);
+  const [roleRequestDialogOpen, setRoleRequestDialogOpen] = React.useState(false);
+  const [changingRoleFor, setChangingRoleFor] = React.useState<string | null>(null);
+  const [changingRoleValue, setChangingRoleValue] = React.useState<string>("");
+  const [roleRequestReason, setRoleRequestReason] = React.useState<string>("");
   const { collapsed, setCollapsed } = useSidebar();
 
   // Check if user is admin
@@ -353,6 +361,94 @@ export default function SettingsPage() {
     },
   });
 
+  // Role change request mutation (submit new request)
+  const submitRoleRequestMutation = useMutation({
+    mutationFn: async (data: { requestedRole: string; reason?: string }) => {
+      if (!user?.organizationId) throw new Error('Organización no encontrada');
+      const res = await fetch('/api/role-requests', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, organizationId: user.organizationId }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Error al enviar solicitud');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('Solicitud de cambio de rol enviada');
+      setRoleRequestDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ['roleRequests'] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  // Approve/reject role request mutation
+  const reviewRoleRequestMutation = useMutation({
+    mutationFn: async ({ id, action, reviewedReason }: { id: string; action: 'approved' | 'rejected'; reviewedReason?: string }) => {
+      const res = await fetch(`/api/role-requests/${id}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, reviewedReason }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Error al procesar solicitud');
+      }
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      toast.success(variables.action === 'approved' ? 'Solicitud aprobada' : 'Solicitud rechazada');
+      queryClient.invalidateQueries({ queryKey: ['roleRequests'] });
+      queryClient.invalidateQueries({ queryKey: ['organization'] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  // Change user role mutation (admin direct assignment)
+  const changeUserRoleMutation = useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
+      const res = await fetch(`/api/users/${userId}/role`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Error al cambiar rol');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('Rol actualizado correctamente');
+      setChangingRoleFor(null);
+      queryClient.invalidateQueries({ queryKey: ['organization'] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  // Fetch pending role requests (admin only)
+  const { data: roleRequestsData, isLoading: roleRequestsLoading } = useQuery({
+    queryKey: ['roleRequests', user?.organizationId],
+    queryFn: async () => {
+      if (!user?.organizationId) return null;
+      const res = await fetch(`/api/role-requests?organizationId=${user.organizationId}&status=pending`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Error al cargar solicitudes');
+      return res.json();
+    },
+    enabled: activeTab === 'admin' && !!user?.organizationId && isAdmin,
+  });
+
   // ============================================
   // Forms
   // ============================================
@@ -493,7 +589,7 @@ export default function SettingsPage() {
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className="glass border border-white/10 bg-transparent p-1">
+              <TabsList className="glass border border-white/8 bg-transparent p-1">
                 <TabsTrigger
                   value="profile"
                   className="flex items-center gap-2 data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
@@ -543,6 +639,15 @@ export default function SettingsPage() {
                   >
                     <Lightbulb className="mr-2 h-4 w-4" />
                     Feedback
+                  </TabsTrigger>
+                )}
+                {user && canManageUsers(user.role) && (
+                  <TabsTrigger
+                    value="admin"
+                    className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
+                  >
+                    <ShieldCheck className="mr-2 h-4 w-4" />
+                    Admin
                   </TabsTrigger>
                 )}
               </TabsList>
@@ -616,11 +721,24 @@ export default function SettingsPage() {
                         </div>
                         <div className="space-y-2">
                           <Label className="text-slate-300">Rol</Label>
-                          <Input 
-                            value={getRoleDisplayName(user?.role || 'member')}
-                            disabled
-                            className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-slate-400"
-                          />
+                          <div className="flex gap-2">
+                            <Input
+                              value={getRoleDisplayName(user?.role || 'member')}
+                              disabled
+                              className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-slate-400"
+                            />
+                            {user && !['owner', 'admin', 'developer', 'dueno'].includes(user.role) && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setRoleRequestDialogOpen(true)}
+                                className="bg-[#0E0F12]/80 backdrop-blur-sm border border-violet-500/30 text-violet-400 hover:bg-violet-500/10 flex-shrink-0"
+                              >
+                                <UserCog className="h-4 w-4 mr-1" />
+                                Solicitar cambio
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -752,7 +870,7 @@ export default function SettingsPage() {
                             isActive: boolean;
                           };
                         }) => (
-                          <div key={member.id} className="flex items-center justify-between p-3 rounded-lg glass border border-white/10">
+                          <div key={member.id} className="flex items-center justify-between p-3 rounded-lg glass border border-white/8">
                             <div className="flex items-center gap-3">
                               <Avatar className="h-10 w-10">
                                 <AvatarImage src={member.user.image || undefined} />
@@ -766,26 +884,75 @@ export default function SettingsPage() {
                               </div>
                             </div>
                             <div className="flex items-center gap-3">
-                              <Badge 
-                                variant="outline"
-                                className={cn(
-                                  member.role === "owner" && "border-amber-500/30 text-amber-400",
-                                  member.role === "admin" && "border-violet-500/30 text-violet-400",
-                                  member.role === "member" && "border-slate-500/30 text-slate-400"
-                                )}
-                              >
-                                {member.role === "owner" ? "Propietario" : 
-                                 member.role === "admin" ? "Admin" : "Miembro"}
-                              </Badge>
-                              {isAdmin && member.user.id !== user?.id && member.role !== 'owner' && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setRemoveMemberId(member.user.id)}
-                                  className="text-slate-400 hover:text-red-400 hover:bg-red-500/10"
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
+                              {isAdmin && member.user.id !== user?.id && member.role !== 'owner' && changingRoleFor === member.user.id ? (
+                                <div className="flex items-center gap-2">
+                                  <Select value={changingRoleValue} onValueChange={setChangingRoleValue}>
+                                    <SelectTrigger className="h-8 w-[140px] bg-[#0E0F12]/80 border-white/8 rounded-lg bg-white/5 text-white text-sm">
+                                      <SelectValue placeholder="Seleccionar" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-[#0E0F12] border-white/8">
+                                      <SelectItem value="admin">Admin</SelectItem>
+                                      <SelectItem value="manager">Gerente</SelectItem>
+                                      <SelectItem value="advisor">Asesor</SelectItem>
+                                      <SelectItem value="staff">Personal</SelectItem>
+                                      <SelectItem value="member">Miembro</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <Button
+                                    size="sm"
+                                    className="h-8 bg-violet-500 hover:bg-violet-600 text-white"
+                                    onClick={() => {
+                                      if (changingRoleValue && changingRoleFor) {
+                                        changeUserRoleMutation.mutate({ userId: changingRoleFor, role: changingRoleValue });
+                                      }
+                                    }}
+                                    disabled={changeUserRoleMutation.isPending || !changingRoleValue}
+                                  >
+                                    <CheckCircle2 className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-8 text-slate-400 hover:text-slate-300"
+                                    onClick={() => { setChangingRoleFor(null); setChangingRoleValue(""); }}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <>
+                                  <Badge
+                                    variant="outline"
+                                    className={cn(
+                                      member.role === "owner" && "border-amber-500/30 text-amber-400",
+                                      member.role === "admin" && "border-violet-500/30 text-violet-400",
+                                      member.role === "member" && "border-slate-500/30 text-slate-400"
+                                    )}
+                                  >
+                                    {member.role === "owner" ? "Propietario" :
+                                     member.role === "admin" ? "Admin" : "Miembro"}
+                                  </Badge>
+                                  {isAdmin && member.user.id !== user?.id && member.role !== 'owner' && (
+                                    <div className="flex items-center gap-1">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => { setChangingRoleFor(member.user.id); setChangingRoleValue(member.role); }}
+                                        className="text-slate-400 hover:text-violet-400 hover:bg-violet-500/10 h-8 w-8 p-0"
+                                      >
+                                        <UserCog className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setRemoveMemberId(member.user.id)}
+                                        className="text-slate-400 hover:text-red-400 hover:bg-red-500/10 h-8 w-8 p-0"
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  )}
+                                </>
                               )}
                             </div>
                           </div>
@@ -831,7 +998,7 @@ export default function SettingsPage() {
                           { key: "goalProgressAlerts", label: "Alertas de objetivos", description: "Actualizaciones de progreso de objetivos" },
                           { key: "newLeadsNotifications", label: "Nuevos leads", description: "Cuando se asignan nuevos contactos" },
                         ].map((item) => (
-                          <div key={item.key} className="flex items-center justify-between p-4 rounded-lg glass border border-white/10">
+                          <div key={item.key} className="flex items-center justify-between p-4 rounded-lg glass border border-white/8">
                             <div>
                               <p className="font-medium text-white">{item.label}</p>
                               <p className="text-sm text-slate-400">{item.description}</p>
@@ -1008,13 +1175,13 @@ export default function SettingsPage() {
                       <div className="space-y-4">
                         <h4 className="text-sm font-medium text-white">Información del tema</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                          <div className="p-3 rounded-lg glass border border-white/10">
+                          <div className="p-3 rounded-lg glass border border-white/8">
                             <p className="text-slate-400">Tema seleccionado</p>
                             <p className="text-white font-medium capitalize">
                               {theme === 'light' ? 'Claro' : theme === 'dark' ? 'Oscuro' : 'Sistema'}
                             </p>
                           </div>
-                          <div className="p-3 rounded-lg glass border border-white/10">
+                          <div className="p-3 rounded-lg glass border border-white/8">
                             <p className="text-slate-400">Tema activo</p>
                             <p className="text-white font-medium">
                               {theme === 'system' 
@@ -1100,7 +1267,7 @@ export default function SettingsPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {/* Google Calendar Integration */}
-                      <div className="flex items-center justify-between p-4 rounded-lg glass border border-white/10">
+                      <div className="flex items-center justify-between p-4 rounded-lg glass border border-white/8">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
                             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -1125,7 +1292,7 @@ export default function SettingsPage() {
                       </div>
 
                       {/* Connected Accounts */}
-                      <div className="flex items-center justify-between p-4 rounded-lg glass border border-white/10">
+                      <div className="flex items-center justify-between p-4 rounded-lg glass border border-white/8">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
                             <LinkIcon className="h-5 w-5 text-slate-400" />
@@ -1172,6 +1339,106 @@ export default function SettingsPage() {
                   </Card>
                 </div>
               </TabsContent>
+
+              {/* ============================================ */}
+              {/* Admin Tab */}
+              {/* ============================================ */}
+              <TabsContent value="admin">
+                <div className="space-y-6">
+                  {/* Role Requests Section */}
+                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center gap-2">
+                        <ShieldCheck className="h-5 w-5 text-violet-400" />
+                        Solicitudes de Cambio de Rol
+                      </CardTitle>
+                      <CardDescription className="text-slate-400">
+                        Revisa y aprueba las solicitudes de cambio de rol pendientes
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {roleRequestsLoading ? (
+                        <div className="flex justify-center py-8">
+                          <Loader2 className="h-6 w-6 animate-spin text-violet-500" />
+                        </div>
+                      ) : roleRequestsData?.roleChangeRequests?.length > 0 ? (
+                        <div className="space-y-4">
+                          {roleRequestsData.roleChangeRequests.map((request: {
+                            id: string;
+                            userId: string;
+                            requestedRole: string;
+                            reason: string | null;
+                            createdAt: string;
+                            user: { id: string; name: string | null; email: string; image: string | null; role: string };
+                          }) => (
+                            <motion.div
+                              key={request.id}
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                              className="p-4 rounded-lg glass border border-white/8"
+                            >
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                  <Avatar className="h-10 w-10">
+                                    <AvatarImage src={request.user.image || undefined} />
+                                    <AvatarFallback className="bg-violet-500/20 text-violet-400">
+                                      {getInitials(request.user.name)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <p className="font-medium text-white">{request.user.name || 'Sin nombre'}</p>
+                                    <p className="text-sm text-slate-400">{request.user.email}</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <Badge variant="outline" className="border-violet-500/30 text-violet-400">
+                                        {getRoleDisplayName(request.requestedRole)}
+                                      </Badge>
+                                      {request.reason && (
+                                        <p className="text-xs text-slate-500 italic">"{request.reason}"</p>
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-slate-500 mt-1">
+                                      {new Date(request.createdAt).toLocaleDateString('es-MX', {
+                                        day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+                                      })}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex gap-2 flex-shrink-0">
+                                  <Button
+                                    size="sm"
+                                    className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30"
+                                    onClick={() => reviewRoleRequestMutation.mutate({ id: request.id, action: 'approved' })}
+                                    disabled={reviewRoleRequestMutation.isPending}
+                                  >
+                                    <CheckCircle2 className="h-4 w-4 mr-1" />
+                                    Aprobar
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-rose-500/30 text-rose-400 hover:bg-rose-500/10"
+                                    onClick={() => reviewRoleRequestMutation.mutate({ id: request.id, action: 'rejected' })}
+                                    disabled={reviewRoleRequestMutation.isPending}
+                                  >
+                                    <XCircle className="h-4 w-4 mr-1" />
+                                    Rechazar
+                                  </Button>
+                                </div>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <ShieldCheck className="h-12 w-12 text-slate-600 mx-auto mb-3" />
+                          <p className="text-slate-400">No hay solicitudes pendientes</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
             </Tabs>
           </motion.div>
         </main>
@@ -1181,7 +1448,7 @@ export default function SettingsPage() {
       {/* Change Password Modal */}
       {/* ============================================ */}
       <Dialog open={passwordModalOpen} onOpenChange={setPasswordModalOpen}>
-        <DialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900">
+        <DialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
           <DialogHeader>
             <DialogTitle className="text-white">Cambiar Contraseña</DialogTitle>
             <DialogDescription className="text-slate-400">
@@ -1250,7 +1517,7 @@ export default function SettingsPage() {
       {/* Invite Member Modal */}
       {/* ============================================ */}
       <Dialog open={inviteMemberOpen} onOpenChange={setInviteMemberOpen}>
-        <DialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900">
+        <DialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
           <DialogHeader>
             <DialogTitle className="text-white">Invitar Miembro</DialogTitle>
             <DialogDescription className="text-slate-400">
@@ -1287,7 +1554,7 @@ export default function SettingsPage() {
                 <SelectTrigger className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white">
                   <SelectValue placeholder="Selecciona un rol" />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-900 border-white/10">
+                <SelectContent className="bg-[#0E0F12] border-white/8">
                   <SelectItem value="member">Miembro</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="owner">Propietario</SelectItem>
@@ -1324,7 +1591,7 @@ export default function SettingsPage() {
       {/* Remove Member Confirmation */}
       {/* ============================================ */}
       <AlertDialog open={!!removeMemberId} onOpenChange={() => setRemoveMemberId(null)}>
-        <AlertDialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900">
+        <AlertDialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white">Eliminar Miembro</AlertDialogTitle>
             <AlertDialogDescription className="text-slate-400">
@@ -1354,7 +1621,7 @@ export default function SettingsPage() {
       {/* Delete Account Confirmation */}
       {/* ============================================ */}
       <AlertDialog open={deleteAccountOpen} onOpenChange={setDeleteAccountOpen}>
-        <AlertDialogContent className="glass border-rose-500/30 bg-slate-900">
+        <AlertDialogContent className="glass border-rose-500/30 bg-[#0E0F12]/80">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-rose-400">Eliminar Cuenta</AlertDialogTitle>
             <AlertDialogDescription className="text-slate-400">
@@ -1379,6 +1646,78 @@ export default function SettingsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* ============================================ */}
+      {/* Role Request Dialog */}
+      {/* ============================================ */}
+      <Dialog open={roleRequestDialogOpen} onOpenChange={setRoleRequestDialogOpen}>
+        <DialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
+          <DialogHeader>
+            <DialogTitle className="text-white">Solicitar Cambio de Rol</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Selecciona el rol al que deseas cambiar. Un administrador deberá aprobar tu solicitud.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label className="text-slate-300">Nuevo rol</Label>
+              <Select
+                onValueChange={(value) => setChangingRoleValue(value)}
+                defaultValue={changingRoleValue}
+              >
+                <SelectTrigger className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white">
+                  <SelectValue placeholder="Selecciona un rol" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#0E0F12] border-white/8">
+                  <SelectItem value="advisor" disabled={user?.role === 'advisor'}>Asesor</SelectItem>
+                  <SelectItem value="manager" disabled={user?.role === 'manager'}>Gerente</SelectItem>
+                  <SelectItem value="staff" disabled={user?.role === 'staff'}>Personal</SelectItem>
+                  <SelectItem value="member" disabled={user?.role === 'member'}>Miembro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-slate-300">Razón (opcional)</Label>
+              <Textarea
+                placeholder="¿Por qué necesitas este cambio de rol?"
+                value={roleRequestReason}
+                onChange={(e) => setRoleRequestReason(e.target.value)}
+                className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white resize-none"
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => { setRoleRequestDialogOpen(false); setChangingRoleValue(""); setRoleRequestReason(""); }}
+              className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl text-slate-300"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              className="bg-violet-500 hover:bg-violet-600"
+              onClick={() => {
+                if (changingRoleValue) {
+                  submitRoleRequestMutation.mutate({ requestedRole: changingRoleValue, reason: roleRequestReason });
+                  setChangingRoleValue("");
+                  setRoleRequestReason("");
+                }
+              }}
+              disabled={submitRoleRequestMutation.isPending || !changingRoleValue}
+            >
+              {submitRoleRequestMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4 mr-2" />
+              )}
+              Enviar solicitud
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

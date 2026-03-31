@@ -24,6 +24,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'organizationId is required' }, { status: 400, headers: { 'x-request-id': requestId } });
     }
 
+    // Enforce organization isolation - cannot mark notifications for other orgs
+    if (organizationId !== user.organizationId) {
+      logger.warn({ operation: 'markAllNotificationsAsRead', requestId, organizationId, userOrgId: user.organizationId }, 'Access denied: org mismatch');
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
+    }
+
     // Use session userId, not from body - prevents marking other users' notifications
     const result = await db.notification.updateMany({
       where: {

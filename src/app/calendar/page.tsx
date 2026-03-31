@@ -286,7 +286,7 @@ async function deleteEvent(id: string): Promise<void> {
 // Event Skeleton
 function EventSkeleton() {
   return (
-    <div className="p-3 rounded-lg glass border border-white/10">
+    <div className="p-3 rounded-lg glass border border-white/8">
       <div className="flex items-start gap-2">
         <Skeleton className="h-8 w-8 rounded" />
         <div className="flex-1 space-y-2">
@@ -416,7 +416,7 @@ function EventDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900/95 max-w-md">
+      <DialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl max-w-md">
         <DialogHeader>
           <DialogTitle className="text-white">
             {isEditing ? "Editar Evento" : "Crear Nuevo Evento"}
@@ -564,7 +564,7 @@ function EventDetailDrawer({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900/95">
+      <DrawerContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
         <DrawerHeader>
           <div className="flex items-center gap-3">
             <div className={cn("p-2 rounded-lg", config.bgColor)}>
@@ -583,7 +583,7 @@ function EventDetailDrawer({
 
         <div className="p-4 space-y-4">
           {/* Date & Time */}
-          <div className="flex items-start gap-3 p-3 rounded-lg glass border border-white/10">
+          <div className="flex items-start gap-3 p-3 rounded-lg glass border border-white/8">
             <Clock className="h-5 w-5 text-slate-400 mt-0.5" />
             <div>
               <p className="text-sm text-slate-400">Fecha y hora</p>
@@ -598,7 +598,7 @@ function EventDetailDrawer({
 
           {/* Location */}
           {event.location && (
-            <div className="flex items-start gap-3 p-3 rounded-lg glass border border-white/10">
+            <div className="flex items-start gap-3 p-3 rounded-lg glass border border-white/8">
               <MapPin className="h-5 w-5 text-slate-400 mt-0.5" />
               <div>
                 <p className="text-sm text-slate-400">Ubicación</p>
@@ -609,7 +609,7 @@ function EventDetailDrawer({
 
           {/* Team */}
           {event.team && (
-            <div className="flex items-start gap-3 p-3 rounded-lg glass border border-white/10">
+            <div className="flex items-start gap-3 p-3 rounded-lg glass border border-white/8">
               <Users className="h-5 w-5 text-slate-400 mt-0.5" />
               <div>
                 <p className="text-sm text-slate-400">Equipo</p>
@@ -620,7 +620,7 @@ function EventDetailDrawer({
 
           {/* Description */}
           {event.description && (
-            <div className="p-3 rounded-lg glass border border-white/10">
+            <div className="p-3 rounded-lg glass border border-white/8">
               <p className="text-sm text-slate-400 mb-1">Descripción</p>
               <p className="text-white whitespace-pre-wrap">{event.description}</p>
             </div>
@@ -634,7 +634,7 @@ function EventDetailDrawer({
           )}
         </div>
 
-        <DrawerFooter className="border-t border-white/10 pt-4">
+        <DrawerFooter className="border-t border-white/8 pt-4">
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -1191,7 +1191,7 @@ export default function CalendarPage() {
                                 size="sm"
                                 onClick={() => syncMutation.mutate()}
                                 disabled={syncMutation.isPending}
-                                className="border-white/10 text-slate-300 hover:bg-white/5 hover:text-white"
+                                className="border-white/8 text-slate-300 hover:bg-white/5 hover:text-white"
                               >
                                 {syncMutation.isPending ? (
                                   <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
@@ -1205,7 +1205,7 @@ export default function CalendarPage() {
                                 size="sm"
                                 onClick={() => disconnectMutation.mutate()}
                                 disabled={disconnectMutation.isPending}
-                                className="border-white/10 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                                className="border-white/8 text-red-400 hover:bg-red-500/10 hover:text-red-300"
                               >
                                 {disconnectMutation.isPending ? (
                                   <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
@@ -1280,7 +1280,7 @@ export default function CalendarPage() {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               {/* Calendar Grid */}
               <Card className="lg:col-span-3 bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
-                <CardHeader className="border-b border-white/10">
+                <CardHeader className="border-b border-white/8">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <Button
@@ -1471,7 +1471,7 @@ export default function CalendarPage() {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
-                                className="p-3 rounded-lg glass border border-white/10 cursor-pointer hover:border-white/20 transition-colors"
+                                className="p-3 rounded-lg glass border border-white/8 cursor-pointer hover:border-white/20 transition-colors"
                                 onClick={() => handleEventClick(event)}
                               >
                                 <div className="flex items-start gap-2">
@@ -1645,7 +1645,7 @@ export default function CalendarPage() {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900/95">
+        <AlertDialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white">¿Eliminar evento?</AlertDialogTitle>
             <AlertDialogDescription>

@@ -69,6 +69,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    // Check if current user is owner or admin
+    const currentMember = await db.member.findFirst({
+      where: { organizationId: id, userId: user.id },
+    });
+
+    if (!currentMember || (currentMember.role !== 'owner' && currentMember.role !== 'admin')) {
+      return NextResponse.json({ error: 'Solo owner o admin pueden invitar miembros' }, { status: 403 });
+    }
+
     const organization = await db.organization.findUnique({
       where: { id },
     });
@@ -143,12 +152,21 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
   try {
     const { id } = await params;
-    const { searchParams } = new URL(request.url);
-    const userId = await Promise.resolve(searchParams.get('userId'));
+    const searchParams = await request.nextUrl.searchParams;
+    const userId = searchParams.get('userId');
 
     // Organization ownership check
     if (user.organizationId !== id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    // Check if current user is owner or admin
+    const currentMember = await db.member.findFirst({
+      where: { organizationId: id, userId: user.id },
+    });
+
+    if (!currentMember || (currentMember.role !== 'owner' && currentMember.role !== 'admin')) {
+      return NextResponse.json({ error: 'Solo owner o admin pueden eliminar miembros' }, { status: 403 });
     }
 
     if (!userId) {

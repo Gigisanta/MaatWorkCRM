@@ -103,7 +103,7 @@ export function ThemeToggle({
   if (variant === "segmented") {
     return (
       <div className={cn(
-        "flex items-center gap-1 p-1 rounded-lg glass border border-white/10",
+        "flex items-center gap-1 p-1 rounded-lg glass border border-white/8",
         className
       )}>
         <Button
@@ -153,7 +153,7 @@ export function ThemeToggle({
         <Button 
           variant="outline" 
           className={cn(
-            "glass border-white/10 bg-transparent text-slate-300 hover:text-white hover:bg-white/10",
+            "glass border-white/8 bg-transparent text-slate-300 hover:text-white hover:bg-white/10",
             className
           )}
         >

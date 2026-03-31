@@ -49,12 +49,27 @@ export async function POST(
 
     const contact = await db.contact.findUnique({
       where: { id },
-      select: { assignedTo: true },
+      select: { assignedTo: true, organizationId: true },
     });
 
     if (!contact) {
       logger.warn({ operation: 'addTagToContact', requestId, contactId: id }, 'Contact not found');
       const response = NextResponse.json({ error: 'Contacto no encontrado' }, { status: 404 });
+      response.headers.set('x-request-id', requestId);
+      return response;
+    }
+
+    if (contact.organizationId !== user.organizationId) {
+      logger.warn({ operation: 'addTagToContact', requestId, contactId: id, orgMismatch: true }, 'Access denied: contact org mismatch');
+      const response = NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      response.headers.set('x-request-id', requestId);
+      return response;
+    }
+
+    // Enforce organization isolation when creating a new tag
+    if (organizationId && organizationId !== user.organizationId) {
+      logger.warn({ operation: 'addTagToContact', requestId, organizationId, userOrgId: user.organizationId }, 'Access denied: org mismatch for new tag');
+      const response = NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       response.headers.set('x-request-id', requestId);
       return response;
     }

@@ -68,7 +68,7 @@ export function TagManagerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="glass border-white/10 bg-slate-900/95 backdrop-blur-xl max-w-md">
+      <DialogContent className="glass border-white/8 backdrop-blur-xl max-w-md">
         <DialogHeader>
           <DialogTitle className="text-white">Gestionar Etiquetas</DialogTitle>
           <DialogDescription className="text-slate-400">

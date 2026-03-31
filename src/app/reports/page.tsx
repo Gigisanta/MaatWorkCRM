@@ -1008,7 +1008,7 @@ export default function ReportsPage() {
                         const teamGoals = team.goals || [];
                         if (teamGoals.length === 0) return null;
                         return (
-                          <div key={team.id} className="p-4 rounded-lg glass border border-white/10">
+                          <div key={team.id} className="p-4 rounded-lg glass border border-white/8">
                             <div className="flex items-center justify-between mb-3">
                               <span className="font-medium text-white">{team.name}</span>
                               <span className="text-sm text-slate-400">
@@ -1046,8 +1046,9 @@ export default function ReportsPage() {
                       })}
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-slate-400">
-                      No hay datos de objetivos disponibles
+                    <div className="flex flex-col items-center justify-center py-8 gap-2">
+                      <Target className="h-8 w-8 text-slate-600" />
+                      <p className="text-slate-500 text-sm">No hay datos de objetivos disponibles</p>
                     </div>
                   )}
                 </CardContent>

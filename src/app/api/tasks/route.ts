@@ -38,6 +38,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    if (organizationId !== user.organizationId) {
+      logger.warn({ operation: 'listTasks', requestId, organizationId }, 'Access denied - org mismatch');
+      return NextResponse.json(
+        { error: 'Forbidden' },
+        { status: 403, headers: { 'x-request-id': requestId } }
+      );
+    }
+
     const skip = (page - 1) * limit;
 
     const where: Record<string, unknown> = { organizationId };

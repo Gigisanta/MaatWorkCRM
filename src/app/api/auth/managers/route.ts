@@ -15,13 +15,22 @@ export async function GET(request: NextRequest) {
   try {
     logger.debug({ operation: 'getManagers', requestId }, 'Fetching managers');
 
-    // Get users with manager/owner/admin roles
+    // Get users with manager/owner/admin roles in the SAME organization
+    if (!user.organizationId) {
+      return NextResponse.json({ managers: [] });
+    }
+
     const managers = await db.user.findMany({
       where: {
         role: {
           in: ['manager', 'owner', 'admin'],
         },
         isActive: true,
+        members: {
+          some: {
+            organizationId: user.organizationId,
+          },
+        },
       },
       select: {
         id: true,

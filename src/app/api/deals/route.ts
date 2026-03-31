@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   try {
     logger.debug({ operation: 'getDeals', requestId }, 'Fetching deals');
 
-    const searchParams = request.nextUrl.searchParams;
+    const searchParams = await request.nextUrl.searchParams;
     const stageId = searchParams.get('stageId');
     const contactId = searchParams.get('contactId');
     const assignedTo = searchParams.get('assignedTo');
@@ -33,6 +33,13 @@ export async function GET(request: NextRequest) {
     if (!organizationId) {
       logger.warn({ operation: 'getDeals', requestId }, 'organizationId is required');
       const response = NextResponse.json({ error: 'organizationId es requerido' }, { status: 400 });
+      response.headers.set('x-request-id', requestId);
+      return response;
+    }
+
+    if (organizationId !== session.organizationId) {
+      logger.warn({ operation: 'getDeals', requestId, organizationId }, 'Forbidden: organization mismatch');
+      const response = NextResponse.json({ error: 'No tienes acceso a esta organización' }, { status: 403 });
       response.headers.set('x-request-id', requestId);
       return response;
     }
@@ -147,6 +154,13 @@ export async function POST(request: NextRequest) {
     }
 
     const data: DealCreateInput = parsed.data;
+
+    if (data.organizationId !== session.organizationId) {
+      logger.warn({ operation: 'createDeal', requestId, organizationId: data.organizationId }, 'Forbidden: organization mismatch');
+      const response = NextResponse.json({ error: 'No tienes acceso a esta organización' }, { status: 403 });
+      response.headers.set('x-request-id', requestId);
+      return response;
+    }
 
     const deal = await db.deal.create({
       data: {

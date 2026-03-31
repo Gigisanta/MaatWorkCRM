@@ -15,7 +15,9 @@ export type Permission =
   | 'team:delete'
   | 'users:manage'
   | 'settings:view'
-  | 'settings:manage';
+  | 'settings:manage'
+  | 'role:request'
+  | 'role:manage';
 
 export type Role = 'admin' | 'developer' | 'owner' | 'manager' | 'advisor' | 'staff' | 'member';
 
@@ -29,13 +31,13 @@ export function normalizeRole(role: string): Role {
 }
 
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
-  admin: ['contacts:read:all', 'contacts:create', 'contacts:update:all', 'contacts:delete:all', 'team:view', 'users:manage', 'settings:view', 'settings:manage'],
-  developer: ['contacts:read:all', 'contacts:create', 'contacts:update:all', 'contacts:delete:all', 'team:view', 'users:manage', 'settings:view', 'settings:manage'],
-  owner: ['contacts:read:all', 'contacts:create', 'contacts:update:all', 'contacts:delete:all', 'team:view', 'users:manage', 'settings:view', 'settings:manage'],
-  manager: ['contacts:read:own', 'contacts:read:team', 'contacts:create', 'contacts:update:own', 'contacts:update:team', 'contacts:delete:own', 'contacts:delete:team', 'team:view'],
-  staff: ['contacts:read:own', 'contacts:create', 'contacts:update:own'],
-  advisor: ['contacts:read:own', 'contacts:create', 'contacts:update:own'],
-  member: ['contacts:read:own', 'contacts:create', 'contacts:update:own'],
+  admin: ['contacts:read:all', 'contacts:create', 'contacts:update:all', 'contacts:delete:all', 'team:view', 'users:manage', 'settings:view', 'settings:manage', 'role:request', 'role:manage'],
+  developer: ['contacts:read:all', 'contacts:create', 'contacts:update:all', 'contacts:delete:all', 'team:view', 'users:manage', 'settings:view', 'settings:manage', 'role:request', 'role:manage'],
+  owner: ['contacts:read:all', 'contacts:create', 'contacts:update:all', 'contacts:delete:all', 'team:view', 'users:manage', 'settings:view', 'settings:manage', 'role:request', 'role:manage'],
+  manager: ['contacts:read:own', 'contacts:read:team', 'contacts:create', 'contacts:update:own', 'contacts:update:team', 'contacts:delete:own', 'contacts:delete:team', 'team:view', 'role:request'],
+  staff: ['contacts:read:own', 'contacts:create', 'contacts:update:own', 'role:request'],
+  advisor: ['contacts:read:own', 'contacts:create', 'contacts:update:own', 'role:request'],
+  member: ['contacts:read:own', 'contacts:create', 'contacts:update:own', 'role:request'],
 };
 
 export function hasPermission(role: string, permission: Permission): boolean {

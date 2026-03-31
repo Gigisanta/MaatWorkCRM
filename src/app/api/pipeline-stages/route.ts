@@ -90,11 +90,17 @@ export async function GET(request: NextRequest) {
     logger.debug({ operation: 'listPipelineStages', requestId }, 'Listing pipeline stages');
 
     const { searchParams } = request.nextUrl;
-    const organizationId = searchParams.get('organizationId');
+    const organizationId = (await searchParams).get('organizationId');
 
     if (!organizationId) {
       logger.warn({ operation: 'listPipelineStages', requestId }, 'Validation failed: organizationId is required');
       return NextResponse.json({ error: 'organizationId is required' }, { status: 400, headers: { 'x-request-id': requestId } });
+    }
+
+    // Organization isolation check
+    if (organizationId !== user.organizationId) {
+      logger.warn({ operation: 'listPipelineStages', requestId, organizationId }, 'Access denied - org mismatch');
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
     }
 
     // Ensure default stages exist for this organization

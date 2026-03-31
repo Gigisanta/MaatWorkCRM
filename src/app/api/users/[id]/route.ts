@@ -61,6 +61,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    // Verify the target user shares the same organization as the requester
+    const targetOrgId = user.members[0]?.organizationId;
+    if (targetOrgId !== sessionUser.organizationId) {
+      logger.warn({ operation: 'getUser', requestId, targetOrgId, sessionOrgId: sessionUser.organizationId }, 'Access denied - org mismatch');
+      return NextResponse.json(
+        { error: 'No tienes acceso a este usuario' },
+        { status: 403, headers: { 'x-request-id': requestId } }
+      );
+    }
+
     logger.info({ operation: 'getUser', requestId, userId: id, duration_ms: Date.now() - start }, 'Usuario obtenido exitosamente');
     return NextResponse.json({ user }, { headers: { 'x-request-id': requestId } });
   } catch (error) {

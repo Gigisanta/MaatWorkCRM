@@ -47,7 +47,7 @@ export async function POST(
     }
 
     // Organization ownership check
-    if (currentDeal.contact?.organizationId !== user.organizationId) {
+    if (currentDeal.organizationId !== user.organizationId) {
       logger.warn({ operation: 'moveDeal', requestId, dealId: id }, 'Access denied - org mismatch');
       const response = NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       response.headers.set('x-request-id', requestId);

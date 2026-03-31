@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 /**
- * MaatWork CRM Middleware
+ * MaatWork CRM Middleware (Next.js 16 proxy.ts)
  *
  * Auth Architecture:
  * ------------------
@@ -17,7 +17,7 @@ import { NextResponse } from 'next/server';
  *    JWT_SECRET. If JWT_SECRET is not set, server-side JWT validation is skipped.
  *
  * Route Protection Strategy:
- * ---------------------------
+ * -------------------------
  * - Public routes (/login, /register): Pass through with CSP headers
  * - API routes (/api/*): Pass through with CSP headers; API routes are responsible
  *   for their own auth checks and return proper JSON error responses
@@ -25,53 +25,47 @@ import { NextResponse } from 'next/server';
  *   call /api/auth/session to validate session before rendering sensitive data
  *
  * CSP Headers:
- * -------------
+ * ------------
  * Content Security Policy is configured for Google OAuth flows including:
  * - accounts.google.com, oauth2.googleapis.com, www.googleapis.com
  * - www.accounts.google.com (for auth)
  * - Vercel deployment URL for API callbacks
+ *
+ * Note: 'unsafe-inline' is required for Next.js inline scripts.
+ * 'unsafe-eval' is NOT used as it poses a security risk.
  */
 
-// CSP_SECRET is required for production security. Falls back to AUTH_SECRET if not set.
-// In production (on Vercel), these are always set via environment variables.
-const CSP_SECRET = process.env.CSP_SECRET || process.env.AUTH_SECRET || 'dev-only-fallback-not-for-production';
-
-// Generate a deterministic nonce from the secret (stable across requests)
-function generateStableNonce(): string {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(CSP_SECRET + '-maatwork-csp-nonce');
-  // Use a hash-like transformation for the nonce
-  let hash = 0;
-  const str = CSP_SECRET.slice(0, 32);
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return btoa(String.fromCharCode(...new Uint8Array([...str].map(c => c.charCodeAt(0) ^ (hash & 0xFF))))).slice(0, 24);
+// Generate a cryptographically secure random nonce
+function generateNonce(): string {
+  const array = new Uint8Array(24);
+  crypto.getRandomValues(array);
+  return btoa(String.fromCharCode(...array));
 }
 
-export default async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const url = new URL(request.url);
-  const nonce = generateStableNonce();
+  const nonce = generateNonce();
 
-  // Security headers configuration
-  // Note: 'strict-dynamic' is not used because Next.js 16 + Turbopack injects script tags
-  // at runtime that don't carry the CSP nonce. Instead we allow explicit host sources.
-  const vercelUrl = process.env.VERCEL_URL || 'maatworkcrm.vercel.app';
+  // Get Vercel URL for domain allowlisting
+  const vercelUrl = process.env.VERCEL_URL;
+
+  // Build dynamic CSP directives
+  const cspDirectives = [
+    "default-src 'self'",
+    // 'unsafe-inline' required for Next.js inline scripts; 'unsafe-eval' removed for security
+    `script-src 'self' 'unsafe-inline'${vercelUrl ? ` https://${vercelUrl} https://*.vercel.app` : ''}`,
+    `style-src 'self' 'unsafe-inline'${vercelUrl ? ` https://${vercelUrl}` : ''}`,
+    "img-src 'self' data: https: blob:",
+    "font-src 'self' data:",
+    `connect-src 'self' http://localhost:* ws://localhost:* https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://www.accounts.google.com${vercelUrl ? ` https://${vercelUrl} https://*.vercel.app` : ''}`,
+    "frame-ancestors 'none'",
+    "form-action 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+  ];
+
   const securityHeaders = {
-    'Content-Security-Policy': [
-      "default-src 'self'",
-      `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://${vercelUrl} https://*.vercel.app`,
-      `style-src 'self' 'unsafe-inline' https://${vercelUrl}`,
-      "img-src 'self' data: https: blob:",
-      "font-src 'self' data:",
-      `connect-src 'self' http://localhost:* ws://localhost:* https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://www.accounts.google.com https://${vercelUrl} https://*.vercel.app`,
-      "frame-ancestors 'none'",
-      "form-action 'self'",
-      "base-uri 'self'",
-      "object-src 'none'",
-    ].join('; '),
+    'Content-Security-Policy': cspDirectives.join('; '),
     'X-Frame-Options': 'DENY',
     'X-Content-Type-Options': 'nosniff',
     'X-XSS-Protection': '1; mode=block',
@@ -84,6 +78,8 @@ export default async function middleware(request: NextRequest) {
     Object.entries(securityHeaders).forEach(([key, value]) => {
       response.headers.set(key, value);
     });
+    // Note: nonce is generated but not applied to scripts since Next.js
+    // does not support nonce-based script tags without additional configuration
     response.headers.set('x-nonce', nonce);
     return response;
   };
@@ -105,5 +101,6 @@ export default async function middleware(request: NextRequest) {
 }
 
 export const config = {
+  runtime: 'nodejs',
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };

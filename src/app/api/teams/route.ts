@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
     }
 
-    const searchParams = request.nextUrl.searchParams;
+    const searchParams = await request.nextUrl.searchParams;
     const organizationId = searchParams.get('organizationId');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -33,6 +33,11 @@ export async function GET(request: NextRequest) {
     if (!organizationId) {
       logger.warn({ operation: 'listTeams', requestId }, 'organizationId is required');
       return NextResponse.json({ error: 'organizationId is required' }, { status: 400, headers: { 'x-request-id': requestId } });
+    }
+
+    if (organizationId !== user.organizationId) {
+      logger.warn({ operation: 'listTeams', requestId, organizationId }, 'Acceso denegado a organizacion');
+      return NextResponse.json({ error: 'No tienes acceso a esta organización' }, { status: 403, headers: { 'x-request-id': requestId } });
     }
 
     const skip = (page - 1) * limit;
@@ -124,6 +129,11 @@ export async function POST(request: NextRequest) {
     if (!organizationId || !name) {
       logger.warn({ operation: 'createTeam', requestId }, 'Validation failed: organizationId and name are required');
       return NextResponse.json({ error: 'organizationId and name are required' }, { status: 400, headers: { 'x-request-id': requestId } });
+    }
+
+    if (organizationId !== user.organizationId) {
+      logger.warn({ operation: 'createTeam', requestId, organizationId }, 'Acceso denegado a organizacion');
+      return NextResponse.json({ error: 'No tienes acceso a esta organización' }, { status: 403, headers: { 'x-request-id': requestId } });
     }
 
     const team = await db.team.create({
