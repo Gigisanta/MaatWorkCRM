@@ -163,17 +163,17 @@ async function fetchCalendarStatus(): Promise<CalendarStatus> {
   return res.json();
 }
 
-async function syncCalendar(): Promise<{ success: boolean; lastSync: string; needsReauth?: boolean; error?: string }> {
+async function syncCalendar(): Promise<{ success: boolean; lastSync: string; needsReauth?: boolean; error?: string; url?: string }> {
   const res = await fetch('/api/calendar/sync', { method: 'POST' });
   const data = await res.json();
   if (!res.ok) {
     if (data.needsReauth) {
-      throw new Error('Tokens de Google Calendar expirados. Por favor reconnecta tu cuenta.');
+      throw Object.assign(new Error('Tokens de Google Calendar expirados. Por favor reconnecta tu cuenta.'), { url: data.url });
     }
     throw new Error(data.error || 'Failed to sync calendar');
   }
   if (data.needsReauth) {
-    throw new Error('Tokens de Google Calendar expirados. Por favor reconnecta tu cuenta.');
+    throw Object.assign(new Error('Tokens de Google Calendar expirados. Por favor reconnecta tu cuenta.'), { url: data.url });
   }
   return data;
 }
@@ -921,8 +921,18 @@ export default function CalendarPage() {
       queryClient.invalidateQueries({ queryKey: ['calendar-status'] });
       toast.success('Calendario sincronizado correctamente');
     },
-    onError: (err: Error) => {
-      toast.error(err.message);
+    onError: (err: Error & { url?: string }) => {
+      if (err.url) {
+        toast.error('Tokens de Google Calendar expirados. Reconectando...', {
+          action: {
+            label: 'Reconectar',
+            onClick: () => window.location.href = err.url,
+          },
+          duration: 8000,
+        });
+      } else {
+        toast.error(err.message);
+      }
     },
   });
 

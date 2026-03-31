@@ -126,7 +126,20 @@ export function CreateContactModal({
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (newContact) => {
+      // Directly update the contacts cache with the new contact
+      queryClient.setQueriesData({ queryKey: ["contacts"] }, (oldData: any) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          contacts: [newContact, ...(oldData.contacts || [])],
+          pagination: oldData.pagination ? {
+            ...oldData.pagination,
+            total: (oldData.pagination.total || 0) + 1,
+          } : undefined,
+        };
+      });
+      // Also invalidate to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       toast.success("Contacto creado exitosamente");
       form.reset();

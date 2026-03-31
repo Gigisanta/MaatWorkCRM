@@ -49,9 +49,11 @@ export async function POST(request: NextRequest) {
         data: { syncStatus: 'idle', errorCount: 0, syncToken: null },
       });
 
+      const callbackUrl = encodeURIComponent('/calendar');
       return NextResponse.json({
         needsReauth: true,
         error: 'Google Calendar tokens expired. Please reconnect your account.',
+        url: `/api/auth/signin/google?callbackUrl=${callbackUrl}`,
       }, { status: 401 });
     }
 
