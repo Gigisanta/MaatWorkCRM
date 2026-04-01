@@ -101,7 +101,14 @@ export class CalendarSyncEngine {
 
       await this.updateSyncState(userId, calendarId, 'idle', nextSyncToken ?? null);
       return { synced: allEvents.length };
-    } catch (error) {
+    } catch (error: any) {
+      // Log full error details for debugging
+      console.error('[SyncEngine] initialSync error:', {
+        message: error?.message,
+        code: error?.code,
+        status: error?.status,
+        response: error?.response?.data,
+      });
       await this.markError(userId, calendarId);
       throw error;
     }
@@ -180,6 +187,14 @@ export class CalendarSyncEngine {
       await this.updateSyncState(userId, calendarId, 'idle', nextSyncToken ?? syncState.syncToken);
       return { synced: allEvents.length, direction: 'delta' };
     } catch (error: any) {
+      // Log full error details for debugging
+      console.error('[SyncEngine] deltaSync error:', {
+        message: error?.message,
+        code: error?.code,
+        status: error?.status,
+        response: error?.response?.data,
+      });
+
       // syncToken expired (410) — Google tokens expire after ~30 days without use
       if (error?.status === 410 || error?.message?.includes('syncToken')) {
         await db.calendarSyncState.update({

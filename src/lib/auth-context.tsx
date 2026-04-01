@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchSession = useCallback(async () => {
     try {
       // Try NextAuth session endpoint first
-      let userData: AuthUser | null = null;
+      let nextAuthUser: AuthUser | null = null;
       let sessionData: SessionData | null = null;
 
       try {
@@ -53,28 +53,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const data = await response.json();
 
         if ((data.authenticated && data.user) || (data.user && data.expires)) {
-          userData = data.user;
+          nextAuthUser = data.user;
           sessionData = data.session || (data.expires ? { expiresAt: data.expires } : null);
         }
       } catch {
         // NextAuth session failed, continue to custom session
       }
 
-      // If NextAuth session returned nothing, try custom session endpoint
-      // This handles the custom credentials login (session_token cookie)
-      if (!userData) {
-        try {
-          const customRes = await fetch('/api/auth/session-custom', { credentials: 'include' });
-          const customData = await customRes.json();
+      // Always try custom session endpoint to get organizationId
+      // This ensures we have the correct organizationId even for Google OAuth users
+      let customUser: AuthUser | null = null;
+      try {
+        const customRes = await fetch('/api/auth/session-custom', { credentials: 'include' });
+        const customData = await customRes.json();
 
-          if (customData.authenticated && customData.user) {
-            userData = customData.user;
-            sessionData = customData.session || null;
-          }
-        } catch {
-          // Custom session also failed
+        if (customData.authenticated && customData.user) {
+          customUser = customData.user;
+          sessionData = customData.session || null;
         }
+      } catch {
+        // Custom session also failed
       }
+
+      // Prefer custom session user (has organizationId), fallback to NextAuth user
+      const userData = customUser || nextAuthUser;
 
       if (userData) {
         setUser(userData);

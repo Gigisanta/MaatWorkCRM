@@ -116,7 +116,7 @@ function DashboardData({ user }: { user: any }) {
     staleTime: 60 * 1000,
   });
 
-  // Keep deals list query for pipeline funnel
+  // Keep deals list query for pipeline funnel (deprecated - contacts are now used)
   const { data: dealsData } = useQuery({
     queryKey: ["dashboard-deals", user?.organizationId],
     queryFn: async () => {
@@ -126,6 +126,21 @@ function DashboardData({ user }: { user: any }) {
         { credentials: 'include' }
       );
       if (!response.ok) throw new Error("Failed to fetch deals");
+      return response.json();
+    },
+    enabled: !!user?.organizationId,
+  });
+
+  // Contacts query for pipeline funnel (replaces deals)
+  const { data: contactsData } = useQuery({
+    queryKey: ["dashboard-contacts", user?.organizationId],
+    queryFn: async () => {
+      if (!user?.organizationId) return { contacts: [] };
+      const response = await fetch(
+        `/api/contacts?organizationId=${user.organizationId}&limit=1000`,
+        { credentials: 'include' }
+      );
+      if (!response.ok) throw new Error("Failed to fetch contacts");
       return response.json();
     },
     enabled: !!user?.organizationId,
@@ -190,14 +205,17 @@ function DashboardData({ user }: { user: any }) {
   });
   const calendarEvents = calendarEventsData?.events || [];
 
-  // Keep deals list for pipeline funnel
+  // Keep deals list for pipeline funnel (deprecated - use contacts instead)
   const deals = dealsData?.deals || [];
   const inactiveStageNames = ["Caído", "Caida", "Cuenta vacia", "Cuenta Vacía"];
+
+  // Use contacts instead of deals for pipeline summary
+  const contacts = contactsData?.contacts || [];
   const activeDeals = React.useMemo(() =>
-    deals.filter((deal: any) => {
-      if (!deal.stage) return true;
-      return !inactiveStageNames.includes(deal.stage.name);
-    }), [deals]
+    contacts.filter((contact: any) => {
+      if (!contact.pipelineStage) return false;
+      return !inactiveStageNames.includes(contact.pipelineStage.name);
+    }), [contacts]
   );
 
   const todayDateString = format(new Date(), "EEEE, d 'de' MMMM");
@@ -385,9 +403,9 @@ function PipelineSummary({
 }: {
   activeDeals: any[];
 }) {
-  // Group deals by stage name
-  const stageGroups = activeDeals.reduce((acc: Record<string, number>, deal: any) => {
-    const stageName = deal.stage?.name || "Sin etapa";
+  // Group contacts by pipeline stage name
+  const stageGroups = activeDeals.reduce((acc: Record<string, number>, contact: any) => {
+    const stageName = contact.pipelineStage?.name || "Sin etapa";
     acc[stageName] = (acc[stageName] || 0) + 1;
     return acc;
   }, {});

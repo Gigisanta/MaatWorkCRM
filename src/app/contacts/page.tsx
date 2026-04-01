@@ -135,8 +135,11 @@ export default function ContactsPage() {
       page,
     ],
     queryFn: async () => {
+      if (!organizationId) {
+        throw new Error('organizationId es requerido');
+      }
       const params = new URLSearchParams();
-      if (!organizationId) return; params.set("organizationId", organizationId);
+      params.set("organizationId", organizationId);
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (filterStage !== "all") params.set("stage", filterStage);
       params.set("page", page.toString());
