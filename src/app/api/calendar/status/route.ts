@@ -45,13 +45,16 @@ async function getGoogleCalendars(accessToken: string, refreshToken?: string | n
 }
 
 export async function GET(request: NextRequest) {
-  // Debug: log received cookies
+  // Debug: log received cookies and raw headers
   const cookies = request.cookies.getAll();
   console.log('[CalendarStatus] Received cookies:', cookies.map(c => ({ name: c.name, valueLength: c.value?.length })));
+  console.log('[CalendarStatus] Cookie header:', request.headers.get('cookie')?.substring(0, 200));
+  console.log('[CalendarStatus] Origin header:', request.headers.get('origin'));
+  console.log('[CalendarStatus] Host header:', request.headers.get('host'));
 
   const user = await getUserFromSession(request);
   if (!user) {
-    console.log('[CalendarStatus] No user from session');
+    console.log('[CalendarStatus] No user from session - returning 401');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

@@ -37,17 +37,23 @@ async function decryptNextAuthToken(token: string): Promise<{ id?: string; sub?:
   try {
     const secret = process.env.NEXTAUTH_SECRET;
     if (!secret) {
-      console.error('[getUserFromSession] NEXTAUTH_SECRET not set');
+      console.error('[decryptNextAuthToken] NEXTAUTH_SECRET not set');
       return null;
     }
 
+    console.log('[decryptNextAuthToken] Token length:', token.length);
+    console.log('[decryptNextAuthToken] Token prefix:', token.substring(0, 20));
+
     const encryptionKey = await getDerivedEncryptionKey(secret, '');
+    console.log('[decryptNextAuthToken] Encryption key derived, length:', encryptionKey.length);
+
     const result = await jwtDecrypt(token, encryptionKey, {
       clockTolerance: 15,
     });
+    console.log('[decryptNextAuthToken] Decryption successful, payload:', JSON.stringify(result.payload).substring(0, 100));
     return result.payload as { id?: string; sub?: string };
   } catch (error) {
-    console.error('[getUserFromSession] Failed to decrypt NextAuth token:', error);
+    console.error('[decryptNextAuthToken] Failed to decrypt NextAuth token:', error);
     return null;
   }
 }
@@ -77,9 +83,15 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
         const chunkName = chunkIndex === 0 ? baseName : `${baseName}.${chunkIndex}`;
         const chunk = request.cookies.get(chunkName)?.value;
         if (chunk) {
+          console.log(`[getChunkedCookie] Found chunk ${chunkIndex}: ${chunkName}, length: ${chunk.length}`);
           token = (token || '') + chunk;
           chunkIndex++;
         } else {
+          if (chunkIndex === 0) {
+            console.log(`[getChunkedCookie] Base cookie not found: ${chunkName}`);
+          } else {
+            console.log(`[getChunkedCookie] Chunk ${chunkIndex} not found: ${chunkName}`);
+          }
           break;
         }
       }
@@ -97,6 +109,7 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
 
     console.log('[getUserFromSession] Cookies received:', request.cookies.getAll().map(c => ({ name: c.name, hasValue: !!c.value })));
     console.log('[getUserFromSession] dbSessionToken:', !!dbSessionToken, 'nextAuthToken:', !!nextAuthToken, 'tokenLength:', nextAuthToken?.length);
+    console.log('[getUserFromSession] NODE_ENV:', process.env.NODE_ENV, 'isProduction:', isProduction);
 
     let userId: string | null = null;
 
@@ -150,6 +163,7 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
 
     // Try NextAuth JWE token (from Google OAuth)
     if (nextAuthToken) {
+      console.log('[getUserFromSession] Found nextAuthToken, attempting decryption');
       const payload = await decryptNextAuthToken(nextAuthToken);
       if (payload) {
         // NextAuth v5 stores user ID in 'id' or 'sub' claim
