@@ -47,10 +47,16 @@ async function decryptNextAuthToken(token: string): Promise<{ id?: string; sub?:
       return null;
     }
 
+    console.log('[decryptNextAuthToken] Secret length:', secret?.length, 'First char:', secret?.[0]);
+    console.log('[decryptNextAuthToken] Token length:', token?.length, 'First 50 chars:', token?.substring(0, 50));
+
     const encryptionKey = await getDerivedEncryptionKey(secret, '');
+    console.log('[decryptNextAuthToken] EncryptionKey derived, length:', encryptionKey.length);
+
     const result = await jwtDecrypt(token, encryptionKey, {
       clockTolerance: 15,
     });
+    console.log('[decryptNextAuthToken] Decryption success, payload:', JSON.stringify(result.payload).substring(0, 100));
     return result.payload as { id?: string; sub?: string };
   } catch (error) {
     console.error('[decryptNextAuthToken] Failed to decrypt NextAuth token:', error);
@@ -83,15 +89,22 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
   try {
     const cookieStore = await cookies();
 
+    // Debug: log all cookies
+    console.log('[getUserFromSession] All cookies:', JSON.stringify(Object.keys(cookieStore).filter(k => k.includes('session') || k.includes('token'))));
+    console.log('[getUserFromSession] NODE_ENV:', process.env.NODE_ENV);
+
     // Try database session token first (UUID from custom credentials login)
     const dbSessionToken = cookieStore.get('session_token')?.value;
+    console.log('[getUserFromSession] dbSessionToken exists:', !!dbSessionToken, 'length:', dbSessionToken?.length);
 
     // Try NextAuth JWE token (from Google OAuth via NextAuth)
     const isProduction = process.env.NODE_ENV === 'production';
     const baseName = isProduction ? '__Secure-next-auth.session-token' : 'next-auth.session-token';
+    console.log('[getUserFromSession] isProduction:', isProduction, 'baseName:', baseName);
 
     // Get base cookie first
     let nextAuthToken = cookieStore.get(baseName)?.value;
+    console.log('[getUserFromSession] nextAuthToken (base) exists:', !!nextAuthToken, 'length:', nextAuthToken?.length);
 
     // Then try to get chunked cookies (NextAuth chunks large tokens)
     let chunkIndex = 0;
@@ -110,6 +123,7 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
     if (!nextAuthToken) {
       const fallbackName = isProduction ? 'next-auth.session-token' : '__Secure-next-auth.session-token';
       nextAuthToken = cookieStore.get(fallbackName)?.value;
+      console.log('[getUserFromSession] nextAuthToken (fallback) exists:', !!nextAuthToken, 'length:', nextAuthToken?.length);
     }
 
     // Try database session token first (UUID from custom auth)
