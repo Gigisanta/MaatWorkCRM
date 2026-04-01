@@ -159,13 +159,13 @@ interface CalendarInfo {
 
 // Google Calendar API functions
 async function fetchCalendarStatus(): Promise<CalendarStatus> {
-  const res = await fetch('/api/calendar/status');
+  const res = await fetch('/api/calendar/status', { credentials: 'include' });
   if (!res.ok) throw new Error('Failed to fetch calendar status');
   return res.json();
 }
 
 async function syncCalendar(): Promise<{ success: boolean; lastSync: string; needsReauth?: boolean; error?: string; url?: string }> {
-  const res = await fetch('/api/calendar/sync', { method: 'POST' });
+  const res = await fetch('/api/calendar/sync', { method: 'POST', credentials: 'include' });
   const data = await res.json();
   if (!res.ok) {
     if (data.needsReauth) {
@@ -184,13 +184,14 @@ async function updateCalendarPreferences(calendars: string[]): Promise<{ success
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ calendars }),
+    credentials: 'include',
   });
   if (!res.ok) throw new Error('Failed to update preferences');
   return res.json();
 }
 
 async function disconnectCalendar(): Promise<{ success: boolean }> {
-  const res = await fetch('/api/calendar/disconnect', { method: 'POST' });
+  const res = await fetch('/api/calendar/disconnect', { method: 'POST', credentials: 'include' });
   if (!res.ok) throw new Error('Failed to disconnect calendar');
   return res.json();
 }
