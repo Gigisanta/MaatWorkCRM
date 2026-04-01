@@ -1,7 +1,8 @@
 // Auth helper functions for MaatWork CRM
 import { NextRequest } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 import { db } from '@/lib/db';
+import { jwtDecrypt } from 'jose';
+import { hkdf } from '@panva/hkdf';
 
 export type UserRole = 'admin' | 'manager' | 'advisor' | 'owner' | 'staff' | 'member' | 'developer' | 'dueno' | 'asesor';
 
@@ -19,16 +20,48 @@ export interface AuthUser {
   linkedProviders?: string[];
 }
 
+// Derive the encryption key using the same algorithm as NextAuth
+async function getDerivedEncryptionKey(keyMaterial: string, salt: string): Promise<Uint8Array> {
+  const derivedKey = await hkdf(
+    'sha256',
+    keyMaterial,
+    salt || 'nextauth.authjs.com',
+    `NextAuth.js Generated Encryption Key${salt ? ` (${salt})` : ''}`,
+    32
+  );
+  return new Uint8Array(derivedKey);
+}
+
+// Decrypt NextAuth JWE token
+async function decryptNextAuthToken(token: string): Promise<{ id?: string; sub?: string } | null> {
+  try {
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) {
+      console.error('[getUserFromSession] NEXTAUTH_SECRET not set');
+      return null;
+    }
+
+    const encryptionKey = await getDerivedEncryptionKey(secret, '');
+    const result = await jwtDecrypt(token, encryptionKey, {
+      clockTolerance: 15,
+    });
+    return result.payload as { id?: string; sub?: string };
+  } catch (error) {
+    console.error('[getUserFromSession] Failed to decrypt NextAuth token:', error);
+    return null;
+  }
+}
+
 /**
  * Get user from session token in API routes
- * Supports both database session token (UUID) and NextAuth JWT session token
+ * Supports both database session token (UUID) and NextAuth JWE session token
  * Returns null if not authenticated
  */
 export async function getUserFromSession(request: NextRequest): Promise<AuthUser | null> {
   try {
     // Try database session token first (UUID from custom auth)
     const dbSessionToken = request.cookies.get('session_token')?.value;
-    // Try NextAuth JWT token (from Google OAuth)
+    // Try NextAuth JWE token (from Google OAuth)
     // Check both possible cookie names: with __Secure- prefix (production) and without (development)
     let nextAuthToken = request.cookies.get('next-auth.session-token')?.value;
     if (!nextAuthToken) {
@@ -87,13 +120,10 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
 
     // Try NextAuth JWE token (from Google OAuth)
     if (nextAuthToken) {
-      try {
-        // Use getToken from next-auth/jwt which properly handles JWE encryption
-        const token = await getToken({
-          req: request as any,
-          secret: process.env.NEXTAUTH_SECRET,
-        });
-        const nextAuthUserId = token?.id as string | undefined;
+      const payload = await decryptNextAuthToken(nextAuthToken);
+      if (payload) {
+        // NextAuth v5 stores user ID in 'id' or 'sub' claim
+        const nextAuthUserId = payload.id || payload.sub;
 
         if (nextAuthUserId) {
           const user = await db.user.findUnique({
@@ -137,8 +167,6 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
             };
           }
         }
-      } catch (jwtError) {
-        console.error('[getUserFromSession] NextAuth token decode error:', jwtError);
       }
     }
 
