@@ -44,9 +44,58 @@ async function getUserFromSessionWithNextAuth() {
   try {
     const cookieStore = await cookies();
 
-    // Try NextAuth JWT token first
-    const nextAuthToken = cookieStore.get('next-auth.session-token')?.value
-      || cookieStore.get('__Secure-next-auth.session-token')?.value;
+    // Try database session token first (UUID from custom credentials login)
+    const dbToken = cookieStore.get('session_token')?.value;
+    if (dbToken) {
+      const session = await db.session.findUnique({
+        where: { token: dbToken },
+        include: {
+          user: {
+            select: {
+              id: true, email: true, name: true, role: true, isActive: true, image: true, managerId: true,
+              members: { take: 1, select: { organizationId: true, role: true } },
+            },
+          },
+        },
+      });
+
+      if (session && session.expiresAt > new Date() && session.user?.isActive) {
+        const primaryMembership = session.user.members[0];
+        const accounts = await db.account.findMany({ where: { userId: session.user.id }, select: { provider: true } });
+        return {
+          id: session.user.id, email: session.user.email, name: session.user.name, role: session.user.role,
+          isActive: session.user.isActive, image: session.user.image, managerId: session.user.managerId,
+          organizationId: primaryMembership?.organizationId || null, organizationRole: primaryMembership?.role || null,
+          linkedProviders: accounts.map((a) => a.provider),
+        };
+      }
+    }
+
+    // Try NextAuth JWT token (chunked cookies supported, same pattern as auth-helpers)
+    const isProduction = process.env.NODE_ENV === 'production';
+    const baseName = isProduction ? '__Secure-next-auth.session-token' : 'next-auth.session-token';
+
+    // Get base cookie first
+    let nextAuthToken = cookieStore.get(baseName)?.value;
+
+    // Then try to get chunked cookies (NextAuth chunks large tokens)
+    let chunkIndex = 0;
+    while (chunkIndex <= 5) {
+      const chunkName = chunkIndex === 0 ? baseName : `${baseName}.${chunkIndex}`;
+      const chunk = cookieStore.get(chunkName)?.value;
+      if (chunk) {
+        nextAuthToken = (nextAuthToken || '') + chunk;
+        chunkIndex++;
+      } else {
+        break;
+      }
+    }
+
+    // Fallback: try opposite prefix if no token found
+    if (!nextAuthToken) {
+      const fallbackName = isProduction ? 'next-auth.session-token' : '__Secure-next-auth.session-token';
+      nextAuthToken = cookieStore.get(fallbackName)?.value;
+    }
 
     if (nextAuthToken) {
       const payload = await decryptNextAuthToken(nextAuthToken);
@@ -71,33 +120,6 @@ async function getUserFromSessionWithNextAuth() {
             };
           }
         }
-      }
-    }
-
-    // Try database session token (UUID from custom credentials login)
-    const dbToken = cookieStore.get('session_token')?.value;
-    if (dbToken) {
-      const session = await db.session.findUnique({
-        where: { token: dbToken },
-        include: {
-          user: {
-            select: {
-              id: true, email: true, name: true, role: true, isActive: true, image: true, managerId: true,
-              members: { take: 1, select: { organizationId: true, role: true } },
-            },
-          },
-        },
-      });
-
-      if (session && session.expiresAt > new Date() && session.user?.isActive) {
-        const primaryMembership = session.user.members[0];
-        const accounts = await db.account.findMany({ where: { userId: session.user.id }, select: { provider: true } });
-        return {
-          id: session.user.id, email: session.user.email, name: session.user.name, role: session.user.role,
-          isActive: session.user.isActive, image: session.user.image, managerId: session.user.managerId,
-          organizationId: primaryMembership?.organizationId || null, organizationRole: primaryMembership?.role || null,
-          linkedProviders: accounts.map((a) => a.provider),
-        };
       }
     }
 

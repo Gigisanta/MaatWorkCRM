@@ -87,8 +87,15 @@ function TasksSkeleton() {
 // Wrapper component that handles auth
 export function DashboardContent() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const router = require('next/navigation').useRouter();
 
-  if (authLoading || !isAuthenticated) {
+  // If done loading and not authenticated, redirect to login
+  if (!authLoading && !isAuthenticated) {
+    router.push('/login');
+    return <AuthSkeleton />;
+  }
+
+  if (authLoading) {
     return <AuthSkeleton />;
   }
 
