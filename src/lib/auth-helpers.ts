@@ -68,10 +68,12 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
     const baseCookieName = isProduction ? '__Secure-next-auth.session-token' : 'next-auth.session-token';
 
     // Helper to get chunked cookie - same pattern as session-custom route
+    // NextAuth chunks as: base cookie (chunk 0), then .1, .2, .3 (chunks 1, 2, 3...)
     function getChunkedCookie(baseName: string): string | null {
       let token: string | null = null;
       let chunkIndex = 0;
       while (chunkIndex <= 5) {
+        // chunkIndex 0 = base cookie, chunkIndex 1 = baseName.1, chunkIndex 2 = baseName.2, etc.
         const chunkName = chunkIndex === 0 ? baseName : `${baseName}.${chunkIndex}`;
         const chunk = request.cookies.get(chunkName)?.value;
         if (chunk) {
