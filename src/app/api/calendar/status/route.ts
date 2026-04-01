@@ -1,8 +1,136 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserFromSession } from '@/lib/auth-helpers';
+import { cookies } from 'next/headers';
 import { db } from '@/lib/db';
 import { google, calendar_v3 } from 'googleapis';
 import { decryptTokenIfSet } from '@/lib/crypto';
+import { jwtDecrypt } from 'jose';
+import { hkdf } from '@panva/hkdf';
+
+// Derive the encryption key using the same algorithm as NextAuth
+async function getDerivedEncryptionKey(keyMaterial: string, salt: string): Promise<Uint8Array> {
+  const derivedKey = await hkdf(
+    'sha256',
+    keyMaterial,
+    salt || 'nextauth.authjs.com',
+    `NextAuth.js Generated Encryption Key${salt ? ` (${salt})` : ''}`,
+    32
+  );
+  return new Uint8Array(derivedKey);
+}
+
+// Get user from session - uses cookies() from next/headers like session-custom
+async function getUserFromSessionCookies() {
+  try {
+    const cookieStore = await cookies();
+    const dbToken = cookieStore.get('session_token')?.value;
+
+    const isProduction = process.env.NODE_ENV === 'production';
+    const baseCookieName = isProduction ? '__Secure-next-auth.session-token' : 'next-auth.session-token';
+
+    // Try production cookie name first, with chunking
+    let nextAuthToken: string | null = null;
+    let chunkIndex = 0;
+    while (chunkIndex <= 5) {
+      const chunkName = chunkIndex === 0 ? baseCookieName : `${baseCookieName}.${chunkIndex}`;
+      const chunk = cookieStore.get(chunkName)?.value;
+      if (chunk) {
+        nextAuthToken = (nextAuthToken || '') + chunk;
+        chunkIndex++;
+      } else {
+        break;
+      }
+    }
+
+    // Fallback: try development cookie name
+    if (!nextAuthToken) {
+      const fallbackName = isProduction ? 'next-auth.session-token' : '__Secure-next-auth.session-token';
+      chunkIndex = 0;
+      while (chunkIndex <= 5) {
+        const chunkName = chunkIndex === 0 ? fallbackName : `${fallbackName}.${chunkIndex}`;
+        const chunk = cookieStore.get(chunkName)?.value;
+        if (chunk) {
+          nextAuthToken = (nextAuthToken || '') + chunk;
+          chunkIndex++;
+        } else {
+          break;
+        }
+      }
+    }
+
+    console.log('[CalendarStatus] Cookies in cookieStore:', cookieStore.getAll().map(c => ({ name: c.name, hasValue: !!c.value })));
+    console.log('[CalendarStatus] dbToken:', !!dbToken, 'nextAuthToken:', !!nextAuthToken, 'length:', nextAuthToken?.length);
+
+    // Database session (UUID token from custom credentials login)
+    if (dbToken) {
+      const session = await db.session.findUnique({
+        where: { token: dbToken },
+        include: {
+          user: {
+            select: {
+              id: true, email: true, name: true, role: true, isActive: true, image: true, managerId: true,
+              members: { take: 1, select: { organizationId: true, role: true } },
+            },
+          },
+        },
+      });
+
+      if (session && session.expiresAt > new Date() && session.user?.isActive) {
+        const primaryMembership = session.user.members[0];
+        const accounts = await db.account.findMany({ where: { userId: session.user.id }, select: { provider: true } });
+        return {
+          id: session.user.id, email: session.user.email, name: session.user.name, role: session.user.role,
+          isActive: session.user.isActive, image: session.user.image, managerId: session.user.managerId,
+          organizationId: primaryMembership?.organizationId || null, organizationRole: primaryMembership?.role || null,
+          linkedProviders: accounts.map((a) => a.provider),
+        };
+      }
+    }
+
+    // NextAuth JWT token (from Google OAuth)
+    if (nextAuthToken) {
+      const secret = process.env.NEXTAUTH_SECRET;
+      if (!secret) {
+        console.log('[CalendarStatus] NEXTAUTH_SECRET not set');
+        return null;
+      }
+
+      const encryptionKey = await getDerivedEncryptionKey(secret, '');
+      try {
+        const result = await jwtDecrypt(nextAuthToken, encryptionKey, { clockTolerance: 15 });
+        const payload = result.payload;
+        const userId = payload.id || payload.sub;
+
+        console.log('[CalendarStatus] JWT payload:', JSON.stringify(payload).substring(0, 100));
+
+        if (userId) {
+          const user = await db.user.findUnique({
+            where: { id: userId },
+            select: { id: true, email: true, name: true, role: true, isActive: true, image: true, managerId: true,
+              members: { take: 1, select: { organizationId: true, role: true } } },
+          });
+
+          if (user && user.isActive) {
+            const primaryMembership = user.members[0];
+            const accounts = await db.account.findMany({ where: { userId: user.id }, select: { provider: true } });
+            return {
+              id: user.id, email: user.email, name: user.name, role: user.role, isActive: user.isActive,
+              image: user.image, managerId: user.managerId,
+              organizationId: primaryMembership?.organizationId || null, organizationRole: primaryMembership?.role || null,
+              linkedProviders: accounts.map((a) => a.provider),
+            };
+          }
+        }
+      } catch (jwtError) {
+        console.error('[CalendarStatus] JWT decrypt error:', jwtError);
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error('[CalendarStatus] getUserFromSessionCookies error:', error);
+    return null;
+  }
+}
 
 function createCalendarClient(accessToken: string, refreshToken?: string | null): calendar_v3.Calendar {
   const auth = new google.auth.OAuth2(
@@ -45,14 +173,8 @@ async function getGoogleCalendars(accessToken: string, refreshToken?: string | n
 }
 
 export async function GET(request: NextRequest) {
-  // Debug: log received cookies and raw headers
-  const cookies = request.cookies.getAll();
-  console.log('[CalendarStatus] Received cookies:', cookies.map(c => ({ name: c.name, valueLength: c.value?.length })));
-  console.log('[CalendarStatus] Cookie header:', request.headers.get('cookie')?.substring(0, 200));
-  console.log('[CalendarStatus] Origin header:', request.headers.get('origin'));
-  console.log('[CalendarStatus] Host header:', request.headers.get('host'));
-
-  const user = await getUserFromSession(request);
+  // Use cookies() from next/headers (like session-custom) instead of request.cookies
+  const user = await getUserFromSessionCookies();
   if (!user) {
     console.log('[CalendarStatus] No user from session - returning 401');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
