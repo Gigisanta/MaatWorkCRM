@@ -61,15 +61,40 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
   try {
     // Try database session token first (UUID from custom auth)
     const dbSessionToken = request.cookies.get('session_token')?.value;
+
     // Try NextAuth JWE token (from Google OAuth)
-    // Check both possible cookie names: with __Secure- prefix (production) and without (development)
-    let nextAuthToken = request.cookies.get('next-auth.session-token')?.value;
+    // NextAuth v5 uses __Secure- prefix in production and may chunk large tokens
+    const isProduction = process.env.NODE_ENV === 'production';
+    const baseCookieName = isProduction ? '__Secure-next-auth.session-token' : 'next-auth.session-token';
+
+    // Helper to get chunked cookie - same pattern as session-custom route
+    function getChunkedCookie(baseName: string): string | null {
+      let token: string | null = null;
+      let chunkIndex = 0;
+      while (chunkIndex <= 5) {
+        const chunkName = chunkIndex === 0 ? baseName : `${baseName}.${chunkIndex}`;
+        const chunk = request.cookies.get(chunkName)?.value;
+        if (chunk) {
+          token = (token || '') + chunk;
+          chunkIndex++;
+        } else {
+          break;
+        }
+      }
+      return token;
+    }
+
+    // Try production cookie name first (with __Secure- prefix)
+    let nextAuthToken = getChunkedCookie(baseCookieName);
+
+    // Fallback: try development cookie name if production didn't yield results
     if (!nextAuthToken) {
-      nextAuthToken = request.cookies.get('__Secure-next-auth.session-token')?.value;
+      const fallbackName = isProduction ? 'next-auth.session-token' : '__Secure-next-auth.session-token';
+      nextAuthToken = getChunkedCookie(fallbackName);
     }
 
     console.log('[getUserFromSession] Cookies received:', request.cookies.getAll().map(c => ({ name: c.name, hasValue: !!c.value })));
-    console.log('[getUserFromSession] dbSessionToken:', !!dbSessionToken, 'nextAuthToken:', !!nextAuthToken);
+    console.log('[getUserFromSession] dbSessionToken:', !!dbSessionToken, 'nextAuthToken:', !!nextAuthToken, 'tokenLength:', nextAuthToken?.length);
 
     let userId: string | null = null;
 
