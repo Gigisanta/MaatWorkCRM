@@ -2,9 +2,9 @@
 
 import * as React from "react";
 import dynamic from "next/dynamic";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Trash2, Plus } from "lucide-react";
+import { X, Trash2, Plus, Loader2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
@@ -71,7 +71,38 @@ interface PipelineStagesResponse {
 
 // Main Contacts Page
 export default function ContactsPage() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
+  const router = useRouter();
+
+  // Auth loading state - show skeleton while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#08090B] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-violet-500/15 flex items-center justify-center mx-auto">
+            <Loader2 className="h-6 w-6 animate-spin text-violet-400" />
+          </div>
+          <p className="text-slate-500 text-sm">Cargando contactos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Not authenticated - redirect to login
+  if (!user) {
+    router.push('/login');
+    return (
+      <div className="min-h-screen bg-[#08090B] flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-violet-500/15 flex items-center justify-center mx-auto">
+            <Loader2 className="h-6 w-6 animate-spin text-violet-400" />
+          </div>
+          <p className="text-slate-500 text-sm">Redirigiendo a login...</p>
+        </div>
+      </div>
+    );
+  }
+
   const organizationId = user?.organizationId || null;
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();

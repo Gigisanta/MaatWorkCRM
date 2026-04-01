@@ -43,10 +43,21 @@ export async function POST(request: NextRequest) {
       path: '/',
     });
 
-    // Clear NextAuth session cookie (Google OAuth)
-    response.cookies.set('next-auth.session-token', '', {
+    // Clear NextAuth session cookie (Google OAuth) - both variants
+    const isProduction = process.env.NODE_ENV === 'production';
+    const nextAuthCookieName = isProduction ? '__Secure-next-auth.session-token' : 'next-auth.session-token';
+    response.cookies.set(nextAuthCookieName, '', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/',
+    });
+    // Also clear the other variant as fallback
+    const fallbackCookieName = isProduction ? 'next-auth.session-token' : '__Secure-next-auth.session-token';
+    response.cookies.set(fallbackCookieName, '', {
+      httpOnly: true,
+      secure: isProduction,
       sameSite: 'lax',
       maxAge: 0,
       path: '/',
@@ -69,7 +80,21 @@ export async function POST(request: NextRequest) {
       path: '/',
     });
 
+    response.cookies.set('session_token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/',
+    });
     response.cookies.set('next-auth.session-token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0,
+      path: '/',
+    });
+    response.cookies.set('__Secure-next-auth.session-token', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
