@@ -68,6 +68,9 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
       nextAuthToken = request.cookies.get('__Secure-next-auth.session-token')?.value;
     }
 
+    console.log('[getUserFromSession] Cookies received:', request.cookies.getAll().map(c => ({ name: c.name, hasValue: !!c.value })));
+    console.log('[getUserFromSession] dbSessionToken:', !!dbSessionToken, 'nextAuthToken:', !!nextAuthToken);
+
     let userId: string | null = null;
 
     if (dbSessionToken) {
