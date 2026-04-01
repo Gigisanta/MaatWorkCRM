@@ -36,7 +36,14 @@ async function getUserTokens(userId: string) {
     where: { userId, provider: 'google' },
     select: { access_token: true, refresh_token: true },
   });
-  if (!account?.access_token) return null;
+  if (!account) {
+    debug('No Google account found for user:', userId);
+    return null;
+  }
+  if (!account.access_token) {
+    debug('No access_token in Google account for user:', userId);
+    return null;
+  }
   return {
     // Token puede estar encriptado o plano — intentamos decrypt y caemos al plano
     accessToken: (() => {

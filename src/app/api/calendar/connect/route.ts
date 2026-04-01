@@ -28,13 +28,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, action: 'resync', synced });
     } catch (error: any) {
       // If tokens are expired/invalid, redirect to OAuth to get fresh tokens
-      const errorMessage = error?.message || '';
+      const errorCode = error?.code || error?.status || '';
+      const errorResponse = error?.response?.data;
+      const googleError = errorResponse?.error || '';
+      const googleErrorDescription = errorResponse?.error_description || '';
+
+      // Check for specific Google OAuth error codes that indicate token issues
       const isTokenError =
-        errorMessage.includes('Token') ||
-        errorMessage.includes('invalid') ||
-        errorMessage.includes('expired') ||
-        errorMessage.includes('401') ||
-        errorMessage.includes('403');
+        errorCode === 401 ||
+        errorCode === 403 ||
+        googleError === 'invalid_grant' ||
+        googleError === 'token_revoked' ||
+        googleError === 'access_denied' ||
+        googleErrorDescription?.includes('token') ||
+        error?.message?.includes('invalid_grant') ||
+        error?.message?.includes('token_revoked') ||
+        (errorCode === 400 && googleError === 'invalid_client');
 
       if (isTokenError) {
         // Clear sync state so next sync starts fresh
@@ -50,7 +59,15 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      return NextResponse.json({ error: errorMessage || 'Re-sync failed' }, { status: 500 });
+      // Log the actual error for debugging
+      console.error('[CalendarConnect] Re-sync failed:', {
+        message: error?.message,
+        code: errorCode,
+        googleError,
+        googleErrorDescription,
+      });
+
+      return NextResponse.json({ error: error?.message || 'Re-sync failed' }, { status: 500 });
     }
   }
 

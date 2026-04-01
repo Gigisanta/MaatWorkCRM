@@ -17,14 +17,30 @@ function createCalendarClient(accessToken: string, refreshToken?: string | null)
   return google.calendar({ version: 'v3', auth });
 }
 
-async function getGoogleCalendars(accessToken: string, refreshToken?: string | null): Promise<calendar_v3.Schema$CalendarListEntry[]> {
+async function getGoogleCalendars(accessToken: string, refreshToken?: string | null): Promise<{ calendars: calendar_v3.Schema$CalendarListEntry[]; error?: string }> {
   try {
     const calendar = createCalendarClient(accessToken, refreshToken);
     const res = await calendar.calendarList.list({ maxResults: 100 });
-    return res.data.items ?? [];
-  } catch (error) {
-    console.error('[CalendarStatus] Failed to list calendars:', error);
-    return [];
+    return { calendars: res.data.items ?? [] };
+  } catch (error: any) {
+    const errorMessage = error?.message || 'Unknown error';
+    const errorCode = error?.code || error?.status || '';
+    const errorResponse = error?.response?.data;
+    const googleError = errorResponse?.error || '';
+    const googleErrorDescription = errorResponse?.error_description || '';
+
+    console.error('[CalendarStatus] Failed to list calendars:', {
+      message: errorMessage,
+      code: errorCode,
+      googleError,
+      googleErrorDescription,
+    });
+
+    // Return error info so the API can report it properly
+    return {
+      calendars: [],
+      error: googleErrorDescription || googleError || errorMessage,
+    };
   }
 }
 
@@ -49,13 +65,16 @@ export async function GET(request: NextRequest) {
   let calendars: { id: string; name: string; selected: boolean }[] = [];
   let selectedCalendarIds: string[] = ['primary'];
 
+  let calendarError: string | undefined;
+
   // If connected, fetch real calendar list from Google
   if (googleAccount?.access_token) {
     const accessToken = decryptTokenIfSet(googleAccount.access_token) ?? googleAccount.access_token;
     const refreshToken = googleAccount.refresh_token ?? undefined;
-    const googleCalendars = await getGoogleCalendars(accessToken, refreshToken);
+    const result = await getGoogleCalendars(accessToken, refreshToken);
+    calendarError = result.error;
 
-    calendars = googleCalendars.map((cal) => ({
+    calendars = result.calendars.map((cal) => ({
       id: cal.id ?? 'primary',
       name: cal.summary ?? cal.id ?? 'Unknown',
       selected: (selectedCalendarIds).includes(cal.id ?? 'primary'),
@@ -70,5 +89,6 @@ export async function GET(request: NextRequest) {
     errorCount: syncState?.errorCount ?? 0,
     calendars,
     selectedCalendarIds,
+    error: calendarError,
   });
 }

@@ -148,6 +148,7 @@ interface CalendarStatus {
   email?: string;
   lastSync?: string;
   calendars: CalendarInfo[];
+  error?: string;
 }
 
 interface CalendarInfo {
@@ -1238,7 +1239,7 @@ export default function CalendarPage() {
                           </div>
 
                           {/* Calendars selection */}
-                          {calendarData.calendars && calendarData.calendars.length > 0 && (
+                          {calendarData.calendars && calendarData.calendars.length > 0 ? (
                             <div className="border-t border-white/5 pt-3">
                               <p className="text-xs text-slate-400 mb-2">Calendarios a sincronizar:</p>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1261,7 +1262,20 @@ export default function CalendarPage() {
                                 ))}
                               </div>
                             </div>
-                          )}
+                          ) : calendarData.error ? (
+                            <div className="border-t border-white/5 pt-3">
+                              <p className="text-xs text-red-400 mb-2">Error al cargar calendarios:</p>
+                              <p className="text-xs text-slate-400">{calendarData.error}</p>
+                              <Button
+                                onClick={() => window.location.reload()}
+                                variant="outline"
+                                size="sm"
+                                className="mt-2 glass border-white/10"
+                              >
+                                Reintentar
+                              </Button>
+                            </div>
+                          ) : null}
                         </div>
                       ) : (
                         <div className="flex flex-col items-center justify-center py-6 space-y-3">
