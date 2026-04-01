@@ -45,10 +45,17 @@ async function getGoogleCalendars(accessToken: string, refreshToken?: string | n
 }
 
 export async function GET(request: NextRequest) {
+  // Debug: log received cookies
+  const cookies = request.cookies.getAll();
+  console.log('[CalendarStatus] Received cookies:', cookies.map(c => ({ name: c.name, valueLength: c.value?.length })));
+
   const user = await getUserFromSession(request);
   if (!user) {
+    console.log('[CalendarStatus] No user from session');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  console.log('[CalendarStatus] User authenticated:', user.email);
 
   const googleAccount = await db.account.findFirst({
     where: { userId: user.id, provider: 'google' },
