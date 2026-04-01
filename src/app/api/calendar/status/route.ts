@@ -1,45 +1,75 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getToken } from 'next-auth/jwt';
+import { jwtDecrypt } from 'jose';
+import { hkdf } from '@panva/hkdf';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { google, calendar_v3 } from 'googleapis';
 import { decryptTokenIfSet } from '@/lib/crypto';
 
-// Get user from session using NextAuth's getToken (recommended approach)
+// ─── Encryption key derivation (same as NextAuth) ─────────────────────────
+async function getDerivedEncryptionKey(keyMaterial: string, salt: string): Promise<Uint8Array> {
+  const derivedKey = await hkdf(
+    'sha256',
+    keyMaterial,
+    salt || 'nextauth.authjs.com',
+    `NextAuth.js Generated Encryption Key${salt ? ` (${salt})` : ''}`,
+    32
+  );
+  return new Uint8Array(derivedKey);
+}
+
+// ─── Decrypt NextAuth JWE token ─────────────────────────────────────────
+async function decryptNextAuthToken(token: string): Promise<{ id?: string; sub?: string } | null> {
+  try {
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) {
+      console.error('[decryptNextAuthToken] NEXTAUTH_SECRET not set');
+      return null;
+    }
+
+    const encryptionKey = await getDerivedEncryptionKey(secret, '');
+    const result = await jwtDecrypt(token, encryptionKey, {
+      clockTolerance: 15,
+    });
+    return result.payload as { id?: string; sub?: string };
+  } catch (error) {
+    console.error('[decryptNextAuthToken] Failed to decrypt NextAuth token:', error);
+    return null;
+  }
+}
+
+// Get user from session using jwtDecrypt (same approach as session-custom)
 async function getUserFromSessionWithNextAuth() {
   try {
     const cookieStore = await cookies();
-    const sessionToken = cookieStore.get('next-auth.session-token')?.value
-      || cookieStore.get('__Secure-next-auth.session-token')?.value
-      || cookieStore.get('session_token')?.value;
-
-    console.log('[CalendarStatus] Session token present:', !!sessionToken);
 
     // Try NextAuth JWT token first
-    if (sessionToken) {
-      const token = await getToken({
-        req: { cookies: { get: (name: string) => cookieStore.get(name) } } as any,
-        secret: process.env.NEXTAUTH_SECRET,
-      });
+    const nextAuthToken = cookieStore.get('next-auth.session-token')?.value
+      || cookieStore.get('__Secure-next-auth.session-token')?.value;
 
-      if (token && token.id) {
-        console.log('[CalendarStatus] getToken succeeded, userId:', token.id);
-        const user = await db.user.findUnique({
-          where: { id: token.id as string },
-          select: { id: true, email: true, name: true, role: true, isActive: true, image: true, managerId: true,
-            members: { take: 1, select: { organizationId: true, role: true } } },
-        });
+    if (nextAuthToken) {
+      const payload = await decryptNextAuthToken(nextAuthToken);
+      if (payload) {
+        const nextAuthUserId = payload.id || payload.sub;
+        if (nextAuthUserId) {
+          console.log('[CalendarStatus] JWT decryption succeeded, userId:', nextAuthUserId);
+          const user = await db.user.findUnique({
+            where: { id: nextAuthUserId },
+            select: { id: true, email: true, name: true, role: true, isActive: true, image: true, managerId: true,
+              members: { take: 1, select: { organizationId: true, role: true } } },
+          });
 
-        if (user && user.isActive) {
-          const primaryMembership = user.members[0];
-          const accounts = await db.account.findMany({ where: { userId: user.id }, select: { provider: true } });
-          return {
-            id: user.id, email: user.email, name: user.name, role: user.role, isActive: user.isActive,
-            image: user.image, managerId: user.managerId,
-            organizationId: primaryMembership?.organizationId || null, organizationRole: primaryMembership?.role || null,
-            linkedProviders: accounts.map((a) => a.provider),
-          };
+          if (user && user.isActive) {
+            const primaryMembership = user.members[0];
+            const accounts = await db.account.findMany({ where: { userId: user.id }, select: { provider: true } });
+            return {
+              id: user.id, email: user.email, name: user.name, role: user.role, isActive: user.isActive,
+              image: user.image, managerId: user.managerId,
+              organizationId: primaryMembership?.organizationId || null, organizationRole: primaryMembership?.role || null,
+              linkedProviders: accounts.map((a) => a.provider),
+            };
+          }
         }
       }
     }

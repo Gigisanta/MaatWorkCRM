@@ -2,7 +2,61 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { cookies } from 'next/headers';
-import { getToken } from 'next-auth/jwt';
+import { jwtDecrypt } from 'jose';
+import { hkdf } from '@panva/hkdf';
+
+// ─── Auth Config Validation (run at module load, non-fatal) ─────────────────
+function validateAuthConfig(): void {
+  const required = ['NEXTAUTH_SECRET'];
+  const missing: string[] = [];
+
+  for (const key of required) {
+    if (!process.env[key]) {
+      missing.push(key);
+    }
+  }
+
+  if (missing.length > 0) {
+    console.warn(
+      `[Auth] Missing environment variables (will cause auth failures at runtime):\n` +
+        missing.map((v) => `  - ${v}`).join('\n')
+    );
+  }
+}
+
+validateAuthConfig();
+
+// ─── Encryption key derivation (same as NextAuth) ─────────────────────────
+async function getDerivedEncryptionKey(keyMaterial: string, salt: string): Promise<Uint8Array> {
+  const derivedKey = await hkdf(
+    'sha256',
+    keyMaterial,
+    salt || 'nextauth.authjs.com',
+    `NextAuth.js Generated Encryption Key${salt ? ` (${salt})` : ''}`,
+    32
+  );
+  return new Uint8Array(derivedKey);
+}
+
+// ─── Decrypt NextAuth JWE token ─────────────────────────────────────────
+async function decryptNextAuthToken(token: string): Promise<{ id?: string; sub?: string } | null> {
+  try {
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) {
+      console.error('[decryptNextAuthToken] NEXTAUTH_SECRET not set');
+      return null;
+    }
+
+    const encryptionKey = await getDerivedEncryptionKey(secret, '');
+    const result = await jwtDecrypt(token, encryptionKey, {
+      clockTolerance: 15,
+    });
+    return result.payload as { id?: string; sub?: string };
+  } catch (error) {
+    console.error('[decryptNextAuthToken] Failed to decrypt NextAuth token:', error);
+    return null;
+  }
+}
 
 export type UserRole = 'admin' | 'manager' | 'advisor' | 'owner' | 'staff' | 'member' | 'developer' | 'dueno' | 'asesor';
 
@@ -22,7 +76,7 @@ export interface AuthUser {
 
 /**
  * Get user from session token in API routes.
- * Uses cookies() from next/headers (async) + getToken from next-auth/jwt.
+ * Uses cookies() from next/headers (async) + jwtDecrypt from jose.
  * This is the same pattern that works in /api/auth/session-custom.
  */
 export async function getUserFromSession(request: NextRequest): Promise<AuthUser | null> {
@@ -106,53 +160,52 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
       }
     }
 
-    // Try NextAuth JWE token via getToken (official NextAuth method)
+    // Try NextAuth JWE token via jwtDecrypt (same approach as session-custom)
     if (nextAuthToken) {
-      const token = await getToken({
-        req: { cookies: { get: (name: string) => cookieStore.get(name) } } as any,
-        secret: process.env.NEXTAUTH_SECRET,
-      });
-
-      if (token && token.id) {
-        const user = await db.user.findUnique({
-          where: { id: token.id as string },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            role: true,
-            isActive: true,
-            image: true,
-            managerId: true,
-            members: {
-              take: 1,
-              select: {
-                organizationId: true,
-                role: true,
+      const payload = await decryptNextAuthToken(nextAuthToken);
+      if (payload) {
+        const nextAuthUserId = payload.id || payload.sub;
+        if (nextAuthUserId) {
+          const user = await db.user.findUnique({
+            where: { id: nextAuthUserId },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              role: true,
+              isActive: true,
+              image: true,
+              managerId: true,
+              members: {
+                take: 1,
+                select: {
+                  organizationId: true,
+                  role: true,
+                },
               },
             },
-          },
-        });
-
-        if (user && user.isActive) {
-          const primaryMembership = user.members[0];
-          const accounts = await db.account.findMany({
-            where: { userId: user.id },
-            select: { provider: true },
           });
 
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-            isActive: user.isActive,
-            image: user.image,
-            managerId: user.managerId,
-            organizationId: primaryMembership?.organizationId || null,
-            organizationRole: primaryMembership?.role || null,
-            linkedProviders: accounts.map((a) => a.provider),
-          };
+          if (user && user.isActive) {
+            const primaryMembership = user.members[0];
+            const accounts = await db.account.findMany({
+              where: { userId: user.id },
+              select: { provider: true },
+            });
+
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              role: user.role,
+              isActive: user.isActive,
+              image: user.image,
+              managerId: user.managerId,
+              organizationId: primaryMembership?.organizationId || null,
+              organizationRole: primaryMembership?.role || null,
+              linkedProviders: accounts.map((a) => a.provider),
+            };
+          }
         }
       }
     }
