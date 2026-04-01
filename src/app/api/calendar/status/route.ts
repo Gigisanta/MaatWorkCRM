@@ -1,66 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { getToken } from 'next-auth/jwt';
+import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { google, calendar_v3 } from 'googleapis';
 import { decryptTokenIfSet } from '@/lib/crypto';
-import { jwtDecrypt } from 'jose';
-import { hkdf } from '@panva/hkdf';
 
-// Derive the encryption key using the same algorithm as NextAuth
-async function getDerivedEncryptionKey(keyMaterial: string, salt: string): Promise<Uint8Array> {
-  const derivedKey = await hkdf(
-    'sha256',
-    keyMaterial,
-    salt || 'nextauth.authjs.com',
-    `NextAuth.js Generated Encryption Key${salt ? ` (${salt})` : ''}`,
-    32
-  );
-  return new Uint8Array(derivedKey);
-}
-
-// Get user from session - uses cookies() from next/headers like session-custom
-async function getUserFromSessionCookies() {
+// Get user from session using NextAuth's getToken (recommended approach)
+async function getUserFromSessionWithNextAuth() {
   try {
     const cookieStore = await cookies();
-    const dbToken = cookieStore.get('session_token')?.value;
+    const sessionToken = cookieStore.get('next-auth.session-token')?.value
+      || cookieStore.get('__Secure-next-auth.session-token')?.value
+      || cookieStore.get('session_token')?.value;
 
-    const isProduction = process.env.NODE_ENV === 'production';
-    const baseCookieName = isProduction ? '__Secure-next-auth.session-token' : 'next-auth.session-token';
+    console.log('[CalendarStatus] Session token present:', !!sessionToken);
 
-    // Try production cookie name first, with chunking
-    let nextAuthToken: string | null = null;
-    let chunkIndex = 0;
-    while (chunkIndex <= 5) {
-      const chunkName = chunkIndex === 0 ? baseCookieName : `${baseCookieName}.${chunkIndex}`;
-      const chunk = cookieStore.get(chunkName)?.value;
-      if (chunk) {
-        nextAuthToken = (nextAuthToken || '') + chunk;
-        chunkIndex++;
-      } else {
-        break;
-      }
-    }
+    // Try NextAuth JWT token first
+    if (sessionToken) {
+      const token = await getToken({
+        req: { cookies: { get: (name: string) => cookieStore.get(name) } } as any,
+        secret: process.env.NEXTAUTH_SECRET,
+      });
 
-    // Fallback: try development cookie name
-    if (!nextAuthToken) {
-      const fallbackName = isProduction ? 'next-auth.session-token' : '__Secure-next-auth.session-token';
-      chunkIndex = 0;
-      while (chunkIndex <= 5) {
-        const chunkName = chunkIndex === 0 ? fallbackName : `${fallbackName}.${chunkIndex}`;
-        const chunk = cookieStore.get(chunkName)?.value;
-        if (chunk) {
-          nextAuthToken = (nextAuthToken || '') + chunk;
-          chunkIndex++;
-        } else {
-          break;
+      if (token && token.id) {
+        console.log('[CalendarStatus] getToken succeeded, userId:', token.id);
+        const user = await db.user.findUnique({
+          where: { id: token.id as string },
+          select: { id: true, email: true, name: true, role: true, isActive: true, image: true, managerId: true,
+            members: { take: 1, select: { organizationId: true, role: true } } },
+        });
+
+        if (user && user.isActive) {
+          const primaryMembership = user.members[0];
+          const accounts = await db.account.findMany({ where: { userId: user.id }, select: { provider: true } });
+          return {
+            id: user.id, email: user.email, name: user.name, role: user.role, isActive: user.isActive,
+            image: user.image, managerId: user.managerId,
+            organizationId: primaryMembership?.organizationId || null, organizationRole: primaryMembership?.role || null,
+            linkedProviders: accounts.map((a) => a.provider),
+          };
         }
       }
     }
 
-    console.log('[CalendarStatus] Cookies in cookieStore:', cookieStore.getAll().map(c => ({ name: c.name, hasValue: !!c.value })));
-    console.log('[CalendarStatus] dbToken:', !!dbToken, 'nextAuthToken:', !!nextAuthToken, 'length:', nextAuthToken?.length);
-
-    // Database session (UUID token from custom credentials login)
+    // Try database session token (UUID from custom credentials login)
+    const dbToken = cookieStore.get('session_token')?.value;
     if (dbToken) {
       const session = await db.session.findUnique({
         where: { token: dbToken },
@@ -86,48 +71,9 @@ async function getUserFromSessionCookies() {
       }
     }
 
-    // NextAuth JWT token (from Google OAuth)
-    if (nextAuthToken) {
-      const secret = process.env.NEXTAUTH_SECRET;
-      if (!secret) {
-        console.log('[CalendarStatus] NEXTAUTH_SECRET not set');
-        return null;
-      }
-
-      const encryptionKey = await getDerivedEncryptionKey(secret, '');
-      try {
-        const result = await jwtDecrypt(nextAuthToken, encryptionKey, { clockTolerance: 15 });
-        const payload = result.payload;
-        const userId = payload.id || payload.sub;
-
-        console.log('[CalendarStatus] JWT payload:', JSON.stringify(payload).substring(0, 100));
-
-        if (userId && typeof userId === 'string') {
-          const user = await db.user.findUnique({
-            where: { id: userId },
-            select: { id: true, email: true, name: true, role: true, isActive: true, image: true, managerId: true,
-              members: { take: 1, select: { organizationId: true, role: true } } },
-          });
-
-          if (user && user.isActive) {
-            const primaryMembership = user.members[0];
-            const accounts = await db.account.findMany({ where: { userId: user.id }, select: { provider: true } });
-            return {
-              id: user.id, email: user.email, name: user.name, role: user.role, isActive: user.isActive,
-              image: user.image, managerId: user.managerId,
-              organizationId: primaryMembership?.organizationId || null, organizationRole: primaryMembership?.role || null,
-              linkedProviders: accounts.map((a) => a.provider),
-            };
-          }
-        }
-      } catch (jwtError) {
-        console.error('[CalendarStatus] JWT decrypt error:', jwtError);
-      }
-    }
-
     return null;
   } catch (error) {
-    console.error('[CalendarStatus] getUserFromSessionCookies error:', error);
+    console.error('[CalendarStatus] getUserFromSessionWithNextAuth error:', error);
     return null;
   }
 }
@@ -173,8 +119,7 @@ async function getGoogleCalendars(accessToken: string, refreshToken?: string | n
 }
 
 export async function GET(request: NextRequest) {
-  // Use cookies() from next/headers (like session-custom) instead of request.cookies
-  const user = await getUserFromSessionCookies();
+  const user = await getUserFromSessionWithNextAuth();
   if (!user) {
     console.log('[CalendarStatus] No user from session - returning 401');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
