@@ -922,11 +922,12 @@ export default function CalendarPage() {
       toast.success('Calendario sincronizado correctamente');
     },
     onError: (err: Error & { url?: string }) => {
-      if (err.url) {
+      const reconnectUrl = err.url;
+      if (reconnectUrl) {
         toast.error('Tokens de Google Calendar expirados. Reconectando...', {
           action: {
             label: 'Reconectar',
-            onClick: () => window.location.href = err.url,
+            onClick: () => { window.location.href = reconnectUrl; },
           },
           duration: 8000,
         });
