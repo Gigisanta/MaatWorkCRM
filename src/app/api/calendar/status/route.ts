@@ -102,7 +102,7 @@ async function getUserFromSessionCookies() {
 
         console.log('[CalendarStatus] JWT payload:', JSON.stringify(payload).substring(0, 100));
 
-        if (userId) {
+        if (userId && typeof userId === 'string') {
           const user = await db.user.findUnique({
             where: { id: userId },
             select: { id: true, email: true, name: true, role: true, isActive: true, image: true, managerId: true,
