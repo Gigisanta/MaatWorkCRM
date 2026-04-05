@@ -68,6 +68,11 @@ import {
 } from "@/hooks/use-pipeline";
 import { ContactCard } from "./components/contact-card";
 import { MobileFAB } from "@/components/ui/mobile-fab";
+import dynamic from "next/dynamic";
+const CreateContactModal = dynamic(
+  () => import("@/app/contacts/components/create-contact-modal").then((m) => m.CreateContactModal),
+  { ssr: false, loading: () => null }
+);
 
 // Stage Column Component
 const StageColumn = React.memo(function StageColumn({
@@ -333,6 +338,8 @@ function PipelineContent() {
   // Modal states
   const [editModalOpen, setEditModalOpen] = React.useState(false);
   const [selectedContact, setSelectedContact] = React.useState<ContactWithProducts | null>(null);
+  const [createModalOpen, setCreateModalOpen] = React.useState(false);
+  const [createModalStageId, setCreateModalStageId] = React.useState<string | null>(null);
   const { collapsed, setCollapsed } = useSidebar();
 
   const sensors = useSensors(
@@ -489,9 +496,8 @@ function PipelineContent() {
   };
 
   const handleAddContact = (stageId: string) => {
-    // For now, just open the edit modal with empty contact in the specific stage
-    // In a real implementation, you might navigate to a create contact page
-    toast.info("Usa la tabla de contactos para crear nuevos contactos");
+    setCreateModalStageId(stageId);
+    setCreateModalOpen(true);
   };
 
   const handleUpdateStage = React.useCallback((contactId: string, stageId: string) => {
@@ -773,13 +779,28 @@ function PipelineContent() {
         organizationId={organizationId}
       />
 
+      {/* Create Contact Modal - opened directly from kanban + button */}
+      <CreateContactModal
+        open={createModalOpen}
+        onClose={() => {
+          setCreateModalOpen(false);
+          setCreateModalStageId(null);
+        }}
+        stages={stages}
+        organizationId={organizationId}
+        initialStageId={createModalStageId}
+      />
+
       {/* Mobile FAB - only shown on mobile */}
       <MobileFAB
         actions={[
           {
             label: "Nueva oportunidad",
             icon: Plus,
-            onClick: () => toast.info("Usa la tabla de contactos para crear nuevos contactos"),
+            onClick: () => {
+              setCreateModalStageId(null);
+              setCreateModalOpen(true);
+            },
           },
         ]}
       />
