@@ -1,6 +1,12 @@
 // Zod schemas for Contact validation
 import { z } from 'zod';
 
+const tagWithValueSchema = z.object({
+  name: z.string().min(1),
+  color: z.string().optional().default('#8b5cf6'),
+  value: z.number().optional().default(0),
+});
+
 export const contactCreateSchema = z.object({
   organizationId: z.string().min(1),
   name: z.string().min(1, 'Name is required').max(255),
@@ -13,6 +19,7 @@ export const contactCreateSchema = z.object({
   pipelineStageId: z.string().optional().nullable(),
   assignedTo: z.string().optional().nullable(),
   tagIds: z.array(z.string()).optional(),
+  tags: z.array(tagWithValueSchema).optional(),
 });
 
 export const contactUpdateSchema = z.object({

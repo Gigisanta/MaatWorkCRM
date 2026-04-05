@@ -44,6 +44,7 @@ const contactFormSchema = z.object({
   source: z.string().optional().or(z.literal("")),
   pipelineStageId: z.string().optional().or(z.literal("")),
   assignedTo: z.string().optional().or(z.literal("")),
+  value: z.number().optional().default(0),
 });
 
 type ContactFormDataInput = z.input<typeof contactFormSchema>;
@@ -69,6 +70,8 @@ interface CreateContactModalProps {
   onClose: () => void;
   stages: PipelineStage[];
   organizationId: string | null;
+  initialStageId?: string | null;
+  initialValue?: number;
 }
 
 export function CreateContactModal({
@@ -76,6 +79,8 @@ export function CreateContactModal({
   onClose,
   stages,
   organizationId,
+  initialStageId,
+  initialValue,
 }: CreateContactModalProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -103,8 +108,9 @@ export function CreateContactModal({
       company: "",
       emoji: "👤",
       source: "",
-      pipelineStageId: "",
+      pipelineStageId: initialStageId || "",
       assignedTo: user?.id || "",
+      value: initialValue || 0,
     },
   });
 
@@ -118,6 +124,10 @@ export function CreateContactModal({
         body: JSON.stringify({
           ...data,
           organizationId,
+          // When value > 0, create a product tag with that value
+          ...(data.value && data.value > 0
+            ? { tags: [{ name: data.name, value: data.value }] }
+            : {}),
         }),
       });
       if (!response.ok) {
@@ -230,6 +240,27 @@ export function CreateContactModal({
                       {...field}
                       className="glass border-white/10 bg-white/5 text-white"
                       placeholder="Nombre de la empresa"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              name="value"
+              control={form.control}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-slate-400">Valor del negocio ($)</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="number"
+                      min={0}
+                      className="glass border-white/10 bg-white/5 text-white"
+                      placeholder="Ej: 15000"
+                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      value={field.value ?? ""}
                     />
                   </FormControl>
                   <FormMessage />

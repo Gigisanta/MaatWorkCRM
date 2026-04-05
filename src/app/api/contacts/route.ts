@@ -546,13 +546,51 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // If tags with values were provided, create them and associate
+    if (data.tags && data.tags.length > 0) {
+      for (const tagData of data.tags) {
+        // Upsert the tag (get existing or create new)
+        let tag = await db.tag.findFirst({
+          where: { organizationId: targetOrgId, name: tagData.name },
+        });
+        if (!tag) {
+          tag = await db.tag.create({
+            data: {
+              organizationId: targetOrgId,
+              name: tagData.name,
+              color: tagData.color ?? '#8b5cf6',
+            },
+          });
+        }
+        // Associate tag with contact and set value
+        await db.contactTag.create({
+          data: {
+            contactId: contact.id,
+            tagId: tag.id,
+            value: tagData.value ?? 0,
+          },
+        });
+      }
+    }
+
+    // Re-fetch contact with updated tags
+    const contactWithTags = await db.contact.findUnique({
+      where: { id: contact.id },
+      include: {
+        tags: { include: { tag: true } },
+        pipelineStage: { select: { id: true, name: true, color: true, order: true } },
+        assignedUser: { select: { id: true, name: true, email: true, image: true } },
+      },
+    });
+
     const responseData = {
-      ...contact,
-      tags: contact.tags.map(ct => ({
+      ...contactWithTags,
+      tags: contactWithTags?.tags.map(ct => ({
         id: ct.tag.id,
         name: ct.tag.name,
         color: ct.tag.color,
-      })),
+        value: ct.value ?? null,
+      })) ?? [],
       interactionCount: 0,
     };
 
