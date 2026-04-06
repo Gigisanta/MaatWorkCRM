@@ -13,8 +13,8 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  closestCorners,
-  closestCenter,
+  rectIntersection,
+  useDroppable,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -96,8 +96,14 @@ const StageColumn = React.memo(function StageColumn({
     sum + (c.tags || []).reduce((ps: number, p: Product) => ps + ((p as { value?: number }).value || 0), 0)
   , 0);
 
+  // Register column as droppable so contacts can be dropped on it
+  const { setNodeRef: setDroppableRef } = useDroppable({
+    id: `stage-${stage.id}`,
+    data: { type: 'stage', stageId: stage.id },
+  });
+
   return (
-    <div className="flex flex-col h-full min-w-[280px] max-w-[280px]">
+    <div ref={setDroppableRef} className="flex flex-col h-full min-w-[280px] max-w-[280px]">
       {/* Stage header with color accent */}
       <div
         className="flex items-center justify-between mb-2 px-1 py-2 rounded-lg bg-white/3 border border-white/6"
@@ -435,11 +441,19 @@ function PipelineContent() {
     const activeId = active.id as string;
     const overId = over.id as string;
 
-    // Find source and destination stages
-    const sourceStage = optimisticStages.find(s => s.contacts.some(c => c.id === activeId));
-    const destStage = optimisticStages.find(s => s.id === overId || s.contacts.some(c => c.id === overId));
+    // Check if dropped on a column (stage-${stageId} format) or on a contact
+    let destStageId: string | null = null;
+    if (overId.startsWith('stage-')) {
+      destStageId = overId.replace('stage-', '');
+    } else {
+      const destStage = optimisticStages.find(s => s.contacts.some(c => c.id === overId));
+      destStageId = destStage?.id || null;
+    }
 
-    if (!sourceStage || !destStage || sourceStage.id === destStage.id) return;
+    // Find source stage
+    const sourceStage = optimisticStages.find(s => s.contacts.some(c => c.id === activeId));
+    if (!sourceStage || !destStageId) return;
+    if (sourceStage.id === destStageId) return;
 
     // Find the contact being dragged
     const contact = sourceStage.contacts.find(c => c.id === activeId);
@@ -450,8 +464,8 @@ function PipelineContent() {
       if (stage.id === sourceStage.id) {
         return { ...stage, contacts: stage.contacts.filter(c => c.id !== activeId) };
       }
-      if (stage.id === destStage.id) {
-        return { ...stage, contacts: [...stage.contacts, { ...contact, pipelineStageId: destStage.id }] };
+      if (stage.id === destStageId) {
+        return { ...stage, contacts: [...stage.contacts, { ...contact, pipelineStageId: destStageId! }] };
       }
       return stage;
     }));
@@ -466,9 +480,18 @@ function PipelineContent() {
     const contactId = active.id as string;
     const overId = over.id as string;
 
+    // Check if dropped on a column (stage-${stageId} format) or on a contact
+    let destStageId: string | null = null;
+    if (overId.startsWith('stage-')) {
+      destStageId = overId.replace('stage-', '');
+    } else {
+      const destStage = stages.find(s => s.contacts.some(c => c.id === overId));
+      destStageId = destStage?.id || null;
+    }
+
     // Find the original contact to get its source stage
     const originalContact = stages.flatMap(s => s.contacts).find(c => c.id === contactId);
-    const destStage = stages.find(s => s.id === overId || s.contacts.some(c => c.id === overId));
+    const destStage = destStageId ? stages.find(s => s.id === destStageId) : null;
 
     if (!originalContact || !destStage) {
       // Revert optimistic update
@@ -715,7 +738,7 @@ function PipelineContent() {
               /* Kanban Board */
               <DndContext
                 sensors={sensors}
-                collisionDetection={closestCenter}
+                collisionDetection={rectIntersection}
                 onDragStart={handleDragStart}
                 onDragOver={handleDragOver}
                 onDragEnd={handleDragEnd}
