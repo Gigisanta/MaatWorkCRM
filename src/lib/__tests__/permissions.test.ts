@@ -53,9 +53,14 @@ describe('hasPermission', () => {
   });
 
   describe('staff', () => {
-    it('has all contact permissions', () => {
-      expect(hasPermission('staff', 'contacts:read:all')).toBe(true);
-      expect(hasPermission('staff', 'contacts:delete:all')).toBe(true);
+    it('has own contact permissions only', () => {
+      expect(hasPermission('staff', 'contacts:read:own')).toBe(true);
+      expect(hasPermission('staff', 'contacts:create')).toBe(true);
+      expect(hasPermission('staff', 'contacts:update:own')).toBe(true);
+    });
+    it('does NOT have all contacts permission', () => {
+      expect(hasPermission('staff', 'contacts:read:all')).toBe(false);
+      expect(hasPermission('staff', 'contacts:delete:all')).toBe(false);
     });
     it('does NOT have team:view', () => {
       expect(hasPermission('staff', 'team:view')).toBe(false);
