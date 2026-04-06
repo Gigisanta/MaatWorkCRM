@@ -13,8 +13,11 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  rectIntersection,
+  pointerWithin,
   useDroppable,
+  CollisionDetection,
+  closestCenter,
+  rectIntersection,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -325,6 +328,32 @@ function ContactModal({
     </Dialog>
   );
 }
+
+// Custom collision detection that prioritizes stage columns
+// First checks if pointer is over a stage column, then falls back to closest center for contacts
+const stageColumnCollisionDetection: CollisionDetection = (args) => {
+  // First, check if we're over a stage column using pointerWithin
+  const stageCollisions = pointerWithin(args);
+  if (stageCollisions.length > 0) {
+    // Filter for stage droppables
+    const stageCollision = stageCollisions.find(c =>
+      c.data?.current?.type === 'stage' ||
+      (typeof c.id === 'string' && c.id.startsWith('stage-'))
+    );
+    if (stageCollision) {
+      return [stageCollision];
+    }
+  }
+
+  // Fall back to rectIntersection for finding contact intersections
+  const contactCollisions = rectIntersection(args);
+  if (contactCollisions.length > 0) {
+    return contactCollisions;
+  }
+
+  // Last resort: closest center
+  return closestCenter(args);
+};
 
 function PipelineContent() {
   const { user } = useAuth();
@@ -738,7 +767,7 @@ function PipelineContent() {
               /* Kanban Board */
               <DndContext
                 sensors={sensors}
-                collisionDetection={rectIntersection}
+                collisionDetection={stageColumnCollisionDetection}
                 onDragStart={handleDragStart}
                 onDragOver={handleDragOver}
                 onDragEnd={handleDragEnd}
