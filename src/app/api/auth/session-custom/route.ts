@@ -177,6 +177,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ user: null, authenticated: false });
   } catch (error) {
-    return NextResponse.json({ user: null, authenticated: false });
+    console.error('[session-custom] Unexpected error:', error);
+    return NextResponse.json({ user: null, authenticated: false, error: 'server_error' });
   }
 }

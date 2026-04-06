@@ -157,6 +157,7 @@ export default function ContactsPage() {
     data: contactsData,
     isLoading,
     error,
+    refetch,
   } = useQuery<ContactsResponse>({
     queryKey: [
       "contacts",
@@ -408,6 +409,8 @@ export default function ContactsPage() {
               isAdvisor={isAdvisor}
               stages={stages}
               isLoading={isLoading}
+              error={error}
+              onRetry={refetch}
               onToggleSelect={toggleSelect}
               onToggleSelectAll={toggleSelectAll}
               onContactClick={handleContactClick}

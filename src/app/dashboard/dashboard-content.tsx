@@ -162,7 +162,7 @@ function DashboardData({ user }: { user: any }) {
         `/api/dashboard/activity?organizationId=${user.organizationId}`,
         { credentials: 'include' }
       );
-      if (!res.ok) return { activities: [] };
+      if (!res.ok) throw new Error('Error al cargar actividad');
       return res.json();
     },
     enabled: !!user?.organizationId,
@@ -184,7 +184,7 @@ function DashboardData({ user }: { user: any }) {
         `/api/tasks?organizationId=${user.organizationId}&status=pending&limit=4&sortBy=dueDate&sortOrder=asc`,
         { credentials: 'include' }
       );
-      if (!res.ok) return { tasks: [] };
+      if (!res.ok) throw new Error('Error al cargar tareas');
       return res.json();
     },
     enabled: !!user?.organizationId,
@@ -204,7 +204,7 @@ function DashboardData({ user }: { user: any }) {
         `/api/calendar-events?organizationId=${user.organizationId}&start=${startOfMonth}&end=${endOfMonth}`,
         { credentials: 'include' }
       );
-      if (!res.ok) return { events: [] };
+      if (!res.ok) throw new Error('Error al cargar eventos de calendario');
       return res.json();
     },
     enabled: !!user?.organizationId,

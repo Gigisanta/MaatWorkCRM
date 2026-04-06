@@ -228,7 +228,7 @@ export function useContacts(organizationId: string = DEFAULT_ORG_ID, search: str
   return useQuery({
     queryKey: ['contacts', organizationId, search],
     queryFn: () => fetchContacts(organizationId, search),
-    enabled: search.length > 0 && !!organizationId,
+    enabled: !!organizationId,
   });
 }
 

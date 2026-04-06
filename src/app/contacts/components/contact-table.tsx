@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { User, ChevronRight, Edit, XCircle, Plus, FileText } from "lucide-react";
+import { User, ChevronRight, Edit, XCircle, Plus, FileText, AlertCircle } from "lucide-react";
 import { type Tag } from "./tag-manager-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -74,6 +74,8 @@ interface ContactTableProps {
   editingContactTagsId: string | null;
   onEditingContactTagsIdChange: (id: string | null) => void;
   onCreateClick?: () => void;
+  error?: Error | null;
+  onRetry?: () => void;
 }
 
 function ContactsTableSkeleton() {
@@ -113,6 +115,8 @@ export function ContactTable({
   editingContactTagsId,
   onEditingContactTagsIdChange,
   onCreateClick,
+  error,
+  onRetry,
 }: ContactTableProps) {
   const router = useRouter();
 
@@ -121,6 +125,29 @@ export function ContactTable({
       <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl overflow-hidden">
         <CardContent className="p-0">
           <ContactsTableSkeleton />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl overflow-hidden">
+        <CardContent className="p-0">
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="text-red-400 mb-3">
+              <AlertCircle className="h-8 w-8" />
+            </div>
+            <p className="text-sm text-red-400/80">Error al cargar contactos</p>
+            {onRetry && (
+              <button
+                onClick={onRetry}
+                className="mt-3 text-xs text-violet-400 hover:text-violet-300 transition-colors"
+              >
+                Reintentar
+              </button>
+            )}
+          </div>
         </CardContent>
       </Card>
     );
