@@ -100,7 +100,6 @@ export async function GET(request: NextRequest) {
                     id: true,
                     name: true,
                     color: true,
-                    value: true,
                   },
                 },
               },
@@ -141,7 +140,6 @@ export async function GET(request: NextRequest) {
           id: ct.tag.id,
           name: ct.tag.name,
           color: ct.tag.color,
-          value: ct.value ?? null,
         })),
         interactionCount: (contact._count?.deals || 0) + (contact._count?.tasks || 0),
       }));
@@ -219,7 +217,6 @@ export async function GET(request: NextRequest) {
                     id: true,
                     name: true,
                     color: true,
-                    value: true,
                   },
                 },
               },
@@ -260,7 +257,6 @@ export async function GET(request: NextRequest) {
           id: ct.tag.id,
           name: ct.tag.name,
           color: ct.tag.color,
-          value: ct.value ?? null,
         })),
         interactionCount: (contact._count?.deals || 0) + (contact._count?.tasks || 0),
       }));
@@ -340,7 +336,6 @@ export async function GET(request: NextRequest) {
                     id: true,
                     name: true,
                     color: true,
-                    value: true,
                   },
                 },
               },
@@ -381,7 +376,6 @@ export async function GET(request: NextRequest) {
           id: ct.tag.id,
           name: ct.tag.name,
           color: ct.tag.color,
-          value: ct.value ?? null,
         })),
         interactionCount: (contact._count?.deals || 0) + (contact._count?.tasks || 0),
       }));
@@ -546,7 +540,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // If tags with values were provided, create them and associate
+    // If tags were provided, create them and associate
     if (data.tags && data.tags.length > 0) {
       for (const tagData of data.tags) {
         // Upsert the tag (get existing or create new)
@@ -562,12 +556,11 @@ export async function POST(request: NextRequest) {
             },
           });
         }
-        // Associate tag with contact and set value
+        // Associate tag with contact
         await db.contactTag.create({
           data: {
             contactId: contact.id,
             tagId: tag.id,
-            value: tagData.value ?? 0,
           },
         });
       }
@@ -589,7 +582,6 @@ export async function POST(request: NextRequest) {
         id: ct.tag.id,
         name: ct.tag.name,
         color: ct.tag.color,
-        value: ct.value ?? null,
       })) ?? [],
       interactionCount: 0,
     };
