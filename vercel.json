@@ -86,6 +86,10 @@
     {
       "path": "/api/cron/sync-calendars",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/goals",
+      "schedule": "0 8 * * *"
     }
   ]
 }

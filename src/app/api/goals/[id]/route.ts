@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getUserFromSession } from '@/lib/auth-helpers';
 import { logger } from '@/lib/logger';
+import { checkGoalMilestones } from '@/lib/notifications';
+import { updateGoalHealthAndMilestones } from '@/lib/goal-tracking';
 
 // GET /api/goals/[id] - Get a single goal
 export async function GET(
@@ -188,6 +190,13 @@ export async function PUT(
       { operation: 'updateGoal', requestId, goalId: goal.id, duration_ms: Date.now() - start },
       'Goal updated successfully'
     );
+
+    // Check for milestone notifications after update
+    if (currentValue !== undefined && targetValue !== undefined) {
+      checkGoalMilestones(goal.id, currentValue, targetValue).catch((err) =>
+        logger.error({ err, operation: 'updateGoal', requestId, goalId: goal.id }, 'Failed to check goal milestones')
+      );
+    }
 
     return NextResponse.json(goal, { headers: { 'x-request-id': requestId } });
   } catch (error) {

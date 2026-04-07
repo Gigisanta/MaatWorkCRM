@@ -8,7 +8,6 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  relationMode = "prisma"
 }
 
 // ============================================
@@ -49,6 +48,12 @@ model User {
   calendarSyncStates CalendarSyncState[]
   calendarWebhooks CalendarWebhook[]
   feedback Feedback[]
+
+  userGoals UserGoal[]
+
+  // Team join requests
+  teamJoinRequests     TeamJoinRequest[] @relation("TeamJoinRequestUser")
+  sentTeamJoinRequests TeamJoinRequest[] @relation("TeamJoinRequestInviter")
 
   roleChangeRequests RoleChangeRequest[] @relation("RoleChangeRequestUser")
   reviewedRoleRequests RoleChangeRequest[] @relation("RoleChangeReviewer")
@@ -393,6 +398,7 @@ model Team {
   members               TeamMember[]
   goals                 TeamGoal[]
   calendarEvents        CalendarEvent[]
+  teamJoinRequests      TeamJoinRequest[]
 
   organization          Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
@@ -434,11 +440,82 @@ model TeamGoal {
   status      String   @default("active") // active, completed, missed, cancelled
 
   team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userGoals   UserGoal[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@index([teamId])
+  @@index([status])
+}
+
+model UserGoal {
+  id          String   @id @default(cuid())
+  ownerId     String
+  teamGoalId  String?
+  title       String
+  description String?
+  type        String   // new_aum, new_clients, meetings, revenue, custom
+  targetValue Float
+  currentValue Float  @default(0)
+  unit        String   // currency, count, percentage
+  period      String   // 2026-03 format
+  month       Int
+  year        Int
+  startDate   DateTime?
+  endDate     DateTime?
+  status      String   @default("active") // draft, active, completed, missed, cancelled, archived
+  health      String?  // on-track, at-risk, off-track, achieved
+  progressMethod String @default("manual") // automatic, manual
+
+  // Alineación jerárquica
+  parentGoalId String?
+
+  // Vinculaciones
+  linkedDeals    String[] // Array de deal IDs
+  linkedContacts String[] // Array de contact IDs
+
+  // Privacidad
+  privacy  String @default("private") // private, team, company
+
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  teamGoal  TeamGoal? @relation(fields: [teamGoalId], references: [id], onDelete: SetNull)
+  parent    UserGoal?  @relation("GoalHierarchy", fields: [parentGoalId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children  UserGoal[] @relation("GoalHierarchy")
+
+  @@index([ownerId])
+  @@index([teamGoalId])
+  @@index([status])
+  @@index([period])
+  @@index([type])
+}
+
+// ============================================
+// TEAM JOIN REQUESTS MODULE
+// ============================================
+
+model TeamJoinRequest {
+  id          String   @id @default(cuid())
+  teamId      String
+  userId      String
+  invitedBy   String
+  role        String   @default("member") // member, leader
+  status      String   @default("pending") // pending, accepted, rejected, cancelled
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  team    Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user    User @relation("TeamJoinRequestUser", fields: [userId], references: [id], onDelete: Cascade)
+  inviter User @relation("TeamJoinRequestInviter", fields: [invitedBy], references: [id], onDelete: Cascade)
+
+  @@index([teamId])
+  @@index([userId])
+  @@index([invitedBy])
   @@index([status])
 }
 
