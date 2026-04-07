@@ -130,47 +130,46 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
     if (dbSessionToken) {
       const session = await db.session.findUnique({
         where: { token: dbSessionToken },
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              role: true,
-              isActive: true,
-              image: true,
-              managerId: true,
-              members: {
-                take: 1,
-                select: {
-                  organizationId: true,
-                  role: true,
-                },
-              },
-            },
-          },
-        },
       });
 
-      if (session && session.expiresAt > new Date() && session.user.isActive) {
-        const primaryMembership = session.user.members[0];
-        const accounts = await db.account.findMany({
-          where: { userId: session.user.id },
-          select: { provider: true },
+      if (session && session.expiresAt > new Date()) {
+        const user = await db.user.findUnique({
+          where: { id: session.userId },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            role: true,
+            isActive: true,
+            image: true,
+            managerId: true,
+          },
         });
 
-        return {
-          id: session.user.id,
-          email: session.user.email,
-          name: session.user.name,
-          role: session.user.role,
-          isActive: session.user.isActive,
-          image: session.user.image,
-          managerId: session.user.managerId,
-          organizationId: primaryMembership?.organizationId || null,
-          organizationRole: primaryMembership?.role || null,
-          linkedProviders: accounts.map((a) => a.provider),
-        };
+        if (user && user.isActive) {
+          const membership = await db.member.findFirst({
+            where: { userId: user.id },
+            select: { organizationId: true, role: true },
+          });
+
+          const accounts = await db.account.findMany({
+            where: { userId: user.id },
+            select: { provider: true },
+          });
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            isActive: user.isActive,
+            image: user.image,
+            managerId: user.managerId,
+            organizationId: membership?.organizationId || null,
+            organizationRole: membership?.role || null,
+            linkedProviders: accounts.map((a) => a.provider),
+          };
+        }
       }
     }
 
@@ -190,18 +189,15 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
               isActive: true,
               image: true,
               managerId: true,
-              members: {
-                take: 1,
-                select: {
-                  organizationId: true,
-                  role: true,
-                },
-              },
             },
           });
 
           if (user && user.isActive) {
-            const primaryMembership = user.members[0];
+            const membership = await db.member.findFirst({
+              where: { userId: user.id },
+              select: { organizationId: true, role: true },
+            });
+
             const accounts = await db.account.findMany({
               where: { userId: user.id },
               select: { provider: true },
@@ -215,8 +211,8 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
               isActive: user.isActive,
               image: user.image,
               managerId: user.managerId,
-              organizationId: primaryMembership?.organizationId || null,
-              organizationRole: primaryMembership?.role || null,
+              organizationId: membership?.organizationId || null,
+              organizationRole: membership?.role || null,
               linkedProviders: accounts.map((a) => a.provider),
             };
           }

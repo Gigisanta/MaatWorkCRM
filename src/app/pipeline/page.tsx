@@ -13,7 +13,6 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  pointerWithin,
   useDroppable,
   CollisionDetection,
   closestCenter,
@@ -329,30 +328,30 @@ function ContactModal({
   );
 }
 
-// Custom collision detection that prioritizes stage columns
-// First checks if pointer is over a stage column, then falls back to closest center for contacts
+// Custom collision detection that ONLY returns stage columns as drop targets
+// Contacts are never drop targets - only stage columns are
 const stageColumnCollisionDetection: CollisionDetection = (args) => {
-  // First, check if we're over a stage column using pointerWithin
-  const stageCollisions = pointerWithin(args);
-  if (stageCollisions.length > 0) {
-    // Filter for stage droppables
-    const stageCollision = stageCollisions.find(c =>
-      c.data?.current?.type === 'stage' ||
-      (typeof c.id === 'string' && c.id.startsWith('stage-'))
-    );
-    if (stageCollision) {
-      return [stageCollision];
-    }
+  // Use rectIntersection to find all intersecting droppables
+  const allCollisions = rectIntersection(args);
+
+  if (allCollisions.length === 0) {
+    return closestCenter(args);
   }
 
-  // Fall back to rectIntersection for finding contact intersections
-  const contactCollisions = rectIntersection(args);
-  if (contactCollisions.length > 0) {
-    return contactCollisions;
+  // Filter for stage columns ONLY - contacts (useSortable) should not be drop targets
+  const stageColumns = allCollisions.filter(c =>
+    c.data?.current?.type === 'stage' ||
+    (typeof c.id === 'string' && c.id.startsWith('stage-'))
+  );
+
+  // If we're over a stage column, return that
+  if (stageColumns.length > 0) {
+    return stageColumns;
   }
 
-  // Last resort: closest center
-  return closestCenter(args);
+  // If no stage column found but we have collisions (shouldn't happen in normal flow),
+  // return all collisions to allow default behavior
+  return allCollisions;
 };
 
 function PipelineContent() {

@@ -20,10 +20,14 @@ async function getUserFromNextAuthSession(token: string) {
   try {
     const secret = process.env.NEXTAUTH_SECRET;
     if (!secret) {
+      console.error('[session-custom] NEXTAUTH_SECRET not set');
       return null;
     }
 
+    console.log('[session-custom] Token length:', token?.length, 'First 50 chars:', token?.substring(0, 50));
+
     const encryptionKey = await getDerivedEncryptionKey(secret, '');
+    console.log('[session-custom] EncryptionKey derived, length:', encryptionKey.length);
 
     let payload: any;
     try {
@@ -31,11 +35,15 @@ async function getUserFromNextAuthSession(token: string) {
         clockTolerance: 15,
       });
       payload = result.payload;
-    } catch {
+      console.log('[session-custom] Decryption success, payload:', JSON.stringify(payload));
+    } catch (err) {
+      console.error('[session-custom] jwtDecrypt failed:', err);
       return null;
     }
 
     const userId = payload.id || payload.sub;
+    console.log('[session-custom] userId from payload (id || sub):', userId);
+    console.log('[session-custom] payload.id:', payload.id, 'payload.sub:', payload.sub);
     if (!userId) {
       return null;
     }
@@ -64,10 +72,22 @@ async function getUserFromNextAuthSession(token: string) {
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
+    console.log('[session-custom] All cookies received:', JSON.stringify(Object.keys(cookieStore).filter(k => k.includes('session') || k.includes('next'))));
+    console.log('[session-custom] NODE_ENV:', process.env.NODE_ENV);
+
     const dbToken = cookieStore.get('session_token')?.value;
+    console.log('[session-custom] dbToken exists:', !!dbToken, 'length:', dbToken?.length);
 
     // NextAuth uses __Secure- prefix in production (HTTPS), without in development
     const isProduction = process.env.NODE_ENV === 'production';
+    console.log('[session-custom] isProduction:', isProduction);
+
+    // Try both cookie names to find the right one
+    const secureToken = cookieStore.get('__Secure-next-auth.session-token')?.value;
+    const nonSecureToken = cookieStore.get('next-auth.session-token')?.value;
+    const hostSecureToken = cookieStore.get('__Host-next-auth.session-token')?.value;
+    console.log('[session-custom] Cookie values - __Secure-:', !!secureToken, 'next-auth:', !!nonSecureToken, '__Host-:', !!hostSecureToken);
+
     let nextAuthToken = isProduction
       ? cookieStore.get('__Secure-next-auth.session-token')?.value
       : cookieStore.get('next-auth.session-token')?.value;
@@ -76,21 +96,35 @@ export async function GET(request: NextRequest) {
       nextAuthToken = isProduction
         ? cookieStore.get('next-auth.session-token')?.value
         : cookieStore.get('__Secure-next-auth.session-token')?.value;
+      console.log('[session-custom] Using fallback cookie, nextAuthToken exists:', !!nextAuthToken);
+    }
+
+    // Try __Host- prefix (some NextAuth configurations use this)
+    if (!nextAuthToken) {
+      nextAuthToken = cookieStore.get('__Host-next-auth.session-token')?.value;
+      console.log('[session-custom] Using __Host- cookie, nextAuthToken exists:', !!nextAuthToken);
     }
 
     // Try to get chunked cookies
     const baseName = isProduction ? '__Secure-next-auth.session-token' : 'next-auth.session-token';
     let chunkIndex = 0;
+    let chunkedToken = '';
     while (chunkIndex <= 5) {
       const chunkName = chunkIndex === 0 ? baseName : `${baseName}.${chunkIndex}`;
       const chunk = cookieStore.get(chunkName)?.value;
       if (chunk) {
-        nextAuthToken = (nextAuthToken || '') + chunk;
+        chunkedToken += chunk;
         chunkIndex++;
       } else {
         break;
       }
     }
+    if (chunkedToken) {
+      console.log('[session-custom] Got chunked token, length:', chunkedToken.length);
+      nextAuthToken = chunkedToken;
+    }
+
+    console.log('[session-custom] Final nextAuthToken exists:', !!nextAuthToken, 'length:', nextAuthToken?.length);
 
     if (!dbToken && !nextAuthToken) {
       return NextResponse.json({ user: null, authenticated: false });
