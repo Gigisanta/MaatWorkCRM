@@ -160,8 +160,17 @@ interface CalendarInfo {
 // Google Calendar API functions
 async function fetchCalendarStatus(): Promise<CalendarStatus> {
   const res = await fetch('/api/calendar/status', { credentials: 'include' });
-  if (!res.ok) throw new Error('Failed to fetch calendar status');
-  return res.json();
+  const data = await res.json();
+  // Validate response has required CalendarStatus fields
+  if (!res.ok || typeof data.connected !== 'boolean') {
+    // Return disconnected state instead of throwing
+    return {
+      connected: false,
+      calendars: [],
+      error: typeof data.error === 'string' ? data.error : 'Error de conexión',
+    };
+  }
+  return data as CalendarStatus;
 }
 
 async function syncCalendar(): Promise<{ success: boolean; lastSync: string; needsReauth?: boolean; error?: string; url?: string }> {
@@ -969,7 +978,24 @@ export default function CalendarPage() {
   };
 
   const handleGoogleConnect = () => {
-    signIn('google', { callbackUrl: '/calendar' });
+    // Use the connect endpoint which checks if already connected and re-syncs if needed
+    // This avoids unnecessary OAuth flow when already connected
+    fetch('/api/calendar/connect', { method: 'POST', credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.needsReauth || data.url) {
+          // Tokens expired, need to re-authorize
+          signIn('google', { callbackUrl: '/calendar' });
+        } else if (data.success) {
+          // Already connected, just re-synced
+          queryClient.invalidateQueries({ queryKey: ['calendar-status'] });
+          toast.success(data.action === 'resync' ? 'Calendario sincronizado' : 'Conectado a Google Calendar');
+        }
+      })
+      .catch(() => {
+        // Fallback to OAuth if endpoint fails
+        signIn('google', { callbackUrl: '/calendar' });
+      });
   };
 
   // Week days for week view (Monday-based)
@@ -1266,7 +1292,7 @@ export default function CalendarPage() {
                           ) : calendarData.error ? (
                             <div className="border-t border-white/5 pt-3">
                               <p className="text-xs text-red-400 mb-2">Error al cargar calendarios:</p>
-                              <p className="text-xs text-slate-400">{calendarData.error}</p>
+                              <p className="text-xs text-slate-400">{String(calendarData.error)}</p>
                               <Button
                                 onClick={() => window.location.reload()}
                                 variant="outline"

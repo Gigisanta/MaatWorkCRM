@@ -242,10 +242,17 @@ export function ContactTable({
                           variant="ghost"
                           size="icon"
                           className="h-6 w-6 text-slate-400 hover:text-white shrink-0"
-                          disabled={!contact.pipelineStage || (stages.find(s => s.id === contact.pipelineStageId)?.order || 0) >= stages.filter(s => s.isActive).length}
+                          disabled={(() => {
+                            if (!contact.pipelineStage) return true;
+                            const currentOrder = contact.pipelineStage.order;
+                            const activeStages = stages.filter(s => s.isActive !== false);
+                            const maxOrder = Math.max(...activeStages.map(s => s.order), 0);
+                            return currentOrder >= maxOrder;
+                          })()}
                           onClick={() => {
-                            const currentOrder = stages.find(s => s.id === contact.pipelineStageId)?.order || 0;
-                            const nextStage = stages.find(s => s.order === currentOrder + 1);
+                            const currentOrder = contact.pipelineStage?.order ?? 0;
+                            const activeStages = stages.filter(s => s.isActive !== false);
+                            const nextStage = activeStages.find(s => s.order === currentOrder + 1);
                             if (nextStage) {
                               onUpdateStage(contact.id, nextStage.id);
                             }

@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, color, organizationId, icon, description, value } = body;
+    const { name, color, organizationId, icon, description } = body;
 
     if (!name || !organizationId) {
       logger.warn({ operation: 'createTag', requestId }, 'Validation failed: name and organizationId are required');
@@ -89,7 +89,6 @@ export async function POST(request: NextRequest) {
         organizationId,
         icon: icon ?? null,
         description: description ?? null,
-        value: value ?? 0,
       },
     });
 

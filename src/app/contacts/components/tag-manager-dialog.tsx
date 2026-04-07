@@ -19,14 +19,13 @@ export interface Tag {
   color: string;
   icon?: string;
   description?: string;
-  value?: number;
 }
 
 interface TagManagerDialogProps {
   open: boolean;
   onClose: () => void;
   tags: Tag[];
-  onCreateTag: (name: string, color?: string, value?: number) => void;
+  onCreateTag: (name: string, color?: string) => void;
   onDeleteTag: (tagId: string) => void;
   isCreating: boolean;
   isDeleting: boolean;
@@ -42,7 +41,6 @@ export function TagManagerDialog({
   isDeleting,
 }: TagManagerDialogProps) {
   const [newTagName, setNewTagName] = React.useState('');
-  const [newTagValue, setNewTagValue] = React.useState('');
   const [selectedColor, setSelectedColor] = React.useState('#8B5CF6');
 
   const colors = [
@@ -58,10 +56,8 @@ export function TagManagerDialog({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newTagName.trim()) {
-      const value = newTagValue ? parseFloat(newTagValue) : undefined;
-      onCreateTag(newTagName.trim(), selectedColor, value);
+      onCreateTag(newTagName.trim(), selectedColor);
       setNewTagName('');
-      setNewTagValue('');
       setSelectedColor('#8B5CF6');
     }
   };
@@ -99,13 +95,6 @@ export function TagManagerDialog({
                 onChange={(e) => setNewTagName(e.target.value)}
                 className="flex-1 glass border-white/10 bg-white/5 text-white placeholder:text-slate-500"
               />
-              <Input
-                type="number"
-                placeholder="Valor ($)"
-                value={newTagValue}
-                onChange={(e) => setNewTagValue(e.target.value)}
-                className="w-24 glass border-white/10 bg-white/5 text-white placeholder:text-slate-500"
-              />
               <Button
                 type="submit"
                 disabled={!newTagName.trim() || isCreating}
@@ -132,9 +121,6 @@ export function TagManagerDialog({
                       style={{ backgroundColor: tag.color }}
                     />
                     <span className="text-white text-sm">{tag.name}</span>
-                    {tag.value !== undefined && tag.value !== null && (
-                      <span className="text-violet-400 text-xs">${tag.value.toLocaleString()}</span>
-                    )}
                   </div>
                   <Button
                     variant="ghost"

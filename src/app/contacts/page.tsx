@@ -296,11 +296,11 @@ export default function ContactsPage() {
 
   // Organization tag mutations
   const createOrgTagMutation = useMutation({
-    mutationFn: async ({ name, color, value }: { name: string; color?: string; value?: number }) => {
+    mutationFn: async ({ name, color }: { name: string; color?: string }) => {
       const response = await fetch('/api/tags', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, color, organizationId, value }),
+        body: JSON.stringify({ name, color, organizationId }),
         credentials: 'include',
       });
       if (!response.ok) {
@@ -340,8 +340,8 @@ export default function ContactsPage() {
     },
   });
 
-  const createOrgTag = (name: string, color?: string, value?: number) => {
-    createOrgTagMutation.mutate({ name, color, value });
+  const createOrgTag = (name: string, color?: string) => {
+    createOrgTagMutation.mutate({ name, color });
   };
 
   const deleteOrgTag = (tagId: string) => {

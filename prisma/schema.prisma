@@ -295,7 +295,6 @@ model Tag {
   color          String   @default("#6366f1")
   icon           String?
   description    String?
-  value          Float?   // Default value for this product/tag
 
   contactTags    ContactTag[]
 
@@ -310,7 +309,6 @@ model ContactTag {
   id         String  @id @default(cuid())
   contactId  String
   tagId      String
-  value      Float?  // Premium/value for this product on this specific contact
 
   contact    Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
   tag        Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)

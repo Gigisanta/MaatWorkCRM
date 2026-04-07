@@ -286,6 +286,7 @@ export function ContactDrawer({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contact", contactId] });
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
       toast.success("Etiqueta agregada");
       setNewTag("");
     },

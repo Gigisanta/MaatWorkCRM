@@ -1,124 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { jwtVerify } from 'jose';
-import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { google, calendar_v3 } from 'googleapis';
 import { decryptTokenIfSet } from '@/lib/crypto';
-
-// ─── Verify NextAuth JWT token (v4 uses JWS, not JWE) ─────────────────────
-// NextAuth v4 stores sessions as JWTs signed with NEXTAUTH_SECRET (JWS, not JWE)
-async function decryptNextAuthToken(token: string): Promise<{ id?: string; sub?: string } | null> {
-  try {
-    const secret = process.env.NEXTAUTH_SECRET;
-    if (!secret) {
-      console.error('[decryptNextAuthToken] NEXTAUTH_SECRET not set');
-      return null;
-    }
-
-    // NextAuth v4 uses HS256 signed JWTs
-    const secretBytes = new TextEncoder().encode(secret);
-    const { payload } = await jwtVerify(token, secretBytes, {
-      algorithms: ['HS256'],
-      clockTolerance: 15,
-    });
-    return payload as { id?: string; sub?: string };
-  } catch (error) {
-    console.error('[decryptNextAuthToken] Failed to verify NextAuth token:', error);
-    return null;
-  }
-}
-
-// Get user from session using jwtDecrypt (same approach as session-custom)
-async function getUserFromSessionWithNextAuth() {
-  try {
-    const cookieStore = await cookies();
-
-    // Try database session token first (UUID from custom credentials login)
-    const dbToken = cookieStore.get('session_token')?.value;
-    if (dbToken) {
-      const session = await db.session.findUnique({
-        where: { token: dbToken },
-        include: {
-          user: {
-            select: {
-              id: true, email: true, name: true, role: true, isActive: true, image: true, managerId: true,
-              members: { take: 1, select: { organizationId: true, role: true } },
-            },
-          },
-        },
-      });
-
-      if (session && session.expiresAt > new Date() && session.user?.isActive) {
-        const primaryMembership = session.user.members[0];
-        const accounts = await db.account.findMany({ where: { userId: session.user.id }, select: { provider: true } });
-        return {
-          id: session.user.id, email: session.user.email, name: session.user.name, role: session.user.role,
-          isActive: session.user.isActive, image: session.user.image, managerId: session.user.managerId,
-          organizationId: primaryMembership?.organizationId || null, organizationRole: primaryMembership?.role || null,
-          linkedProviders: accounts.map((a) => a.provider),
-        };
-      }
-    }
-
-    // Try NextAuth JWT token (chunked cookies supported, same pattern as auth-helpers)
-    const isProduction = process.env.NODE_ENV === 'production';
-    const baseName = isProduction ? '__Secure-next-auth.session-token' : 'next-auth.session-token';
-
-    // Get base cookie first
-    let nextAuthToken = cookieStore.get(baseName)?.value;
-
-    // Then try to get chunked cookies (NextAuth chunks large tokens)
-    let chunkIndex = 0;
-    while (chunkIndex <= 5) {
-      const chunkName = chunkIndex === 0 ? baseName : `${baseName}.${chunkIndex}`;
-      const chunk = cookieStore.get(chunkName)?.value;
-      if (chunk) {
-        nextAuthToken = (nextAuthToken || '') + chunk;
-        chunkIndex++;
-      } else {
-        break;
-      }
-    }
-
-    // Fallback: try opposite prefix if no token found
-    if (!nextAuthToken) {
-      const fallbackName = isProduction ? 'next-auth.session-token' : '__Secure-next-auth.session-token';
-      nextAuthToken = cookieStore.get(fallbackName)?.value;
-    }
-
-    if (nextAuthToken) {
-      const payload = await decryptNextAuthToken(nextAuthToken);
-      if (payload) {
-        const nextAuthUserId = payload.id || payload.sub;
-        if (nextAuthUserId) {
-          console.log('[CalendarStatus] JWT decryption succeeded, userId:', nextAuthUserId);
-          const user = await db.user.findUnique({
-            where: { id: nextAuthUserId },
-            select: { id: true, email: true, name: true, role: true, isActive: true, image: true, managerId: true,
-              members: { take: 1, select: { organizationId: true, role: true } } },
-          });
-
-          if (user && user.isActive) {
-            const primaryMembership = user.members[0];
-            const accounts = await db.account.findMany({ where: { userId: user.id }, select: { provider: true } });
-            return {
-              id: user.id, email: user.email, name: user.name, role: user.role, isActive: user.isActive,
-              image: user.image, managerId: user.managerId,
-              organizationId: primaryMembership?.organizationId || null, organizationRole: primaryMembership?.role || null,
-              linkedProviders: accounts.map((a) => a.provider),
-            };
-          }
-        }
-      }
-    }
-
-    return null;
-  } catch (error) {
-    console.error('[CalendarStatus] getUserFromSessionWithNextAuth error:', error);
-    return null;
-  }
-}
+import { getUserFromSession } from '@/lib/auth-helpers';
 
 function createCalendarClient(accessToken: string, refreshToken?: string | null): calendar_v3.Calendar {
   const auth = new google.auth.OAuth2(
@@ -153,15 +37,21 @@ async function getGoogleCalendars(accessToken: string, refreshToken?: string | n
     });
 
     // Return error info so the API can report it properly
+    // Ensure error is always a string, not an object
+    const errorStr = typeof googleErrorDescription === 'string' && googleErrorDescription
+      ? googleErrorDescription
+      : typeof googleError === 'string' && googleError
+        ? googleError
+        : errorMessage;
     return {
       calendars: [],
-      error: googleErrorDescription || googleError || errorMessage,
+      error: errorStr,
     };
   }
 }
 
 export async function GET(request: NextRequest) {
-  const user = await getUserFromSessionWithNextAuth();
+  const user = await getUserFromSession(request);
   if (!user) {
     console.log('[CalendarStatus] No user from session - returning 401');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -174,10 +64,6 @@ export async function GET(request: NextRequest) {
   });
 
   const syncState = await db.calendarSyncState.findFirst({
-    where: { userId: user.id },
-  });
-
-  const membership = await db.member.findFirst({
     where: { userId: user.id },
   });
 
