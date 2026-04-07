@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { cookies } from 'next/headers';
-import { getToken } from 'next-auth/jwt';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
@@ -52,18 +53,14 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // NextAuth session token (from Google OAuth) - use getToken which handles JWE
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-      secureCookie: process.env.NODE_ENV === 'production',
-    });
+    // Try NextAuth session (Google OAuth users)
+    const nextAuthSession = await getServerSession(authOptions);
 
-    if (token) {
-      const userId = token.id || token.sub;
+    if (nextAuthSession?.user) {
+      const userId = (nextAuthSession.user as any).id;
       if (userId) {
         const user = await db.user.findUnique({
-          where: { id: userId as string },
+          where: { id: userId },
           select: {
             id: true, email: true, username: true, name: true,
             image: true, role: true, isActive: true, managerId: true,
@@ -95,7 +92,7 @@ export async function GET(request: NextRequest) {
               linkedProviders: accounts.map((a) => a.provider),
             },
             authenticated: true,
-            session: { expiresAt: token.exp ? new Date(token.exp * 1000).toISOString() : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() },
+            session: { expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() },
           });
         }
       }
