@@ -29,7 +29,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, color, icon, description, value } = body;
+    const { name, color, icon, description } = body;
 
     // Check if tag exists
     const existing = await db.tag.findUnique({
@@ -52,7 +52,6 @@ export async function PUT(
     if (color !== undefined) updateData.color = color;
     if (icon !== undefined) updateData.icon = icon;
     if (description !== undefined) updateData.description = description;
-    if (value !== undefined) updateData.value = value;
 
     const tag = await db.tag.update({
       where: { id },

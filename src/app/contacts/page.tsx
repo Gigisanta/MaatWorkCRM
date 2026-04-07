@@ -257,25 +257,21 @@ export default function ContactsPage() {
         credentials: 'include',
       });
 
-      if (!response.ok) {
-        let errorMessage = "Error al agregar tag";
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData?.error || errorData?.details || errorMessage;
-        } catch {
-          const text = await response.text();
-          if (text) errorMessage = text;
-        }
-        throw new Error(errorMessage);
-      }
-
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Error al agregar tag");
+      }
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
       queryClient.invalidateQueries({ queryKey: ["tags"] });
-      toast.success("Tag agregado");
+      if (data.alreadyAssociated) {
+        toast.info("Esta etiqueta ya está en el contacto");
+      } else {
+        toast.success("Tag agregado");
+      }
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : "Error al agregar tag");

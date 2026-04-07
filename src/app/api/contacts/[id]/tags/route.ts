@@ -126,11 +126,14 @@ export async function POST(
         contactId: id,
         tagId: finalTagId,
       },
+      include: {
+        tag: true,
+      },
     });
 
     if (existingContactTag) {
-      logger.warn({ operation: 'addTagToContact', requestId, contactId: id, tagId: finalTagId }, 'Tag already associated with contact');
-      const response = NextResponse.json({ error: 'Tag ya asociado con el contacto' }, { status: 400 });
+      logger.info({ operation: 'addTagToContact', requestId, contactId: id, tagId: finalTagId }, 'Tag already associated with contact');
+      const response = NextResponse.json({ alreadyAssociated: true, tag: existingContactTag.tag }, { status: 200 });
       response.headers.set('x-request-id', requestId);
       return response;
     }

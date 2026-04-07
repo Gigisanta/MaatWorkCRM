@@ -278,16 +278,21 @@ export function ContactDrawer({
           organizationId,
         }),
       });
+      const data = await response.json();
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Error al agregar etiqueta");
+        throw new Error(data.error || "Error al agregar etiqueta");
       }
-      return response.json();
+      // Return the data so we can check alreadyAssociated
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["contact", contactId] });
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
-      toast.success("Etiqueta agregada");
+      if (data.alreadyAssociated) {
+        toast.info("Esta etiqueta ya está en el contacto");
+      } else {
+        toast.success("Etiqueta agregada");
+      }
       setNewTag("");
     },
     onError: (error: Error) => {
