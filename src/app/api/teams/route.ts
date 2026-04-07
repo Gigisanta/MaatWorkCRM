@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
     }
 
-    const searchParams = await request.nextUrl.searchParams;
+    const { searchParams } = await request.nextUrl;
     const organizationId = searchParams.get('organizationId');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
@@ -119,8 +119,8 @@ export async function POST(request: NextRequest) {
     const userRole = normalizeRole(user.role);
 
     if (!hasPermission(userRole, 'team:create')) {
-      logger.warn({ operation: 'createTeam', requestId, userId: user.id }, 'Forbidden: insufficient permissions');
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
+      logger.warn({ operation: 'createTeam', requestId, userId: user.id }, 'Forbidden: insufficient permissions to create team');
+      return NextResponse.json({ error: 'No tienes permiso para crear equipos' }, { status: 403, headers: { 'x-request-id': requestId } });
     }
 
     const body = await request.json();

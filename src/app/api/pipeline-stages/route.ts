@@ -2,8 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getCachedPipelineStages, invalidatePipelineStagesCache } from '@/lib/cache';
 import { getUserFromSession } from '@/lib/auth-helpers';
+import { normalizeRole, hasPermission } from '@/lib/permissions';
 import { logger } from '@/lib/logger';
 import { ensureDefaultPipelineStages } from '@/lib/pipeline-stages';
+
+// Helper: get IDs of team members (advisors) under a manager
+async function getTeamMemberIds(managerId: string): Promise<string[]> {
+  const team = await db.user.findMany({
+    where: { managerId },
+    select: { id: true },
+  });
+  return team.map(u => u.id);
+}
+
+// Helper: check if user can view all contacts (admin/owner/developer)
+function userCanViewAllContacts(role: string): boolean {
+  return hasPermission(role, 'contacts:read:all');
+}
 
 // POST /api/pipeline-stages - Create a new pipeline stage
 export async function POST(request: NextRequest) {
@@ -103,6 +118,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
     }
 
+    // Determine contact filtering based on user role
+    const userRole = normalizeRole(user.role);
+    let contactFilter: Record<string, unknown> = {};
+
+    if (!userCanViewAllContacts(userRole)) {
+      // Manager sees own + team contacts
+      const teamMemberIds = await getTeamMemberIds(user.id);
+      contactFilter = { assignedTo: { in: [user.id, ...teamMemberIds] } };
+    }
+    // admin/owner/developer: no filter (see all)
+
     // Ensure default stages exist for this organization
     await ensureDefaultPipelineStages(organizationId);
 
@@ -111,6 +137,7 @@ export async function GET(request: NextRequest) {
       where: { organizationId, isActive: true },
       include: {
         contacts: {
+          where: contactFilter,
           take: 50,
           orderBy: { createdAt: 'desc' as const },
           select: {

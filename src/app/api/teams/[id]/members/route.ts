@@ -24,7 +24,7 @@ export async function POST(
     const userRole = normalizeRole(user.role);
     if (!hasPermission(userRole, 'team:update')) {
       logger.warn({ operation: 'addTeamMember', requestId, userId: user.id }, 'Forbidden: insufficient permissions');
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
+      return NextResponse.json({ error: 'No tienes permiso para agregar miembros a equipos' }, { status: 403, headers: { 'x-request-id': requestId } });
     }
 
     const { id } = await params;

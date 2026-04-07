@@ -87,6 +87,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 import { Check, ChevronsUpDown } from "lucide-react";
+import { canCreateTeam } from "@/lib/roles";
 import {
   Tooltip,
   TooltipContent,
@@ -1326,6 +1327,9 @@ export default function TeamsPage() {
   const teams = teamsData?.teams || [];
   const users = usersData || [];
 
+  // Determinar si el usuario puede crear equipos
+  const userCanCreateTeam = user ? canCreateTeam(user.role) : false;
+
   return (
     <div className="min-h-screen gradient-bg">
       <AppSidebar collapsed={collapsed} onCollapsedChange={setCollapsed} />
@@ -1347,13 +1351,15 @@ export default function TeamsPage() {
                   <p className="text-slate-500 mt-1 text-sm">Gestiona tus equipos y objetivos</p>
                 </div>
               </div>
-              <Button
-                className="bg-violet-500 hover:bg-violet-600"
-                onClick={() => setCreateTeamOpen(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Nuevo Equipo
-              </Button>
+              {userCanCreateTeam && (
+                <Button
+                  className="bg-violet-500 hover:bg-violet-600"
+                  onClick={() => setCreateTeamOpen(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nuevo Equipo
+                </Button>
+              )}
             </div>
 
             {/* Loading State */}
@@ -1420,13 +1426,15 @@ export default function TeamsPage() {
                   <p className="text-slate-400 mb-4">
                     Crea tu primer equipo para comenzar a gestionar objetivos y miembros
                   </p>
-                  <Button
-                    className="bg-violet-500 hover:bg-violet-600"
-                    onClick={() => setCreateTeamOpen(true)}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Crear Equipo
-                  </Button>
+                  {userCanCreateTeam && (
+                    <Button
+                      className="bg-violet-500 hover:bg-violet-600"
+                      onClick={() => setCreateTeamOpen(true)}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Crear Equipo
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             )}

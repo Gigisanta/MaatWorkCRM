@@ -103,7 +103,7 @@ export async function PUT(
 
     if (!hasPermission(userRole, 'team:update')) {
       logger.warn({ operation: 'updateTeam', requestId, userId: user.id }, 'Forbidden: insufficient permissions');
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
+      return NextResponse.json({ error: 'No tienes permiso para editar este equipo' }, { status: 403, headers: { 'x-request-id': requestId } });
     }
 
     const { id } = await params;
@@ -183,7 +183,7 @@ export async function DELETE(
 
     if (!hasPermission(userRole, 'team:delete')) {
       logger.warn({ operation: 'deleteTeam', requestId, userId: user.id }, 'Forbidden: insufficient permissions');
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
+      return NextResponse.json({ error: 'No tienes permiso para eliminar este equipo' }, { status: 403, headers: { 'x-request-id': requestId } });
     }
 
     const { id } = await params;

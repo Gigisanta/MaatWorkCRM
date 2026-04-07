@@ -1,9 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getUserFromSession } from '@/lib/auth-helpers';
+import { normalizeRole, hasPermission } from '@/lib/permissions';
 import { logger } from '@/lib/logger';
 import { taskCreateSchema } from '@/lib/schemas';
 import type { TaskCreateInput } from '@/lib/schemas';
+
+// Helper: get IDs of team members (advisors) under a manager
+async function getTeamMemberIds(managerId: string): Promise<string[]> {
+  const team = await db.user.findMany({
+    where: { managerId },
+    select: { id: true },
+  });
+  return team.map(u => u.id);
+}
+
+// Helper: check if user can view all contacts
+function userCanViewAllContacts(role: string): boolean {
+  return hasPermission(role, 'contacts:read:all');
+}
 
 // GET /api/tasks - List tasks with filters
 export async function GET(request: NextRequest) {
@@ -46,9 +61,33 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const userRole = normalizeRole(user.role);
     const skip = (page - 1) * limit;
 
+    // Construir el where base
     const where: Record<string, unknown> = { organizationId };
+
+    // Si es manager (no admin/owner/developer) y no hay filtro assignedTo específico,
+    // filtrar para ver solo tareas propias y de su equipo de advisors
+    if (!userCanViewAllContacts(userRole) && !assignedTo) {
+      const teamMemberIds = await getTeamMemberIds(user.id);
+      where.assignedTo = { in: [user.id, ...teamMemberIds] };
+    }
+
+    // Si hay filtro assignedTo específico, verificar que el usuario tenga acceso
+    if (assignedTo) {
+      const teamMemberIds = await getTeamMemberIds(user.id);
+      if (assignedTo !== user.id && !teamMemberIds.includes(assignedTo)) {
+        // No puede ver tareas de otros fuera de su equipo
+        if (!userCanViewAllContacts(userRole)) {
+          return NextResponse.json(
+            { error: 'Forbidden' },
+            { status: 403, headers: { 'x-request-id': requestId } }
+          );
+        }
+      }
+      where.assignedTo = assignedTo;
+    }
 
     if (status) {
       where.status = status;
@@ -56,10 +95,6 @@ export async function GET(request: NextRequest) {
 
     if (priority) {
       where.priority = priority;
-    }
-
-    if (assignedTo) {
-      where.assignedTo = assignedTo;
     }
 
     if (contactId) {
