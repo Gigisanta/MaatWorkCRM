@@ -90,7 +90,9 @@ export async function GET(request: NextRequest) {
   });
 
   let calendars: { id: string; name: string; selected: boolean }[] = [];
-  let selectedCalendarIds: string[] = ['primary'];
+  selectedCalendarIds = syncState?.selectedCalendarIds
+    ? (() => { try { return JSON.parse(syncState.selectedCalendarIds); } catch { return ['primary']; } })()
+    : ['primary'];
 
   let calendarError: string | undefined;
 

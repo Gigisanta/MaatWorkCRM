@@ -16,7 +16,20 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'No organization found' }, { status: 400 });
   }
 
-  return NextResponse.json({ selectedCalendarIds: ['primary'] });
+  const syncState = await db.calendarSyncState.findFirst({
+    where: { userId: user.id, calendarId: 'primary' },
+  });
+
+  let selectedCalendarIds: string[] = ['primary'];
+  if (syncState?.selectedCalendarIds) {
+    try {
+      selectedCalendarIds = JSON.parse(syncState.selectedCalendarIds);
+    } catch {
+      selectedCalendarIds = ['primary'];
+    }
+  }
+
+  return NextResponse.json({ selectedCalendarIds });
 }
 
 export async function POST(request: NextRequest) {
@@ -37,6 +50,25 @@ export async function POST(request: NextRequest) {
   if (!body || !Array.isArray(body.calendars)) {
     return NextResponse.json({ error: 'Invalid request: calendars array required' }, { status: 400 });
   }
+
+  const calendars = body.calendars as string[];
+
+  await db.calendarSyncState.upsert({
+    where: {
+      userId_calendarId: {
+        userId: user.id,
+        calendarId: 'primary',
+      },
+    },
+    update: {
+      selectedCalendarIds: JSON.stringify(calendars),
+    },
+    create: {
+      userId: user.id,
+      calendarId: 'primary',
+      selectedCalendarIds: JSON.stringify(calendars),
+    },
+  });
 
   return NextResponse.json({ success: true });
 }

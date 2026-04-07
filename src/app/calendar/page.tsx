@@ -146,7 +146,7 @@ interface EventsResponse {
 interface CalendarStatus {
   connected: boolean;
   email?: string;
-  lastSync?: string;
+  lastSyncedAt?: string;
   calendars: CalendarInfo[];
   error?: string;
   needsReauth?: boolean;
@@ -1230,7 +1230,7 @@ export default function CalendarPage() {
                               <div>
                                 <p className="text-sm font-medium text-white">{calendarData.email}</p>
                                 <p className="text-xs text-slate-400">
-                                  Ultima sincronizacion: {calendarData.lastSync ? new Date(calendarData.lastSync).toLocaleString('es-ES') : 'Nunca'}
+                                  Ultima sincronizacion: {calendarData.lastSyncedAt ? new Date(calendarData.lastSyncedAt).toLocaleString('es-ES') : 'Nunca'}
                                 </p>
                               </div>
                             </div>

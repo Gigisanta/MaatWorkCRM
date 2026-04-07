@@ -567,7 +567,8 @@ model CalendarSyncState {
   syncToken    String?
   lastSyncedAt DateTime?
   syncStatus   String   @default("idle")  // idle | syncing | error
-  errorCount   Int      @default(0)
+  errorCount         Int      @default(0)
+  selectedCalendarIds String?  // JSON string array of selected calendar IDs
 
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
