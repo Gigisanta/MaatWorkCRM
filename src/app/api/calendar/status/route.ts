@@ -89,12 +89,12 @@ export async function GET(request: NextRequest) {
     where: { userId: user.id },
   });
 
-  let calendars: { id: string; name: string; selected: boolean }[] = [];
-  selectedCalendarIds = syncState?.selectedCalendarIds
+  let selectedCalendarIds: string[] = syncState?.selectedCalendarIds
     ? (() => { try { return JSON.parse(syncState.selectedCalendarIds); } catch { return ['primary']; } })()
     : ['primary'];
 
   let calendarError: string | undefined;
+  let calendars: { id: string; name: string; selected: boolean }[] = [];
 
   // If connected, fetch real calendar list from Google
   if (googleAccount?.access_token) {
