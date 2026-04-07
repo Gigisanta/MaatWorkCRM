@@ -122,6 +122,6 @@ export async function GET(request: NextRequest) {
     calendars,
     selectedCalendarIds,
     error: calendarError,
-    needsReauth: !!calendarError && (calendarError.includes('Invalid OAuth 2.0') || calendarError.includes('invalid credentials')),
+    needsReauth: !!calendarError && (calendarError.includes('Invalid OAuth 2.0') || calendarError.includes('invalid credentials') || calendarError.includes('expirada') || calendarError.includes('expired')),
   });
 }
