@@ -1,44 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { cookies } from 'next/headers';
-import { jwtVerify } from 'jose';
+import { getToken } from 'next-auth/jwt';
 
-// NextAuth v4 uses JWS (signed JWT), not JWE (encrypted JWT)
-// We verify the signature using the secret as HMAC key
-async function getUserFromNextAuthSession(token: string) {
+// NextAuth v4: use getToken for proper JWT validation
+async function getUserFromNextAuthSession(request: NextRequest) {
   try {
-    const secret = process.env.NEXTAUTH_SECRET;
-    if (!secret) {
-      console.error('[session-custom] NEXTAUTH_SECRET not set');
+    // getToken is the officially supported way to get the JWT token in NextAuth v4
+    const token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+      secureCookie: process.env.NODE_ENV === 'production',
+    });
+
+    if (!token) {
+      console.log('[session-custom] No token found via getToken');
       return null;
     }
 
-    console.log('[session-custom] Token length:', token?.length, 'First 50 chars:', token?.substring(0, 50));
+    console.log('[session-custom] getToken success, token payload:', JSON.stringify(token).substring(0, 200));
 
-    let payload: any;
-    try {
-      // NextAuth v4 uses HS256 signed JWTs
-      const secretBytes = new TextEncoder().encode(secret);
-      const { payload: decryptedPayload } = await jwtVerify(token, secretBytes, {
-        algorithms: ['HS256'],
-        clockTolerance: 15,
-      });
-      payload = decryptedPayload;
-      console.log('[session-custom] JWT verify success, payload:', JSON.stringify(payload).substring(0, 200));
-    } catch (err) {
-      console.error('[session-custom] jwtVerify failed:', err);
-      return null;
-    }
-
-    const userId = payload.id || payload.sub;
-    console.log('[session-custom] userId from payload (id || sub):', userId);
-    console.log('[session-custom] payload.id:', payload.id, 'payload.sub:', payload.sub);
+    const userId = token.id || token.sub;
     if (!userId) {
+      console.log('[session-custom] No userId in token');
       return null;
     }
 
     const user = await db.user.findUnique({
-      where: { id: userId },
+      where: { id: userId as string },
       select: {
         id: true, email: true, username: true, name: true,
         image: true, role: true, isActive: true, managerId: true,
@@ -49,77 +38,24 @@ async function getUserFromNextAuthSession(token: string) {
       return null;
     }
 
-    const exp = payload.exp;
+    const exp = token.exp;
     const expiresAt = exp ? new Date(exp * 1000) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
     return { user, expiresAt };
-  } catch {
+  } catch (error) {
+    console.error('[session-custom] getUserFromNextAuthSession error:', error);
     return null;
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    console.log('[session-custom] All cookies received:', JSON.stringify(Object.keys(cookieStore).filter(k => k.includes('session') || k.includes('next'))));
     console.log('[session-custom] NODE_ENV:', process.env.NODE_ENV);
 
-    const dbToken = cookieStore.get('session_token')?.value;
-    console.log('[session-custom] dbToken exists:', !!dbToken, 'length:', dbToken?.length);
-
-    // NextAuth uses __Secure- prefix in production (HTTPS), without in development
-    const isProduction = process.env.NODE_ENV === 'production';
-    console.log('[session-custom] isProduction:', isProduction);
-
-    // Try both cookie names to find the right one
-    const secureToken = cookieStore.get('__Secure-next-auth.session-token')?.value;
-    const nonSecureToken = cookieStore.get('next-auth.session-token')?.value;
-    const hostSecureToken = cookieStore.get('__Host-next-auth.session-token')?.value;
-    console.log('[session-custom] Cookie values - __Secure-:', !!secureToken, 'next-auth:', !!nonSecureToken, '__Host-:', !!hostSecureToken);
-
-    let nextAuthToken = isProduction
-      ? cookieStore.get('__Secure-next-auth.session-token')?.value
-      : cookieStore.get('next-auth.session-token')?.value;
-
-    if (!nextAuthToken) {
-      nextAuthToken = isProduction
-        ? cookieStore.get('next-auth.session-token')?.value
-        : cookieStore.get('__Secure-next-auth.session-token')?.value;
-      console.log('[session-custom] Using fallback cookie, nextAuthToken exists:', !!nextAuthToken);
-    }
-
-    // Try __Host- prefix (some NextAuth configurations use this)
-    if (!nextAuthToken) {
-      nextAuthToken = cookieStore.get('__Host-next-auth.session-token')?.value;
-      console.log('[session-custom] Using __Host- cookie, nextAuthToken exists:', !!nextAuthToken);
-    }
-
-    // Try to get chunked cookies
-    const baseName = isProduction ? '__Secure-next-auth.session-token' : 'next-auth.session-token';
-    let chunkIndex = 0;
-    let chunkedToken = '';
-    while (chunkIndex <= 5) {
-      const chunkName = chunkIndex === 0 ? baseName : `${baseName}.${chunkIndex}`;
-      const chunk = cookieStore.get(chunkName)?.value;
-      if (chunk) {
-        chunkedToken += chunk;
-        chunkIndex++;
-      } else {
-        break;
-      }
-    }
-    if (chunkedToken) {
-      console.log('[session-custom] Got chunked token, length:', chunkedToken.length);
-      nextAuthToken = chunkedToken;
-    }
-
-    console.log('[session-custom] Final nextAuthToken exists:', !!nextAuthToken, 'length:', nextAuthToken?.length);
-
-    if (!dbToken && !nextAuthToken) {
-      return NextResponse.json({ user: null, authenticated: false });
-    }
-
     // Database session (UUID token from custom credentials login)
+    const cookieStore = await cookies();
+    const dbToken = cookieStore.get('session_token')?.value;
+
     if (dbToken) {
       const session = await db.session.findFirst({
         where: { token: dbToken, expiresAt: { gt: new Date() } },
@@ -164,38 +100,36 @@ export async function GET(request: NextRequest) {
     }
 
     // NextAuth session token (from Google OAuth via PrismaAdapter)
-    if (nextAuthToken) {
-      const result = await getUserFromNextAuthSession(nextAuthToken);
+    const result = await getUserFromNextAuthSession(request);
 
-      if (result?.user) {
-        const { user, expiresAt } = result;
-        const membership = await db.member.findFirst({
-          where: { userId: user.id },
-          select: { organizationId: true, role: true },
-        });
-        const accounts = await db.account.findMany({
-          where: { userId: user.id },
-          select: { provider: true },
-        });
+    if (result?.user) {
+      const { user, expiresAt } = result;
+      const membership = await db.member.findFirst({
+        where: { userId: user.id },
+        select: { organizationId: true, role: true },
+      });
+      const accounts = await db.account.findMany({
+        where: { userId: user.id },
+        select: { provider: true },
+      });
 
-        return NextResponse.json({
-          user: {
-            id: user.id,
-            email: user.email,
-            username: user.username,
-            name: user.name,
-            image: user.image,
-            role: user.role,
-            isActive: user.isActive,
-            managerId: user.managerId,
-            organizationId: membership?.organizationId || null,
-            organizationRole: membership?.role || null,
-            linkedProviders: accounts.map((a) => a.provider),
-          },
-          authenticated: true,
-          session: { expiresAt: expiresAt.toISOString() },
-        });
-      }
+      return NextResponse.json({
+        user: {
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          name: user.name,
+          image: user.image,
+          role: user.role,
+          isActive: user.isActive,
+          managerId: user.managerId,
+          organizationId: membership?.organizationId || null,
+          organizationRole: membership?.role || null,
+          linkedProviders: accounts.map((a) => a.provider),
+        },
+        authenticated: true,
+        session: { expiresAt: expiresAt.toISOString() },
+      });
     }
 
     return NextResponse.json({ user: null, authenticated: false });

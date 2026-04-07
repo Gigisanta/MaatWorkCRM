@@ -2,7 +2,7 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { cookies } from 'next/headers';
-import { jwtVerify } from 'jose';
+import { getToken } from 'next-auth/jwt';
 
 // ─── Auth Config Validation (run at module load, non-fatal) ─────────────────
 function validateAuthConfig(): void {
@@ -25,37 +25,6 @@ function validateAuthConfig(): void {
 
 validateAuthConfig();
 
-// ─── Verify NextAuth JWT token (v4 uses JWS, not JWE) ─────────────────────
-// NextAuth v4 stores sessions as JWTs signed with NEXTAUTH_SECRET (JWS, not JWE)
-// We use jwtVerify to verify the signature, not jwtDecrypt (which is for JWE encryption)
-async function decryptNextAuthToken(token: string): Promise<{ id?: string; sub?: string } | null> {
-  try {
-    const secret = process.env.NEXTAUTH_SECRET;
-    if (!secret) {
-      console.error('[decryptNextAuthToken] NEXTAUTH_SECRET not set');
-      return null;
-    }
-
-    console.log('[decryptNextAuthToken] Secret length:', secret?.length);
-    console.log('[decryptNextAuthToken] Token length:', token?.length, 'First 50 chars:', token?.substring(0, 50));
-
-    // NextAuth v4 uses JWS (signed JWT), so we need jwtVerify not jwtDecrypt
-    // The secret is used directly as the HMAC key (HS256)
-    const secretBytes = new TextEncoder().encode(secret);
-    console.log('[decryptNextAuthToken] Using jwtVerify for NextAuth v4 JWS token');
-
-    const { payload } = await jwtVerify(token, secretBytes, {
-      algorithms: ['HS256'],
-      clockTolerance: 15,
-    });
-    console.log('[decryptNextAuthToken] Verification success, payload:', JSON.stringify(payload).substring(0, 200));
-    return payload as { id?: string; sub?: string };
-  } catch (error) {
-    console.error('[decryptNextAuthToken] Failed to verify NextAuth token:', error);
-    return null;
-  }
-}
-
 export type UserRole = 'admin' | 'manager' | 'advisor' | 'owner' | 'staff' | 'member' | 'developer' | 'dueno' | 'asesor';
 
 export interface AuthUser {
@@ -74,51 +43,14 @@ export interface AuthUser {
 
 /**
  * Get user from session token in API routes.
- * Uses cookies() from next/headers (async) + jwtDecrypt from jose.
- * This is the same pattern that works in /api/auth/session-custom.
+ * Uses getToken from next-auth/jwt which is the official NextAuth v4 method.
  */
 export async function getUserFromSession(request: NextRequest): Promise<AuthUser | null> {
   try {
-    const cookieStore = await cookies();
-
-    // Debug: log all cookies
-    console.log('[getUserFromSession] All cookies:', JSON.stringify(Object.keys(cookieStore).filter(k => k.includes('session') || k.includes('token'))));
-    console.log('[getUserFromSession] NODE_ENV:', process.env.NODE_ENV);
-
     // Try database session token first (UUID from custom credentials login)
+    const cookieStore = await cookies();
     const dbSessionToken = cookieStore.get('session_token')?.value;
-    console.log('[getUserFromSession] dbSessionToken exists:', !!dbSessionToken, 'length:', dbSessionToken?.length);
 
-    // Try NextAuth JWE token (from Google OAuth via NextAuth)
-    const isProduction = process.env.NODE_ENV === 'production';
-    const baseName = isProduction ? '__Secure-next-auth.session-token' : 'next-auth.session-token';
-    console.log('[getUserFromSession] isProduction:', isProduction, 'baseName:', baseName);
-
-    // Get base cookie first
-    let nextAuthToken = cookieStore.get(baseName)?.value;
-    console.log('[getUserFromSession] nextAuthToken (base) exists:', !!nextAuthToken, 'length:', nextAuthToken?.length);
-
-    // Then try to get chunked cookies (NextAuth chunks large tokens)
-    let chunkIndex = 0;
-    while (chunkIndex <= 5) {
-      const chunkName = chunkIndex === 0 ? baseName : `${baseName}.${chunkIndex}`;
-      const chunk = cookieStore.get(chunkName)?.value;
-      if (chunk) {
-        nextAuthToken = (nextAuthToken || '') + chunk;
-        chunkIndex++;
-      } else {
-        break;
-      }
-    }
-
-    // Fallback: try opposite prefix if no token found
-    if (!nextAuthToken) {
-      const fallbackName = isProduction ? 'next-auth.session-token' : '__Secure-next-auth.session-token';
-      nextAuthToken = cookieStore.get(fallbackName)?.value;
-      console.log('[getUserFromSession] nextAuthToken (fallback) exists:', !!nextAuthToken, 'length:', nextAuthToken?.length);
-    }
-
-    // Try database session token first (UUID from custom auth)
     if (dbSessionToken) {
       const session = await db.session.findUnique({
         where: { token: dbSessionToken },
@@ -165,49 +97,52 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
       }
     }
 
-    // Try NextAuth JWE token via jwtDecrypt (same approach as session-custom)
-    if (nextAuthToken) {
-      const payload = await decryptNextAuthToken(nextAuthToken);
-      if (payload) {
-        const nextAuthUserId = payload.id || payload.sub;
-        if (nextAuthUserId) {
-          const user = await db.user.findUnique({
-            where: { id: nextAuthUserId },
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              role: true,
-              isActive: true,
-              image: true,
-              managerId: true,
-            },
+    // Try NextAuth token using getToken (official NextAuth v4 method)
+    const token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+      secureCookie: process.env.NODE_ENV === 'production',
+    });
+
+    if (token) {
+      const userId = token.id || token.sub;
+      if (userId) {
+        const user = await db.user.findUnique({
+          where: { id: userId as string },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            role: true,
+            isActive: true,
+            image: true,
+            managerId: true,
+          },
+        });
+
+        if (user && user.isActive) {
+          const membership = await db.member.findFirst({
+            where: { userId: user.id },
+            select: { organizationId: true, role: true },
           });
 
-          if (user && user.isActive) {
-            const membership = await db.member.findFirst({
-              where: { userId: user.id },
-              select: { organizationId: true, role: true },
-            });
+          const accounts = await db.account.findMany({
+            where: { userId: user.id },
+            select: { provider: true },
+          });
 
-            const accounts = await db.account.findMany({
-              where: { userId: user.id },
-              select: { provider: true },
-            });
-
-            return {
-              id: user.id,
-              email: user.email,
-              name: user.name,
-              role: user.role,
-              isActive: user.isActive,
-              image: user.image,
-              managerId: user.managerId,
-              organizationId: membership?.organizationId || null,
-              organizationRole: membership?.role || null,
-              linkedProviders: accounts.map((a) => a.provider),
-            };
-          }
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            isActive: user.isActive,
+            image: user.image,
+            managerId: user.managerId,
+            organizationId: membership?.organizationId || null,
+            organizationRole: membership?.role || null,
+            linkedProviders: accounts.map((a) => a.provider),
+          };
         }
       }
     }
