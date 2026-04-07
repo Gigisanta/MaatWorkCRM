@@ -1,21 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { cookies } from 'next/headers';
-import { jwtDecrypt } from 'jose';
-import { hkdf } from '@panva/hkdf';
+import { jwtVerify } from 'jose';
 
-// Derive the encryption key using the same algorithm as NextAuth
-async function getDerivedEncryptionKey(keyMaterial: string, salt: string): Promise<Uint8Array> {
-  const derivedKey = await hkdf(
-    'sha256',
-    keyMaterial,
-    salt || 'nextauth.authjs.com',
-    `NextAuth.js Generated Encryption Key${salt ? ` (${salt})` : ''}`,
-    32
-  );
-  return new Uint8Array(derivedKey);
-}
-
+// NextAuth v4 uses JWS (signed JWT), not JWE (encrypted JWT)
+// We verify the signature using the secret as HMAC key
 async function getUserFromNextAuthSession(token: string) {
   try {
     const secret = process.env.NEXTAUTH_SECRET;
@@ -26,18 +15,18 @@ async function getUserFromNextAuthSession(token: string) {
 
     console.log('[session-custom] Token length:', token?.length, 'First 50 chars:', token?.substring(0, 50));
 
-    const encryptionKey = await getDerivedEncryptionKey(secret, '');
-    console.log('[session-custom] EncryptionKey derived, length:', encryptionKey.length);
-
     let payload: any;
     try {
-      const result = await jwtDecrypt(token, encryptionKey, {
+      // NextAuth v4 uses HS256 signed JWTs
+      const secretBytes = new TextEncoder().encode(secret);
+      const { payload: decryptedPayload } = await jwtVerify(token, secretBytes, {
+        algorithms: ['HS256'],
         clockTolerance: 15,
       });
-      payload = result.payload;
-      console.log('[session-custom] Decryption success, payload:', JSON.stringify(payload));
+      payload = decryptedPayload;
+      console.log('[session-custom] JWT verify success, payload:', JSON.stringify(payload).substring(0, 200));
     } catch (err) {
-      console.error('[session-custom] jwtDecrypt failed:', err);
+      console.error('[session-custom] jwtVerify failed:', err);
       return null;
     }
 

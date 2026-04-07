@@ -2,8 +2,7 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { cookies } from 'next/headers';
-import { jwtDecrypt } from 'jose';
-import { hkdf } from '@panva/hkdf';
+import { jwtVerify } from 'jose';
 
 // ─── Auth Config Validation (run at module load, non-fatal) ─────────────────
 function validateAuthConfig(): void {
@@ -26,19 +25,9 @@ function validateAuthConfig(): void {
 
 validateAuthConfig();
 
-// ─── Encryption key derivation (same as NextAuth) ─────────────────────────
-async function getDerivedEncryptionKey(keyMaterial: string, salt: string): Promise<Uint8Array> {
-  const derivedKey = await hkdf(
-    'sha256',
-    keyMaterial,
-    salt || 'nextauth.authjs.com',
-    `NextAuth.js Generated Encryption Key${salt ? ` (${salt})` : ''}`,
-    32
-  );
-  return new Uint8Array(derivedKey);
-}
-
-// ─── Decrypt NextAuth JWE token ─────────────────────────────────────────
+// ─── Verify NextAuth JWT token (v4 uses JWS, not JWE) ─────────────────────
+// NextAuth v4 stores sessions as JWTs signed with NEXTAUTH_SECRET (JWS, not JWE)
+// We use jwtVerify to verify the signature, not jwtDecrypt (which is for JWE encryption)
 async function decryptNextAuthToken(token: string): Promise<{ id?: string; sub?: string } | null> {
   try {
     const secret = process.env.NEXTAUTH_SECRET;
@@ -47,19 +36,22 @@ async function decryptNextAuthToken(token: string): Promise<{ id?: string; sub?:
       return null;
     }
 
-    console.log('[decryptNextAuthToken] Secret length:', secret?.length, 'First char:', secret?.[0]);
+    console.log('[decryptNextAuthToken] Secret length:', secret?.length);
     console.log('[decryptNextAuthToken] Token length:', token?.length, 'First 50 chars:', token?.substring(0, 50));
 
-    const encryptionKey = await getDerivedEncryptionKey(secret, '');
-    console.log('[decryptNextAuthToken] EncryptionKey derived, length:', encryptionKey.length);
+    // NextAuth v4 uses JWS (signed JWT), so we need jwtVerify not jwtDecrypt
+    // The secret is used directly as the HMAC key (HS256)
+    const secretBytes = new TextEncoder().encode(secret);
+    console.log('[decryptNextAuthToken] Using jwtVerify for NextAuth v4 JWS token');
 
-    const result = await jwtDecrypt(token, encryptionKey, {
+    const { payload } = await jwtVerify(token, secretBytes, {
+      algorithms: ['HS256'],
       clockTolerance: 15,
     });
-    console.log('[decryptNextAuthToken] Decryption success, payload:', JSON.stringify(result.payload).substring(0, 100));
-    return result.payload as { id?: string; sub?: string };
+    console.log('[decryptNextAuthToken] Verification success, payload:', JSON.stringify(payload).substring(0, 200));
+    return payload as { id?: string; sub?: string };
   } catch (error) {
-    console.error('[decryptNextAuthToken] Failed to decrypt NextAuth token:', error);
+    console.error('[decryptNextAuthToken] Failed to verify NextAuth token:', error);
     return null;
   }
 }

@@ -1,25 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { jwtDecrypt } from 'jose';
-import { hkdf } from '@panva/hkdf';
+import { jwtVerify } from 'jose';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { google, calendar_v3 } from 'googleapis';
 import { decryptTokenIfSet } from '@/lib/crypto';
 
-// ─── Encryption key derivation (same as NextAuth) ─────────────────────────
-async function getDerivedEncryptionKey(keyMaterial: string, salt: string): Promise<Uint8Array> {
-  const derivedKey = await hkdf(
-    'sha256',
-    keyMaterial,
-    salt || 'nextauth.authjs.com',
-    `NextAuth.js Generated Encryption Key${salt ? ` (${salt})` : ''}`,
-    32
-  );
-  return new Uint8Array(derivedKey);
-}
-
-// ─── Decrypt NextAuth JWE token ─────────────────────────────────────────
+// ─── Verify NextAuth JWT token (v4 uses JWS, not JWE) ─────────────────────
+// NextAuth v4 stores sessions as JWTs signed with NEXTAUTH_SECRET (JWS, not JWE)
 async function decryptNextAuthToken(token: string): Promise<{ id?: string; sub?: string } | null> {
   try {
     const secret = process.env.NEXTAUTH_SECRET;
@@ -28,13 +16,15 @@ async function decryptNextAuthToken(token: string): Promise<{ id?: string; sub?:
       return null;
     }
 
-    const encryptionKey = await getDerivedEncryptionKey(secret, '');
-    const result = await jwtDecrypt(token, encryptionKey, {
+    // NextAuth v4 uses HS256 signed JWTs
+    const secretBytes = new TextEncoder().encode(secret);
+    const { payload } = await jwtVerify(token, secretBytes, {
+      algorithms: ['HS256'],
       clockTolerance: 15,
     });
-    return result.payload as { id?: string; sub?: string };
+    return payload as { id?: string; sub?: string };
   } catch (error) {
-    console.error('[decryptNextAuthToken] Failed to decrypt NextAuth token:', error);
+    console.error('[decryptNextAuthToken] Failed to verify NextAuth token:', error);
     return null;
   }
 }

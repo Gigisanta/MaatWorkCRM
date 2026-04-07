@@ -1,27 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { jwtDecrypt } from 'jose';
-import { hkdf } from '@panva/hkdf';
+import { jwtVerify } from 'jose';
 
-// ─── Encryption key derivation (same as NextAuth) ─────────────────────────
-async function getDerivedEncryptionKey(keyMaterial: string, salt: string): Promise<Uint8Array> {
-  const derivedKey = await hkdf(
-    'sha256',
-    keyMaterial,
-    salt || 'nextauth.authjs.com',
-    `NextAuth.js Generated Encryption Key${salt ? ` (${salt})` : ''}`,
-    32
-  );
-  return new Uint8Array(derivedKey);
-}
-
-// ─── Decrypt NextAuth JWE token ─────────────────────────────────────────
+// ─── Verify NextAuth JWT token (v4 uses JWS, not JWE) ─────────────────────
+// NextAuth v4 stores sessions as JWTs signed with NEXTAUTH_SECRET (JWS, not JWE)
+// We use jwtVerify to verify the signature at the edge
 async function decryptNextAuthToken(token: string): Promise<{ id?: string; sub?: string } | null> {
   try {
     const secret = process.env.NEXTAUTH_SECRET;
     if (!secret) return null;
-    const encryptionKey = await getDerivedEncryptionKey(secret, '');
-    const result = await jwtDecrypt(token, encryptionKey, { clockTolerance: 15 });
-    return result.payload as { id?: string; sub?: string };
+
+    // NextAuth v4 uses HS256 signed JWTs
+    const secretBytes = new TextEncoder().encode(secret);
+    const { payload } = await jwtVerify(token, secretBytes, {
+      algorithms: ['HS256'],
+      clockTolerance: 15,
+    });
+    return payload as { id?: string; sub?: string };
   } catch {
     return null;
   }
@@ -86,7 +80,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Try to decrypt/validate the NextAuth JWE token at edge
+  // Try to verify the NextAuth JWS token at edge
   // (This is the only validation we can do without DB access)
   try {
     const payload = await decryptNextAuthToken(fullToken);
