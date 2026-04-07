@@ -2,7 +2,6 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { cookies } from 'next/headers';
-import { getToken } from 'next-auth/jwt';
 
 // ─── Auth Config Validation (run at module load, non-fatal) ─────────────────
 function validateAuthConfig(): void {
@@ -43,7 +42,8 @@ export interface AuthUser {
 
 /**
  * Get user from session token in API routes.
- * Uses getToken from next-auth/jwt which is the official NextAuth v4 method.
+ * Calls NextAuth's built-in session endpoint internally, which correctly
+ * validates the JWT and returns user with organizationId.
  */
 export async function getUserFromSession(request: NextRequest): Promise<AuthUser | null> {
   try {
@@ -97,53 +97,73 @@ export async function getUserFromSession(request: NextRequest): Promise<AuthUser
       }
     }
 
-    // Try NextAuth token using getToken (official NextAuth v4 method)
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-      secureCookie: process.env.NODE_ENV === 'production',
-    });
+    // For Google OAuth users, call NextAuth's built-in session endpoint internally
+    // This works because it correctly validates the JWT token
+    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+    const host = request.headers.get('host') || 'localhost:3000';
+    const sessionUrl = `${protocol}://${host}/api/auth/session`;
 
-    if (token) {
-      const userId = token.id || token.sub;
-      if (userId) {
-        const user = await db.user.findUnique({
-          where: { id: userId as string },
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            role: true,
-            isActive: true,
-            image: true,
-            managerId: true,
-          },
-        });
+    let sessionResponse;
+    try {
+      const headers = {
+        'cookie': request.headers.get('cookie') || '',
+      };
+      sessionResponse = await fetch(sessionUrl, {
+        method: 'GET',
+        headers,
+        credentials: 'include',
+      });
+    } catch (err) {
+      console.error('[getUserFromSession] Failed to call NextAuth session:', err);
+      return null;
+    }
 
-        if (user && user.isActive) {
-          const membership = await db.member.findFirst({
-            where: { userId: user.id },
-            select: { organizationId: true, role: true },
+    if (sessionResponse.ok) {
+      try {
+        const sessionData = await sessionResponse.json();
+        if (sessionData.user?.id) {
+          const nextAuthUser = sessionData.user;
+          const userId = nextAuthUser.id;
+
+          const user = await db.user.findUnique({
+            where: { id: userId },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              role: true,
+              isActive: true,
+              image: true,
+              managerId: true,
+            },
           });
 
-          const accounts = await db.account.findMany({
-            where: { userId: user.id },
-            select: { provider: true },
-          });
+          if (user && user.isActive) {
+            const membership = await db.member.findFirst({
+              where: { userId: user.id },
+              select: { organizationId: true, role: true },
+            });
+            const accounts = await db.account.findMany({
+              where: { userId: user.id },
+              select: { provider: true },
+            });
 
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-            isActive: user.isActive,
-            image: user.image,
-            managerId: user.managerId,
-            organizationId: membership?.organizationId || null,
-            organizationRole: membership?.role || null,
-            linkedProviders: accounts.map((a) => a.provider),
-          };
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              role: user.role,
+              isActive: user.isActive,
+              image: user.image,
+              managerId: user.managerId,
+              organizationId: nextAuthUser.organizationId || membership?.organizationId || null,
+              organizationRole: membership?.role || null,
+              linkedProviders: accounts.map((a) => a.provider),
+            };
+          }
         }
+      } catch (err) {
+        console.error('[getUserFromSession] Failed to parse session response:', err);
       }
     }
 
