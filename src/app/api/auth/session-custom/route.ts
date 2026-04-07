@@ -54,28 +54,24 @@ export async function GET(request: NextRequest) {
     }
 
     // For Google OAuth users, call the NextAuth session endpoint internally
-    // This works because NextAuth's built-in session endpoint correctly validates its own JWT
-    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-    const host = request.headers.get('host') || 'localhost:3000';
-    const sessionUrl = `${protocol}://${host}/api/auth/session`;
+    // Use proper URL construction for serverless environment
+    const sessionUrl = new URL('/api/auth/session', `https://${request.headers.get('host') || 'crm.maat.work'}`);
 
     let sessionResponse;
     try {
-      const headers = {
-        'cookie': request.headers.get('cookie') || '',
-        'x-request-id': crypto.randomUUID(),
-      };
-      sessionResponse = await fetch(sessionUrl, {
+      sessionResponse = await fetch(sessionUrl.toString(), {
         method: 'GET',
-        headers,
+        headers: {
+          'cookie': request.headers.get('cookie') || '',
+          'host': request.headers.get('host') || '',
+        },
         credentials: 'include',
       });
     } catch (err) {
       console.error('[session-custom] Failed to call NextAuth session:', err);
-      return NextResponse.json({ user: null, authenticated: false });
     }
 
-    if (sessionResponse.ok) {
+    if (sessionResponse?.ok) {
       try {
         const sessionData = await sessionResponse.json();
         if (sessionData.user?.id) {
