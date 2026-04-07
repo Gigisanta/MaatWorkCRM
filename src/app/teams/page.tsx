@@ -387,6 +387,7 @@ function TeamDetailDrawer({
   onCreateGoal,
   onUpdateGoalProgress,
   onDeleteGoal,
+  onUpdateLeader,
 }: {
   team: Team | null;
   open: boolean;
@@ -397,12 +398,15 @@ function TeamDetailDrawer({
   onCreateGoal: (data: CreateGoalForm) => void;
   onUpdateGoalProgress: (goalId: string, currentValue: number) => void;
   onDeleteGoal: (goalId: string) => void;
+  onUpdateLeader: (leaderId: string) => void;
 }) {
   const [showAddMember, setShowAddMember] = React.useState(false);
   const [showCreateGoal, setShowCreateGoal] = React.useState(false);
+  const [showChangeLeader, setShowChangeLeader] = React.useState(false);
   const [editingGoal, setEditingGoal] = React.useState<TeamGoal | null>(null);
   const [deletingGoal, setDeletingGoal] = React.useState<TeamGoal | null>(null);
   const [removingMember, setRemovingMember] = React.useState<TeamMember | null>(null);
+  const [selectedLeaderId, setSelectedLeaderId] = React.useState(team?.leader?.id || "");
 
   const addMemberForm = useForm<AddMemberFormInput>({
     resolver: zodResolver(addMemberSchema) as any,
@@ -467,10 +471,24 @@ function TeamDetailDrawer({
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Team Leader */}
           <div>
-            <h3 className="text-sm font-medium text-slate-400 mb-3 flex items-center gap-2">
-              <Crown className="h-4 w-4 text-amber-500" />
-              Líder del Equipo
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-medium text-slate-400 flex items-center gap-2">
+                <Crown className="h-4 w-4 text-amber-500" />
+                Líder del Equipo
+              </h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-violet-400 hover:text-violet-300 h-7 px-2"
+                onClick={() => {
+                  setSelectedLeaderId(team.leader?.id || "");
+                  setShowChangeLeader(true);
+                }}
+              >
+                <Edit className="h-3.5 w-3.5 mr-1" />
+                Cambiar
+              </Button>
+            </div>
             {team.leader ? (
               <div className="flex items-center gap-3 p-3 rounded-lg glass border border-white/10">
                 <Avatar className="h-10 w-10">
@@ -502,7 +520,7 @@ function TeamDetailDrawer({
                 onClick={() => setShowAddMember(true)}
               >
                 <UserPlus className="h-4 w-4 mr-2" />
-                Añadir
+                Invitar
               </Button>
             </div>
             <div className="space-y-2 max-h-64 overflow-y-auto">
@@ -625,13 +643,13 @@ function TeamDetailDrawer({
           </div>
         </div>
 
-        {/* Add Member Dialog */}
+        {/* Add Member Dialog - Now sends invitation */}
         <Dialog open={showAddMember} onOpenChange={setShowAddMember}>
           <DialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900">
             <DialogHeader>
-              <DialogTitle className="text-white">Añadir Miembro</DialogTitle>
+              <DialogTitle className="text-white">Invitar al Equipo</DialogTitle>
               <DialogDescription className="text-slate-400">
-                Selecciona un usuario para añadir al equipo
+                Se enviará una solicitud de unión al usuario. Deberá aceptarla desde su perfil.
               </DialogDescription>
             </DialogHeader>
             <Form {...addMemberForm}>
@@ -693,11 +711,57 @@ function TeamDetailDrawer({
                     Cancelar
                   </Button>
                   <Button type="submit" className="bg-violet-500 hover:bg-violet-600">
-                    Añadir
+                    Enviar Invitación
                   </Button>
                 </DialogFooter>
               </form>
             </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Change Leader Dialog */}
+        <Dialog open={showChangeLeader} onOpenChange={setShowChangeLeader}>
+          <DialogContent className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-slate-900">
+            <DialogHeader>
+              <DialogTitle className="text-white">Cambiar Líder del Equipo</DialogTitle>
+              <DialogDescription className="text-slate-400">
+                Selecciona un nuevo líder para este equipo
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-slate-300 mb-2 block">Nuevo Líder</label>
+                <Select value={selectedLeaderId} onValueChange={setSelectedLeaderId}>
+                  <SelectTrigger className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white">
+                    <SelectValue placeholder="Selecciona un líder" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.name || user.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setShowChangeLeader(false)}>
+                  Cancelar
+                </Button>
+                <Button
+                  type="button"
+                  className="bg-violet-500 hover:bg-violet-600"
+                  onClick={() => {
+                    if (selectedLeaderId && selectedLeaderId !== team.leader?.id) {
+                      onUpdateLeader(selectedLeaderId);
+                    }
+                    setShowChangeLeader(false);
+                  }}
+                >
+                  Guardar
+                </Button>
+              </DialogFooter>
+            </div>
           </DialogContent>
         </Dialog>
 
@@ -1198,25 +1262,50 @@ export default function TeamsPage() {
     },
   });
 
-  // Add member mutation
+  // Add member mutation - sends invitation via team-join-requests
   const addMemberMutation = useMutation({
     mutationFn: async ({ teamId, data }: { teamId: string; data: AddMemberForm }) => {
-      const response = await fetch(`/api/teams/${teamId}/members`, {
+      const response = await fetch("/api/team-join-requests", {
         credentials: 'include',
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ teamId, targetUserId: data.userId, role: data.role }),
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || "Failed to add member");
+        throw new Error(error.error || "Failed to send invitation");
       }
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["teams"] });
       refetchTeamDetails();
-      toast.success("Miembro añadido exitosamente");
+      toast.success("Invitación enviada. El usuario deberá aceptarla.");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  // Update team leader mutation
+  const updateLeaderMutation = useMutation({
+    mutationFn: async ({ teamId, leaderId }: { teamId: string; leaderId: string }) => {
+      const response = await fetch(`/api/teams/${teamId}`, {
+        credentials: 'include',
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leaderId }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to update leader");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
+      refetchTeamDetails();
+      toast.success("Líder del equipo actualizado");
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -1611,6 +1700,11 @@ export default function TeamsPage() {
         }}
         onDeleteGoal={(goalId) => {
           deleteGoalMutation.mutate(goalId);
+        }}
+        onUpdateLeader={(leaderId) => {
+          if (selectedTeam) {
+            updateLeaderMutation.mutate({ teamId: selectedTeam.id, leaderId });
+          }
         }}
       />
     </div>

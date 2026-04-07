@@ -17,7 +17,7 @@ function createCalendarClient(accessToken: string, refreshToken?: string | null)
   return google.calendar({ version: 'v3', auth });
 }
 
-async function getGoogleCalendars(accessToken: string, refreshToken?: string | null): Promise<{ calendars: calendar_v3.Schema$CalendarListEntry[]; error?: string }> {
+async function getGoogleCalendars(accessToken: string, refreshToken?: string | null): Promise<{ calendars: calendar_v3.Schema$CalendarListEntry[]; error?: string; isAuthError?: boolean }> {
   try {
     const calendar = createCalendarClient(accessToken, refreshToken);
     const res = await calendar.calendarList.list({ maxResults: 100 });
@@ -29,6 +29,30 @@ async function getGoogleCalendars(accessToken: string, refreshToken?: string | n
     const googleError = errorResponse?.error || '';
     const googleErrorDescription = errorResponse?.error_description || '';
 
+    // Check for auth errors (401 = invalid/expired tokens)
+    const isAuthError =
+      errorCode === 401 ||
+      error?.status === 401 ||
+      googleError === 'invalid_grant' ||
+      googleError === 'token_revoked' ||
+      googleErrorDescription?.includes('Invalid OAuth 2.0') ||
+      errorMessage?.includes('invalid_grant') ||
+      errorMessage?.includes('Credentials');
+
+    if (isAuthError) {
+      console.error('[CalendarStatus] Google auth error (401):', {
+        message: errorMessage,
+        code: errorCode,
+        googleError,
+        googleErrorDescription,
+      });
+      return {
+        calendars: [],
+        error: 'Sesión de Google Calendar expirada. Por favor reconnecta tu cuenta.',
+        isAuthError: true,
+      };
+    }
+
     console.error('[CalendarStatus] Failed to list calendars:', {
       message: errorMessage,
       code: errorCode,
@@ -36,8 +60,6 @@ async function getGoogleCalendars(accessToken: string, refreshToken?: string | n
       googleErrorDescription,
     });
 
-    // Return error info so the API can report it properly
-    // Ensure error is always a string, not an object
     const errorStr = typeof googleErrorDescription === 'string' && googleErrorDescription
       ? googleErrorDescription
       : typeof googleError === 'string' && googleError
@@ -79,6 +101,11 @@ export async function GET(request: NextRequest) {
     const result = await getGoogleCalendars(accessToken, refreshToken);
     calendarError = result.error;
 
+    // If Google returned a 401, auth tokens are bad — user needs to reconnect
+    if (result.error && (result.error.includes('Invalid OAuth 2.0') || result.error.includes('401') || result.error.includes('invalid credentials'))) {
+      calendarError = result.error;
+    }
+
     calendars = result.calendars.map((cal) => ({
       id: cal.id ?? 'primary',
       name: cal.summary ?? cal.id ?? 'Unknown',
@@ -95,5 +122,6 @@ export async function GET(request: NextRequest) {
     calendars,
     selectedCalendarIds,
     error: calendarError,
+    needsReauth: !!calendarError && (calendarError.includes('Invalid OAuth 2.0') || calendarError.includes('invalid credentials')),
   });
 }

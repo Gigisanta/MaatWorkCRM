@@ -149,6 +149,7 @@ interface CalendarStatus {
   lastSync?: string;
   calendars: CalendarInfo[];
   error?: string;
+  needsReauth?: boolean;
 }
 
 interface CalendarInfo {
@@ -1294,12 +1295,18 @@ export default function CalendarPage() {
                               <p className="text-xs text-red-400 mb-2">Error al cargar calendarios:</p>
                               <p className="text-xs text-slate-400">{String(calendarData.error)}</p>
                               <Button
-                                onClick={() => window.location.reload()}
+                                onClick={() => {
+                                  if (calendarData?.needsReauth) {
+                                    signIn('google', { callbackUrl: '/calendar' });
+                                  } else {
+                                    window.location.reload();
+                                  }
+                                }}
                                 variant="outline"
                                 size="sm"
                                 className="mt-2 glass border-white/10"
                               >
-                                Reintentar
+                                {calendarData?.needsReauth ? 'Reconectar Google Calendar' : 'Reintentar'}
                               </Button>
                             </div>
                           ) : null}

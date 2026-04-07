@@ -6,6 +6,7 @@ import { contactCreateSchema } from '@/lib/schemas';
 import type { ContactCreateInput } from '@/lib/schemas';
 import { revalidateTag } from 'next/cache';
 import { logger } from '@/lib/logger';
+import { trackGoalProgress } from '@/lib/goal-tracking';
 
 export const dynamic = 'force-dynamic';
 
@@ -587,6 +588,9 @@ export async function POST(request: NextRequest) {
     };
 
     logger.info({ operation: 'createContact', requestId, contactId: contact.id, duration_ms: Date.now() - start }, 'Contact created successfully');
+
+    // Track goal progress for new client goals
+    await trackGoalProgress(user.id, 'contact', contact.id, 1);
 
     revalidateTag('contacts', 'max');
     revalidateTag('dashboard', 'max');

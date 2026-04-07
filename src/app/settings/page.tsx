@@ -18,6 +18,7 @@ import {
   Trash2,
   LogOut,
   UserPlus,
+  Users,
   X,
   AlertTriangle,
   Palette,
@@ -79,6 +80,7 @@ import { useAuth } from "@/lib/auth-context";
 import { canManageUsers, getRoleDisplayName, isManagerOrAdmin } from "@/lib/auth-helpers-client";
 import { ThemeToggle, ThemePreviewCard } from "@/components/theme-toggle";
 import { FeedbackManagement } from "./components/feedback-management";
+import { TeamRequestsSection } from "./components/team-requests-section";
 import Link from "next/link";
 
 // ============================================
@@ -631,6 +633,13 @@ export default function SettingsPage() {
                 >
                   <LinkIcon className="mr-2 h-4 w-4" />
                   Cuentas
+                </TabsTrigger>
+                <TabsTrigger
+                  value="team-requests"
+                  className="data-[state=active]:bg-white/10 data-[state=active]:text-white text-slate-400"
+                >
+                  <Users className="mr-2 h-4 w-4" />
+                  Equipos
                 </TabsTrigger>
                 {(user && (user.role === "owner" || user.role === "dueno" || user.organizationRole === "owner")) && (
                   <TabsTrigger
@@ -1315,6 +1324,15 @@ export default function SettingsPage() {
                       </div>
                     </CardContent>
                   </Card>
+                </div>
+              </TabsContent>
+
+              {/* ============================================ */}
+              {/* Team Requests Tab */}
+              {/* ============================================ */}
+              <TabsContent value="team-requests">
+                <div className="space-y-6">
+                  <TeamRequestsSection />
                 </div>
               </TabsContent>
 

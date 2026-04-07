@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { logger } from '@/lib/logger';
 import { getUserFromSession } from '@/lib/auth-helpers';
+import { trackGoalProgress } from '@/lib/goal-tracking';
 
 // GET /api/calendar-events - List events with date range filter
 export async function GET(request: NextRequest) {
@@ -183,6 +184,9 @@ export async function POST(request: NextRequest) {
     });
 
     logger.info({ operation: 'createCalendarEvent', requestId, eventId: event.id, duration_ms: Date.now() - start }, 'Calendar event created successfully');
+
+    // Track goal progress for meetings goals
+    await trackGoalProgress(user.id, 'calendar_event', event.id, 1);
 
     return NextResponse.json(event, { status: 201, headers: { 'x-request-id': requestId } });
   } catch (error) {

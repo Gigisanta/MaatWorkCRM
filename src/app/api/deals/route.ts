@@ -5,6 +5,7 @@ import { logger } from '@/lib/logger';
 import { getUserFromSession } from '@/lib/auth-helpers';
 import { dealCreateSchema } from '@/lib/schemas/deal';
 import type { DealCreateInput } from '@/lib/schemas/deal';
+import { trackGoalProgress } from '@/lib/goal-tracking';
 
 export const revalidate = 300;
 
@@ -188,6 +189,9 @@ export async function POST(request: NextRequest) {
     });
 
     logger.info({ operation: 'createDeal', requestId, dealId: deal.id, organizationId: data.organizationId, duration_ms: Date.now() - start }, 'Deal created successfully');
+
+    // Track goal progress for revenue/new_aum goals
+    await trackGoalProgress(session.id, 'deal', deal.id, deal.value);
 
     revalidateTag('deals', 'max');
 

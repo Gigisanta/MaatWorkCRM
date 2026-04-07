@@ -116,6 +116,16 @@ export class CalendarSyncEngine {
         status: error?.status,
         response: error?.response?.data,
       });
+
+      // 401 = auth failure — tokens are invalid/revoked, user needs to reconnect
+      if (error?.status === 401 || error?.code === 401) {
+        await this.updateSyncState(userId, calendarId, 'idle');
+        throw Object.assign(new Error('GOOGLE_AUTH_EXPIRED'), {
+          needsReauth: true,
+          url: `/api/auth/signin/google?callbackUrl=${encodeURIComponent('/calendar')}`,
+        });
+      }
+
       await this.markError(userId, calendarId);
       throw error;
     }
@@ -212,6 +222,16 @@ export class CalendarSyncEngine {
         const result = await this.initialSync(userId, organizationId, calendarId);
         return { ...result, direction: 'full' };
       }
+
+      // 401 = auth failure — tokens are invalid/revoked, user needs to reconnect
+      if (error?.status === 401 || error?.code === 401) {
+        await this.updateSyncState(userId, calendarId, 'idle');
+        throw Object.assign(new Error('GOOGLE_AUTH_EXPIRED'), {
+          needsReauth: true,
+          url: `/api/auth/signin/google?callbackUrl=${encodeURIComponent('/calendar')}`,
+        });
+      }
+
       await this.markError(userId, calendarId);
       throw error;
     }
