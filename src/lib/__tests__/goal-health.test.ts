@@ -182,12 +182,12 @@ describe('goal-health', () => {
       // Mar 1 to Apr 30 = 60 days total
       // Mar 1 to Apr 8 = 38 days elapsed
       // expectedProgress = 38/60 * 100 = 63.3%
-      // actual = 48.3% (currentValue = 48.3, targetValue = 100)
-      // boundary = 63.3 - 15 = 48.3 => 48.3 >= 48.3 => at-risk
+      // actual = 50% (currentValue = 50, targetValue = 100)
+      // boundary = 64.2 - 15 = 49.2 => 50 >= 49.2 => at-risk
       const goal = {
         startDate: new Date('2026-03-01'),
         endDate: new Date('2026-04-30'),
-        currentValue: 48.3,
+        currentValue: 50,
         targetValue: 100,
       };
       expect(calculateGoalHealth(goal)).toBe('at-risk');
