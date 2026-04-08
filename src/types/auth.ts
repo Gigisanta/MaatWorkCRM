@@ -43,3 +43,27 @@ export interface OrganizationWithMembers extends Organization {
 export interface MemberWithUser extends Member {
   user: User;
 }
+
+// UserWithTeams - user with manager, members, and team membership info
+export interface UserWithTeams extends AuthUser {
+  manager: Pick<AuthUser, 'id' | 'name' | 'email'> | null;
+  members: { role: string; organizationId: string }[];
+  teamMembers: { team: { id: string; name: string }; role: string; joinedAt: Date }[];
+  isActive: boolean;
+  careerLevel: string | null;
+  phone: string | null;
+}
+
+// AuditLog - audit log entry structure
+export interface AuditLog {
+  id: string;
+  action: string;
+  entityType: string;
+  entityId: string;
+  userId: string;
+  user: { id: string; name: string; email: string };
+  createdAt: string;
+  metadata?: Record<string, unknown>;
+  oldData?: Record<string, unknown>;
+  newData?: Record<string, unknown>;
+}
