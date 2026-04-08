@@ -81,6 +81,7 @@ import { canManageUsers, getRoleDisplayName, isManagerOrAdmin } from "@/lib/auth
 import { ThemeToggle, ThemePreviewCard } from "@/components/theme-toggle";
 import { FeedbackManagement } from "./components/feedback-management";
 import { TeamRequestsSection } from "./components/team-requests-section";
+import { AdminPanel } from "./components/admin-panel";
 import Link from "next/link";
 
 // ============================================
@@ -1362,100 +1363,7 @@ export default function SettingsPage() {
               {/* Admin Tab */}
               {/* ============================================ */}
               <TabsContent value="admin">
-                <div className="space-y-6">
-                  {/* Role Requests Section */}
-                  <Card className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl">
-                    <CardHeader>
-                      <CardTitle className="text-white flex items-center gap-2">
-                        <ShieldCheck className="h-5 w-5 text-violet-400" />
-                        Solicitudes de Cambio de Rol
-                      </CardTitle>
-                      <CardDescription className="text-slate-400">
-                        Revisa y aprueba las solicitudes de cambio de rol pendientes
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {roleRequestsLoading ? (
-                        <div className="flex justify-center py-8">
-                          <Loader2 className="h-6 w-6 animate-spin text-violet-500" />
-                        </div>
-                      ) : roleRequestsData?.roleChangeRequests?.length > 0 ? (
-                        <div className="space-y-4">
-                          {roleRequestsData.roleChangeRequests.map((request: {
-                            id: string;
-                            userId: string;
-                            requestedRole: string;
-                            reason: string | null;
-                            createdAt: string;
-                            user: { id: string; name: string | null; email: string; image: string | null; role: string };
-                          }) => (
-                            <motion.div
-                              key={request.id}
-                              initial={{ opacity: 0, y: 8 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                              className="p-4 rounded-lg glass border border-white/8"
-                            >
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="flex items-center gap-3">
-                                  <Avatar className="h-10 w-10">
-                                    <AvatarImage src={request.user.image || undefined} />
-                                    <AvatarFallback className="bg-violet-500/20 text-violet-400">
-                                      {getInitials(request.user.name)}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div>
-                                    <p className="font-medium text-white">{request.user.name || 'Sin nombre'}</p>
-                                    <p className="text-sm text-slate-400">{request.user.email}</p>
-                                    <div className="flex items-center gap-2 mt-1">
-                                      <Badge variant="outline" className="border-violet-500/30 text-violet-400">
-                                        {getRoleDisplayName(request.requestedRole)}
-                                      </Badge>
-                                      {request.reason && (
-                                        <p className="text-xs text-slate-500 italic">"{request.reason}"</p>
-                                      )}
-                                    </div>
-                                    <p className="text-xs text-slate-500 mt-1">
-                                      {new Date(request.createdAt).toLocaleDateString('es-MX', {
-                                        day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-                                      })}
-                                    </p>
-                                  </div>
-                                </div>
-                                <div className="flex gap-2 flex-shrink-0">
-                                  <Button
-                                    size="sm"
-                                    className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30"
-                                    onClick={() => reviewRoleRequestMutation.mutate({ id: request.id, action: 'approved' })}
-                                    disabled={reviewRoleRequestMutation.isPending}
-                                  >
-                                    <CheckCircle2 className="h-4 w-4 mr-1" />
-                                    Aprobar
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="border-rose-500/30 text-rose-400 hover:bg-rose-500/10"
-                                    onClick={() => reviewRoleRequestMutation.mutate({ id: request.id, action: 'rejected' })}
-                                    disabled={reviewRoleRequestMutation.isPending}
-                                  >
-                                    <XCircle className="h-4 w-4 mr-1" />
-                                    Rechazar
-                                  </Button>
-                                </div>
-                              </div>
-                            </motion.div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-8">
-                          <ShieldCheck className="h-12 w-12 text-slate-600 mx-auto mb-3" />
-                          <p className="text-slate-400">No hay solicitudes pendientes</p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
+                <AdminPanel />
               </TabsContent>
             </Tabs>
           </motion.div>
