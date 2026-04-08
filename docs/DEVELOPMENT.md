@@ -69,6 +69,9 @@ GOOGLE_CLIENT_SECRET=""
 | `bun build` | Build de producción |
 | `bun start` | Servidor de producción |
 | `bun run lint` | Linting con ESLint |
+| `bun run test` | Tests en watch mode |
+| `bun run test:ci` | Tests una vez (CI) |
+| `bun run test:coverage` | Tests con coverage |
 | `bun run db:push` | Sincronizar schema con DB |
 | `bun run db:migrate` | Crear migración |
 | `bun run db:seed` | Poblar con datos demo |
@@ -341,42 +344,116 @@ bun prisma studio
 
 ## Testing
 
-### Tests Unitarios
+### Stack de Testing
+
+- **Vitest** — Test runner (framework de test)
+- **@testing-library/react** — Testing de componentes React
+- **@testing-library/jest-dom** — Matchers DOM (toBeInTheDocument, etc.)
+- **@vitest/coverage-v8** — Coverage reporting con v8
+- **Playwright** — E2E tests
+
+### Comandos
 
 ```bash
-# Instalar vitest
-bun add -D vitest @testing-library/react
+# Tests (watch mode durante dev)
+bun run test
 
-# Crear test
-# src/app/contacts/page.test.tsx
+# Tests una vez (CI)
+bun run test:ci
+
+# Tests con coverage
+bun run test:coverage
 ```
 
-```tsx
-import { render, screen } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+### Estructura de Tests
 
-describe("ContactsPage", () => {
-  it("renders contacts list", () => {
-    render(<ContactsPage />);
-    expect(screen.getByText("Contactos")).toBeDefined();
+```
+src/
+├── lib/
+│   └── __tests__/
+│       ├── utils.test.ts          # cn() utility
+│       ├── permissions.test.ts     # Role/permission helpers
+│       ├── roles.test.ts          # Role utility functions
+│       ├── schemas.test.ts        # Zod schema validation
+│       ├── task-utils.test.ts     # Task CRUD helpers + schema
+│       ├── goal-tracking.test.ts  # Goal progress tracking
+│       ├── goal-health.test.ts    # Goal health calculation
+│       ├── auth-helpers.test.ts        # Server auth helpers
+│       └── auth-helpers-client.test.ts # Client auth helpers
+├── components/
+│   └── __tests__/
+│       └── ui/
+│           ├── button.test.tsx
+│           ├── badge.test.tsx
+│           └── card.test.tsx
+e2e/
+├── login.spec.ts        # Login E2E
+└── dashboard.spec.ts   # Dashboard E2E
+```
+
+### Configuración
+
+`vitest.config.mts` — environment jsdom, globals true, setup en `src/test/setup.ts`
+
+### Coverage
+
+- **Meta: 80%** en líneas, funciones, branches y statements
+- Provider: v8
+- Reporters: text, json, html
+
+### Ejemplo de Test Unitario
+
+```tsx
+import { describe, it, expect } from 'vitest';
+import { taskSchema } from '@/lib/task-utils';
+
+describe('taskSchema', () => {
+  it('parses a valid minimal task', () => {
+    const result = taskSchema.safeParse({ title: 'Follow up' });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects empty title', () => {
+    const result = taskSchema.safeParse({ title: '' });
+    expect(result.success).toBe(false);
   });
 });
 ```
 
-### Tests de API
+### Ejemplo de Test de Componente
 
 ```tsx
-import { describe, it, expect } from "vitest";
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { Button } from '@/components/ui/button';
 
-describe("/api/contacts", () => {
-  it("returns contacts list", async () => {
-    const res = await fetch("/api/contacts");
-    const data = await res.json();
-    expect(res.status).toBe(200);
-    expect(Array.isArray(data)).toBe(true);
+describe('Button', () => {
+  it('renders children', () => {
+    render(<Button>Click me</Button>);
+    expect(screen.getByRole('button', { name: /click me/i })).toBeInTheDocument();
+  });
+
+  it('is disabled when disabled prop is set', () => {
+    render(<Button disabled>Disabled</Button>);
+    expect(screen.getByRole('button')).toBeDisabled();
   });
 });
 ```
+
+### E2E con Playwright
+
+```bash
+# Instalar browsers (solo la primera vez)
+npx playwright install chromium
+
+# Correr E2E tests
+npx playwright test
+
+# Con UI interactivo
+npx playwright test --ui
+```
+
+Config: `playwright.config.ts` — chromium, baseURL `http://localhost:3000`
 
 ---
 

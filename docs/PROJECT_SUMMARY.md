@@ -11,6 +11,8 @@
 | API Routes | 41 |
 | Componentes UI | 48+ |
 | Tablas de Base de Datos | 26 |
+| Tests (unit + component) | 395 |
+| Archivos de Test | 12 |
 | Líneas de Documentación | ~3,000 |
 
 ---
@@ -121,6 +123,13 @@
 - Registro de mensajes
 - Tracking de respuestas a anuncios
 
+### ✅ Sistema de Testing
+- Vitest + @testing-library/react
+- 395 tests (unit + component), 0 failing
+- Coverage 80%+ en módulos core
+- Playwright E2E configurado
+- Tests: schemas, roles, permissions, utils, goal-health, auth-helpers, UI components
+
 ### ✅ Automation System
 - Triggers: contact_activated, task_overdue, goal_near_target
 - Configuración de automatizaciones
@@ -178,8 +187,9 @@
 | API.md | Documentación de endpoints |
 | DATABASE.md | Esquema de base de datos |
 | COMPONENTS.md | Componentes UI |
-| DEVELOPMENT.md | Guía de desarrollo |
+| DEVELOPMENT.md | Guía de desarrollo (incluye testing) |
 | PROJECT_SUMMARY.md | Este archivo |
+| superpowers/plans/2026-04-08-testing-system-overhaul.md | Plan de testing |
 
 ---
 
@@ -236,8 +246,7 @@ bun run db:seed   # Datos demo
 
 ## Próximos Pasos Sugeridos
 
-1. **Tests**: Implementar tests unitarios y de integración
-2. **Email**: Configurar envío de emails (Resend, SendGrid)
+1. **Email**: Configurar envío de emails (Resend, SendGrid)
 3. **OAuth**: Implementar Google OAuth completo
 4. **WebSockets**: Notificaciones en tiempo real
 5. **Mobile**: App móvil con React Native

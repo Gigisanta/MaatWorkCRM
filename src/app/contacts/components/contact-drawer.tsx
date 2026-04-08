@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { X, Edit, Trash2, Loader2, Tag as TagIcon, FileText, Sparkles } from "lucide-react";
+import { X, Edit, Trash2, Loader2, Tag as TagIcon, FileText, Sparkles, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -202,6 +202,17 @@ export function ContactDrawer({
     queryFn: async () => {
       const response = await fetch(`/api/contacts/${contactId}/planning`, { credentials: 'include' });
       if (!response.ok) return null;
+      return response.json();
+    },
+    enabled: !!contactId && open,
+  });
+
+  // Fetch productions for this contact
+  const { data: productions } = useQuery({
+    queryKey: ["productions", contactId],
+    queryFn: async () => {
+      const response = await fetch(`/api/production?contactId=${contactId}`, { credentials: 'include' });
+      if (!response.ok) return { items: [], total: 0 };
       return response.json();
     },
     enabled: !!contactId && open,
@@ -423,6 +434,12 @@ export function ContactDrawer({
                         Plan Financiero
                       </TabsTrigger>
                     )}
+                    <TabsTrigger
+                      value="productions"
+                      className="data-[state=active]:bg-violet-500/15 data-[state=active]:text-violet-300 data-[state=active]:border-b-2 data-[state=active]:border-violet-500 text-slate-400"
+                    >
+                      Producciones
+                    </TabsTrigger>
                   </TabsList>
                 </div>
 
@@ -955,6 +972,63 @@ export function ContactDrawer({
                         >
                           <Sparkles className="h-4 w-4 mr-2" />
                           Generar Plan
+                        </Button>
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="productions" className="mt-0 space-y-4">
+                    {productions && productions.items && productions.items.length > 0 ? (
+                      <div className="space-y-3">
+                        {productions.items.map((prod: any) => (
+                          <div key={prod.id} className="p-3 rounded-lg glass border border-white/10">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="font-medium text-white">{prod.nombreProducto}</h4>
+                                  <Badge
+                                    variant={prod.estado === 'activo' ? 'default' : 'secondary'}
+                                    className={cn(
+                                      "text-xs",
+                                      prod.estado === 'activo' ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" :
+                                      prod.estado === 'cancelado' ? "bg-rose-500/20 text-rose-400 border-rose-500/30" :
+                                      "bg-slate-500/20 text-slate-400 border-slate-500/30"
+                                    )}
+                                  >
+                                    {prod.estado}
+                                  </Badge>
+                                </div>
+                                {prod.tipo && (
+                                  <p className="text-xs text-slate-400">{prod.tipo}</p>
+                                )}
+                                {prod.emisor && (
+                                  <p className="text-xs text-slate-500">{prod.emisor}</p>
+                                )}
+                              </div>
+                              <div className="text-right">
+                                {prod.primaMensual > 0 && (
+                                  <p className="text-sm font-medium text-emerald-400">
+                                    ${prod.primaMensual.toLocaleString()}/{prod.moneda || 'USD'}
+                                  </p>
+                                )}
+                                {prod.numeroPoliza && (
+                                  <p className="text-xs text-slate-500">Póliza: {prod.numeroPoliza}</p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <Briefcase className="h-12 w-12 text-slate-600 mx-auto mb-3" />
+                        <p className="text-slate-400 mb-4">Este contacto no tiene producciones registradas</p>
+                        <Button
+                          className="bg-violet-500 hover:bg-violet-600"
+                          onClick={() => window.location.href = '/production'}
+                        >
+                          <Briefcase className="h-4 w-4 mr-2" />
+                          Ir a Producciones
                         </Button>
                       </div>
                     )}

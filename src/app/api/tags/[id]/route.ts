@@ -119,6 +119,9 @@ export async function DELETE(
       where: { id },
     });
 
+    // Invalidate tags cache after deletion
+    invalidateTagsCache(tag.organizationId);
+
     logger.info({ operation: 'deleteTag', requestId, tagId: id, duration_ms: Date.now() - start }, 'Tag deleted successfully');
 
     return NextResponse.json({ success: true }, { headers: { 'x-request-id': requestId } });

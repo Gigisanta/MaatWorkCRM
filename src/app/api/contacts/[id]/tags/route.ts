@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getUserFromSession } from '@/lib/auth-helpers';
 import { hasPermission, normalizeRole } from '@/lib/permissions';
+import { invalidateTagsCache } from '@/lib/cache';
 import { logger } from '@/lib/logger';
 
 // Helper to check if targetUserId is in the team managed by managerId
@@ -149,6 +150,10 @@ export async function POST(
     });
 
     logger.info({ operation: 'addTagToContact', requestId, contactId: id, tagId: finalTagId, duration_ms: Date.now() - start }, 'Tag added to contact successfully');
+
+    // Invalidate tags and contacts cache
+    invalidateTagsCache(user.organizationId);
+
     const response = NextResponse.json(contactTag, { status: 201 });
     response.headers.set('x-request-id', requestId);
     return response;

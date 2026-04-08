@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getUserFromSession } from '@/lib/auth-helpers';
+import { invalidateTagsCache } from '@/lib/cache';
 import { logger } from '@/lib/logger';
 import { isValidId } from '@/lib/id-validation';
 
@@ -88,6 +89,9 @@ export async function DELETE(
         id: contactTag.id,
       },
     });
+
+    // Invalidate tags cache
+    invalidateTagsCache(user.organizationId);
 
     logger.info({ operation: 'removeTagFromContact', requestId, contactId: id, tagId, duration_ms: Date.now() - start }, 'Tag removed from contact successfully');
     const response = NextResponse.json({ success: true });

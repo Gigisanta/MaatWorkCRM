@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromSession } from '@/lib/auth-helpers';
 import { db } from '@/lib/db';
+import { invalidatePipelineStagesCache } from '@/lib/cache';
 import { logger } from '@/lib/logger';
 import { isValidId } from '@/lib/id-validation';
 
@@ -66,6 +67,9 @@ export async function PUT(
     });
 
     logger.info({ operation: 'updatePipelineStage', requestId, stageId: id, duration_ms: Date.now() - start }, 'Pipeline stage updated successfully');
+
+    // Invalidate pipeline stages cache
+    invalidatePipelineStagesCache(existingStage.organizationId);
 
     return NextResponse.json(stage, { headers: { 'x-request-id': requestId } });
   } catch (error) {
