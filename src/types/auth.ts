@@ -46,6 +46,7 @@ export interface MemberWithUser extends Member {
 
 // UserWithTeams - user with manager, members, and team membership info
 export interface UserWithTeams extends AuthUser {
+  createdAt: Date
   manager: Pick<AuthUser, 'id' | 'name' | 'email'> | null;
   members: { role: string; organizationId: string }[];
   teamMembers: { team: { id: string; name: string }; role: string; joinedAt: Date }[];
