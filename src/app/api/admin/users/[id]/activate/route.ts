@@ -2,13 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getUserFromSession } from '@/lib/auth-helpers';
 import { hasPermission } from '@/lib/permissions';
-import { logger } from '@/lib/logger';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
 // PUT /api/admin/users/[id]/activate - Toggle isActive
 export async function PUT(request: NextRequest, { params }: RouteParams) {
-  const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
   const currentUser = await getUserFromSession(request);
   if (!currentUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -19,20 +17,16 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   }
 
   const { id } = await params;
+  const orgId = currentUser.organizationId ?? undefined;
 
-  // Get target user member record
   const memberRecord = await db.member.findFirst({
-    where: {
-      userId: id,
-      organizationId: currentUser.organizationId || undefined,
-    },
+    where: { userId: id, organizationId: orgId },
   });
 
   if (!memberRecord) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
 
-  // Get current isActive state
   const targetUser = await db.user.findUnique({
     where: { id },
     select: { isActive: true },
@@ -45,13 +39,13 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   // Block deactivating the last owner
   if (memberRecord.role === 'owner' && targetUser.isActive === true) {
     const ownerCount = await db.member.count({
-      where: {
-        organizationId: currentUser.organizationId || undefined,
-        role: 'owner',
-      },
+      where: { organizationId: orgId, role: 'owner' },
     });
     if (ownerCount <= 1) {
-      return NextResponse.json({ error: 'No se puede desactivar el último propietario de la organización' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'No se puede desactivar el último propietario de la organización' },
+        { status: 400 }
+      );
     }
   }
 
@@ -60,12 +54,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   const updatedUser = await db.user.update({
     where: { id },
     data: { isActive: newIsActive },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      isActive: true,
-    },
+    select: { id: true, name: true, email: true, isActive: true },
   });
 
   return NextResponse.json({ user: updatedUser });

@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getUserFromSession } from '@/lib/auth-helpers';
 import { hasPermission } from '@/lib/permissions';
-import { logger } from '@/lib/logger';
+import { Prisma } from '@prisma/client';
 
 // GET /api/admin/users - List all users in the organization
 export async function GET(request: NextRequest) {
-  const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
   const currentUser = await getUserFromSession(request);
   if (!currentUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -24,26 +23,21 @@ export async function GET(request: NextRequest) {
   const limit = parseInt(searchParams.get('limit') || '20', 10);
   const skip = (page - 1) * limit;
 
-  const where: Record<string, unknown> = {
-    members: {
-      some: { organizationId: currentUser.organizationId || undefined },
-    },
+  const where: Prisma.UserWhereInput = {
+    members: currentUser.organizationId
+      ? { some: { organizationId: currentUser.organizationId } }
+      : undefined,
+    ...(search && {
+      OR: [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+      ],
+    }),
+    ...(role && { role }),
+    ...(isActiveParam !== null && isActiveParam !== '' && {
+      isActive: isActiveParam === 'true',
+    }),
   };
-
-  if (search) {
-    where.OR = [
-      { name: { contains: search, mode: 'insensitive' } },
-      { email: { contains: search, mode: 'insensitive' } },
-    ];
-  }
-
-  if (role) {
-    where.role = role;
-  }
-
-  if (isActiveParam !== null && isActiveParam !== '') {
-    where.isActive = isActiveParam === 'true';
-  }
 
   const [users, total] = await Promise.all([
     db.user.findMany({
@@ -84,6 +78,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
+  const organizationId = currentUser.organizationId;
+  if (!organizationId) {
+    return NextResponse.json({ error: 'Organización no encontrada' }, { status: 404 });
+  }
+
   const body = await request.json();
   const { email, role = 'member', name, careerLevel, phone } = body;
 
@@ -91,12 +90,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Email es requerido' }, { status: 400 });
   }
 
-  const organizationId = currentUser.organizationId;
-  if (!organizationId) {
-    return NextResponse.json({ error: 'Organización no encontrada' }, { status: 404 });
-  }
-
-  // Check if current user is owner or admin
+  // Check if current user is owner or admin in org
   const currentMember = await db.member.findFirst({
     where: { organizationId, userId: currentUser.id },
   });
@@ -106,9 +100,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Find or create user
-  let targetUser = await db.user.findUnique({
-    where: { email },
-  });
+  let targetUser = await db.user.findUnique({ where: { email } });
 
   if (!targetUser) {
     targetUser = await db.user.create({
@@ -123,10 +115,7 @@ export async function POST(request: NextRequest) {
 
   // Check if already a member
   const existingMember = await db.member.findFirst({
-    where: {
-      organizationId,
-      userId: targetUser.id,
-    },
+    where: { organizationId, userId: targetUser.id },
   });
 
   if (existingMember) {
@@ -135,11 +124,7 @@ export async function POST(request: NextRequest) {
 
   // Add member
   const member = await db.member.create({
-    data: {
-      organizationId,
-      userId: targetUser.id,
-      role,
-    },
+    data: { organizationId, userId: targetUser.id, role },
   });
 
   // Update user fields if provided
@@ -153,15 +138,8 @@ export async function POST(request: NextRequest) {
   const userWithMember = await db.user.findUnique({
     where: { id: targetUser.id },
     select: {
-      id: true,
-      name: true,
-      email: true,
-      image: true,
-      role: true,
-      isActive: true,
-      careerLevel: true,
-      phone: true,
-      createdAt: true,
+      id: true, name: true, email: true, image: true,
+      role: true, isActive: true, careerLevel: true, phone: true, createdAt: true,
     },
   });
 
