@@ -26,10 +26,12 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = await request.nextUrl;
-    const organizationId = searchParams.get('organizationId');
+    const requestedOrgId = searchParams.get('organizationId');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
 
+    // Use organizationId from the authenticated user's session, not from the request
+    const organizationId = user.organizationId;
     if (!organizationId) {
       logger.warn({ operation: 'listTeams', requestId }, 'organizationId is required');
       return NextResponse.json({ error: 'organizationId is required' }, { status: 400, headers: { 'x-request-id': requestId } });

@@ -166,7 +166,11 @@ export function ContactDrawer({
   const { openDialog } = usePlanningDialog();
 
   // Check if user is admin (can reassign contacts)
-  const isAdmin = user?.role === 'admin' || user?.role === 'owner' || user?.role === 'dueno';
+  const normalizedRole = (() => {
+    const aliases: Record<string, string> = { dueno: 'owner', asesor: 'advisor' };
+    return aliases[user?.role ?? ''] ?? (user?.role ?? '');
+  })();
+  const isAdmin = ['admin', 'owner', 'developer'].includes(normalizedRole);
 
   // Fetch organization users for assignment dropdown (only for admins)
   const { data: usersData } = useQuery<{ users: { id: string; name: string | null; email: string }[] }>({

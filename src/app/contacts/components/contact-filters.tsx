@@ -76,10 +76,19 @@ export function ContactFilters({
           size="icon"
           className="bg-white/4 border-white/10 text-slate-400 hover:text-white hover:bg-white/8 hover:border-white/20 h-9 w-9 rounded-lg transition-all"
           onClick={onTagManagerClick}
-          title="Gestionar Tags"
+          title="Gestionar Etiquetas"
         >
           <TagIcon className="h-4 w-4" />
         </Button>
+        <span
+          className="text-xs text-slate-500 cursor-pointer hover:text-slate-300 transition-colors hidden sm:inline"
+          onClick={onTagManagerClick}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onTagManagerClick(); }}
+        >
+          Gestionar Etiquetas
+        </span>
 
         <Button
           variant="outline"

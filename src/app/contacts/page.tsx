@@ -345,12 +345,13 @@ export default function ContactsPage() {
   };
 
   const toggleSelectAll = React.useCallback(() => {
-    if (selectedContacts.length === contacts.length) {
-      setSelectedContacts([]);
-    } else {
-      setSelectedContacts(contacts.map((c) => c.id));
-    }
-  }, [contacts, selectedContacts.length]);
+    setSelectedContacts((prev) => {
+      if (prev.length === contacts.length && contacts.length > 0) {
+        return [];
+      }
+      return contacts.map((c) => c.id);
+    });
+  }, [contacts]);
 
   const toggleSelect = React.useCallback((id: string) => {
     setSelectedContacts((prev) =>

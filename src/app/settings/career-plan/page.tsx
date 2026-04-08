@@ -105,7 +105,8 @@ export default function CareerPlanPage() {
   const [deleteLevelId, setDeleteLevelId] = React.useState<string | null>(null);
   const [restoreConfirmOpen, setRestoreConfirmOpen] = React.useState(false);
 
-  const isAdmin = user ? ['admin', 'owner', 'developer'].includes(user.role) : false;
+  const role = user?.role ?? '';
+  const isAdmin = ['admin', 'owner', 'developer', 'dueno'].includes(role);
 
   // ============================================
   // Data Fetching
