@@ -20,6 +20,7 @@ import {
   Trash2,
   AlertCircle,
   Building2,
+  Download,
 } from "lucide-react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
@@ -1659,6 +1660,23 @@ export default function TeamsPage() {
                 })}
               </div>
             )}
+              {/* Herramientas */}
+              <div className="mt-6 p-4 glass rounded-xl border border-white/10">
+                <h3 className="text-lg font-semibold text-white mb-3">Herramientas</h3>
+                <div className="flex gap-3">
+                  <a
+                    href="/api/teams/template/startup-100"
+                    download
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-violet-500/10 hover:bg-violet-500/20 border border-violet-500/20 rounded-lg text-violet-300 text-sm transition-colors"
+                  >
+                    <Download className="h-4 w-4" />
+                    Descargar Plantilla Startup 100
+                  </a>
+                </div>
+                <p className="text-xs text-slate-500 mt-2">
+                  Descargue la plantilla para importar contactos de nuevos asesores al CRM.
+                </p>
+              </div>
           </motion.div>
         </main>
       </div>

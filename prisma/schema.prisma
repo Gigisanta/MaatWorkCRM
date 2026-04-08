@@ -50,6 +50,7 @@ model User {
   feedback Feedback[]
 
   userGoals UserGoal[]
+  interactions Interaction[]
 
   // Team join requests
   teamJoinRequests     TeamJoinRequest[] @relation("TeamJoinRequestUser")
@@ -133,6 +134,8 @@ model Organization {
   automationConfigs AutomationConfig[]
   feedback Feedback[]
   roleChangeRequests RoleChangeRequest[]
+  productions Production[]
+  careerPlanLevels CareerPlanLevel[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -192,6 +195,13 @@ model Contact {
 
   // Financial planning
   financialPlan  FinancialPlan?
+
+  // Last interaction tracking
+  lastInteractionDate DateTime?
+
+  // Relations
+  interactions   Interaction[]
+  productions    Production[]
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -951,4 +961,83 @@ model RoleChangeRequest {
   @@index([userId])
   @@index([organizationId])
   @@index([status])
+}
+
+// ============================================
+// PRODUCTION MODULE
+// ============================================
+
+model Production {
+  id             String   @id @default(cuid())
+  organizationId String
+  contactId     String
+
+  // Product details
+  nombreProducto   String
+  tipo             String?  // seguro, inversión, fondo, etc.
+  emisor           String?  // company that issued the product
+  numeroPoliza     String?
+  primaMensual     Float?
+  incrementPercentage Float?
+  valorTotal       Float?
+  moneda           String   @default("USD")
+  fechaInicio      DateTime?
+  fechaVencimiento DateTime?
+  estado           String   @default("active") // active, cancelled, expired
+  notas            String?
+
+  // Relations
+  contact     Contact     @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([contactId])
+  @@index([estado])
+}
+
+// ============================================
+// CAREER PLAN MODULE
+// ============================================
+
+model CareerPlanLevel {
+  id             String   @id @default(cuid())
+  organizationId String
+  levelNumber    Int
+  category       String   // Junior, Semi-Senior, Senior
+  name           String
+  annualGoalUsd Float
+  percentage     Float   // percentage of quota
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([organizationId, levelNumber])
+  @@index([organizationId])
+}
+
+// ============================================
+// INTERACTION TRACKING MODULE
+// ============================================
+
+model Interaction {
+  id          String   @id @default(cuid())
+  contactId   String
+  userId      String
+  tipo        String   // call, email, meeting, note
+  descripcion String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([contactId])
+  @@index([userId])
+  @@index([createdAt])
 }
