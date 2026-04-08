@@ -47,7 +47,7 @@ export function canManageTeam(user: AuthUser | null): boolean {
  * Check if user can view all contacts
  */
 export function canViewAllContacts(role: string): boolean {
-  return ['admin', 'manager', 'owner', 'developer'].includes(role);
+  return ['admin', 'owner', 'developer'].includes(role);
 }
 
 /**
@@ -68,7 +68,14 @@ export function canEditContacts(role: string): boolean {
  * Check if user can delete contacts
  */
 export function canDeleteContacts(role: string): boolean {
-  return ['admin', 'manager', 'owner', 'developer'].includes(role);
+  return ['admin', 'owner', 'developer'].includes(role);
+}
+
+/**
+ * Check if user can view audit logs (admin, owner, developer)
+ */
+export function canViewAuditLogs(role: string): boolean {
+  return ['admin', 'owner', 'developer'].includes(role);
 }
 
 /**
