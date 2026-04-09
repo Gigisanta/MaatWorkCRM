@@ -40,8 +40,8 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   owner: ['contacts:read:all', 'contacts:create', 'contacts:update:all', 'contacts:delete:all', 'team:view', 'team:create', 'team:update', 'team:delete', 'users:manage', 'settings:view', 'settings:manage', 'role:request', 'role:manage'],
   // FIXED: manager now has team:create and team:update to manage teams
   manager: ['contacts:read:own', 'contacts:read:team', 'contacts:create', 'contacts:update:own', 'contacts:update:team', 'contacts:delete:own', 'contacts:delete:team', 'team:view', 'team:create', 'team:update', 'role:request'],
-  staff: ['contacts:read:own', 'contacts:create', 'contacts:update:own', 'role:request'],
-  advisor: ['contacts:read:own', 'contacts:create', 'contacts:update:own', 'role:request'],
+  staff: ['contacts:read:own', 'contacts:create', 'contacts:update:own', 'team:view', 'role:request'],
+  advisor: ['contacts:read:own', 'contacts:create', 'contacts:update:own', 'team:view', 'role:request'],
   member: ['contacts:read:own', 'contacts:create', 'contacts:update:own', 'team:view', 'role:request'],
 };
 
