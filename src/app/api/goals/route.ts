@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { logger } from '@/lib/logger';
+import { db } from '@/lib/db/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { logger } from '@/lib/db/logger';
+import { userGoalCreateSchema } from '@/lib/schemas';
+import { z } from 'zod';
 
 // GET /api/goals - List goals by teamId
 export async function GET(request: NextRequest) {
@@ -18,10 +20,10 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = await request.nextUrl;
-    const params = await searchParams;
+    const params = searchParams;
     const teamId = params.get('teamId');
-    const status = params.get('status');
-    const period = params.get('period');
+    const status = params.get('status') || undefined;
+    const period = params.get('period') || undefined;
     const page = parseInt(params.get('page') || '1');
     const limit = parseInt(params.get('limit') || '20');
 
@@ -116,26 +118,21 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const {
-      teamId,
-      title,
-      description,
-      type,
-      targetValue,
-      currentValue,
-      unit,
-      period,
-      month,
-      year,
-      startDate,
-      endDate,
-      status,
-    } = body;
-
-    if (!teamId || !title || !type || targetValue === undefined) {
-      logger.warn({ operation: 'createGoal', requestId }, 'teamId, title, type, and targetValue are required');
+    const parsed = userGoalCreateSchema.safeParse(body);
+    if (!parsed.success) {
+      logger.warn({ operation: 'createGoal', requestId, errors: parsed.error.flatten() }, 'Invalid goal data');
       return NextResponse.json(
-        { error: 'teamId, title, type y targetValue son requeridos' },
+        { error: parsed.error.errors[0]?.message || 'Datos inválidos' },
+        { status: 400, headers: { 'x-request-id': requestId } }
+      );
+    }
+
+    const { teamGoalId: teamId, title, description, type, targetValue, currentValue, unit, period, month, year, startDate, endDate, status } = parsed.data;
+
+    if (!teamId) {
+      logger.warn({ operation: 'createGoal', requestId }, 'teamId is required');
+      return NextResponse.json(
+        { error: 'teamId es requerido' },
         { status: 400, headers: { 'x-request-id': requestId } }
       );
     }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { logger } from '@/lib/logger';
+import { db } from '@/lib/db/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { logger } from '@/lib/db/logger';
 import { userGoalCreateSchema, userGoalQuerySchema } from '@/lib/schemas/goal';
 
 // GET /api/goals/user - List goals for the current user
@@ -21,13 +21,13 @@ export async function GET(request: NextRequest) {
     const { searchParams } = await request.nextUrl;
     const params = await searchParams;
 
-    // Parse and validate query params
+    // Parse and validate query params (convert null to undefined for Zod optional fields)
     const queryResult = userGoalQuerySchema.safeParse({
-      status: params.get('status'),
-      type: params.get('type'),
-      period: params.get('period'),
-      teamGoalId: params.get('teamGoalId'),
-      health: params.get('health'),
+      status: params.get('status') || undefined,
+      type: params.get('type') || undefined,
+      period: params.get('period') || undefined,
+      teamGoalId: params.get('teamGoalId') || undefined,
+      health: params.get('health') || undefined,
       page: params.get('page') || '1',
       limit: params.get('limit') || '20',
     });

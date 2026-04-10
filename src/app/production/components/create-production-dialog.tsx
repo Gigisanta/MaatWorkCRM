@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/auth-context';
 import { productionCreateSchema, productionTypes, productionEstados } from '@/lib/schemas/production';
 
 const formSchema = productionCreateSchema;
@@ -58,19 +59,32 @@ export function CreateProductionDialog({
   onClose,
   contactId: initialContactId,
 }: CreateProductionDialogProps) {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [contactsKey, setContactsKey] = React.useState(0);
 
   // Fetch contacts for selector
-  const { data: contactsData } = useQuery<{ items: Contact[] }>({
-    queryKey: ['contacts-selector'],
+  const { data: contactsData } = useQuery<{ contacts: Contact[] }>({
+    queryKey: ['contacts-selector', user?.organizationId],
     queryFn: async () => {
-      const response = await fetch('/api/contacts?limit=100', { credentials: 'include' });
+      const orgId = user?.organizationId || '';
+      const response = await fetch(`/api/contacts?organizationId=${orgId}&limit=100`, { credentials: 'include' });
       if (!response.ok) throw new Error('Error al cargar contactos');
       return response.json();
     },
-    enabled: !!open,
+    enabled: !!user?.organizationId,
+    staleTime: 0,
+    refetchOnMount: true,
   });
-  const contacts = contactsData?.items ?? [];
+
+  // Force re-render when contacts data changes
+  React.useEffect(() => {
+    if (contactsData?.contacts) {
+      setContactsKey(prev => prev + 1);
+    }
+  }, [contactsData]);
+
+  const contacts = contactsData?.contacts ?? [];
 
   const form = useForm<ProductionFormDataInput>({
     resolver: zodResolver(formSchema) as any,
@@ -168,13 +182,18 @@ export function CreateProductionDialog({
                         <SelectValue placeholder="Seleccionar contacto" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
-                      {contacts.map((contact) => (
-                        <SelectItem key={contact.id} value={contact.id}>
-                          <span className="mr-1">{contact.emoji || '👤'}</span>
-                          {contact.name}
-                        </SelectItem>
-                      ))}
+                    <SelectContent position="popper" sideOffset={8} key={`select-content-${contactsKey}`}>
+                      {contacts.length === 0 ? (
+                        <div className="py-6 text-center text-sm text-slate-400">
+                          No hay contactos disponibles
+                        </div>
+                      ) : (
+                        contacts.map((contact) => (
+                          <SelectItem key={contact.id} value={contact.id}>
+                            {contact.emoji || '👤'} {contact.name}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />
