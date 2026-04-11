@@ -10,7 +10,7 @@ export const taskCreateSchema = z.object({
   description: z.string().optional().nullable(),
   status: taskStatusEnum.optional().default('pending'),
   priority: taskPriorityEnum.optional().default('medium'),
-  dueDate: z.string().datetime().optional().nullable(),
+  dueDate: z.preprocess((val) => (val === "" ? null : val), z.string().datetime().nullable().optional()),
   assignedTo: z.string().optional().nullable(),
   contactId: z.string().optional().nullable(),
   isRecurrent: z.boolean().optional().default(false),
