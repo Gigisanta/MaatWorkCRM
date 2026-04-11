@@ -28,10 +28,17 @@ MockNextRequest = (function (
   this.cookies = { get: vi.fn().mockReturnValue(null), getAll: vi.fn().mockReturnValue([]) } as any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   this.clone = vi.fn().mockReturnValue(this) as any;
+  // Capture the body from init so json() can return it
+  const capturedBody = init?.body as string | undefined;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  this.json = vi.fn().mockImplementation(async () => ({})) as any;
+  this.json = vi.fn().mockImplementation(async () => {
+    if (capturedBody) {
+      return JSON.parse(capturedBody);
+    }
+    return {};
+  }) as any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  this.text = vi.fn().mockImplementation(async () => '') as any;
+  this.text = vi.fn().mockImplementation(async () => capturedBody ?? '') as any;
   mockHeadersEntries = [...this.headers.entries()];
 } as any);
 
