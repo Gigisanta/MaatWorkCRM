@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
       'Goals fetched successfully'
     );
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         goals,
         pagination: {
@@ -91,6 +91,8 @@ export async function GET(request: NextRequest) {
       },
       { headers: { 'x-request-id': requestId } }
     );
+    response.headers.set('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
+    return response;
   } catch (error) {
     logger.error(
       { err: error, operation: 'listGoals', requestId, duration_ms: Date.now() - start },

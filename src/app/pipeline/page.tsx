@@ -143,7 +143,7 @@ const StageColumn = React.memo(function StageColumn({
       {/* Contacts Container */}
       <div className="flex-1 space-y-2 overflow-y-auto px-1 pb-2 max-h-[calc(100vh-400px)]">
         <SortableContext items={stage.contacts.map(c => c.id)} strategy={verticalListSortingStrategy}>
-          <AnimatePresence mode="popLayout">
+          <AnimatePresence mode="sync">
             {stage.contacts.map((contact) => (
               <ContactCard
                 key={contact.id}

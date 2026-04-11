@@ -17,7 +17,7 @@
     "db:migrate": "prisma migrate dev",
     "db:reset": "prisma migrate reset",
     "db:studio": "prisma studio",
-    "build": "NODE_OPTIONS='--max-old-space-size=4096' bun prisma generate && next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/public/",
+    "build": "NODE_OPTIONS='--max-old-space-size=12288' bun prisma generate && next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/public/",
     "analyze": "ANALYZE=true next build",
     "start": "NODE_ENV=production bun .next/standalone/server.js 2>&1 | tee server.log",
     "lint": "next lint",

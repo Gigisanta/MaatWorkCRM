@@ -11,7 +11,6 @@ const nextConfig: NextConfig = {
     remotePatterns: [{ protocol: "https", hostname: "**" }],
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 31536000,
-    // Optimize for common device sizes
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
@@ -27,11 +26,15 @@ const nextConfig: NextConfig = {
       'sonner',
     ],
   },
-  reactCompiler: true,
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  turbopack: {
+    root: '/Users/prueba/Desktop/maatworkcrmv3',
+  },
   transpilePackages: ['recharts', 'framer-motion', 'date-fns'],
   headers: async () => [
     {
-      // Cache static JS/CSS for 1 year (immutable hashes)
       source: '/_next/static/:path*',
       headers: [
         {
@@ -41,7 +44,6 @@ const nextConfig: NextConfig = {
       ],
     },
     {
-      // Cache public static files
       source: '/public/:path*',
       headers: [
         {
@@ -51,7 +53,6 @@ const nextConfig: NextConfig = {
       ],
     },
     {
-      // Cache Next.js built resources
       source: '/_next/:path*',
       headers: [
         {

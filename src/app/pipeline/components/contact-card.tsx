@@ -20,7 +20,7 @@ interface ContactCardProps {
   onUpdateStage?: (contactId: string, stageId: string) => void;
 }
 
-export function ContactCard({
+export const ContactCard = React.memo(function ContactCard({
   contact,
   isDragging,
   isHighlighted,
@@ -169,4 +169,4 @@ export function ContactCard({
       })()}
     </motion.div>
   );
-}
+});

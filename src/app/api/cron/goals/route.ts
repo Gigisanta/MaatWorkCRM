@@ -37,6 +37,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const now = new Date();
+    let teamGoalsProcessed = 0;
     const today = new Date(now);
     today.setHours(0, 0, 0, 0);
 
@@ -78,28 +79,17 @@ export async function GET(req: NextRequest) {
       recentWarnings.map(n => `${n.title}|${n.actionUrl}`)
     );
 
-    let teamGoalsProcessed = 0;
-    let atRiskNotifications = 0;
-    let offTrackNotifications = 0;
-    let completedNotifications = 0;
+    // Phase 1: Collect goals by category (no awaits)
+    const completedGoals: typeof teamGoals = [];
+    const offTrackGoals: typeof teamGoals = [];
+    const atRiskGoals: typeof teamGoals = [];
 
     for (const goal of teamGoals) {
       teamGoalsProcessed++;
 
-      // Check if goal is completed
       if (goal.currentValue >= goal.targetValue) {
         if (goal.status !== 'completed') {
-          await notifyGoalCompleted({
-            goalId: goal.id,
-            goalTitle: goal.title,
-            teamId: goal.teamId,
-            organizationId: goal.team.organizationId,
-          });
-          completedNotifications++;
-          await db.teamGoal.update({
-            where: { id: goal.id },
-            data: { status: 'completed' },
-          });
+          completedGoals.push(goal);
         }
         continue;
       }
@@ -119,33 +109,63 @@ export async function GET(req: NextRequest) {
       const isOffTrack = expectedProgress > actualProgress + 25;
 
       if (isOffTrack) {
-        // O(1) lookup in pre-fetched notification set
         const warningKey = `Objetivo fuera de trayectoria|/teams?team=${goal.teamId}`;
         if (!sentWarnings.has(warningKey)) {
-          const userIds = goal.team.members.map(m => m.userId);
-          await createNotificationForUsers(userIds, {
-            organizationId: goal.team.organizationId,
-            type: 'warning',
-            title: 'Objetivo fuera de trayectoria',
-            message: `El objetivo "${goal.title}" está significativamente por debajo del progreso esperado`,
-            actionUrl: `/teams?team=${goal.teamId}`,
-          });
-          offTrackNotifications++;
+          offTrackGoals.push(goal);
         }
       } else if (isAtRisk) {
         const warningKey = `Objetivo en riesgo|/teams?team=${goal.teamId}`;
         if (!sentWarnings.has(warningKey)) {
-          await notifyGoalBehindSchedule({
-            goalId: goal.id,
-            goalTitle: goal.title,
-            progress: Math.round(actualProgress),
-            teamId: goal.teamId,
-            organizationId: goal.team.organizationId,
-          });
-          atRiskNotifications++;
+          atRiskGoals.push(goal);
         }
       }
     }
+
+    // Phase 2: Execute all operations in parallel
+    const allNotifications = await Promise.all([
+      // Update completed goals status
+      ...completedGoals.map((goal) =>
+        db.teamGoal.update({
+          where: { id: goal.id },
+          data: { status: 'completed' },
+        })
+      ),
+      // Notify completed goals
+      ...completedGoals.map((goal) =>
+        notifyGoalCompleted({
+          goalId: goal.id,
+          goalTitle: goal.title,
+          teamId: goal.teamId,
+          organizationId: goal.team.organizationId,
+        })
+      ),
+      // Off-track notifications (batch by organization)
+      ...offTrackGoals.map((goal) => {
+        const userIds = goal.team.members.map((m) => m.userId);
+        return createNotificationForUsers(userIds, {
+          organizationId: goal.team.organizationId,
+          type: 'warning',
+          title: 'Objetivo fuera de trayectoria',
+          message: `El objetivo "${goal.title}" está significativamente por debajo del progreso esperado`,
+          actionUrl: `/teams?team=${goal.teamId}`,
+        });
+      }),
+      // At-risk notifications
+      ...atRiskGoals.map((goal) => {
+        const actualProgress = (goal.currentValue / goal.targetValue) * 100;
+        return notifyGoalBehindSchedule({
+          goalId: goal.id,
+          goalTitle: goal.title,
+          progress: Math.round(actualProgress),
+          teamId: goal.teamId,
+          organizationId: goal.team.organizationId,
+        });
+      }),
+    ]);
+
+    const completedNotifications = completedGoals.length;
+    const offTrackNotifications = offTrackGoals.length;
+    const atRiskNotifications = atRiskGoals.length;
 
     logger.info({
       operation: 'cron:goals',
@@ -156,7 +176,7 @@ export async function GET(req: NextRequest) {
       completedNotifications,
     }, `Processed ${teamGoalsProcessed} team goals`);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       ok: true,
       processed: new Date().toISOString(),
       results: {
@@ -166,6 +186,9 @@ export async function GET(req: NextRequest) {
         completedNotifications,
       },
     });
+    response.headers.set('Cache-Control', 'no-store, must-revalidate');
+    response.headers.set('X-Cron-Job', 'true');
+    return response;
   } catch (error) {
     logger.error({ operation: 'cron:goals', requestId, error: error instanceof Error ? error.message : String(error) }, 'Error processing goals cron job');
     return NextResponse.json(

@@ -7,18 +7,7 @@ import type { ContactUpdateInput } from '@/lib/schemas';
 import { revalidateTag } from 'next/cache';
 import { logger } from '@/lib/db/logger';
 import { isValidId } from '@/lib/utils/id-validation';
-
-// Helper to check if targetUserId is in the team managed by managerId
-async function isInTeam(targetUserId: string, managerId: string): Promise<boolean> {
-  const teamMember = await db.user.findFirst({
-    where: {
-      id: targetUserId,
-      managerId: managerId,
-    },
-    select: { id: true },
-  });
-  return !!teamMember;
-}
+import { isInTeam } from '@/lib/services/team';
 
 // GET /api/contacts/[id] - Get a single contact with relations
 export async function GET(
@@ -52,7 +41,9 @@ export async function GET(
       include: {
         tags: {
           include: {
-            tag: true,
+            tag: {
+              select: { id: true, name: true, color: true, icon: true },
+            },
           },
         },
         pipelineStage: true,
@@ -86,6 +77,7 @@ export async function GET(
           },
         },
         stageHistory: {
+          take: 100,
           orderBy: { changedAt: 'desc' },
           include: {
             fromStage: {
@@ -217,7 +209,9 @@ export async function PUT(
       include: {
         tags: {
           include: {
-            tag: true,
+            tag: {
+              select: { id: true, name: true, color: true, icon: true },
+            },
           },
         },
         pipelineStage: true,

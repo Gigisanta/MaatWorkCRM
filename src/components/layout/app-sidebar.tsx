@@ -40,7 +40,7 @@ interface AppSidebarProps {
   onCollapsedChange: (collapsed: boolean) => void;
 }
 
-export function AppSidebar({ collapsed, onCollapsedChange }: AppSidebarProps) {
+export const AppSidebar = React.memo(function AppSidebar({ collapsed, onCollapsedChange }: AppSidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -95,8 +95,7 @@ export function AppSidebar({ collapsed, onCollapsedChange }: AppSidebarProps) {
       return { unreadCount: data.unreadCount || 0 };
     },
     enabled: !!user?.organizationId,
-    staleTime: 30 * 1000,
-    refetchInterval: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
   const unreadCount = notifData?.unreadCount || 0;
 
@@ -346,4 +345,4 @@ export function AppSidebar({ collapsed, onCollapsedChange }: AppSidebarProps) {
       </motion.aside>
     </TooltipProvider>
   );
-}
+});

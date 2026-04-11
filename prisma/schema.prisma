@@ -2,7 +2,8 @@
 // Learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider          = "prisma-client-js"
+  previewFeatures   = ["postgresqlExtensions"]
 }
 
 datasource db {
@@ -61,6 +62,10 @@ model User {
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  @@index([managerId])
+  // MEDIUM: Filtrar usuarios activos
+  @@index([isActive])
 }
 
 model Session {
@@ -222,6 +227,10 @@ model Contact {
   @@index([organizationId, createdAt(sort: Desc)])
   @@index([organizationId, updatedAt(sort: Desc)])
   @@index([organizationId, segment])
+  // B) Index para lastInteractionDate (dashboard activity)
+  @@index([lastInteractionDate])
+  // Search por nombre (full-text)
+  @@index([name])
   @@index([leadScore])
 }
 
@@ -249,6 +258,7 @@ model PipelineStage {
 
   @@unique([id, organizationId])
   @@index([organizationId])
+  @@index([organizationId, order])
 }
 
 model PipelineStageHistory {
@@ -268,8 +278,6 @@ model PipelineStageHistory {
 
   @@index([organizationId])
   @@index([contactId])
-  @@index([fromStageId])
-  @@index([toStageId])
 }
 
 model Deal {
@@ -302,6 +310,8 @@ model Deal {
   @@index([expectedCloseDate])
   @@index([organizationId, stageId])
   @@index([contactId, stageId])
+  // HIGH: Para analytics de deals cerrados
+  @@index([organizationId, updatedAt])
 }
 
 model Note {
@@ -322,6 +332,8 @@ model Note {
   @@index([entityType, entityId])
   @@index([organizationId])
   @@index([organizationId, authorId, createdAt(sort: Desc)])
+  // HIGH: Dashboard activity
+  @@index([organizationId, createdAt])
 }
 
 // ============================================
@@ -417,6 +429,8 @@ model Task {
   @@index([organizationId, assignedTo])
   @@index([organizationId, status])
   @@index([assignedTo, dueDate])
+  // HIGH: Para metricas de actividad por periodo
+  @@index([organizationId, status, createdAt])
   @@index([organizationId, status, dueDate])
 }
 
@@ -531,6 +545,10 @@ model UserGoal {
   @@index([status])
   @@index([period])
   @@index([type])
+  @@index([ownerId, createdAt])
+  @@index([ownerId, health])
+  // HIGH: Metas por usuario+periodo
+  @@index([ownerId, period])
 }
 
 // ============================================
@@ -654,6 +672,7 @@ model Notification {
   @@index([userId, isRead, createdAt])
   @@index([organizationId, createdAt])
   @@index([organizationId, userId, isRead])
+  @@index([userId, isRead, organizationId])
 }
 
 // ============================================
@@ -703,6 +722,8 @@ model AuditLog {
 
   @@index([organizationId, createdAt(sort: Desc)])
   @@index([userId, createdAt(sort: Desc)])
+  // MEDIUM: Filtrar por tipo de accion
+  @@index([action])
 }
 
 // ============================================
@@ -813,6 +834,8 @@ model AutomationConfig {
   updatedAt      DateTime @updatedAt
 
   @@index([organizationId])
+  // MEDIUM: Automaciones activas
+  @@index([organizationId, enabled])
 }
 
 // ============================================
@@ -1072,4 +1095,5 @@ model Interaction {
   @@index([contactId])
   @@index([userId])
   @@index([createdAt])
+  @@index([contactId, createdAt])
 }

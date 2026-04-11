@@ -92,7 +92,7 @@ export function NotificationBell() {
   const markAsReadMutation = useMutation({
     mutationFn: markAsRead,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications", user!.id, user!.organizationId] });
     },
     onError: () => {
       toast.error("Error al marcar notificación como leída");
@@ -103,7 +103,7 @@ export function NotificationBell() {
   const markAllAsReadMutation = useMutation({
     mutationFn: () => markAllAsRead(user!.id, user!.organizationId!),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications", user!.id, user!.organizationId] });
       toast.success("Todas las notificaciones marcadas como leídas");
     },
     onError: () => {

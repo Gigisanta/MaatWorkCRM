@@ -3,17 +3,8 @@ import { db } from '@/lib/db/db';
 import { getUserFromSession } from '@/lib/auth/auth-helpers';
 import { normalizeRole, hasPermission } from '@/lib/roles';
 import { logger } from '@/lib/db/logger';
-import { taskCreateSchema } from '@/lib/schemas';
-import type { TaskCreateInput } from '@/lib/schemas';
-
-// Helper: get IDs of team members (advisors) under a manager
-async function getTeamMemberIds(managerId: string): Promise<string[]> {
-  const team = await db.user.findMany({
-    where: { managerId },
-    select: { id: true },
-  });
-  return team.map(u => u.id);
-}
+import { getTeamMemberIds } from '@/lib/services/team';
+import { taskCreateSchema } from '@/lib/schemas/task';
 
 // Helper: check if user can view all contacts
 function userCanViewAllContacts(role: string): boolean {
@@ -69,14 +60,15 @@ export async function GET(request: NextRequest) {
 
     // Si es manager (no admin/owner/developer) y no hay filtro assignedTo específico,
     // filtrar para ver solo tareas propias y de su equipo de advisors
+    // NOTE: getTeamMemberIds se llama una sola vez para reuse
+    const teamMemberIds = !userCanViewAllContacts(userRole) ? await getTeamMemberIds(user.id) : [];
+
     if (!userCanViewAllContacts(userRole) && !assignedTo) {
-      const teamMemberIds = await getTeamMemberIds(user.id);
       where.assignedTo = { in: [user.id, ...teamMemberIds] };
     }
 
     // Si hay filtro assignedTo específico, verificar que el usuario tenga acceso
     if (assignedTo) {
-      const teamMemberIds = await getTeamMemberIds(user.id);
       if (assignedTo !== user.id && !teamMemberIds.includes(assignedTo)) {
         // No puede ver tareas de otros fuera de su equipo
         if (!userCanViewAllContacts(userRole)) {

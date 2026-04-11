@@ -48,7 +48,10 @@ export async function GET(request: NextRequest) {
     );
 
     if (activeSyncs.length === 0) {
-      return NextResponse.json({ processed: 0, results: [], timestamp: new Date().toISOString() });
+      const response = NextResponse.json({ processed: 0, results: [], timestamp: new Date().toISOString() });
+      response.headers.set('Cache-Control', 'no-store, must-revalidate');
+      response.headers.set('X-Cron-Job', 'true');
+      return response;
     }
 
     const results = [];
@@ -80,11 +83,14 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       processed: results.length,
       results,
       timestamp: new Date().toISOString(),
     });
+    response.headers.set('Cache-Control', 'no-store, must-revalidate');
+    response.headers.set('X-Cron-Job', 'true');
+    return response;
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
     logger.error({ operation: 'cron:sync-calendars', requestId, error: message }, 'Calendar sync cron error');

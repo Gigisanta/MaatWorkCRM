@@ -261,7 +261,7 @@ export function usePipelineData(organizationId: string = DEFAULT_ORG_ID) {
     }));
   }, [stagesQuery.data, contactsQuery.data]);
 
-  return {
+  return useMemo(() => ({
     stages: stagesWithContacts,
     isLoading: stagesQuery.isLoading || contactsQuery.isLoading,
     error: stagesQuery.error || contactsQuery.error,
@@ -269,7 +269,7 @@ export function usePipelineData(organizationId: string = DEFAULT_ORG_ID) {
       stagesQuery.refetch();
       contactsQuery.refetch();
     },
-  };
+  }), [stagesWithContacts, stagesQuery.isLoading, stagesQuery.error, contactsQuery.isLoading, contactsQuery.error]);
 }
 
 export function useMoveContact() {

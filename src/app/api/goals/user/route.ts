@@ -3,6 +3,7 @@ import { db } from '@/lib/db/db';
 import { getUserFromSession } from '@/lib/auth/auth-helpers';
 import { logger } from '@/lib/db/logger';
 import { userGoalCreateSchema, userGoalQuerySchema } from '@/lib/schemas/goal';
+import { calculateGoalHealth } from '@/lib/services/goal-health';
 
 // GET /api/goals/user - List goals for the current user
 export async function GET(request: NextRequest) {
@@ -75,28 +76,15 @@ export async function GET(request: NextRequest) {
       db.userGoal.count({ where }),
     ]);
 
-    // Calculate health for each goal if not set
+    // Calculate health for each goal if not already set
     const goalsWithHealth = goals.map((goal) => {
       if (!goal.health && goal.startDate && goal.endDate && goal.targetValue > 0) {
-        const now = new Date();
-        const start = new Date(goal.startDate);
-        const end = new Date(goal.endDate);
-        const totalDuration = end.getTime() - start.getTime();
-        const elapsed = now.getTime() - start.getTime();
-        const progress = Math.min(100, (goal.currentValue / goal.targetValue) * 100);
-        const expectedProgress = totalDuration > 0 ? (elapsed / totalDuration) * 100 : 0;
-
-        let calculatedHealth: string;
-        if (progress >= 100) {
-          calculatedHealth = 'achieved';
-        } else if (progress >= expectedProgress * 0.9) {
-          calculatedHealth = 'on-track';
-        } else if (progress >= expectedProgress * 0.5) {
-          calculatedHealth = 'at-risk';
-        } else {
-          calculatedHealth = 'off-track';
-        }
-
+        const calculatedHealth = calculateGoalHealth({
+          startDate: new Date(goal.startDate),
+          endDate: new Date(goal.endDate),
+          currentValue: goal.currentValue,
+          targetValue: goal.targetValue,
+        });
         return { ...goal, calculatedHealth };
       }
       return { ...goal, calculatedHealth: goal.health };
@@ -107,7 +95,7 @@ export async function GET(request: NextRequest) {
       'User goals fetched successfully'
     );
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         goals: goalsWithHealth,
         pagination: {
@@ -119,6 +107,8 @@ export async function GET(request: NextRequest) {
       },
       { headers: { 'x-request-id': requestId } }
     );
+    response.headers.set('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
+    return response;
   } catch (error) {
     logger.error(
       { err: error, operation: 'listUserGoals', requestId, duration_ms: Date.now() - start },
@@ -195,25 +185,15 @@ export async function POST(request: NextRequest) {
     const month = data.month || now.getMonth() + 1;
     const year = data.year || now.getFullYear();
 
-    // Auto-calculate health based on start/end dates
+    // Auto-calculate health based on start/end dates using the centralized function
     let health = data.health;
     if (!health && data.startDate && data.endDate && data.targetValue > 0) {
-      const start = new Date(data.startDate);
-      const end = new Date(data.endDate);
-      const totalDuration = end.getTime() - start.getTime();
-      const elapsed = Date.now() - start.getTime();
-      const progress = (data.currentValue || 0) / data.targetValue * 100;
-      const expectedProgress = totalDuration > 0 ? (elapsed / totalDuration) * 100 : 0;
-
-      if (progress >= 100) {
-        health = 'achieved';
-      } else if (progress >= expectedProgress * 0.9) {
-        health = 'on-track';
-      } else if (progress >= expectedProgress * 0.5) {
-        health = 'at-risk';
-      } else {
-        health = 'off-track';
-      }
+      health = calculateGoalHealth({
+        startDate: new Date(data.startDate),
+        endDate: new Date(data.endDate),
+        currentValue: data.currentValue || 0,
+        targetValue: data.targetValue,
+      });
     }
 
     const goal = await db.userGoal.create({

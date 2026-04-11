@@ -76,20 +76,16 @@ describe('goal-health', () => {
     // --- Past deadline ---
     // BASE_DATE = April 8, 2026
 
-    it('returns on-track when deadline passed but goal is completed', () => {
+    it('returns achieved when deadline passed and goal is completed', () => {
       // End date: March 15 (before base date April 8)
-      // Start: Jan 1 2026, End: March 15 2026 = 73 days
-      // effectiveNow = min(now, endDate) = March 15
-      // daysElapsed = 73, totalDays = 73 => expectedProgress = 100%
-      // currentValue = 100, targetValue = 100 => actualProgress = 100%
-      // 100 >= 100 => on-track
+      // currentValue = targetValue = 100 => achieved regardless of timing
       const goal = {
         startDate: new Date('2026-01-01'),
         endDate: new Date('2026-03-15'),
         currentValue: 100,
         targetValue: 100,
       };
-      expect(calculateGoalHealth(goal)).toBe('on-track');
+      expect(calculateGoalHealth(goal)).toBe('achieved');
     });
 
     it('returns off-track when deadline passed and significantly behind', () => {
@@ -124,19 +120,15 @@ describe('goal-health', () => {
       expect(calculateGoalHealth(goal)).toBe('on-track');
     });
 
-    it('returns on-track when exactly on time (100% complete at deadline)', () => {
-      // End date = April 8 (today), so effectiveNow = endDate
-      // Start Jan 1, End April 8 = 97 days total
-      // daysElapsed = 97 => expectedProgress = 100%
-      // currentValue = 100, targetValue = 100 => actual = 100%
-      // 100 >= 100 => on-track
+    it('returns achieved when exactly on time (100% complete at deadline)', () => {
+      // currentValue = targetValue = 100 => achieved regardless of timing
       const goal = {
         startDate: new Date('2026-01-01'),
         endDate: new Date('2026-04-08'),
         currentValue: 100,
         targetValue: 100,
       };
-      expect(calculateGoalHealth(goal)).toBe('on-track');
+      expect(calculateGoalHealth(goal)).toBe('achieved');
     });
 
     it('returns on-track when ahead of schedule', () => {

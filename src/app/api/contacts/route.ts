@@ -7,19 +7,7 @@ import type { ContactCreateInput } from '@/lib/schemas';
 import { revalidateTag } from 'next/cache';
 import { logger } from '@/lib/db/logger';
 import { trackGoalProgress } from '@/lib/services/goal-tracking';
-
-export const dynamic = 'force-dynamic';
-
-// Helper to get team member IDs for a manager
-async function getTeamMemberIds(managerId: string): Promise<string[]> {
-  logger.debug({ operation: 'getTeamMemberIds', managerId }, 'Getting team members');
-  const team = await db.user.findMany({
-    where: { managerId },
-    select: { id: true },
-  });
-  logger.debug({ operation: 'getTeamMemberIds', managerId, count: team.length }, 'Team members fetched');
-  return team.map(u => u.id);
-}
+import { getTeamMemberIds } from '@/lib/services/team';
 
 // Helper to get interaction stats for contacts using groupBy (avoids N+1)
 async function getInteractionStats(contactIds: string[]) {
@@ -616,7 +604,7 @@ export async function POST(request: NextRequest) {
     const contactWithTags = await db.contact.findUnique({
       where: { id: contact.id },
       include: {
-        tags: { include: { tag: true } },
+        tags: { include: { tag: { select: { id: true, name: true, color: true, icon: true } } } },
         pipelineStage: { select: { id: true, name: true, color: true, order: true } },
         assignedUser: { select: { id: true, name: true, email: true, image: true } },
       },

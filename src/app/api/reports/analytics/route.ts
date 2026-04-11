@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { unstable_cache } from "next/cache";
 import { getUserFromSession } from "@/lib/auth/auth-helpers";
 import { db } from "@/lib/db/db";
 import { logger } from "@/lib/db/logger";
@@ -324,39 +325,38 @@ async function getFunnelMetrics(orgId: string, period: PeriodFilter): Promise<Fu
 // ─── Lead Scoring Metrics ───────────────────────────────────────────────────────
 
 async function getLeadScoringMetrics(orgId: string): Promise<LeadScoringMetrics> {
-  const contacts = await db.contact.findMany({
+  // FIX Q1: Use groupBy instead of loading all contacts into memory.
+  // groupBy returns at most 31 unique leadScore values (0-30), vs. up to 10,000 rows.
+  const scoreGroups = await db.contact.groupBy({
+    by: ["leadScore"],
     where: { organizationId: orgId },
-    select: {
-      leadScore: true,
-      id: true,
-      tags: true,
-    },
+    _count: true,
   });
 
-  const totalContacts = contacts.length;
+  const totalContacts = scoreGroups.reduce((sum, g) => sum + g._count, 0);
 
-  // Bucket distribution
+  // Bucket distribution computed entirely from grouped aggregates
   const buckets = LEAD_SCORE_BUCKETS.map((bucket) => {
-    const bucketContacts = contacts.filter(
-      (c) => c.leadScore >= bucket.min && c.leadScore <= bucket.max
+    const bucketGroups = scoreGroups.filter(
+      (g) => g.leadScore >= bucket.min && g.leadScore <= bucket.max
     );
+    const count = bucketGroups.reduce((sum, g) => sum + g._count, 0);
     return {
       bucket: bucket.label,
       range: `${bucket.min}-${bucket.max}`,
-      count: bucketContacts.length,
-      percentage:
-        totalContacts > 0 ? Math.round((bucketContacts.length / totalContacts) * 100) : 0,
+      count,
+      percentage: totalContacts > 0 ? Math.round((count / totalContacts) * 100) : 0,
       avgValue: 0,
       color: bucket.color,
     } as LeadScoreBucket;
   });
 
-  // Score effectiveness (based on count, not tag value since tags have no value field)
-  const highScoreContacts = contacts.filter((c) => c.leadScore >= 20);
-  const lowScoreContacts = contacts.filter((c) => c.leadScore < 10);
+  // Score effectiveness derived from the same groupBy result
+  const highScoreGroups = scoreGroups.filter((g) => g.leadScore >= 20);
+  const lowScoreGroups = scoreGroups.filter((g) => g.leadScore < 10);
 
-  const highScoreAvgValue = highScoreContacts.length;
-  const lowScoreAvgValue = lowScoreContacts.length;
+  const highScoreAvgValue = highScoreGroups.reduce((sum, g) => sum + g._count, 0);
+  const lowScoreAvgValue = lowScoreGroups.reduce((sum, g) => sum + g._count, 0);
 
   const lift = lowScoreAvgValue > 0 ? Math.round((highScoreAvgValue / lowScoreAvgValue) * 100) / 100 : 0;
 
@@ -387,22 +387,20 @@ async function getLeadScoringMetrics(orgId: string): Promise<LeadScoringMetrics>
 // ─── Goals Metrics ─────────────────────────────────────────────────────────────
 
 async function getGoalsMetrics(orgId: string, period: PeriodFilter): Promise<GoalsMetrics> {
-  const { start, end } = getPeriodBounds(period);
+  const { start } = getPeriodBounds(period);
+  // Push period filter to Prisma where clause instead of loading all goals
+  const goalYear = start.getFullYear();
+  const goalMonth = start.getMonth() + 1;
 
   const goals = await db.teamGoal.findMany({
     where: {
       team: { organizationId: orgId },
+      year: goalYear,
+      month: goalMonth,
     },
     include: {
       team: { select: { id: true, name: true } },
     },
-  });
-
-  // Filter goals by period
-  const periodGoals = goals.filter((g) => {
-    const goalPeriod = `${g.year}-${String(g.month).padStart(2, "0")}`;
-    const filterPeriod = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}`;
-    return goalPeriod === filterPeriod;
   });
 
   const goalTypes = ["new_aum", "new_clients", "meetings", "revenue"];
@@ -414,7 +412,7 @@ async function getGoalsMetrics(orgId: string, period: PeriodFilter): Promise<Goa
   };
 
   const byType: GoalTypeSummary[] = goalTypes.map((type) => {
-    const typeGoals = periodGoals.filter((g) => g.type === type);
+    const typeGoals = goals.filter((g) => g.type === type);
     const completed = typeGoals.filter((g) => g.status === "completed").length;
     const atRisk = typeGoals.filter(
       (g) => g.status === "active" && g.currentValue / g.targetValue < 0.5
@@ -436,26 +434,26 @@ async function getGoalsMetrics(orgId: string, period: PeriodFilter): Promise<Goa
     };
   });
 
-  const activeGoals = periodGoals.filter((g) => g.status === "active").length;
-  const completedGoals = periodGoals.filter((g) => g.status === "completed").length;
-  const atRiskGoals = periodGoals.filter(
+  const activeGoals = goals.filter((g) => g.status === "active").length;
+  const completedGoals = goals.filter((g) => g.status === "completed").length;
+  const atRiskGoals = goals.filter(
     (g) => g.status === "active" && g.currentValue / g.targetValue < 0.5
   ).length;
   const avgProgress =
-    periodGoals.length > 0
+    goals.length > 0
       ? Math.round(
-          periodGoals.reduce(
+          goals.reduce(
             (sum, g) => sum + (g.targetValue > 0 ? (g.currentValue / g.targetValue) * 100 : 0),
             0
-          ) / periodGoals.length
+          ) / goals.length
         )
       : 0;
 
   const pacingIndex = avgProgress / 100;
 
   // By team
-  const teamsMap = new Map<string, { name: string; goals: typeof periodGoals }>();
-  for (const goal of periodGoals) {
+  const teamsMap = new Map<string, { name: string; goals: typeof goals }>();
+  for (const goal of goals) {
     const existing = teamsMap.get(goal.team.id);
     if (existing) {
       existing.goals.push(goal);
@@ -492,7 +490,7 @@ async function getGoalsMetrics(orgId: string, period: PeriodFilter): Promise<Goa
   return {
     byType,
     overall: {
-      totalGoals: periodGoals.length,
+      totalGoals: goals.length,
       completedGoals,
       activeGoals,
       atRiskGoals,
@@ -770,21 +768,25 @@ async function getPipelineMetrics(orgId: string, period: PeriodFilter): Promise<
   const stages = await db.pipelineStage.findMany({
     where: { organizationId: orgId },
     orderBy: { order: "asc" },
-    include: {
-      deals: {
-        where: { organizationId: orgId },
-        select: { value: true, probability: true },
-      },
-    },
   });
 
+  // FIX Q4: Use groupBy instead of include { deals } to avoid loading deal rows.
+  // groupBy aggregates in the database, returning a single row per stageId instead of one row per deal.
+  const stageIds = stages.map((s) => s.id);
+  const stageDealsAgg = await db.deal.groupBy({
+    by: ["stageId"],
+    where: { organizationId: orgId, stageId: { in: stageIds } },
+    _sum: { value: true },
+    _count: true,
+    _avg: { probability: true },
+  });
+  const dealsAggMap = new Map(stageDealsAgg.map((d) => [d.stageId, d]));
+
   const stageDistribution = stages.map((stage) => {
-    const count = stage.deals.length;
-    const value = stage.deals.reduce((sum, d) => sum + d.value, 0);
-    const avgProbability =
-      stage.deals.length > 0
-        ? stage.deals.reduce((sum, d) => sum + d.probability, 0) / stage.deals.length
-        : 50;
+    const agg = dealsAggMap.get(stage.id);
+    const count = agg?._count ?? 0;
+    const value = agg?._sum?.value ?? 0;
+    const avgProbability = agg?._avg?.probability ?? 50;
 
     return {
       stageId: stage.id,
@@ -979,59 +981,51 @@ async function getTrendsMetrics(orgId: string, period: PeriodFilter): Promise<Tr
   const numPoints = period === "week" ? 4 : period === "month" ? 4 : period === "quarter" ? 4 : 12;
   const stepMs = (interval / numPoints) * 24 * 60 * 60 * 1000;
 
+  // Build all point ranges upfront to enable parallel queries
+  const pointRanges = Array.from({ length: numPoints }, (_, i) => {
+    const pointStart = new Date(start.getTime() - (numPoints - 1 - i) * stepMs);
+    const pointEnd = new Date(pointStart.getTime() + stepMs - 1);
+    const prevPointStart = new Date(prevStart.getTime() - (numPoints - 1 - i) * stepMs);
+    const prevPointEnd = new Date(prevPointStart.getTime() - 1);
+    return { label: `P${i + 1}`, pointStart, pointEnd, prevPointStart, prevPointEnd };
+  });
+
+  // Fetch all trend data in parallel
+  const trendResults = await Promise.all(
+    pointRanges.map(({ pointStart, pointEnd, prevPointStart, prevPointEnd }) =>
+      Promise.all([
+        db.contact.count({
+          where: { organizationId: orgId, createdAt: { gte: pointStart, lte: pointEnd } },
+        }),
+        db.contact.count({
+          where: { organizationId: orgId, createdAt: { gte: prevPointStart, lte: prevPointEnd } },
+        }),
+        db.deal.findMany({
+          where: { organizationId: orgId, updatedAt: { gte: pointStart, lte: pointEnd } },
+          select: { value: true, probability: true },
+        }),
+        db.task.count({
+          where: { organizationId: orgId, status: "completed", completedAt: { gte: pointStart, lte: pointEnd } },
+        }),
+        db.calendarEvent.count({
+          where: { organizationId: orgId, type: "meeting", startAt: { gte: pointStart, lte: pointEnd } },
+        }),
+      ])
+    )
+  );
+
+  // Build response arrays from parallel results
   const contacts: TrendsMetrics["contacts"] = [];
   const revenue: TrendsMetrics["revenue"] = [];
   const activity: TrendsMetrics["activity"] = [];
 
-  for (let i = numPoints - 1; i >= 0; i--) {
-    const pointStart = new Date(start.getTime() - i * stepMs);
-    const pointEnd = new Date(pointStart.getTime() + stepMs - 1);
-    const prevPointStart = new Date(prevStart.getTime() - i * stepMs);
-    const prevPointEnd = new Date(prevStart.getTime() - 1);
-
-    const [contactsCreated, prevContactsCreated, dealsInPoint] = await Promise.all([
-      db.contact.count({
-        where: { organizationId: orgId, createdAt: { gte: pointStart, lte: pointEnd } },
-      }),
-      db.contact.count({
-        where: { organizationId: orgId, createdAt: { gte: prevPointStart, lte: prevPointEnd } },
-      }),
-      db.deal.findMany({
-        where: {
-          organizationId: orgId,
-          updatedAt: { gte: pointStart, lte: pointEnd },
-        },
-        select: { value: true, probability: true },
-      }),
-    ]);
+  for (let i = 0; i < numPoints; i++) {
+    const { label, pointStart, pointEnd } = pointRanges[i];
+    const [contactsCreated, prevContactsCreated, dealsInPoint, tasksCompleted, meetingsInPoint] = trendResults[i];
 
     const valueInPoint = dealsInPoint.reduce((sum, d) => sum + d.value, 0);
-    const weightedValueInPoint = dealsInPoint.reduce(
-      (sum, d) => sum + d.value * (d.probability / 100),
-      0
-    );
+    const weightedValueInPoint = dealsInPoint.reduce((sum, d) => sum + d.value * (d.probability / 100), 0);
 
-    const [tasksCompleted, meetingsInPoint, contactsCreatedPoint] = await Promise.all([
-      db.task.count({
-        where: {
-          organizationId: orgId,
-          status: "completed",
-          completedAt: { gte: pointStart, lte: pointEnd },
-        },
-      }),
-      db.calendarEvent.count({
-        where: {
-          organizationId: orgId,
-          type: "meeting",
-          startAt: { gte: pointStart, lte: pointEnd },
-        },
-      }),
-      db.contact.count({
-        where: { organizationId: orgId, createdAt: { gte: pointStart, lte: pointEnd } },
-      }),
-    ]);
-
-    const label = `P${numPoints - i}`;
     contacts.push({
       label,
       value: contactsCreated,
@@ -1050,7 +1044,7 @@ async function getTrendsMetrics(orgId: string, period: PeriodFilter): Promise<Tr
       label,
       tasksCompleted,
       meetings: meetingsInPoint,
-      contactsCreated: contactsCreatedPoint,
+      contactsCreated: contactsCreated,
     });
   }
 
@@ -1071,6 +1065,38 @@ async function getTrendsMetrics(orgId: string, period: PeriodFilter): Promise<Tr
   };
 }
 
+// ─── Cached Analytics Computation ───────────────────────────────────────────
+
+async function computeReportsAnalytics(
+  orgId: string,
+  period: PeriodFilter
+): Promise<Omit<ReportsAnalyticsResponse, "generatedAt">> {
+  const [executive, funnel, leadScoring, goals, activity, advisor, pipeline, contacts, trends] =
+    await Promise.all([
+      getExecutiveMetrics(orgId, period),
+      getFunnelMetrics(orgId, period),
+      getLeadScoringMetrics(orgId),
+      getGoalsMetrics(orgId, period),
+      getActivityMetrics(orgId, period),
+      getAdvisorMetrics(orgId, period),
+      getPipelineMetrics(orgId, period),
+      getContactsMetrics(orgId),
+      getTrendsMetrics(orgId, period),
+    ]);
+
+  return { executive, funnel, leadScoring, goals, activity, advisor, pipeline, contacts, trends };
+}
+
+// Cache key includes orgId and period so different orgs/periods are cached separately.
+// Cache tag enables targeted revalidation on data mutations.
+async function getCachedReportsAnalytics(orgId: string, period: PeriodFilter) {
+  return unstable_cache(
+    (o: string, p: PeriodFilter) => computeReportsAnalytics(o, p),
+    [`reports-analytics-${orgId}-${period}`],
+    { tags: [`reports-analytics-${orgId}`], revalidate: 300 }
+  )(orgId, period);
+}
+
 // ─── Main Route Handler ───────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
@@ -1081,7 +1107,7 @@ export async function GET(request: NextRequest) {
     }
     const orgId = user.organizationId;
 
-    const { searchParams } = await request.nextUrl;
+    const searchParams = await request.nextUrl.searchParams;
     const period = (searchParams.get("period") as PeriodFilter) || "month";
     const includeParam = searchParams.get("include") || "";
 
@@ -1099,43 +1125,18 @@ export async function GET(request: NextRequest) {
           "trends",
         ];
 
-    // Execute all metric queries in parallel
-    const [
-      executive,
-      funnel,
-      leadScoring,
-      goals,
-      activity,
-      advisor,
-      pipeline,
-      contacts,
-      trends,
-    ] = await Promise.all([
-      getExecutiveMetrics(orgId, period),
-      getFunnelMetrics(orgId, period),
-      getLeadScoringMetrics(orgId),
-      getGoalsMetrics(orgId, period),
-      getActivityMetrics(orgId, period),
-      getAdvisorMetrics(orgId, period),
-      getPipelineMetrics(orgId, period),
-      getContactsMetrics(orgId),
-      getTrendsMetrics(orgId, period),
-    ]);
+    // FIX 3: Use unstable_cache so identical org+period requests hit the cache
+    // instead of recomputing all 9 parallel metric queries on every request.
+    const cached = await getCachedReportsAnalytics(orgId, period);
 
-    const response: ReportsAnalyticsResponse = {
+    const responseBody: ReportsAnalyticsResponse = {
       generatedAt: new Date().toISOString(),
-      executive,
-      funnel,
-      leadScoring,
-      goals,
-      activity,
-      advisor,
-      pipeline,
-      contacts,
-      trends,
+      ...cached,
     };
 
-    return NextResponse.json(response);
+    const response = NextResponse.json(responseBody);
+    response.headers.set('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+    return response;
   } catch (error) {
     logger.error({ error }, "Failed to generate analytics report");
     return NextResponse.json(

@@ -8,6 +8,7 @@ export const CACHE_TAGS = {
   USERS: "users",
   DEALS: "deals",
   CONTACTS: "contacts",
+  REPORTS_ANALYTICS: "reports-analytics",
 } as const;
 
 export const REVALIDATION = {
@@ -58,17 +59,24 @@ export async function getCachedUsers(organizationId: string) {
 }
 
 // Invalidate cache after mutations
+// Next.js 16: revalidateTag requires profile: string | CacheLifeConfig
 export function invalidatePipelineStagesCache(organizationId: string) {
-  revalidateTag(CACHE_TAGS.PIPELINE_STAGES, 'max');
-  revalidateTag(`pipeline-stages-${organizationId}`, 'max');
+  revalidateTag(CACHE_TAGS.PIPELINE_STAGES, "max");
+  revalidateTag(`pipeline-stages-${organizationId}`, "max");
 }
 
 export function invalidateTagsCache(organizationId: string) {
-  revalidateTag(CACHE_TAGS.TAGS, 'max');
-  revalidateTag(`tags-${organizationId}`, 'max');
+  revalidateTag(CACHE_TAGS.TAGS, "max");
+  revalidateTag(`tags-${organizationId}`, "max");
 }
 
 export function invalidateUsersCache(organizationId: string) {
-  revalidateTag(CACHE_TAGS.USERS, 'max');
-  revalidateTag(`users-${organizationId}`, 'max');
+  revalidateTag(CACHE_TAGS.USERS, "max");
+  revalidateTag(`users-${organizationId}`, "max");
+}
+
+// Reports Analytics cache — call this after any mutation that affects
+// deal/contact/task/calendar/goal data for the organization.
+export function invalidateReportsAnalyticsCache(organizationId: string) {
+  revalidateTag(`reports-analytics-${organizationId}`, "max");
 }

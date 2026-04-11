@@ -52,8 +52,10 @@ export async function GET(req: NextRequest) {
       const batch = organizationIds.slice(i, i + BATCH_SIZE);
       await Promise.all(batch.map(async (organizationId) => {
         try {
-          const overdueResults = await processOverdueTasks(organizationId);
-          const dueSoonResults = await processTasksDueSoon(organizationId);
+          const [overdueResults, dueSoonResults] = await Promise.all([
+            processOverdueTasks(organizationId),
+            processTasksDueSoon(organizationId),
+          ]);
 
           totalOverdueNotifications += Array.isArray(overdueResults) ? 0 : overdueResults.count;
           totalDueSoonNotifications += Array.isArray(dueSoonResults) ? 0 : dueSoonResults.count;
@@ -63,7 +65,7 @@ export async function GET(req: NextRequest) {
       }));
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       ok: true,
       processed: new Date().toISOString(),
       results: {
@@ -72,6 +74,9 @@ export async function GET(req: NextRequest) {
         dueSoonNotifications: totalDueSoonNotifications,
       },
     });
+    response.headers.set('Cache-Control', 'no-store, must-revalidate');
+    response.headers.set('X-Cron-Job', 'true');
+    return response;
   } catch (error) {
     logger.error({ operation: 'cron:notifications', requestId, error: error instanceof Error ? error.message : String(error) }, 'Error processing notifications cron job');
     return NextResponse.json(

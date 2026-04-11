@@ -17,7 +17,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': '/Users/prueba/MaatWorkCRM/src',
+      '@': '/Users/prueba/Desktop/maatworkcrmv3/src',
     },
   },
 });
