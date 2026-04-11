@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { getUserFromSession } from "@/lib/auth-helpers";
-import { db } from "@/lib/db";
-import { cacheGet, cacheSet } from "@/lib/redis";
+import { getUserFromSession } from "@/lib/auth/auth-helpers";
+import { db } from "@/lib/db/db";
+import { cacheGet, cacheSet } from "@/lib/db/redis";
 
 export async function GET(request: Request) {
   const session = await getUserFromSession(request as any);

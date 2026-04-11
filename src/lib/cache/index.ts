@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { revalidateTag } from "next/cache";
-import { db } from "@/lib/db";
+import { db } from "@/lib/db/db";
 
 export const CACHE_TAGS = {
   PIPELINE_STAGES: "pipeline-stages",

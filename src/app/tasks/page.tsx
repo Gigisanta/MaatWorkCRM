@@ -26,7 +26,7 @@ import {
 import Link from "next/link";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
-import { useSidebar } from "@/lib/sidebar-context";
+import { useSidebar } from "@/contexts/sidebar-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -67,9 +67,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import { format, isToday, isTomorrow, isPast, parseISO, startOfDay, addDays } from "date-fns";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth } from "@/contexts/auth-context";
 import { MobileFAB } from "@/components/ui/mobile-fab";
 import { EmptyState } from "@/components/ui/empty-state";
 

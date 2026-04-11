@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth } from "@/contexts/auth-context";
 
 const goalFormSchema = z.object({
   title: z.string().min(1, "El título es requerido").max(100, "Máximo 100 caracteres"),

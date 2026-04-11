@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { hasPermission } from '@/lib/permissions';
+import { db } from '@/lib/db/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { hasPermission } from '@/lib/roles';
 import { Prisma } from '@prisma/client';
+import { logger } from '@/lib/db/logger';
 
 // GET /api/admin/users - List all users in the organization
 export async function GET(request: NextRequest) {
+  const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
+
   const currentUser = await getUserFromSession(request);
   if (!currentUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -15,7 +18,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const { searchParams } = request.nextUrl;
+  const searchParams = request.nextUrl.searchParams;
   const search = searchParams.get('search') || '';
   const role = searchParams.get('role') || '';
   const isActiveParam = searchParams.get('isActive');
@@ -69,6 +72,8 @@ export async function GET(request: NextRequest) {
 
 // POST /api/admin/users - Invite/create user directly in the organization
 export async function POST(request: NextRequest) {
+  const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
+
   const currentUser = await getUserFromSession(request);
   if (!currentUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

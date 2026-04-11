@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { taskSchema, TaskFormDataInput, TaskFormData } from '@/lib/task-utils';
+import { taskSchema, TaskFormDataInput, TaskFormData } from '@/lib/utils/task-utils';
 
 describe('taskSchema', () => {
   it('parses a valid minimal task (title only)', () => {

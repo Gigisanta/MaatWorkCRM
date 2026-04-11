@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db } from '@/lib/db/db';
 import { revalidateTag } from 'next/cache';
-import { logger } from '@/lib/logger';
-import { isValidId } from '@/lib/id-validation';
-import { getUserFromSession } from '@/lib/auth-helpers';
+import { logger } from '@/lib/db/logger';
+import { isValidId } from '@/lib/utils/id-validation';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
 
 // GET /api/deals/[id] - Get a single deal
 export async function GET(

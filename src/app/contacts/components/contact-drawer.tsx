@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { X, Edit, Trash2, Loader2, Tag as TagIcon, FileText, Sparkles, Briefcase } from "lucide-react";
+import { X, Edit, Trash2, Loader2, Tag as TagIcon, FileText, Sparkles, Briefcase, Mail, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -49,11 +49,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { usePlanningDialog } from "./usePlanningDialog";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth } from "@/contexts/auth-context";
 
 // Types
 interface Tag {
@@ -189,9 +189,7 @@ export function ContactDrawer({
     queryFn: async () => {
       const response = await fetch(`/api/contacts/${contactId}`, { credentials: 'include' });
       if (!response.ok) throw new Error("Error al cargar contacto");
-      const data = await response.json();
-      // stageHistory is not returned by the API - provide empty array for compatibility
-      return { ...data, stageHistory: data.stageHistory || [] };
+      return response.json();
     },
     enabled: !!contactId && open,
   });
@@ -342,6 +340,58 @@ export function ContactDrawer({
     updateMutation.mutate(data as ContactFormData);
   };
 
+  // Send welcome email mutation
+  const sendWelcomeEmailMutation = useMutation({
+    mutationFn: async () => {
+      if (!contact?.email || !contact?.name) throw new Error("Missing contact email or name");
+      const response = await fetch("/api/email/welcome", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          contactId: contact.id,
+          email: contact.email,
+          name: contact.name,
+        }),
+      });
+      if (!response.ok) throw new Error("Error al enviar email de bienvenida");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast.success("Email de bienvenida enviado");
+    },
+    onError: () => {
+      toast.error("Error al enviar email de bienvenida");
+    },
+  });
+
+  // Send meeting invitation mutation
+  const sendMeetingInviteMutation = useMutation({
+    mutationFn: async () => {
+      if (!contact?.email || !contact?.name) throw new Error("Missing contact email or name");
+      const response = await fetch("/api/email/meeting-invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          contactId: contact.id,
+          email: contact.email,
+          name: contact.name,
+          meetingTitle: "Reunion con MaatWork",
+          meetingDate: new Date().toISOString(),
+        }),
+      });
+      if (!response.ok) throw new Error("Error al enviar invitacion");
+      return response.json();
+    },
+    onSuccess: () => {
+      toast.success("Invitacion de reunion enviada");
+    },
+    onError: () => {
+      toast.error("Error al enviar invitacion de reunion");
+    },
+  });
+
   if (!contactId) return null;
 
   return (
@@ -488,6 +538,40 @@ export function ContactDrawer({
                         )}
                       </Button>
                     </div>
+
+                    {/* Email Actions */}
+                    {contact.email && (
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 glass border-violet-500/30 text-violet-400 hover:bg-violet-500/10"
+                          onClick={() => sendWelcomeEmailMutation.mutate()}
+                          disabled={sendWelcomeEmailMutation.isPending || sendMeetingInviteMutation.isPending}
+                        >
+                          {sendWelcomeEmailMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <Mail className="h-4 w-4 mr-2" />
+                          )}
+                          Email de bienvenida
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 glass border-violet-500/30 text-violet-400 hover:bg-violet-500/10"
+                          onClick={() => sendMeetingInviteMutation.mutate()}
+                          disabled={sendWelcomeEmailMutation.isPending || sendMeetingInviteMutation.isPending}
+                        >
+                          {sendMeetingInviteMutation.isPending ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <Calendar className="h-4 w-4 mr-2" />
+                          )}
+                          Invitar a reunion
+                        </Button>
+                      </div>
+                    )}
 
                     {isEditing ? (
                       <Form {...form}>

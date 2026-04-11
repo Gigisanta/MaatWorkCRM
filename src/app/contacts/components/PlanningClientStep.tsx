@@ -22,7 +22,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/utils';
 import { PlanningFormData } from './usePlanningDialog';
 
 const clientFormSchema = z.object({

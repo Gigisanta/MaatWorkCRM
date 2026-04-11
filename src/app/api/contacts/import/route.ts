@@ -1,9 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { hasPermission, normalizeRole } from '@/lib/permissions';
-import { logger } from '@/lib/logger';
+import { db } from '@/lib/db/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { hasPermission, normalizeRole } from '@/lib/roles';
+import { logger } from '@/lib/db/logger';
+import { Ratelimit } from '@upstash/ratelimit';
+import { getRedis } from '@/lib/db/redis';
 import * as XLSX from 'xlsx';
+
+// Rate limiter: 30 imports per minute per IP (only when Redis is available)
+const ratelimit = (() => {
+  const redis = getRedis();
+  if (!redis) return null;
+  return new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(30, '1 m'),
+    analytics: true,
+    prefix: 'ratelimit:contacts-import',
+  });
+})();
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +25,17 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   const start = Date.now();
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
+
+  // Rate limiting
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+           || request.headers.get('x-real-ip') || 'unknown';
+  if (ratelimit) {
+    const { success } = await ratelimit.limit(ip);
+    if (!success) {
+      logger.warn({ operation: 'importContactsPreview', requestId, ip }, 'Rate limited');
+      return NextResponse.json({ error: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' }, { status: 429 });
+    }
+  }
 
   try {
     logger.debug({ operation: 'importContactsPreview', requestId }, 'Starting import preview');

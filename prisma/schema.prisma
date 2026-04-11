@@ -120,6 +120,7 @@ model Organization {
   members          Member[]
   contacts         Contact[]
   pipelineStages   PipelineStage[]
+  pipelineStageHistory PipelineStageHistory[]
   deals            Deal[]
   notes            Note[]
   tasks            Task[]
@@ -183,6 +184,7 @@ model Contact {
   tags           ContactTag[]
   deals          Deal[]
   tasks          Task[]
+  stageHistory   PipelineStageHistory[]
 
   // Lead Scoring (R&D Council Revenue Initiative)
   budgetScore    Int       @default(0)   // 1-10: capacidad de presupuesto
@@ -238,6 +240,8 @@ model PipelineStage {
   // Relations
   contacts       Contact[]
   deals          Deal[]
+  historyFrom    PipelineStageHistory[] @relation("FromStage")
+  historyTo      PipelineStageHistory[] @relation("ToStage")
 
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
@@ -245,6 +249,27 @@ model PipelineStage {
 
   @@unique([id, organizationId])
   @@index([organizationId])
+}
+
+model PipelineStageHistory {
+  id              String   @id @default(cuid())
+  organizationId  String
+  contactId       String
+  fromStageId     String?
+  toStageId       String?
+  reason          String?
+  changedByUserId String?
+  changedAt       DateTime @default(now())
+
+  contact         Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  fromStage       PipelineStage? @relation("FromStage", fields: [fromStageId], references: [id])
+  toStage         PipelineStage? @relation("ToStage", fields: [toStageId], references: [id])
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([contactId])
+  @@index([fromStageId])
+  @@index([toStageId])
 }
 
 model Deal {
@@ -296,6 +321,7 @@ model Note {
 
   @@index([entityType, entityId])
   @@index([organizationId])
+  @@index([organizationId, authorId, createdAt(sort: Desc)])
 }
 
 // ============================================
@@ -391,6 +417,7 @@ model Task {
   @@index([organizationId, assignedTo])
   @@index([organizationId, status])
   @@index([assignedTo, dueDate])
+  @@index([organizationId, status, dueDate])
 }
 
 // ============================================
@@ -457,6 +484,7 @@ model TeamGoal {
 
   @@index([teamId])
   @@index([status])
+  @@index([teamId, createdAt(sort: Desc)])
 }
 
 model UserGoal {
@@ -568,6 +596,7 @@ model CalendarEvent {
   @@index([startAt, endAt])
   @@index([organizationId, startAt(sort: Desc)])
   @@index([googleEventId])
+  @@index([organizationId, teamId, startAt(sort: Desc)])
 }
 
 model CalendarSyncState {
@@ -647,6 +676,7 @@ model TrainingMaterial {
   updatedAt      DateTime @updatedAt
 
   @@index([organizationId])
+  @@index([organizationId, category, createdAt(sort: Desc)])
 }
 
 // ============================================
@@ -935,6 +965,7 @@ model Feedback {
   @@index([organizationId])
   @@index([status])
   @@index([createdAt(sort: Desc)])
+  @@index([organizationId, status, createdAt(sort: Desc)])
 }
 
 // ============================================
@@ -983,7 +1014,7 @@ model Production {
   moneda           String   @default("USD")
   fechaInicio      DateTime?
   fechaVencimiento DateTime?
-  estado           String   @default("active") // active, cancelled, expired
+  estado           String   @default("activo") // activo, cancelado, suspendido
   notas            String?
 
   // Relations
@@ -996,6 +1027,7 @@ model Production {
   @@index([organizationId])
   @@index([contactId])
   @@index([estado])
+  @@index([organizationId, estado, createdAt(sort: Desc)])
 }
 
 // ============================================

@@ -13,9 +13,9 @@ import {
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import { useDebounce } from "@/hooks/use-debounce";
-import { getRoleDisplayName } from "@/lib/auth-helpers-client";
+import { getRoleDisplayName } from "@/lib/auth/auth-helpers-client";
 import { type UserWithTeams } from "@/types/auth";
 
 // UserWithTeams with createdAt (from Prisma User model)

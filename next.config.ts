@@ -4,10 +4,7 @@ const nextConfig: NextConfig = {
   output: "standalone",
   reactStrictMode: true,
   compiler: {
-    // TODO: restore after Next.js 16 Turbopack fix for removeConsole
-    // removeConsole: process.env.NODE_ENV === "production"
-    //   ? ["log", "debug", "info"]
-    //   : [],
+    removeConsole: process.env.NODE_ENV === "production",
   },
   serverExternalPackages: ['@prisma/client', 'prisma'],
   images: {

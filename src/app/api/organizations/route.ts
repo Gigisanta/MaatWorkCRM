@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { logger } from '@/lib/logger';
-import { ensureDefaultPipelineStages } from '@/lib/pipeline-stages';
+import { db } from '@/lib/db/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { logger } from '@/lib/db/logger';
+import { ensureDefaultPipelineStages } from '@/lib/utils/pipeline-stages';
 
 // GET /api/organizations - List all organizations
 export async function GET(request: NextRequest) {

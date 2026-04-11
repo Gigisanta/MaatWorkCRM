@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useAuth } from '@/lib/auth-context';
+import { useAuth } from '@/contexts/auth-context';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { MaatWorkLogo } from '@/components/brand';

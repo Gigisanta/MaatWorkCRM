@@ -33,7 +33,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth } from "@/contexts/auth-context";
 
 const contactFormSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),

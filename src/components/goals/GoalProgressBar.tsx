@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 
 interface GoalProgressBarProps {
   progress: number; // 0-100

@@ -4,7 +4,7 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { ChevronUp, ChevronDown, Trophy, TrendingUp, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import type { AdvisorMetrics } from "../types/analytics";
 
 interface AdvisorPerformanceProps {

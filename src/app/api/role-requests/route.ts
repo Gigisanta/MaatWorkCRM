@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { logger } from '@/lib/logger';
-import { hasPermission } from '@/lib/permissions';
+import { db } from '@/lib/db/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { logger } from '@/lib/db/logger';
+import { hasPermission } from '@/lib/roles';
 
 // GET /api/role-requests - List pending requests for organization (admin/owner/developer only)
 export async function GET(request: NextRequest) {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { logger } from '@/lib/logger';
-import { getUserFromSession } from '@/lib/auth-helpers';
+import { db } from '@/lib/db/db';
+import { logger } from '@/lib/db/logger';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
 
 // POST /api/notifications/read-all - Mark all notifications as read
 export async function POST(request: NextRequest) {

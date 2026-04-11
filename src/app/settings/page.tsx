@@ -39,7 +39,7 @@ import { toast } from "sonner";
 
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
-import { useSidebar } from "@/lib/sidebar-context";
+import { useSidebar } from "@/contexts/sidebar-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,9 +75,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/lib/auth-context";
-import { canManageUsers, getRoleDisplayName, isManagerOrAdmin } from "@/lib/auth-helpers-client";
+import { cn } from "@/lib/utils/utils";
+import { useAuth } from "@/contexts/auth-context";
+import { canManageUsers, getRoleDisplayName, isManagerOrAdmin } from "@/lib/auth/auth-helpers-client";
 import { ThemeToggle, ThemePreviewCard } from "@/components/theme-toggle";
 import { FeedbackManagement } from "./components/feedback-management";
 import { TeamRequestsSection } from "./components/team-requests-section";
@@ -519,7 +519,7 @@ export default function SettingsPage() {
         newLeadsNotifications: userSettings.settings.newLeadsNotifications ?? true,
       });
     }
-  }, [userSettings]);
+  }, [userSettings, setNotificationSettings]);
 
   const handleNotificationChange = (key: string, value: boolean) => {
     const newSettings = { ...notificationSettings, [key]: value };

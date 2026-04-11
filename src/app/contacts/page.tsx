@@ -8,10 +8,10 @@ import { X, Trash2, Plus, Loader2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
-import { useSidebar } from "@/lib/sidebar-context";
+import { useSidebar } from "@/contexts/sidebar-context";
 import { toast } from "sonner";
-import { useAuth } from "@/lib/auth-context";
-import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/auth-context";
+import { cn } from "@/lib/utils/utils";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import {
 import { ContactStats } from "./components/contact-stats";
 import { ContactFilters } from "./components/contact-filters";
 import { ContactTable } from "./components/contact-table";
+import { ContactsCards } from "./components/contacts-cards";
 import { ContactPagination } from "./components/contact-pagination";
 import { ContactDrawerSkeleton } from "./components/contact-drawer-skeleton";
 import { PlanningDialogProvider } from "./components/PlanningDialogContext";
@@ -73,6 +74,7 @@ interface PipelineStagesResponse {
 export default function ContactsPage() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const { collapsed, setCollapsed } = useSidebar();
 
   // Auth loading state - show skeleton while checking auth
   if (authLoading) {
@@ -105,7 +107,6 @@ export default function ContactsPage() {
 
   const organizationId = user?.organizationId || null;
   const queryClient = useQueryClient();
-  const searchParams = useSearchParams();
 
   // State - check URL param for action=create to auto-open modal
   const [search, setSearch] = React.useState("");
@@ -113,11 +114,19 @@ export default function ContactsPage() {
   const [selectedContactId, setSelectedContactId] = React.useState<string | null>(null);
   const [editingContactTagsId, setEditingContactTagsId] = React.useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
-  const [createModalOpen, setCreateModalOpen] = React.useState(searchParams.get('action') === 'create');
+  const [createModalOpen, setCreateModalOpen] = React.useState(false);
   const [filterStage, setFilterStage] = React.useState<string>("all");
+  const [viewMode, setViewMode] = React.useState<"table" | "cards">("table");
   const [page, setPage] = React.useState(1);
   const [showTagManager, setShowTagManager] = React.useState(false);
-  const { collapsed, setCollapsed } = useSidebar();
+
+  // Set createModalOpen based on URL param after mount
+  const searchParams = useSearchParams();
+  React.useEffect(() => {
+    if (searchParams.get('action') === 'create') {
+      setCreateModalOpen(true);
+    }
+  }, [searchParams]);
 
   // Check if user can reassign contacts (should not see assigned to column in table)
   const canReassign = user?.role === 'owner' || user?.role === 'admin' || user?.role === 'developer';
@@ -397,27 +406,39 @@ export default function ContactsPage() {
               onFilterStageChange={setFilterStage}
               stages={stages}
               onTagManagerClick={() => setShowTagManager(true)}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
             />
 
-            {/* Table */}
-            <ContactTable
-              contacts={contacts}
-              selectedContacts={selectedContacts}
-              isAdvisor={isAdvisor}
-              stages={stages}
-              isLoading={isLoading}
-              error={error}
-              onRetry={refetch}
-              onToggleSelect={toggleSelect}
-              onToggleSelectAll={toggleSelectAll}
-              onContactClick={handleContactClick}
-              onUpdateStage={updateContactStage}
-              onRemoveTag={removeTag}
-              onAddTag={addTag}
-              allTags={allTags}
-              editingContactTagsId={editingContactTagsId}
-              onEditingContactTagsIdChange={setEditingContactTagsId}
-            />
+            {/* Table or Cards */}
+            {viewMode === "table" ? (
+              <ContactTable
+                contacts={contacts}
+                selectedContacts={selectedContacts}
+                isAdvisor={isAdvisor}
+                stages={stages}
+                isLoading={isLoading}
+                error={error}
+                onRetry={refetch}
+                onToggleSelect={toggleSelect}
+                onToggleSelectAll={toggleSelectAll}
+                onContactClick={handleContactClick}
+                onUpdateStage={updateContactStage}
+                onRemoveTag={removeTag}
+                onAddTag={addTag}
+                allTags={allTags}
+                editingContactTagsId={editingContactTagsId}
+                onEditingContactTagsIdChange={setEditingContactTagsId}
+              />
+            ) : (
+              <ContactsCards
+                contacts={contacts}
+                isLoading={isLoading}
+                search={search}
+                onContactClick={handleContactClick}
+                onCreateClick={() => setCreateModalOpen(true)}
+              />
+            )}
 
             {/* Pagination */}
             {pagination && (

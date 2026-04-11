@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { logger } from '@/lib/logger';
+import { db } from '@/lib/db/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { logger } from '@/lib/db/logger';
 
 // PUT /api/team-join-requests/[id] - Accept, reject, or cancel a request
 export async function PUT(

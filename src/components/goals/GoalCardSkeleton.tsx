@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 
 interface GoalCardSkeletonProps {
   className?: string;

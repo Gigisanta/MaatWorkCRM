@@ -1,7 +1,7 @@
 "use client";
 
 import { GoalProgressRingImpl } from "@/components/charts/goal-progress-ring-impl";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 
 type GoalStatus = "healthy" | "warning" | "danger" | "achieved";
 type GoalSize = "sm" | "md" | "lg";

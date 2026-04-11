@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { hasPermission } from '@/lib/permissions';
+import { db } from '@/lib/db/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { hasPermission } from '@/lib/roles';
 import { careerPlanLevelUpdateSchema } from '@/lib/schemas/career-plan';
-import { logger } from '@/lib/logger';
-import { isValidId } from '@/lib/id-validation';
+import { logger } from '@/lib/db/logger';
+import { isValidId } from '@/lib/utils/id-validation';
 
 // GET /api/career-plan/levels/[id] - Get single level
 export async function GET(

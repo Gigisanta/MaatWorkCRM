@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { hasPermission } from '@/lib/permissions';
+import { db } from '@/lib/db/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { hasPermission } from '@/lib/roles';
 import { careerPlanLevelSchema, DEFAULT_CAREER_PLAN_LEVELS } from '@/lib/schemas/career-plan';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/db/logger';
 
 // GET /api/career-plan/levels - List all levels
 export async function GET(request: NextRequest) {

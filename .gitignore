@@ -5,11 +5,17 @@
 .env.production.local
 .env.development.local
 .env.vercel
+.env.vercel-production
 
 # Logs
 *.log
 npm-debug.log*
 dev.log
+--port
+3457
+
+# Production credentials file (NEVER commit)
+production
 
 # Dependencies
 node_modules
@@ -56,6 +62,8 @@ download/*
 *.png
 
 # Backup files
+*.bak
+*.backup
 package.json.backup
 
 # Database (local dev)

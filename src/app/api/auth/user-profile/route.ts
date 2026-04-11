@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { db } from '@/lib/db';
+import { authOptions } from '@/lib/auth/auth';
+import { db } from '@/lib/db/db';
+import { logger } from '@/lib/db/logger';
 
 export async function GET() {
+  const requestId = crypto.randomUUID();
+
   try {
     const session = await getServerSession(authOptions);
 
@@ -83,7 +86,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('[UserProfile] Error:', error);
+    logger.error({ operation: 'auth:user-profile', requestId, error: error instanceof Error ? error.message : String(error) }, 'Error fetching user profile');
     return NextResponse.json({ user: null });
   }
 }

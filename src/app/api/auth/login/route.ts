@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db } from '@/lib/db/db';
 import { randomUUID } from 'crypto';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/db/logger';
 import { Ratelimit } from '@upstash/ratelimit';
-import { getRedis } from '@/lib/redis';
+import { getRedis } from '@/lib/db/redis';
 
 // Rate limiter: 5 attempts per minute per IP (lazy - only when Redis is available)
 const ratelimit = (() => {

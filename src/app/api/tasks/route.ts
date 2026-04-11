@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { normalizeRole, hasPermission } from '@/lib/permissions';
-import { logger } from '@/lib/logger';
+import { db } from '@/lib/db/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { normalizeRole, hasPermission } from '@/lib/roles';
+import { logger } from '@/lib/db/logger';
 import { taskCreateSchema } from '@/lib/schemas';
 import type { TaskCreateInput } from '@/lib/schemas';
 
@@ -189,6 +189,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    const parsed = taskCreateSchema.safeParse(body);
+    if (!parsed.success) {
+      logger.warn({ operation: 'createTask', requestId, errors: parsed.error.flatten() }, 'Invalid task data');
+      return NextResponse.json(
+        { error: parsed.error.errors[0]?.message || 'Datos inválidos' },
+        { status: 400, headers: { 'x-request-id': requestId } }
+      );
+    }
+
     const {
       organizationId,
       title,
@@ -201,17 +210,9 @@ export async function POST(request: NextRequest) {
       isRecurrent,
       recurrenceRule,
       parentTaskId,
-    } = body;
+    } = parsed.data;
 
-    if (!organizationId || !title) {
-      logger.warn({ operation: 'createTask', requestId }, 'organizationId and title are required');
-      return NextResponse.json(
-        { error: 'organizationId y title son requeridos' },
-        { status: 400, headers: { 'x-request-id': requestId } }
-      );
-    }
-
-    // Organization ownership check
+    // organizationId and title are guaranteed by the schema
     if (user.organizationId !== organizationId) {
       logger.warn({ operation: 'createTask', requestId, organizationId }, 'Access denied - org mismatch');
       return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });

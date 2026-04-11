@@ -1,8 +1,8 @@
 import { google, calendar_v3 as gcal } from 'googleapis';
-import { db } from '@/lib/db';
+import { db } from '@/lib/db/db';
 import { Prisma } from '@prisma/client';
 import { OAuth2Client } from 'google-auth-library';
-import { decryptTokenIfSet } from '@/lib/crypto';
+import { decryptTokenIfSet } from '@/lib/utils/crypto';
 import { localEventToGoogle } from './event-mapper';
 
 const MAX_EVENTS_PER_PAGE = 250;

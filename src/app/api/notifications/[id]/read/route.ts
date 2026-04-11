@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { getUserFromSession } from '@/lib/auth-helpers';
+import { db } from '@/lib/db/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { logger } from '@/lib/db/logger';
 
-// POST /api/notifications/[id]/read - Mark notification as read
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
+
   const user = await getUserFromSession(request);
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -15,10 +17,7 @@ export async function POST(
   try {
     const { id } = await params;
 
-    // Verify notification belongs to the authenticated user
-    const notification = await db.notification.findUnique({
-      where: { id },
-    });
+    const notification = await db.notification.findUnique({ where: { id } });
 
     if (!notification) {
       return NextResponse.json({ error: 'Notification not found' }, { status: 404 });
@@ -35,7 +34,10 @@ export async function POST(
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error('Error marking notification as read:', error);
-    return NextResponse.json({ error: 'Failed to mark notification as read' }, { status: 500 });
+    logger.error(
+      { operation: 'POST /api/notifications/[id]/read', requestId, error },
+      'Error marking notification as read'
+    );
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
   }
 }

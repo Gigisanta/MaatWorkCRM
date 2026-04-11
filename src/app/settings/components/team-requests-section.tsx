@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth } from "@/contexts/auth-context";
 
 interface TeamJoinRequest {
   id: string;

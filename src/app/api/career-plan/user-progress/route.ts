@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { getUserCareerProgress } from '@/lib/career-plan';
-import { logger } from '@/lib/logger';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { getUserCareerProgress } from '@/lib/services/career-plan';
+import { logger } from '@/lib/db/logger';
 
 export async function GET(request: NextRequest) {
   const start = Date.now();

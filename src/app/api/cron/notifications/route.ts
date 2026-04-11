@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { processOverdueTasks, processTasksDueSoon } from '@/lib/notifications';
+import { db } from '@/lib/db/db';
+import { processOverdueTasks, processTasksDueSoon } from '@/lib/services/notifications';
+import { logger } from '@/lib/db/logger';
 
 /**
  * GET /api/cron/notifications
@@ -11,12 +12,14 @@ import { processOverdueTasks, processTasksDueSoon } from '@/lib/notifications';
  * Security: Verifies CRON_SECRET Bearer token in Authorization header.
  */
 export async function GET(req: NextRequest) {
+  const requestId = req.headers.get('x-request-id') || crypto.randomUUID();
+
   // Verify CRON_SECRET for security (Vercel Cron sends Bearer token in Authorization header)
   const authHeader = req.headers.get('authorization');
   const cronSecret = authHeader?.replace('Bearer ', '');
 
   if (!process.env.CRON_SECRET) {
-    console.error('CRON_SECRET environment variable is not set');
+    logger.error({ operation: 'cron:notifications', requestId }, 'CRON_SECRET environment variable is not set');
     return NextResponse.json(
       { error: 'Server configuration error' },
       { status: 500 }
@@ -55,7 +58,7 @@ export async function GET(req: NextRequest) {
           totalOverdueNotifications += Array.isArray(overdueResults) ? 0 : overdueResults.count;
           totalDueSoonNotifications += Array.isArray(dueSoonResults) ? 0 : dueSoonResults.count;
         } catch (error) {
-          console.error(`Notification processing failed for org ${organizationId}:`, error);
+          logger.error({ operation: 'cron:notifications:process', organizationId, error }, `Notification processing failed for org ${organizationId}`);
         }
       }));
     }
@@ -70,7 +73,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error processing notifications cron job:', error);
+    logger.error({ operation: 'cron:notifications', requestId, error: error instanceof Error ? error.message : String(error) }, 'Error processing notifications cron job');
     return NextResponse.json(
       { error: 'Failed to process notifications', details: String(error) },
       { status: 500 }

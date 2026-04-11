@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { isValidId } from '@/lib/id-validation';
+import { db } from '@/lib/db/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { isValidId } from '@/lib/utils/id-validation';
 import { productionUpdateSchema } from '@/lib/schemas/production';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/db/logger';
 
 // GET /api/production/[id] - Get a single production
 export async function GET(

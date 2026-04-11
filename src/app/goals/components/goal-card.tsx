@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/tooltip";
 import { GoalProgressRingImpl } from "@/components/charts/goal-progress-ring-impl";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import { formatDistanceToNow, isPast, differenceInDays } from "date-fns";
 import { es } from "date-fns/locale";
 

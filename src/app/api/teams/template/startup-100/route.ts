@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { hasPermission } from '@/lib/permissions';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { hasPermission } from '@/lib/roles';
 import * as XLSX from 'xlsx';
 
 export async function GET(request: NextRequest) {

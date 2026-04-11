@@ -7,8 +7,9 @@ export const goalHealthEnum = z.enum(['on-track', 'at-risk', 'off-track', 'achie
 export const goalPrivacyEnum = z.enum(['private', 'team', 'company']);
 export const progressMethodEnum = z.enum(['automatic', 'manual']);
 
-export const userGoalCreateSchema = z.object({
+const _userGoalCreateSchemaBase = z.object({
   teamGoalId: z.string().optional().nullable(),
+  teamId: z.string().optional().nullable(),
   title: z.string().min(1, 'Title is required').max(255),
   description: z.string().optional().nullable(),
   type: goalTypeEnum,
@@ -29,7 +30,23 @@ export const userGoalCreateSchema = z.object({
   privacy: goalPrivacyEnum.optional().default('private'),
 });
 
-export const userGoalUpdateSchema = userGoalCreateSchema.partial();
+// Normalise: prefer teamGoalId, fall back to teamId (for callers that use teamId)
+const _normalise = (data: z.infer<typeof _userGoalCreateSchemaBase>) => ({
+  ...data,
+  teamGoalId: data.teamGoalId ?? data.teamId ?? null,
+});
+
+export const userGoalCreateSchema = _userGoalCreateSchemaBase.transform(_normalise);
+
+// For update schema, create a separate normalisation that handles partial data
+const _normaliseUpdate = (data: Partial<z.infer<typeof _userGoalCreateSchemaBase>>) => ({
+  ...data,
+  teamGoalId: data.teamGoalId ?? data.teamId ?? null,
+});
+
+export const userGoalUpdateSchema = _userGoalCreateSchemaBase
+  .partial()
+  .transform(_normaliseUpdate);
 
 export const userGoalQuerySchema = z.object({
   status: goalStatusEnum.optional(),

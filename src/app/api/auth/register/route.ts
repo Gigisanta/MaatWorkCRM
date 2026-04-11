@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { canBeManager } from '@/lib/permissions';
-import { logger } from '@/lib/logger';
+import { db } from '@/lib/db/db';
+import { canBeManager } from '@/lib/roles';
+import { logger } from '@/lib/db/logger';
 
 export async function POST(request: NextRequest) {
   const start = Date.now();
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Seed pipeline stages (no slug field in schema)
+    // Seed pipeline stages using createMany (avoids N sequential queries)
     const stageNames = [
       { name: 'Prospecto', order: 0, color: '#8B5CF6', isDefault: true, isActive: true },
       { name: 'Contactado', order: 1, color: '#3B82F6', isDefault: false, isActive: true },
@@ -136,11 +136,9 @@ export async function POST(request: NextRequest) {
       { name: 'Cuenta Vacía', order: 7, color: '#6B7280', isDefault: false, isActive: true },
     ];
 
-    for (const stage of stageNames) {
-      await db.pipelineStage.create({
-        data: { ...stage, organizationId: organization.id },
-      });
-    }
+    await db.pipelineStage.createMany({
+      data: stageNames.map(stage => ({ ...stage, organizationId: organization.id })),
+    });
 
     logger.info({ operation: 'register', requestId, userId: newUser.id, email: newUser.email, role: newUser.role, duration_ms: Date.now() - start }, 'Registration success');
 

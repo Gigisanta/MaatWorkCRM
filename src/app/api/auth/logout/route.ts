@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { logger } from '@/lib/logger';
+import { db } from '@/lib/db/db';
+import { logger } from '@/lib/db/logger';
 
 export async function POST(request: NextRequest) {
   const start = Date.now();

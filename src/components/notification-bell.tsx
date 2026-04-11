@@ -14,7 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth } from "@/contexts/auth-context";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
@@ -50,8 +50,10 @@ async function fetchNotifications(userId: string, organizationId: string): Promi
 
 // Mark notification as read
 async function markAsRead(notificationId: string): Promise<void> {
-  const response = await fetch(`/api/notifications/${notificationId}/read`, {
-    method: "POST",
+  const response = await fetch(`/api/notifications/${notificationId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ isRead: true }),
     credentials: 'include',
   });
   if (!response.ok) {
@@ -62,10 +64,10 @@ async function markAsRead(notificationId: string): Promise<void> {
 // Mark all notifications as read
 async function markAllAsRead(userId: string, organizationId: string): Promise<void> {
   const response = await fetch("/api/notifications/read-all", {
-    method: "POST",
+    method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    credentials: 'include',
     body: JSON.stringify({ userId, organizationId }),
+    credentials: 'include',
   });
   if (!response.ok) {
     throw new Error("Failed to mark all notifications as read");

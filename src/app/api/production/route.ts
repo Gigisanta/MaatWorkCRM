@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { hasPermission } from '@/lib/permissions';
+import { db } from '@/lib/db/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { hasPermission } from '@/lib/roles';
 import { productionCreateSchema } from '@/lib/schemas/production';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/db/logger';
 
 // Helper: get IDs of team members (advisors) under a manager
 async function getTeamMemberIds(managerId: string): Promise<string[]> {
@@ -114,6 +114,9 @@ export async function POST(request: NextRequest) {
       data: {
         ...data,
         organizationId: user.organizationId as string,
+        // Convert empty strings to null for DateTime fields
+        fechaInicio: data.fechaInicio || null,
+        fechaVencimiento: data.fechaVencimiento || null,
       },
       include: { contact: { select: { id: true, name: true, emoji: true } } },
     });

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { logger } from '@/lib/logger';
-import { checkGoalMilestones } from '@/lib/notifications';
-import { updateGoalHealthAndMilestones } from '@/lib/goal-tracking';
+import { db } from '@/lib/db/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { logger } from '@/lib/db/logger';
+import { checkGoalMilestones } from '@/lib/services/notifications';
+import { updateGoalHealthAndMilestones } from '@/lib/services/goal-tracking';
 
 // GET /api/goals/[id] - Get a single goal
 export async function GET(

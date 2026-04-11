@@ -1,4 +1,4 @@
-import { hasPermission, normalizeRole, canBeManager } from '../permissions';
+import { hasPermission, normalizeRole, canBeManager } from '../auth/permissions';
 
 describe('normalizeRole', () => {
   it('normalizes dueno to owner', () => {

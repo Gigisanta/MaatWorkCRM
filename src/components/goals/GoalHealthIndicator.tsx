@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckCircle2, AlertTriangle, XCircle, Sparkles } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 
 type HealthStatus = "on-track" | "at-risk" | "off-track" | "achieved";
 

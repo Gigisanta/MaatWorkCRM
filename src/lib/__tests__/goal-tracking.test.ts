@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { trackGoalProgress, calculateGoalHealth } from '@/lib/goal-tracking';
+import { trackGoalProgress, calculateGoalHealth } from '@/lib/services/goal-tracking';
 
 // Mock dependencies
 vi.mock('@/lib/db', () => ({

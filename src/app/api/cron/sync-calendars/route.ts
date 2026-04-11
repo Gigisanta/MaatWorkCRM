@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db } from '@/lib/db/db';
 import { calendarSyncEngine } from '@/lib/google-calendar/sync-engine';
+import { logger } from '@/lib/db/logger';
 
 export async function GET(request: NextRequest) {
+  const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
+
   // Vercel Cron sends Bearer token in Authorization header
   const authHeader = request.headers.get('authorization');
   const cronSecret = authHeader?.replace('Bearer ', '');
 
   if (!process.env.CRON_SECRET) {
-    console.error('CRON_SECRET environment variable is not set');
+    logger.error({ operation: 'cron:sync-calendars', requestId }, 'CRON_SECRET environment variable is not set');
     return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
   }
 
@@ -82,8 +85,9 @@ export async function GET(request: NextRequest) {
       results,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
-    console.error('Calendar sync cron error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    logger.error({ operation: 'cron:sync-calendars', requestId, error: message }, 'Calendar sync cron error');
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

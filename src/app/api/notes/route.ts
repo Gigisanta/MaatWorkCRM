@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { logger } from '@/lib/logger';
-import { getUserFromSession } from '@/lib/auth-helpers';
+import { db } from '@/lib/db/db';
+import { logger } from '@/lib/db/logger';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
 
 // GET /api/notes - List notes by entityType and entityId
 export async function GET(request: NextRequest) {

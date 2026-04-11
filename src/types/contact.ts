@@ -94,8 +94,9 @@ export interface ContactListItem {
   assignedTo: string | null;
   createdAt: Date;
   updatedAt: Date;
-  tags: Pick<Tag, 'id' | 'name' | 'color' | 'icon'>[];
+  tags: (Pick<Tag, 'id' | 'name' | 'color'> & { icon?: string | null })[];
   pipelineStage: Pick<PipelineStage, 'id' | 'name' | 'color' | 'order'> | null;
   assignedUser: Pick<User, 'id' | 'name' | 'email' | 'image'> | null;
   interactionCount: number;
+  lastInteractionDate: string | null;
 }

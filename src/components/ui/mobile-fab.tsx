@@ -3,7 +3,7 @@
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import type { LucideIcon } from "lucide-react";
 
 export interface FABAction {

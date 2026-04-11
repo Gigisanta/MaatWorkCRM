@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { hasPermission, normalizeRole } from '@/lib/permissions';
+import { db } from '@/lib/db/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { hasPermission, normalizeRole } from '@/lib/roles';
 import { contactUpdateSchema } from '@/lib/schemas';
 import type { ContactUpdateInput } from '@/lib/schemas';
 import { revalidateTag } from 'next/cache';
-import { logger } from '@/lib/logger';
-import { isValidId } from '@/lib/id-validation';
+import { logger } from '@/lib/db/logger';
+import { isValidId } from '@/lib/utils/id-validation';
 
 // Helper to check if targetUserId is in the team managed by managerId
 async function isInTeam(targetUserId: string, managerId: string): Promise<boolean> {
@@ -82,6 +82,17 @@ export async function GET(
           include: {
             assignedUser: {
               select: { id: true, name: true },
+            },
+          },
+        },
+        stageHistory: {
+          orderBy: { changedAt: 'desc' },
+          include: {
+            fromStage: {
+              select: { id: true, name: true, color: true },
+            },
+            toStage: {
+              select: { id: true, name: true, color: true },
             },
           },
         },

@@ -11,8 +11,8 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { cn } from '@/lib/utils';
-import { useAuth } from '@/lib/auth-context';
+import { cn } from '@/lib/utils/utils';
+import { useAuth } from '@/contexts/auth-context';
 import {
   Select,
   SelectContent,

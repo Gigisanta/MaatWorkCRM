@@ -13,7 +13,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import type { ExecutiveMetrics } from "../types/analytics";
 
 // Lazy ring chart with dynamic import fallback

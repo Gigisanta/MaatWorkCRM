@@ -7,13 +7,13 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
-import { useSidebar } from "@/lib/sidebar-context";
-import { useAuth } from "@/lib/auth-context";
+import { useSidebar } from "@/contexts/sidebar-context";
+import { useAuth } from "@/contexts/auth-context";
 import { useQuery } from "@tanstack/react-query";
 import { format, isToday, isTomorrow, formatDistanceToNow } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import { MobileFAB } from "@/components/ui/mobile-fab";
-import { useQuickActions } from "@/lib/quick-actions-context";
+import { useQuickActions } from "@/contexts/quick-actions-context";
 
 const kpiConfig = [
   {
@@ -123,21 +123,6 @@ function DashboardData({ user }: { user: any }) {
     staleTime: 60 * 1000,
   });
 
-  // Keep deals list query for pipeline funnel (deprecated - contacts are now used)
-  const { data: dealsData } = useQuery({
-    queryKey: ["dashboard-deals", user?.organizationId],
-    queryFn: async () => {
-      if (!user?.organizationId) return { deals: [] };
-      const response = await fetch(
-        `/api/deals?organizationId=${user.organizationId}&limit=1000`,
-        { credentials: 'include' }
-      );
-      if (!response.ok) throw new Error("Failed to fetch deals");
-      return response.json();
-    },
-    enabled: !!user?.organizationId,
-  });
-
   // Contacts query for pipeline funnel (replaces deals)
   const { data: contactsData } = useQuery({
     queryKey: ["dashboard-contacts", user?.organizationId],
@@ -212,11 +197,9 @@ function DashboardData({ user }: { user: any }) {
   });
   const calendarEvents = calendarEventsData?.events || [];
 
-  // Keep deals list for pipeline funnel (deprecated - use contacts instead)
-  const deals = dealsData?.deals || [];
   const inactiveStageNames = ["Caído", "Caida", "Cuenta vacia", "Cuenta Vacía"];
 
-  // Use contacts instead of deals for pipeline summary
+  // Use contacts for pipeline summary
   const contacts = contactsData?.contacts || [];
   const activeDeals = React.useMemo(() =>
     contacts.filter((contact: any) => {

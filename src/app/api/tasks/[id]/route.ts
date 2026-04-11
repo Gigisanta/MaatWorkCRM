@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { logger } from '@/lib/logger';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { hasPermission, normalizeRole } from '@/lib/permissions';
-import { isValidId } from '@/lib/id-validation';
+import { db } from '@/lib/db/db';
+import { logger } from '@/lib/db/logger';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { hasPermission, normalizeRole } from '@/lib/roles';
+import { isValidId } from '@/lib/utils/id-validation';
 
 // GET /api/tasks/[id] - Get a single task
 export async function GET(

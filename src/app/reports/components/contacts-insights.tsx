@@ -4,7 +4,7 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { AlertTriangle, Users, TrendingUp, UserX } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import LazyBarChart from "@/components/charts/lazy-bar-chart";
 import LazyPieChart from "@/components/charts/lazy-pie-chart";
 import type { ContactsMetrics } from "../types/analytics";

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { db } from '@/lib/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { db } from '@/lib/db/db';
+import { logger } from '@/lib/db/logger';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -16,8 +17,19 @@ interface UserSettings {
   theme: 'light' | 'dark' | 'system';
 }
 
+const DEFAULT_SETTINGS: UserSettings = {
+  emailNotifications: true,
+  pushNotifications: true,
+  taskReminders: true,
+  goalProgressAlerts: true,
+  newLeadsNotifications: true,
+  theme: 'dark',
+};
+
 // GET /api/users/[id]/settings - Get user settings
 export async function GET(request: NextRequest, { params }: RouteParams) {
+  const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
+
   const user = await getUserFromSession(request);
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -26,29 +38,22 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
 
-    const user = await db.user.findUnique({
+    const dbUser = await db.user.findUnique({
       where: { id },
+      select: { id: true, settings: true },
     });
 
-    if (!user) {
+    if (!dbUser) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
     }
 
     // Parse stored settings or return defaults
-    let settings: UserSettings = {
-      emailNotifications: true,
-      pushNotifications: true,
-      taskReminders: true,
-      goalProgressAlerts: true,
-      newLeadsNotifications: true,
-      theme: 'dark',
-    };
+    let settings: UserSettings = { ...DEFAULT_SETTINGS };
 
-    // @ts-ignore - settings field exists in database
-    if (user.settings) {
+    if (dbUser.settings && typeof dbUser.settings === 'string') {
       try {
-        // @ts-ignore
-        settings = { ...settings, ...JSON.parse(user.settings as string) };
+        const parsed = JSON.parse(dbUser.settings) as Partial<UserSettings>;
+        settings = { ...settings, ...parsed };
       } catch {
         // Keep defaults if parsing fails
       }
@@ -56,13 +61,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ settings });
   } catch (error) {
-    console.error('Error fetching user settings:', error);
+    logger.error({ operation: 'users:settings:get', requestId, error: error instanceof Error ? error.message : String(error) }, 'Error fetching user settings');
     return NextResponse.json({ error: 'Error al obtener configuración' }, { status: 500 });
   }
 }
 
 // PUT /api/users/[id]/settings - Update user settings
 export async function PUT(request: NextRequest, { params }: RouteParams) {
+  const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
+
   const sessionUser = await getUserFromSession(request);
   if (!sessionUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -87,18 +94,17 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
     }
 
-    // Update user settings using Prisma's typed API
+    // Update user settings
     await db.user.update({
       where: { id },
       data: {
-        // @ts-ignore - settings field exists in database schema
-        settings: JSON.stringify(settings),
+        settings: JSON.stringify(settings) as unknown as Record<string, unknown>,
       },
     });
 
     return NextResponse.json({ settings });
   } catch (error) {
-    console.error('Error updating user settings:', error);
+    logger.error({ operation: 'users:settings:put', requestId, error: error instanceof Error ? error.message : String(error) }, 'Error updating user settings');
     return NextResponse.json({ error: 'Error al actualizar configuración' }, { status: 500 });
   }
 }

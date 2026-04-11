@@ -4,7 +4,7 @@ import * as React from "react"
 import * as SelectPrimitive from "@radix-ui/react-select"
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils/utils"
 
 function Select({
   ...props
@@ -73,8 +73,9 @@ function SelectContent({
         <SelectPrimitive.Viewport
           className={cn(
             "p-1",
-            position === "popper" &&
-              "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] scroll-my-1"
+            position === "popper"
+              ? "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] scroll-my-1"
+              : "min-h-[120px] w-full scroll-my-1"
           )}
         >
           {children}
@@ -119,6 +120,19 @@ function SelectItem({
       </span>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
     </SelectPrimitive.Item>
+  )
+}
+
+function SelectItemText({
+  className,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.ItemText>) {
+  return (
+    <SelectPrimitive.ItemText
+      data-slot="select-item-text"
+      className={cn("flex items-center gap-1", className)}
+      {...props}
+    />
   )
 }
 
@@ -176,6 +190,7 @@ export {
   SelectContent,
   SelectGroup,
   SelectItem,
+  SelectItemText,
   SelectLabel,
   SelectScrollDownButton,
   SelectScrollUpButton,

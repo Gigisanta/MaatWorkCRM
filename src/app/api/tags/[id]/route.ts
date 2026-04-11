@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { getUserFromSession } from '@/lib/auth-helpers';
+import { db } from '@/lib/db/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
 import { invalidateTagsCache } from '@/lib/cache';
-import { logger } from '@/lib/logger';
-import { isValidId } from '@/lib/id-validation';
+import { logger } from '@/lib/db/logger';
+import { isValidId } from '@/lib/utils/id-validation';
 
 // PUT /api/tags/[id] - Update a tag
 export async function PUT(

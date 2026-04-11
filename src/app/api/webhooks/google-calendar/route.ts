@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db } from '@/lib/db/db';
 import { calendarSyncEngine } from '@/lib/google-calendar/sync-engine';
+import { logger } from '@/lib/db/logger';
 
 export async function GET(request: NextRequest) {
   const { searchParams }: { searchParams: URLSearchParams } = await request.nextUrl;
@@ -16,6 +17,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
+
   try {
     const resourceState = request.headers.get('x-goog-resource-state');
     const channelId = request.headers.get('x-goog-channel-id');
@@ -52,12 +55,12 @@ export async function POST(request: NextRequest) {
       calendarSyncEngine.deltaSync(
         webhook.userId,
         membership.organizationId
-      ).catch((err: Error) => console.error('[Webhook] Sync failed:', err.message));
+      ).catch((err: Error) => logger.error({ operation: 'webhook:sync', requestId, error: err.message }, 'Sync failed'));
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[Webhook] Error:', error);
+    logger.error({ operation: 'webhook:post', requestId, error: error instanceof Error ? error.message : String(error) }, 'Webhook error');
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }

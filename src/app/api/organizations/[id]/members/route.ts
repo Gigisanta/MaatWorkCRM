@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { db } from '@/lib/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { db } from '@/lib/db/db';
+import { logger } from '@/lib/db/logger';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -8,6 +9,8 @@ interface RouteParams {
 
 // GET /api/organizations/[id]/members - List organization members
 export async function GET(request: NextRequest, { params }: RouteParams) {
+  const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
+
   const user = await getUserFromSession(request);
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -43,13 +46,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ members });
   } catch (error) {
-    console.error('Error fetching members:', error);
+    logger.error({ operation: 'organizations:members:get', requestId, error: error instanceof Error ? error.message : String(error) }, 'Error fetching members');
     return NextResponse.json({ error: 'Error al obtener miembros' }, { status: 500 });
   }
 }
 
 // POST /api/organizations/[id]/members - Invite/add member to organization
 export async function POST(request: NextRequest, { params }: RouteParams) {
+  const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
+
   const user = await getUserFromSession(request);
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -138,13 +143,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ member });
   } catch (error) {
-    console.error('Error adding member:', error);
+    logger.error({ operation: 'organizations:members:post', requestId, error: error instanceof Error ? error.message : String(error) }, 'Error adding member');
     return NextResponse.json({ error: 'Error al agregar miembro' }, { status: 500 });
   }
 }
 
 // DELETE /api/organizations/[id]/members - Remove member from organization
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
+
   const user = await getUserFromSession(request);
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -208,7 +215,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error removing member:', error);
+    logger.error({ operation: 'organizations:members:delete', requestId, error: error instanceof Error ? error.message : String(error) }, 'Error removing member');
     return NextResponse.json({ error: 'Error al eliminar miembro' }, { status: 500 });
   }
 }

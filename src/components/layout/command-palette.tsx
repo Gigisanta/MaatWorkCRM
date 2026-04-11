@@ -33,7 +33,7 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth } from "@/contexts/auth-context";
 
 // Types
 interface Contact {
@@ -106,7 +106,11 @@ function getRecentItems(): RecentItem[] {
   if (typeof window === "undefined") return [];
   try {
     const stored = localStorage.getItem(RECENT_ITEMS_KEY);
-    return stored ? JSON.parse(stored) : [];
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) return parsed as RecentItem[];
+    }
+    return [];
   } catch {
     return [];
   }

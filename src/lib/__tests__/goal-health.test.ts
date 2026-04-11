@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { calculateGoalHealth, getGoalProgressDetails } from '@/lib/goal-health';
+import { calculateGoalHealth, getGoalProgressDetails } from '@/lib/services/goal-health';
 
 describe('goal-health', () => {
   // Fixed base time for reproducible tests: April 8, 2026 12:00 UTC

@@ -36,7 +36,7 @@ import {
 } from "lucide-react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
-import { useSidebar } from "@/lib/sidebar-context";
+import { useSidebar } from "@/contexts/sidebar-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,10 +56,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth } from "@/contexts/auth-context";
 import {
   usePipelineData,
   useMoveContact,

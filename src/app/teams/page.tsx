@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
-import { useSidebar } from "@/lib/sidebar-context";
+import { useSidebar } from "@/contexts/sidebar-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -84,8 +84,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/lib/auth-context";
+import { cn } from "@/lib/utils/utils";
+import { useAuth } from "@/contexts/auth-context";
 import { toast } from "sonner";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { canCreateTeam } from "@/lib/roles";

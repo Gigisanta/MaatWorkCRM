@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db } from '@/lib/db/db';
 import {
   notifyGoalBehindSchedule,
   notifyGoalCompleted,
   createNotificationForUsers,
-} from '@/lib/notifications';
-import { calculateGoalHealth } from '@/lib/goal-health';
+} from '@/lib/services/notifications';
+import { calculateGoalHealth } from '@/lib/services/goal-health';
+import { logger } from '@/lib/db/logger';
 
 /**
  * GET /api/cron/goals
@@ -23,7 +24,7 @@ export async function GET(req: NextRequest) {
   const cronSecret = authHeader?.replace('Bearer ', '');
 
   if (!process.env.CRON_SECRET) {
-    console.error('CRON_SECRET environment variable is not set');
+    logger.error({ operation: 'cron:goals', requestId }, 'CRON_SECRET environment variable is not set');
     return NextResponse.json(
       { error: 'Server configuration error' },
       { status: 500 }
@@ -61,6 +62,22 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    // Pre-fetch ALL warning notifications from the last 24h in one query (avoids N+1)
+    const recentWarningCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const recentWarnings = await db.notification.findMany({
+      where: {
+        type: 'warning',
+        title: { in: ['Objetivo fuera de trayectoria', 'Objetivo en riesgo'] },
+        createdAt: { gte: recentWarningCutoff },
+      },
+      select: { title: true, actionUrl: true },
+    });
+
+    // Build a Set of "{title}|{actionUrl}" for O(1) lookup
+    const sentWarnings = new Set(
+      recentWarnings.map(n => `${n.title}|${n.actionUrl}`)
+    );
+
     let teamGoalsProcessed = 0;
     let atRiskNotifications = 0;
     let offTrackNotifications = 0;
@@ -69,16 +86,8 @@ export async function GET(req: NextRequest) {
     for (const goal of teamGoals) {
       teamGoalsProcessed++;
 
-      const health = calculateGoalHealth({
-        startDate: goal.startDate,
-        endDate: goal.endDate,
-        currentValue: goal.currentValue,
-        targetValue: goal.targetValue,
-      });
-
       // Check if goal is completed
       if (goal.currentValue >= goal.targetValue) {
-        // Only notify if not already completed
         if (goal.status !== 'completed') {
           await notifyGoalCompleted({
             goalId: goal.id,
@@ -87,8 +96,6 @@ export async function GET(req: NextRequest) {
             organizationId: goal.team.organizationId,
           });
           completedNotifications++;
-
-          // Update goal status to completed
           await db.teamGoal.update({
             where: { id: goal.id },
             data: { status: 'completed' },
@@ -97,7 +104,6 @@ export async function GET(req: NextRequest) {
         continue;
       }
 
-      // Calculate expected vs actual progress for at-risk/off-track detection
       const startDate = goal.startDate || today;
       const endDate = goal.endDate!;
       const totalDays = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
@@ -109,25 +115,13 @@ export async function GET(req: NextRequest) {
 
       const expectedProgress = (daysElapsed / totalDays) * 100;
       const actualProgress = (goal.currentValue / goal.targetValue) * 100;
-
-      // Thresholds for notification (same as task description)
-      // at-risk: expected > actual + 10%
-      // off-track: expected > actual + 25%
       const isAtRisk = expectedProgress > actualProgress + 10;
       const isOffTrack = expectedProgress > actualProgress + 25;
 
       if (isOffTrack) {
-        // Check for existing off-track notification (within last 24h)
-        const existingNotification = await db.notification.findFirst({
-          where: {
-            type: 'warning',
-            title: 'Objetivo fuera de trayectoria',
-            actionUrl: `/teams?team=${goal.teamId}`,
-            createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
-          },
-        });
-
-        if (!existingNotification) {
+        // O(1) lookup in pre-fetched notification set
+        const warningKey = `Objetivo fuera de trayectoria|/teams?team=${goal.teamId}`;
+        if (!sentWarnings.has(warningKey)) {
           const userIds = goal.team.members.map(m => m.userId);
           await createNotificationForUsers(userIds, {
             organizationId: goal.team.organizationId,
@@ -139,17 +133,8 @@ export async function GET(req: NextRequest) {
           offTrackNotifications++;
         }
       } else if (isAtRisk) {
-        // Check for existing at-risk notification (within last 24h)
-        const existingNotification = await db.notification.findFirst({
-          where: {
-            type: 'warning',
-            title: 'Objetivo en riesgo',
-            actionUrl: `/teams?team=${goal.teamId}`,
-            createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
-          },
-        });
-
-        if (!existingNotification) {
+        const warningKey = `Objetivo en riesgo|/teams?team=${goal.teamId}`;
+        if (!sentWarnings.has(warningKey)) {
           await notifyGoalBehindSchedule({
             goalId: goal.id,
             goalTitle: goal.title,
@@ -162,11 +147,14 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    console.log(`[Cron:goals] Processed ${teamGoalsProcessed} team goals`, {
+    logger.info({
+      operation: 'cron:goals',
+      requestId,
+      teamGoalsProcessed,
       atRiskNotifications,
       offTrackNotifications,
       completedNotifications,
-    });
+    }, `Processed ${teamGoalsProcessed} team goals`);
 
     return NextResponse.json({
       ok: true,
@@ -179,7 +167,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error processing goals cron job:', error);
+    logger.error({ operation: 'cron:goals', requestId, error: error instanceof Error ? error.message : String(error) }, 'Error processing goals cron job');
     return NextResponse.json(
       { error: 'Failed to process goals cron job', details: String(error) },
       { status: 500 }

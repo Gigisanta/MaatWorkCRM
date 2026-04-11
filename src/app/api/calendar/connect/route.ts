@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { db } from '@/lib/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { db } from '@/lib/db/db';
 import { calendarSyncEngine } from '@/lib/google-calendar/sync-engine';
+import { logger } from '@/lib/db/logger';
 
 // POST /api/calendar/connect — Trigger Google OAuth flow or re-sync if already connected
 export async function POST(request: NextRequest) {
+  const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
+
   const user = await getUserFromSession(request);
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -26,10 +29,10 @@ export async function POST(request: NextRequest) {
       // Full re-sync
       const { synced } = await calendarSyncEngine.initialSync(user.id, membership.organizationId);
       return NextResponse.json({ success: true, action: 'resync', synced });
-    } catch (error: any) {
-      // If tokens are expired/invalid, redirect to OAuth to get fresh tokens
-      const errorCode = error?.code || error?.status || '';
-      const errorResponse = error?.response?.data;
+    } catch (error: unknown) {
+      const err = error as { message?: string; code?: string | number; status?: string | number; response?: { data?: { error?: string; error_description?: string } } };
+      const errorCode = err?.code || err?.status || '';
+      const errorResponse = err?.response?.data;
       const googleError = errorResponse?.error || '';
       const googleErrorDescription = errorResponse?.error_description || '';
 
@@ -41,8 +44,8 @@ export async function POST(request: NextRequest) {
         googleError === 'token_revoked' ||
         googleError === 'access_denied' ||
         googleErrorDescription?.includes('token') ||
-        error?.message?.includes('invalid_grant') ||
-        error?.message?.includes('token_revoked') ||
+        err?.message?.includes('invalid_grant') ||
+        err?.message?.includes('token_revoked') ||
         (errorCode === 400 && googleError === 'invalid_client');
 
       if (isTokenError) {
@@ -60,14 +63,9 @@ export async function POST(request: NextRequest) {
       }
 
       // Log the actual error for debugging
-      console.error('[CalendarConnect] Re-sync failed:', {
-        message: error?.message,
-        code: errorCode,
-        googleError,
-        googleErrorDescription,
-      });
+      logger.error({ operation: 'calendar:connect:resync', requestId, userId: user.id, error: err?.message, code: errorCode, googleError, googleErrorDescription }, 'Re-sync failed');
 
-      return NextResponse.json({ error: error?.message || 'Re-sync failed' }, { status: 500 });
+      return NextResponse.json({ error: err?.message || 'Re-sync failed' }, { status: 500 });
     }
   }
 

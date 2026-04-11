@@ -1,8 +1,9 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { logger } from '@/lib/logger';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { trackGoalProgress } from '@/lib/goal-tracking';
+import { db } from '@/lib/db/db';
+import { logger } from '@/lib/db/logger';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { trackGoalProgress } from '@/lib/services/goal-tracking';
 
 // GET /api/calendar-events - List events with date range filter
 export async function GET(request: NextRequest) {
@@ -91,7 +92,7 @@ export async function GET(request: NextRequest) {
           },
         },
         skip,
-        take: 250,
+        take: limit,
         orderBy: { startAt: 'asc' },
       }),
       db.calendarEvent.count({ where }),

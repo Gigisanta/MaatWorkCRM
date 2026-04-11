@@ -8,8 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/lib/auth-context';
-import { getAvailableRoles, getRoleDisplayName } from '@/lib/auth-helpers-client';
+import { useAuth } from '@/contexts/auth-context';
+import { getAvailableRoles, getRoleDisplayName } from '@/lib/auth/auth-helpers-client';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import {

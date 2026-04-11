@@ -10,7 +10,7 @@ import {
 } from "recharts"
 import * as RechartsPrimitive from "recharts"
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils/utils"
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const
@@ -76,6 +76,16 @@ function ChartContainer({
   )
 }
 
+// ChartStyle generates CSS custom properties from a ChartConfig prop.
+//
+// SECURITY NOTE: The config object is always developer-defined (passed as a static
+// object literal from parent components). It is NEVER derived from user input.
+// The color values are used only as CSS variable values, which are safely escaped
+// by the browser. Even if a color string contained characters like quotes or
+// semicolons, they would be treated as literal CSS value content, not HTML or JS.
+// If this component is ever extended to accept config from user-provided data
+// (e.g., a "custom theme" feature), strict validation (e.g., a hex color regex)
+// must be added here before passing values to dangerouslySetInnerHTML.
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(
     ([, config]) => config.theme || config.color

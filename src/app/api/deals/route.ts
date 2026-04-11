@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db } from '@/lib/db/db';
 import { revalidateTag } from 'next/cache';
-import { logger } from '@/lib/logger';
-import { getUserFromSession } from '@/lib/auth-helpers';
+import { logger } from '@/lib/db/logger';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
 import { dealCreateSchema } from '@/lib/schemas/deal';
 import type { DealCreateInput } from '@/lib/schemas/deal';
-import { trackGoalProgress } from '@/lib/goal-tracking';
+import { trackGoalProgress } from '@/lib/services/goal-tracking';
 
 export const revalidate = 300;
 

@@ -10,8 +10,8 @@ import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { AppHeader } from '@/components/layout/app-header';
-import { useSidebar } from '@/lib/sidebar-context';
-import { useAuth } from '@/lib/auth-context';
+import { useSidebar } from '@/contexts/sidebar-context';
+import { useAuth } from '@/contexts/auth-context';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -56,7 +56,7 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/utils';
 import { CreateProductionDialog } from './components/create-production-dialog';
 import { productionEstados } from '@/lib/schemas/production';
 

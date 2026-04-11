@@ -19,7 +19,7 @@ import {
 import { toast } from "sonner";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
-import { useSidebar } from "@/lib/sidebar-context";
+import { useSidebar } from "@/contexts/sidebar-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,8 +29,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/lib/auth-context";
+import { cn } from "@/lib/utils/utils";
+import { useAuth } from "@/contexts/auth-context";
 import {
   startOfWeek,
   startOfMonth,

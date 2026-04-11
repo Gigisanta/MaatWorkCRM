@@ -24,7 +24,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { taskSchema, type TaskFormData, type TaskFormDataInput, createTask } from "@/lib/task-utils";
+import { taskSchema, type TaskFormData, type TaskFormDataInput, createTask } from "@/lib/utils/task-utils";
+import { z } from "zod";
 
 interface CreateTaskDialogProps {
   open: boolean;
@@ -42,7 +43,7 @@ export function CreateTaskDialog({ open, onOpenChange }: CreateTaskDialogProps) 
     setValue,
     watch,
   } = useForm<TaskFormDataInput>({
-    resolver: zodResolver(taskSchema) as any,
+    resolver: zodResolver(taskSchema),
     defaultValues: {
       title: "",
       description: "",
@@ -136,7 +137,7 @@ export function CreateTaskDialog({ open, onOpenChange }: CreateTaskDialogProps) 
               <Label className="text-white">Prioridad</Label>
               <Select
                 defaultValue="medium"
-                onValueChange={(value) => setValue("priority", value as TaskFormData["priority"])}
+                onValueChange={(value) => setValue("priority", value as TaskFormDataInput["priority"])}
               >
                 <SelectTrigger className="bg-[#0E0F12]/80 backdrop-blur-sm border border-white/8 rounded-xl bg-white/5 text-white">
                   <SelectValue placeholder="Prioridad" />

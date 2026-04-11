@@ -4,7 +4,7 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { CheckCircle, Clock, AlertTriangle, ListTodo, Calendar, TrendingUp, TrendingDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import LazyLineChart from "@/components/charts/lazy-line-chart";
 import type { ActivityMetrics } from "../types/analytics";
 

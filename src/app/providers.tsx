@@ -5,7 +5,7 @@ import { Providers } from '@/components/providers';
 import { SkipLink } from '@/components/ui/skip-link';
 import { Toaster } from '@/components/ui/sonner';
 import { QuickActionsModals } from '@/components/quick-actions-modals';
-import { SidebarProvider } from '@/lib/sidebar-context';
+import { SidebarProvider } from '@/contexts/sidebar-context';
 
 export function ProvidersWrapper({ children }: { children: React.ReactNode }) {
   return (

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -140,10 +140,10 @@ async function fetchUsers(organizationId: string): Promise<User[]> {
 
 // Move deal to another stage
 async function moveDeal(dealId: string, data: { toStageId: string; organizationId: string }): Promise<Deal> {
-  const response = await fetch(`/api/deals/${dealId}/move`, {
-    method: 'POST',
+  const response = await fetch(`/api/deals/${dealId}`, {
+    method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
+    body: JSON.stringify({ stageId: data.toStageId }),
   });
   if (!response.ok) throw new Error('Failed to move deal');
   return response.json();
@@ -154,7 +154,7 @@ async function moveContact(contactId: string, data: { pipelineStageId: string })
   const response = await fetch(`/api/contacts/${contactId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
+    body: JSON.stringify({ stageId: data.pipelineStageId }),
   });
   if (!response.ok) throw new Error('Failed to move contact');
   return response.json();
@@ -172,9 +172,9 @@ async function createDeal(data: {
   assignedTo?: string;
 }): Promise<Deal> {
   const response = await fetch('/api/deals', {
-    method: 'POST',
+    method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
+    body: JSON.stringify({ stageId: data.stageId }),
   });
   if (!response.ok) throw new Error('Failed to create deal');
   return response.json();
@@ -193,7 +193,7 @@ async function updateDeal(dealId: string, data: {
   const response = await fetch(`/api/deals/${dealId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
+    body: JSON.stringify({ stageId: data.stageId }),
   });
   if (!response.ok) throw new Error('Failed to update deal');
   return response.json();
@@ -252,7 +252,7 @@ export function usePipelineData(organizationId: string = DEFAULT_ORG_ID) {
   const stagesQuery = useStages(organizationId);
   const contactsQuery = useContactsWithProducts(organizationId);
 
-  const stagesWithContacts: StageWithContacts[] = React.useMemo(() => {
+  const stagesWithContacts: StageWithContacts[] = useMemo(() => {
     if (!stagesQuery.data || !contactsQuery.data) return [];
 
     return stagesQuery.data.map(stage => ({

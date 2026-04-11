@@ -1,7 +1,8 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { db } from '@/lib/db';
-import { logger } from '@/lib/logger';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { db } from '@/lib/db/db';
+import { logger } from '@/lib/db/logger';
 
 // GET /api/sessions - Get active sessions for current user
 export async function GET(request: NextRequest) {

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { signIn } from 'next-auth/react';
-import { useAuth } from '@/lib/auth-context';
+import { useAuth } from '@/contexts/auth-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Link2, Link2Off, Key, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { hasPermission, normalizeRole } from '@/lib/permissions';
-import { logger } from '@/lib/logger';
+import { db } from '@/lib/db/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { hasPermission, normalizeRole } from '@/lib/roles';
+import { logger } from '@/lib/db/logger';
 
 // POST /api/teams/[id]/members - Add a member to a team
 export async function POST(

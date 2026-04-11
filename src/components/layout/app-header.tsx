@@ -23,8 +23,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CommandPalette } from "./command-palette";
 import { NotificationBell } from "@/components/notification-bell";
-import { useAuth } from "@/lib/auth-context";
-import { useQuickActions } from "@/lib/quick-actions-context";
+import { useAuth } from "@/contexts/auth-context";
+import { useQuickActions } from "@/contexts/quick-actions-context";
 import { motion } from "framer-motion";
 import Link from "next/link";
 

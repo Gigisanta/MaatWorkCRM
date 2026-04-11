@@ -24,7 +24,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Card } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/utils';
 import { toast } from 'sonner';
 import { Plus, Trash2, Edit2, PieChart, AlertCircle } from 'lucide-react';
 import { PlanningFormData } from './usePlanningDialog';

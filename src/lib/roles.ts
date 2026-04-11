@@ -1,10 +1,10 @@
 // Canonical role and permission definitions for MaatWork CRM
 // All role and permission utilities should be imported from this file
 
-import { hasPermission as _hasPermission, normalizeRole as _normalizeRole, canBeManager as _canBeManager } from './permissions';
+import { hasPermission as _hasPermission, normalizeRole as _normalizeRole, canBeManager as _canBeManager } from './auth/permissions';
 
 // Re-export everything from permissions for backwards compatibility
-export { hasPermission, normalizeRole, canBeManager, type Permission } from './permissions';
+export { hasPermission, normalizeRole, canBeManager, type Permission } from './auth/permissions';
 
 // ─── Role Aliases ───────────────────────────────────────────────────────────────
 

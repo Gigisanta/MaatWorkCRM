@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { getUserFromSession } from '@/lib/auth-helpers';
+import { db } from '@/lib/db/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
 import { getCachedTags, invalidateTagsCache } from '@/lib/cache';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/db/logger';
 
 export const revalidate = 3600; // 1 hour
 
@@ -79,7 +79,10 @@ export async function POST(request: NextRequest) {
 
     if (existing) {
       logger.info({ operation: 'createTag', requestId, tagId: existing.id }, 'Tag already exists, returning existing');
-      return NextResponse.json(existing, { headers: { 'x-request-id': requestId } });
+      return NextResponse.json(
+        { error: 'El tag ya existe', tag: existing },
+        { status: 409, headers: { 'x-request-id': requestId } }
+      );
     }
 
     const tag = await db.tag.create({

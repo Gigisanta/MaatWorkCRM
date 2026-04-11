@@ -3,7 +3,7 @@
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 
 interface ContactPaginationProps {
   page: number;

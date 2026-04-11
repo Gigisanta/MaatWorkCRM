@@ -1,16 +1,20 @@
-import { NextResponse } from "next/server";
-import { getUserFromSession } from "@/lib/auth-helpers";
-import { db } from "@/lib/db";
+export const dynamic = 'force-dynamic';
+import { NextRequest, NextResponse } from "next/server";
+import { getUserFromSession } from "@/lib/auth/auth-helpers";
+import { db } from "@/lib/db/db";
+import { logger } from "@/lib/db/logger";
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  const requestId = request.headers.get("x-request-id") || crypto.randomUUID();
+
   try {
-    const session = await getUserFromSession(request as any);
+    const session = await getUserFromSession(request);
     if (!session?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const organizationId = await Promise.resolve(searchParams.get("organizationId"));
+    const searchParams = request.nextUrl.searchParams;
+    const organizationId = searchParams.get("organizationId");
 
     if (!organizationId || organizationId !== session.organizationId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -82,7 +86,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ activities });
   } catch (error) {
-    console.error("[dashboard/activity]", error);
+    logger.error({ operation: 'dashboard:activity', requestId, error: error instanceof Error ? error.message : String(error) }, 'Error fetching dashboard activity');
     return NextResponse.json({ activities: [] });
   }
 }

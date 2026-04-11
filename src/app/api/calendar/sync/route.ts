@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserFromSession } from '@/lib/auth-helpers';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
 import { calendarSyncEngine } from '@/lib/google-calendar/sync-engine';
-import { db } from '@/lib/db';
+import { db } from '@/lib/db/db';
+import { logger } from '@/lib/db/logger';
 
 export async function POST(request: NextRequest) {
+  const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
+
   const user = await getUserFromSession(request);
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -28,19 +31,14 @@ export async function POST(request: NextRequest) {
       const { synced, direction } = await calendarSyncEngine.deltaSync(user.id, membership.organizationId);
       return NextResponse.json({ success: true, action, synced, direction });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { message?: string; code?: string | number; status?: string | number; response?: { data?: { error?: string; error_description?: string } } };
     // Log full error for server-side debugging
-    console.error('[CalendarSync] Error details:', {
-      message: error?.message,
-      code: error?.code,
-      status: error?.status,
-      errorSchema: error?.error?.error,
-      errorDescription: error?.error?.error_description,
-    });
+    logger.error({ operation: 'calendar:sync', requestId, userId: user.id, error: err?.message, code: err?.code, status: err?.status, googleError: err?.response?.data?.error, googleErrorDescription: err?.response?.data?.error_description }, 'Error details');
 
-    const errorMessage = error?.message || 'Sync failed';
-    const errorCode = error?.code || error?.status || '';
-    const errorResponse = error?.response?.data;
+    const errorMessage = err?.message || 'Sync failed';
+    const errorCode = err?.code || err?.status || '';
+    const errorResponse = err?.response?.data;
 
     // Check for specific Google OAuth error codes that indicate token issues
     // These are from Google OAuth's error response format

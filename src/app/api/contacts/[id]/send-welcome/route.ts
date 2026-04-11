@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { sendWelcomeEmail } from '@/lib/google-email';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { logger } from '@/lib/db/logger';
+import { sendWelcomeEmail } from '@/lib/services/google-email';
 
 export async function POST(
   request: NextRequest,
@@ -26,7 +27,7 @@ export async function POST(
       return NextResponse.json({ error: result.error }, { status: 500 });
     }
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    logger.error({ err: error, operation: 'sendWelcomeEmail' }, 'Failed to send welcome email');
+    return NextResponse.json({ error: 'An unexpected error occurred' }, { status: 500 });
   }
 }

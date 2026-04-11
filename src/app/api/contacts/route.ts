@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { hasPermission, normalizeRole } from '@/lib/permissions';
+import { db } from '@/lib/db/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { hasPermission, normalizeRole } from '@/lib/roles';
 import { contactCreateSchema } from '@/lib/schemas';
 import type { ContactCreateInput } from '@/lib/schemas';
 import { revalidateTag } from 'next/cache';
-import { logger } from '@/lib/logger';
-import { trackGoalProgress } from '@/lib/goal-tracking';
+import { logger } from '@/lib/db/logger';
+import { trackGoalProgress } from '@/lib/services/goal-tracking';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +19,20 @@ async function getTeamMemberIds(managerId: string): Promise<string[]> {
   });
   logger.debug({ operation: 'getTeamMemberIds', managerId, count: team.length }, 'Team members fetched');
   return team.map(u => u.id);
+}
+
+// Helper to get interaction stats for contacts using groupBy (avoids N+1)
+async function getInteractionStats(contactIds: string[]) {
+  if (contactIds.length === 0) return new Map();
+  const stats = await db.interaction.groupBy({
+    by: ['contactId'],
+    _count: { _all: true },
+    _max: { createdAt: true },
+    where: { contactId: { in: contactIds } },
+  });
+  return new Map(
+    stats.map(r => [r.contactId, { count: r._count._all, lastDate: r._max.createdAt }])
+  );
 }
 
 // GET /api/contacts - List contacts with filters and pagination
@@ -61,6 +75,7 @@ export async function GET(request: NextRequest) {
 
       const stage = searchParams.get('stage');
       const segment = searchParams.get('segment');
+      const source = searchParams.get('source');
       const assignedTo = searchParams.get('assignedTo');
       const search = searchParams.get('search');
       const page = parseInt(searchParams.get('page') || '1');
@@ -75,6 +90,10 @@ export async function GET(request: NextRequest) {
 
       if (segment) {
         where.segment = segment;
+      }
+
+      if (source) {
+        where.source = source;
       }
 
       if (assignedTo) {
@@ -121,12 +140,6 @@ export async function GET(request: NextRequest) {
                 image: true,
               },
             },
-            _count: {
-              select: {
-                deals: true,
-                tasks: true,
-              },
-            },
           },
           skip,
           take: limit,
@@ -135,15 +148,23 @@ export async function GET(request: NextRequest) {
         db.contact.count({ where }),
       ]);
 
-      const transformedContacts = contacts.map(contact => ({
-        ...contact,
-        tags: contact.tags.map(ct => ({
-          id: ct.tag.id,
-          name: ct.tag.name,
-          color: ct.tag.color,
-        })),
-        interactionCount: (contact._count?.deals || 0) + (contact._count?.tasks || 0),
-      }));
+      // Get real interaction counts using groupBy (avoids N+1)
+      const contactIds = contacts.map(c => c.id);
+      const statMap = await getInteractionStats(contactIds);
+
+      const transformedContacts = contacts.map(contact => {
+        const stats = statMap.get(contact.id);
+        return {
+          ...contact,
+          tags: contact.tags.map(ct => ({
+            id: ct.tag.id,
+            name: ct.tag.name,
+            color: ct.tag.color,
+          })),
+          interactionCount: stats?.count ?? 0,
+          lastInteractionDate: stats?.lastDate ?? null,
+        };
+      });
 
       logger.info({ operation: 'getContacts', requestId, count: contacts.length, total, duration_ms: Date.now() - start }, 'Contacts fetched successfully');
       const response = NextResponse.json({
@@ -167,7 +188,7 @@ export async function GET(request: NextRequest) {
 
       const targetOrgId = organizationId || user.organizationId;
       if (!targetOrgId) {
-        logger.warn({ operation: 'getContacts', requestId }, 'organizationId is required');
+        logger.warn({ operation: 'getContacts', requestId }, 'organizationId es requerido');
         const response = NextResponse.json({ error: 'organizationId es requerido' }, { status: 400 });
         response.headers.set('x-request-id', requestId);
         return response;
@@ -176,6 +197,7 @@ export async function GET(request: NextRequest) {
       const teamMemberIds = await getTeamMemberIds(user.id);
       const stage = searchParams.get('stage');
       const segment = searchParams.get('segment');
+      const source = searchParams.get('source');
       const search = searchParams.get('search');
       const page = parseInt(searchParams.get('page') || '1');
       const limit = parseInt(searchParams.get('limit') || '50');
@@ -195,6 +217,10 @@ export async function GET(request: NextRequest) {
 
       if (segment) {
         where.segment = segment;
+      }
+
+      if (source) {
+        where.source = source;
       }
 
       if (search) {
@@ -238,12 +264,6 @@ export async function GET(request: NextRequest) {
                 image: true,
               },
             },
-            _count: {
-              select: {
-                deals: true,
-                tasks: true,
-              },
-            },
           },
           skip,
           take: limit,
@@ -252,15 +272,23 @@ export async function GET(request: NextRequest) {
         db.contact.count({ where }),
       ]);
 
-      const transformedContacts = contacts.map(contact => ({
-        ...contact,
-        tags: contact.tags.map(ct => ({
-          id: ct.tag.id,
-          name: ct.tag.name,
-          color: ct.tag.color,
-        })),
-        interactionCount: (contact._count?.deals || 0) + (contact._count?.tasks || 0),
-      }));
+      // Get real interaction counts using groupBy (avoids N+1)
+      const contactIds = contacts.map(c => c.id);
+      const statMap = await getInteractionStats(contactIds);
+
+      const transformedContacts = contacts.map(contact => {
+        const stats = statMap.get(contact.id);
+        return {
+          ...contact,
+          tags: contact.tags.map(ct => ({
+            id: ct.tag.id,
+            name: ct.tag.name,
+            color: ct.tag.color,
+          })),
+          interactionCount: stats?.count ?? 0,
+          lastInteractionDate: stats?.lastDate ?? null,
+        };
+      });
 
       logger.info({ operation: 'getContacts', requestId, count: contacts.length, total, duration_ms: Date.now() - start }, 'Contacts fetched successfully');
       const response = NextResponse.json({
@@ -284,7 +312,7 @@ export async function GET(request: NextRequest) {
 
       const targetOrgId = organizationId || user.organizationId;
       if (!targetOrgId) {
-        logger.warn({ operation: 'getContacts', requestId }, 'organizationId is required');
+        logger.warn({ operation: 'getContacts', requestId }, 'organizationId es requerido');
         const response = NextResponse.json({ error: 'organizationId es requerido' }, { status: 400 });
         response.headers.set('x-request-id', requestId);
         return response;
@@ -299,6 +327,7 @@ export async function GET(request: NextRequest) {
 
       const stage = searchParams.get('stage');
       const segment = searchParams.get('segment');
+      const source = searchParams.get('source');
       const search = searchParams.get('search');
       const page = parseInt(searchParams.get('page') || '1');
       const limit = parseInt(searchParams.get('limit') || '50');
@@ -315,6 +344,10 @@ export async function GET(request: NextRequest) {
 
       if (segment) {
         where.segment = segment;
+      }
+
+      if (source) {
+        where.source = source;
       }
 
       if (search) {
@@ -357,12 +390,6 @@ export async function GET(request: NextRequest) {
                 image: true,
               },
             },
-            _count: {
-              select: {
-                deals: true,
-                tasks: true,
-              },
-            },
           },
           skip,
           take: limit,
@@ -371,15 +398,23 @@ export async function GET(request: NextRequest) {
         db.contact.count({ where }),
       ]);
 
-      const transformedContacts = contacts.map(contact => ({
-        ...contact,
-        tags: contact.tags.map(ct => ({
-          id: ct.tag.id,
-          name: ct.tag.name,
-          color: ct.tag.color,
-        })),
-        interactionCount: (contact._count?.deals || 0) + (contact._count?.tasks || 0),
-      }));
+      // Get real interaction counts using groupBy (avoids N+1)
+      const contactIds = contacts.map(c => c.id);
+      const statMap = await getInteractionStats(contactIds);
+
+      const transformedContacts = contacts.map(contact => {
+        const stats = statMap.get(contact.id);
+        return {
+          ...contact,
+          tags: contact.tags.map(ct => ({
+            id: ct.tag.id,
+            name: ct.tag.name,
+            color: ct.tag.color,
+          })),
+          interactionCount: stats?.count ?? 0,
+          lastInteractionDate: stats?.lastDate ?? null,
+        };
+      });
 
       logger.info({ operation: 'getContacts', requestId, count: contacts.length, total, duration_ms: Date.now() - start }, 'Contacts fetched successfully');
       const response = NextResponse.json({
@@ -541,30 +576,40 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // If tags were provided, create them and associate
+    // If tags were provided, batch-create missing tags and associate
     if (data.tags && data.tags.length > 0) {
-      for (const tagData of data.tags) {
-        // Upsert the tag (get existing or create new)
-        let tag = await db.tag.findFirst({
-          where: { organizationId: targetOrgId, name: tagData.name },
+      // 1. Fetch all existing tags in one query
+      const existingTags = await db.tag.findMany({
+        where: { organizationId: targetOrgId, name: { in: data.tags.map(t => t.name) } },
+        select: { id: true, name: true },
+      });
+      const existingMap = new Map(existingTags.map(t => [t.name, t.id]));
+
+      // 2. Create only missing tags
+      const missingTags = data.tags.filter(t => !existingMap.has(t.name));
+      if (missingTags.length > 0) {
+        const created = await db.tag.createMany({
+          data: missingTags.map(t => ({
+            organizationId: targetOrgId,
+            name: t.name,
+            color: t.color ?? '#8b5cf6',
+          })),
         });
-        if (!tag) {
-          tag = await db.tag.create({
-            data: {
-              organizationId: targetOrgId,
-              name: tagData.name,
-              color: tagData.color ?? '#8b5cf6',
-            },
-          });
-        }
-        // Associate tag with contact
-        await db.contactTag.create({
-          data: {
-            contactId: contact.id,
-            tagId: tag.id,
-          },
+        // Re-fetch newly created tags so we have their IDs
+        const newTags = await db.tag.findMany({
+          where: { organizationId: targetOrgId, name: { in: missingTags.map(t => t.name) } },
+          select: { id: true, name: true },
         });
+        for (const t of newTags) existingMap.set(t.name, t.id);
       }
+
+      // 3. Batch-associate all tags with the contact
+      await db.contactTag.createMany({
+        data: data.tags
+          .map(t => existingMap.get(t.name))
+          .filter((id): id is string => id !== undefined)
+          .map(tagId => ({ contactId: contact.id, tagId })),
+      });
     }
 
     // Re-fetch contact with updated tags
@@ -585,6 +630,7 @@ export async function POST(request: NextRequest) {
         color: ct.tag.color,
       })) ?? [],
       interactionCount: 0,
+      lastInteractionDate: null,
     };
 
     logger.info({ operation: 'createContact', requestId, contactId: contact.id, duration_ms: Date.now() - start }, 'Contact created successfully');

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { db } from '@/lib/db';
-import { logger } from '@/lib/logger';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { db } from '@/lib/db/db';
+import { logger } from '@/lib/db/logger';
 import { getCachedUsers } from '@/lib/cache';
 
 // GET /api/users - List users for an organization

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db } from '@/lib/db/db';
 import { getCachedPipelineStages, invalidatePipelineStagesCache } from '@/lib/cache';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { normalizeRole, hasPermission } from '@/lib/permissions';
-import { logger } from '@/lib/logger';
-import { ensureDefaultPipelineStages } from '@/lib/pipeline-stages';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { normalizeRole, hasPermission } from '@/lib/roles';
+import { logger } from '@/lib/db/logger';
+import { ensureDefaultPipelineStages } from '@/lib/utils/pipeline-stages';
 
 // Helper: get IDs of team members (advisors) under a manager
 async function getTeamMemberIds(managerId: string): Promise<string[]> {

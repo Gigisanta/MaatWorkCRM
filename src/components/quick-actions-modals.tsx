@@ -2,8 +2,8 @@
 
 import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useQuickActions } from '@/lib/quick-actions-context';
-import { useAuth } from '@/lib/auth-context';
+import { useQuickActions } from '@/contexts/quick-actions-context';
+import { useAuth } from '@/contexts/auth-context';
 import { CreateContactModal } from '@/app/contacts/components/create-contact-modal';
 import { CreateTaskDialog } from '@/components/create-task-dialog';
 import { FeedbackDialog } from '@/components/feedback-dialog';

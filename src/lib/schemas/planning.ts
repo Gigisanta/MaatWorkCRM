@@ -119,14 +119,6 @@ export const financialPlanCreateSchema = financialPlanSchema;
 
 // ===== Types =====
 
-export type MetaVidaInput = z.infer<typeof metaVidaSchema>;
-export type PlanInstrumentInput = z.infer<typeof planInstrumentSchema>;
-export type AsignacionEstrategicaInput = z.infer<typeof asignacionEstrategicaSchema>;
-export type ObligacionNegociableInput = z.infer<typeof obligacionNegociableSchema>;
-export type RiesgoInput = z.infer<typeof riesgoSchema>;
-export type PlanningConfigInput = z.infer<typeof planningConfigSchema>;
-export type PlanningIAInput = z.infer<typeof planningIASchema>;
-export type PlanningProyeccionInput = z.infer<typeof planningProyeccionSchema>;
 export type FinancialPlanInput = z.infer<typeof financialPlanSchema>;
 export type FinancialPlanUpdateInput = z.infer<typeof financialPlanUpdateSchema>;
 export type FinancialPlanCreateInput = z.infer<typeof financialPlanCreateSchema>;

@@ -17,7 +17,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 
 export type GoalStatus = "all" | "active" | "completed" | "archived" | "draft" | "missed";
 export type GoalType = "all" | "revenue" | "new_clients" | "meetings" | "new_aum" | "custom";

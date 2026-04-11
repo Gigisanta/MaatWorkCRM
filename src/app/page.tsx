@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function HomePage() {
   const { isAuthenticated, isLoading } = useAuth();

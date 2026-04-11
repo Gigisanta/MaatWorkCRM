@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db } from '@/lib/db/db';
 import { cookies } from 'next/headers';
+import { logger } from '@/lib/db/logger';
 
 // Proxy to NextAuth's built-in session endpoint to get the user's organizationId
 // This works because NextAuth's session endpoint already validates the JWT correctly
 export async function GET(request: NextRequest) {
+  const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
+
   try {
     // Database session (UUID token from custom credentials login)
     const cookieStore = await cookies();
@@ -55,7 +58,7 @@ export async function GET(request: NextRequest) {
 
     // For Google OAuth users, call the NextAuth session endpoint internally
     // Use proper URL construction for serverless environment
-    const sessionUrl = new URL('/api/auth/session', `https://${request.headers.get('host') || 'crm.maat.work'}`);
+    const sessionUrl = new URL('/api/auth/session', `https://${request.headers.get('host') || process.env.NEXTAUTH_URL || 'crm.maat.work'}`);
 
     let sessionResponse;
     try {
@@ -68,7 +71,7 @@ export async function GET(request: NextRequest) {
         credentials: 'include',
       });
     } catch (err) {
-      console.error('[session-custom] Failed to call NextAuth session:', err);
+      logger.warn({ operation: 'auth:session-custom:nextauth', requestId, error: err instanceof Error ? err.message : String(err) }, 'Failed to call NextAuth session');
     }
 
     if (sessionResponse?.ok) {
@@ -116,13 +119,13 @@ export async function GET(request: NextRequest) {
           }
         }
       } catch (err) {
-        console.error('[session-custom] Failed to parse NextAuth session:', err);
+        logger.error({ operation: 'auth:session-custom:parse', requestId, error: err instanceof Error ? err.message : String(err) }, 'Failed to parse NextAuth session');
       }
     }
 
     return NextResponse.json({ user: null, authenticated: false });
   } catch (error) {
-    console.error('[session-custom] Unexpected error:', error);
+    logger.error({ operation: 'auth:session-custom', requestId, error: error instanceof Error ? error.message : String(error) }, 'Unexpected error');
     return NextResponse.json({ user: null, authenticated: false, error: 'server_error' });
   }
 }

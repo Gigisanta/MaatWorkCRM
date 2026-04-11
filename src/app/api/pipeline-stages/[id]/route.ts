@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { db } from '@/lib/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { db } from '@/lib/db/db';
 import { invalidatePipelineStagesCache } from '@/lib/cache';
-import { logger } from '@/lib/logger';
-import { isValidId } from '@/lib/id-validation';
+import { logger } from '@/lib/db/logger';
+import { isValidId } from '@/lib/utils/id-validation';
 
 // PUT /api/pipeline-stages/[id] - Update a pipeline stage
 export async function PUT(

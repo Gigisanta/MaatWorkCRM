@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getUserFromSession } from "@/lib/auth-helpers";
-import { db } from "@/lib/db";
-import { logger } from "@/lib/logger";
+import { getUserFromSession } from "@/lib/auth/auth-helpers";
+import { db } from "@/lib/db/db";
+import { logger } from "@/lib/db/logger";
 import {
   startOfWeek,
   endOfWeek,
@@ -202,15 +202,12 @@ async function getExecutiveMetrics(
   const overdueTasksChange = 0; // simplified
   const meetingsChange = 0; // would need prev meetings count
 
-  // Weighted pipeline: value * avg leadScore/30
-  const contactsWithScore = await db.contact.findMany({
+  // FIX 1: Use DB aggregation instead of loading all contacts to compute average
+  const scoreAgg = await db.contact.aggregate({
     where: { organizationId: orgId },
-    select: { leadScore: true },
+    _avg: { leadScore: true },
   });
-  const avgLeadScore =
-    contactsWithScore.length > 0
-      ? contactsWithScore.reduce((sum, c) => sum + c.leadScore, 0) / contactsWithScore.length
-      : 0;
+  const avgLeadScore = scoreAgg._avg.leadScore || 0;
   const weightedPipeline = pipelineValue * (avgLeadScore / 30);
 
   // Revenue forecast = weighted pipeline
@@ -246,30 +243,37 @@ async function getFunnelMetrics(orgId: string, period: PeriodFilter): Promise<Fu
   const now = new Date();
   const { start, end } = getPeriodBounds(period, now);
 
+  // FIX 2: Fetch stages without loading contacts; use groupBy for counts
   const stages = await db.pipelineStage.findMany({
     where: { organizationId: orgId },
     orderBy: { order: "asc" },
-    include: {
-      contacts: {
-        where: { organizationId: orgId },
-        select: { id: true, leadScore: true },
-      },
-    },
   });
 
-  // Get ContactTag values per stage
-  const stageContactValues = await db.contact.groupBy({
-    by: ["pipelineStageId"],
-    where: { organizationId: orgId },
-    _sum: { leadScore: true },
-  });
+  // Get counts and lead-score sums per stage via groupBy (avoids loading full contact rows)
+  const [stageCountsResult, stageContactValues] = await Promise.all([
+    db.contact.groupBy({
+      by: ["pipelineStageId"],
+      where: { organizationId: orgId },
+      _count: true,
+    }),
+    db.contact.groupBy({
+      by: ["pipelineStageId"],
+      where: { organizationId: orgId },
+      _sum: { leadScore: true },
+    }),
+  ]);
+
+  const stageCountsMap: Record<string, number> = {};
+  for (const sc of stageCountsResult) {
+    stageCountsMap[sc.pipelineStageId || ""] = sc._count;
+  }
 
   const stageValuesMap: Record<string, number> = {};
   for (const sv of stageContactValues) {
     stageValuesMap[sv.pipelineStageId || ""] = sv._sum?.leadScore || 0;
   }
 
-  // Get total contact count and values
+  // Get total contact count
   const totalContacts = await db.contact.count({ where: { organizationId: orgId } });
 
   // Get lost contacts (in inactive stages)
@@ -281,27 +285,14 @@ async function getFunnelMetrics(orgId: string, period: PeriodFilter): Promise<Fu
     },
   });
 
-  // Sum ContactTag values where contact is in inactive stages
-  const lostContactsResult = await db.contact.findMany({
-    where: {
-      organizationId: orgId,
-      pipelineStage: { name: { in: INACTIVE_STAGES } },
-    },
-    select: {
-      id: true,
-    },
-  });
   const lostContactsValue = 0;
 
-  // Build funnel stages
+  // Build funnel stages using pre-computed maps
   const funnelStages: FunnelStage[] = stages.map((stage, idx) => {
-    const count = stage.contacts.length;
+    const count = stageCountsMap[stage.id] || 0;
     const value = stageValuesMap[stage.id] || 0;
-    const prevStage = idx > 0 ? stages[idx - 1] : null;
-    const conversionRate =
-      prevStage && prevStage.contacts.length > 0
-        ? Math.round((count / prevStage.contacts.length) * 100)
-        : null;
+    const prevCount = idx > 0 ? (stageCountsMap[stages[idx - 1].id] || 0) : 0;
+    const conversionRate = prevCount > 0 ? Math.round((count / prevCount) * 100) : null;
 
     return {
       id: stage.id,
@@ -316,8 +307,8 @@ async function getFunnelMetrics(orgId: string, period: PeriodFilter): Promise<Fu
     };
   });
 
-  const firstStageCount = stages[0]?.contacts.length || 0;
-  const lastStageCount = stages[stages.length - 1]?.contacts.length || 0;
+  const firstStageCount = stageCountsMap[stages[0]?.id] || 0;
+  const lastStageCount = stageCountsMap[stages[stages.length - 1]?.id] || 0;
   const overallConversionRate =
     firstStageCount > 0 ? Math.round((lastStageCount / firstStageCount) * 100) : 0;
 
@@ -582,44 +573,42 @@ async function getActivityMetrics(orgId: string, period: PeriodFilter): Promise<
   const completionRate = tasksTotal > 0 ? Math.round((tasksCompleted / tasksTotal) * 100) : 0;
   const meetingsChange = pctChange(meetingsCount, prevMeetingsCount);
 
-  // Trend: group by week or month depending on period
-  const trend: ActivityMetrics["trend"] = [];
+  // Trend: pre-compute all date ranges then run all queries in parallel (avoids N+1)
   const interval = period === "week" ? 7 : period === "month" ? 30 : 90;
   const numPoints = period === "week" ? 4 : period === "month" ? 4 : period === "quarter" ? 4 : 12;
+  const pointStep = Math.floor(interval / numPoints);
 
-  for (let i = numPoints - 1; i >= 0; i--) {
+  const pointRanges = Array.from({ length: numPoints }, (_, i) => {
+    const reversedI = numPoints - 1 - i; // P1 = oldest, P4/P12 = newest
     const pointStart = new Date(start);
-    pointStart.setDate(pointStart.getDate() - i * Math.floor(interval / numPoints));
+    pointStart.setDate(pointStart.getDate() - reversedI * pointStep);
     const pointEnd = new Date(pointStart);
-    pointEnd.setDate(pointEnd.getDate() + Math.floor(interval / numPoints));
+    pointEnd.setDate(pointEnd.getDate() + pointStep);
+    return { label: `P${i + 1}`, pointStart, pointEnd };
+  });
 
-    const [tasksInPoint, meetingsInPoint, contactsInPoint] = await Promise.all([
-      db.task.count({
-        where: {
-          organizationId: orgId,
-          status: "completed",
-          completedAt: { gte: pointStart, lte: pointEnd },
-        },
-      }),
-      db.calendarEvent.count({
-        where: {
-          organizationId: orgId,
-          type: "meeting",
-          startAt: { gte: pointStart, lte: pointEnd },
-        },
-      }),
-      db.contact.count({
-        where: { organizationId: orgId, createdAt: { gte: pointStart, lte: pointEnd } },
-      }),
-    ]);
+  const trendResults = await Promise.all(
+    pointRanges.map(({ pointStart, pointEnd }) =>
+      Promise.all([
+        db.task.count({
+          where: { organizationId: orgId, status: "completed", completedAt: { gte: pointStart, lte: pointEnd } },
+        }),
+        db.calendarEvent.count({
+          where: { organizationId: orgId, type: "meeting", startAt: { gte: pointStart, lte: pointEnd } },
+        }),
+        db.contact.count({
+          where: { organizationId: orgId, createdAt: { gte: pointStart, lte: pointEnd } },
+        }),
+      ])
+    )
+  );
 
-    trend.push({
-      label: `P${numPoints - i}`,
-      tasksCompleted: tasksInPoint,
-      meetings: meetingsInPoint,
-      contactsCreated: contactsInPoint,
-    });
-  }
+  const trend: ActivityMetrics["trend"] = pointRanges.map(({ label }, idx) => ({
+    label,
+    tasksCompleted: trendResults[idx][0],
+    meetings: trendResults[idx][1],
+    contactsCreated: trendResults[idx][2],
+  }));
 
   return {
     tasks: {
@@ -659,78 +648,94 @@ async function getAdvisorMetrics(orgId: string, period: PeriodFilter): Promise<A
     },
   });
 
-  const advisors: AdvisorRanking[] = await Promise.all(
-    teamMembers.map(async (member) => {
-      const userId = member.user.id;
+  const userIds = teamMembers.map(m => m.user.id);
 
-      const [contactsCount, dealsResult, completedTasks] = await Promise.all([
-        db.contact.count({ where: { organizationId: orgId, assignedTo: userId } }),
-        db.deal.aggregate({
-          where: { organizationId: orgId, assignedTo: userId },
-          _count: true,
-          _sum: { value: true },
-        }),
-        db.task.count({
-          where: {
-            organizationId: orgId,
-            assignedTo: userId,
-            status: "completed",
-            completedAt: { gte: start, lte: end },
-          },
-        }),
-      ]);
+  // Batch query all stats in parallel (avoids N+1)
+  const [contactsCounts, dealsStats, completedTasksCounts, dealsClosedCounts, goalStats] = await Promise.all([
+    // Contact counts per user
+    userIds.length > 0 ? db.contact.groupBy({
+      by: ['assignedTo'],
+      where: { organizationId: orgId, assignedTo: { in: userIds } },
+      _count: { _all: true },
+    }) : [],
+    // Deal aggregates per user
+    userIds.length > 0 ? db.deal.groupBy({
+      by: ['assignedTo'],
+      where: { organizationId: orgId, assignedTo: { in: userIds } },
+      _count: { _all: true },
+      _sum: { value: true },
+    }) : [],
+    // Completed tasks per user in period
+    userIds.length > 0 ? db.task.groupBy({
+      by: ['assignedTo'],
+      where: { organizationId: orgId, assignedTo: { in: userIds }, status: 'completed', completedAt: { gte: start, lte: end } },
+      _count: { _all: true },
+    }) : [],
+    // Deals closed in period
+    userIds.length > 0 ? db.deal.groupBy({
+      by: ['assignedTo'],
+      where: { organizationId: orgId, assignedTo: { in: userIds }, updatedAt: { gte: start, lte: end } },
+      _count: { _all: true },
+    }) : [],
+    // Goal attainment for team members
+    userIds.length > 0 ? db.teamGoal.findMany({
+      where: { team: { members: { some: { userId: { in: userIds } } } }, status: 'active' },
+      select: { targetValue: true, currentValue: true, team: { include: { members: true } } },
+    }) : [],
+  ]);
 
-      // Get deals closed in period
-      const dealsClosed = await db.deal.count({
-        where: {
-          organizationId: orgId,
-          assignedTo: userId,
-          updatedAt: { gte: start, lte: end },
-        },
-      });
+  // Build lookup maps for O(1) access
+  const contactsMap = Object.fromEntries(contactsCounts.map(c => [c.assignedTo, c._count._all]));
+  const dealsMap = Object.fromEntries(dealsStats.map(d => [d.assignedTo, { count: d._count._all, value: d._sum?.value || 0 }]));
+  const tasksMap = Object.fromEntries(completedTasksCounts.map(t => [t.assignedTo, t._count._all]));
+  const closedMap = Object.fromEntries(dealsClosedCounts.map(d => [d.assignedTo, d._count._all]));
 
-      const revenue = dealsResult._sum?.value || 0;
-      const pipelineValue = dealsResult._sum?.value || 0;
+  // Calculate goal attainment per user
+  const goalAttainmentMap: Record<string, number> = {};
+  for (const goal of goalStats) {
+    for (const member of goal.team.members) {
+      if (!goalAttainmentMap[member.userId]) goalAttainmentMap[member.userId] = 0;
+      if (goal.targetValue > 0) {
+        goalAttainmentMap[member.userId] += (goal.currentValue / goal.targetValue) * 100;
+      }
+    }
+  }
+  // Average per user
+  for (const userId of userIds) {
+    const goalsForUser = goalStats.filter(g => g.team.members.some(m => m.userId === userId)).length;
+    if (goalsForUser > 0 && goalAttainmentMap[userId]) {
+      goalAttainmentMap[userId] = Math.round(goalAttainmentMap[userId] / goalsForUser);
+    } else {
+      goalAttainmentMap[userId] = 0;
+    }
+  }
 
-      // Get goal attainment for this advisor's team
-      const memberGoals = await db.teamGoal.findMany({
-        where: {
-          team: { members: { some: { userId } } },
-          status: "active",
-        },
-        select: { targetValue: true, currentValue: true },
-      });
+  const advisors: AdvisorRanking[] = teamMembers.map(member => {
+    const userId = member.user.id;
+    const contactsCount = contactsMap[userId] || 0;
+    const dealsData = dealsMap[userId] || { count: 0, value: 0 };
+    const pipelineValue = dealsData.value;
+    const dealsClosed = closedMap[userId] || 0;
+    const completedTasks = tasksMap[userId] || 0;
+    const goalAttainment = goalAttainmentMap[userId] || 0;
 
-      const goalAttainment =
-        memberGoals.length > 0
-          ? Math.round(
-              memberGoals.reduce(
-                (sum, g) =>
-                  sum + (g.targetValue > 0 ? (g.currentValue / g.targetValue) * 100 : 0),
-                0
-              ) / memberGoals.length
-            )
-          : 0;
+    const compositeScore = Math.round(
+      (contactsCount * 0.1) + (pipelineValue * 0.0001) + (dealsClosed * 5) + (goalAttainment * 0.3)
+    );
 
-      // Composite score: weighted combination
-      const compositeScore = Math.round(
-        (contactsCount * 0.1) + (pipelineValue * 0.0001) + (dealsClosed * 5) + (goalAttainment * 0.3)
-      );
-
-      return {
-        advisorId: userId,
-        advisorName: member.user.name || member.user.email,
-        contacts: contactsCount,
-        pipelineValue: Math.round(pipelineValue),
-        dealsClosed,
-        revenue: Math.round(revenue),
-        goalAttainment,
-        tasksCompleted: completedTasks,
-        compositeScore,
-        rank: 0,
-      };
-    })
-  );
+    return {
+      advisorId: userId,
+      advisorName: member.user.name || member.user.email,
+      contacts: contactsCount,
+      pipelineValue: Math.round(pipelineValue),
+      dealsClosed,
+      revenue: Math.round(pipelineValue),
+      goalAttainment,
+      tasksCompleted: completedTasks,
+      compositeScore,
+      rank: 0,
+    };
+  });
 
   // Sort and assign ranks
   advisors.sort((a, b) => b.compositeScore - a.compositeScore);
@@ -740,8 +745,8 @@ async function getAdvisorMetrics(orgId: string, period: PeriodFilter): Promise<A
 
   // Comparisons
   const bestPerformer = advisors[0] || null;
-  const mostImproved = advisors.sort((a, b) => b.tasksCompleted - a.tasksCompleted)[0] || null;
-  const needsAttention = advisors.sort((a, b) => a.goalAttainment - b.goalAttainment)[0] || null;
+  const mostImproved = [...advisors].sort((a, b) => b.tasksCompleted - a.tasksCompleted)[0] || null;
+  const needsAttention = [...advisors].sort((a, b) => a.goalAttainment - b.goalAttainment)[0] || null;
 
   return {
     rankings: advisors,
@@ -853,12 +858,8 @@ async function getContactsMetrics(orgId: string): Promise<ContactsMetrics> {
   const now = new Date();
   const staleThreshold = subDays(now, 14);
 
-  const [
-    contactsStale,
-    contactsUnassigned,
-    atRiskContacts,
-    allContacts,
-  ] = await Promise.all([
+  // FIX 3: Removed unused `allContacts` query that loaded all contacts with full relations
+  const [contactsStale, contactsUnassigned, atRiskContacts] = await Promise.all([
     db.contact.count({
       where: {
         organizationId: orgId,
@@ -883,17 +884,6 @@ async function getContactsMetrics(orgId: string): Promise<ContactsMetrics> {
       },
       orderBy: { updatedAt: "asc" },
       take: 10,
-    }),
-    db.contact.findMany({
-      where: { organizationId: orgId },
-      select: {
-        id: true,
-        leadScore: true,
-        segment: true,
-        source: true,
-        pipelineStage: { select: { name: true } },
-        tags: true,
-      },
     }),
   ]);
 
@@ -997,7 +987,7 @@ async function getTrendsMetrics(orgId: string, period: PeriodFilter): Promise<Tr
     const pointStart = new Date(start.getTime() - i * stepMs);
     const pointEnd = new Date(pointStart.getTime() + stepMs - 1);
     const prevPointStart = new Date(prevStart.getTime() - i * stepMs);
-    const prevPointEnd = new Date(prevStart.getTime() + stepMs - 1);
+    const prevPointEnd = new Date(prevStart.getTime() - 1);
 
     const [contactsCreated, prevContactsCreated, dealsInPoint] = await Promise.all([
       db.contact.count({

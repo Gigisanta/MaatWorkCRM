@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from "react";
-import { Search, Download, Tag as TagIcon } from "lucide-react";
+import { Search, Download, Tag as TagIcon, LayoutGrid, List } from "lucide-react";
+import { cn } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -26,6 +27,8 @@ interface ContactFiltersProps {
   onFilterStageChange: (value: string) => void;
   stages: PipelineStage[];
   onTagManagerClick: () => void;
+  viewMode: "table" | "cards";
+  onViewModeChange: (mode: "table" | "cards") => void;
 }
 
 export function ContactFilters({
@@ -35,6 +38,8 @@ export function ContactFilters({
   onFilterStageChange,
   stages,
   onTagManagerClick,
+  viewMode,
+  onViewModeChange,
 }: ContactFiltersProps) {
   return (
     <div className="flex flex-col sm:flex-row gap-3 p-4 rounded-xl bg-[#0E0F12]/60 border border-white/8">
@@ -89,6 +94,33 @@ export function ContactFilters({
         >
           Gestionar Etiquetas
         </span>
+
+        <div className="flex items-center border border-white/10 rounded-lg overflow-hidden">
+          <button
+            onClick={() => onViewModeChange("table")}
+            className={cn(
+              "p-2 transition-all",
+              viewMode === "table"
+                ? "bg-violet-500/15 text-violet-300"
+                : "text-slate-500 hover:text-slate-300"
+            )}
+            title="Vista tabla"
+          >
+            <List className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => onViewModeChange("cards")}
+            className={cn(
+              "p-2 transition-all",
+              viewMode === "cards"
+                ? "bg-violet-500/15 text-violet-300"
+                : "text-slate-500 hover:text-slate-300"
+            )}
+            title="Vista tarjetas"
+          >
+            <LayoutGrid className="h-4 w-4" />
+          </button>
+        </div>
 
         <Button
           variant="outline"

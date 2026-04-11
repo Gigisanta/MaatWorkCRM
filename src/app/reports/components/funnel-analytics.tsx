@@ -4,7 +4,7 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { Users, TrendingDown, Target, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import LazyBarChart from "@/components/charts/lazy-bar-chart";
 import LazyFunnelChart from "@/components/charts/lazy-funnel-chart";
 import type { FunnelMetrics } from "../types/analytics";

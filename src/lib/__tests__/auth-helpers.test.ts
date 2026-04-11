@@ -14,7 +14,7 @@ import {
   getAvailableRoles,
   requiresManagerSelection,
   canBeManager,
-} from '../auth-helpers';
+} from '../auth/auth-helpers';
 
 describe('auth-helpers (server)', () => {
   describe('isAdmin', () => {

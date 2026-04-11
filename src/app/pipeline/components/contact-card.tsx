@@ -7,7 +7,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Pencil, AlertTriangle, ChevronRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import { ProductSubCard } from "./product-sub-card";
 import type { ContactWithProducts, Product, StageWithContacts } from "@/hooks/use-pipeline";
 

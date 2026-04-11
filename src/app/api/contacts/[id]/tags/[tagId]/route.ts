@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { getUserFromSession } from '@/lib/auth-helpers';
+import { db } from '@/lib/db/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
 import { invalidateTagsCache } from '@/lib/cache';
-import { logger } from '@/lib/logger';
-import { isValidId } from '@/lib/id-validation';
+import { logger } from '@/lib/db/logger';
+import { isValidId } from '@/lib/utils/id-validation';
 
 // DELETE /api/contacts/[id]/tags/[tagId] - Remove a tag from a contact
 export async function DELETE(
@@ -77,12 +77,6 @@ export async function DELETE(
       return response;
     }
 
-    if (!contactTag) {
-      logger.warn({ operation: 'removeTagFromContact', requestId, contactId: id, tagId }, 'Tag not associated with contact');
-      const response = NextResponse.json({ error: 'Tag no asociado con el contacto' }, { status: 404 });
-      response.headers.set('x-request-id', requestId);
-      return response;
-    }
 
     await db.contactTag.delete({
       where: {

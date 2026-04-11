@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db } from '@/lib/db/db';
 import { google, calendar_v3 } from 'googleapis';
-import { decryptTokenIfSet } from '@/lib/crypto';
-import { getUserFromSession } from '@/lib/auth-helpers';
+import { decryptTokenIfSet } from '@/lib/utils/crypto';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { logger } from '@/lib/db/logger';
 
 function createCalendarClient(accessToken: string, refreshToken?: string | null): calendar_v3.Calendar {
   const auth = new google.auth.OAuth2(
@@ -22,17 +23,18 @@ async function getGoogleCalendars(accessToken: string, refreshToken?: string | n
     const calendar = createCalendarClient(accessToken, refreshToken);
     const res = await calendar.calendarList.list({ maxResults: 100 });
     return { calendars: res.data.items ?? [] };
-  } catch (error: any) {
-    const errorMessage = error?.message || 'Unknown error';
-    const errorCode = error?.code || error?.status || '';
-    const errorResponse = error?.response?.data;
+  } catch (error: unknown) {
+    const err = error as { message?: string; code?: string | number; status?: string | number; response?: { data?: { error?: string; error_description?: string } } };
+    const errorMessage = err?.message || 'Unknown error';
+    const errorCode = err?.code || err?.status || '';
+    const errorResponse = err?.response?.data;
     const googleError = errorResponse?.error || '';
     const googleErrorDescription = errorResponse?.error_description || '';
 
     // Check for auth errors (401 = invalid/expired tokens)
     const isAuthError =
       errorCode === 401 ||
-      error?.status === 401 ||
+      err?.status === 401 ||
       googleError === 'invalid_grant' ||
       googleError === 'token_revoked' ||
       googleErrorDescription?.includes('Invalid OAuth 2.0') ||
@@ -40,12 +42,7 @@ async function getGoogleCalendars(accessToken: string, refreshToken?: string | n
       errorMessage?.includes('Credentials');
 
     if (isAuthError) {
-      console.error('[CalendarStatus] Google auth error (401):', {
-        message: errorMessage,
-        code: errorCode,
-        googleError,
-        googleErrorDescription,
-      });
+      logger.warn({ operation: 'calendar:status:auth', error: errorMessage, code: errorCode, googleError, googleErrorDescription }, 'Google auth error (401)');
       return {
         calendars: [],
         error: 'Sesión de Google Calendar expirada. Por favor reconnecta tu cuenta.',
@@ -53,12 +50,7 @@ async function getGoogleCalendars(accessToken: string, refreshToken?: string | n
       };
     }
 
-    console.error('[CalendarStatus] Failed to list calendars:', {
-      message: errorMessage,
-      code: errorCode,
-      googleError,
-      googleErrorDescription,
-    });
+    logger.error({ operation: 'calendar:status:list', error: errorMessage, code: errorCode, googleError, googleErrorDescription }, 'Failed to list calendars');
 
     const errorStr = typeof googleErrorDescription === 'string' && googleErrorDescription
       ? googleErrorDescription
@@ -73,13 +65,15 @@ async function getGoogleCalendars(accessToken: string, refreshToken?: string | n
 }
 
 export async function GET(request: NextRequest) {
+  const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
+
   const user = await getUserFromSession(request);
   if (!user) {
-    console.log('[CalendarStatus] No user from session - returning 401');
+    logger.debug({ operation: 'calendar:status', requestId }, 'No user from session - returning 401');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  console.log('[CalendarStatus] User authenticated:', user.email);
+  logger.debug({ operation: 'calendar:status', requestId, userId: user.id }, 'User authenticated');
 
   const googleAccount = await db.account.findFirst({
     where: { userId: user.id, provider: 'google' },
@@ -89,9 +83,15 @@ export async function GET(request: NextRequest) {
     where: { userId: user.id },
   });
 
-  let selectedCalendarIds: string[] = syncState?.selectedCalendarIds
-    ? (() => { try { return JSON.parse(syncState.selectedCalendarIds); } catch { return ['primary']; } })()
-    : ['primary'];
+  let selectedCalendarIds: string[] = ['primary'];
+  if (syncState?.selectedCalendarIds) {
+    try {
+      const parsed = JSON.parse(syncState.selectedCalendarIds);
+      if (Array.isArray(parsed) && parsed.every(item => typeof item === 'string')) {
+        selectedCalendarIds = parsed as string[];
+      }
+    } catch { /* keep default ['primary'] */ }
+  }
 
   let calendarError: string | undefined;
   let calendars: { id: string; name: string; selected: boolean }[] = [];

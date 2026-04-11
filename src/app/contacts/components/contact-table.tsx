@@ -21,14 +21,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { formatDistanceToNow } from "date-fns";
 import { EmptyState } from "@/components/ui/empty-state";
+import { getInteractionGradient } from "@/lib/utils/interaction-gradient";
+import { cn } from "@/lib/utils/utils";
 
 export interface Contact {
   id: string;
   name: string;
   email: string | null;
+  phone: string | null;
   company: string | null;
   emoji: string;
+  segment: string | null;
   source: string | null;
+  organizationId: string;
   pipelineStageId: string | null;
   pipelineStage: {
     id: string;
@@ -44,9 +49,11 @@ export interface Contact {
     image: string | null;
   } | null;
   tags: Tag[];
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
   hasFinancialPlan?: boolean;
+  interactionCount: number;
+  lastInteractionDate: string | null;
 }
 
 export interface PipelineStage {
@@ -193,6 +200,9 @@ export function ContactTable({
               )}
               <th className="hidden sm:table-cell w-32 shrink-0 px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
                 Última edición
+              </th>
+              <th className="hidden xl:table-cell w-40 shrink-0 px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                Últ. contacto
               </th>
             </tr>
           </thead>
@@ -406,6 +416,24 @@ export function ContactTable({
                     )}
                     <td className="hidden sm:table-cell px-4 py-3 text-xs text-slate-500">
                       {formatDistanceToNow(new Date(contact.updatedAt), { addSuffix: true })}
+                    </td>
+                    <td className="hidden xl:table-cell px-4 py-3">
+                      {(() => {
+                        const date = contact.lastInteractionDate ? new Date(contact.lastInteractionDate) : null;
+                        const gradient = getInteractionGradient(date);
+                        return (
+                          <div className="flex flex-col">
+                            <span className={cn("text-xs font-medium", gradient.color)}>
+                              {gradient.label}
+                            </span>
+                            {date && (
+                              <span className="text-xs text-slate-500">
+                                {formatDistanceToNow(date, { addSuffix: true })}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </td>
                   </tr>
             ))}

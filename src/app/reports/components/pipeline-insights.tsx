@@ -4,7 +4,7 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { TrendingUp, DollarSign, Target, AlertTriangle, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import LazyBarChart from "@/components/charts/lazy-bar-chart";
 import LazyLineChart from "@/components/charts/lazy-line-chart";
 import type { PipelineMetrics } from "../types/analytics";

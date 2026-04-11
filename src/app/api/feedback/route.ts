@@ -1,7 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { getUserFromSession } from '@/lib/auth-helpers';
-import { logger } from '@/lib/logger';
+import { db } from '@/lib/db/db';
+import { getUserFromSession } from '@/lib/auth/auth-helpers';
+import { logger } from '@/lib/db/logger';
+import { Ratelimit } from '@upstash/ratelimit';
+import { getRedis } from '@/lib/db/redis';
+
+// Rate limiter: 10 feedback submissions per minute per IP (only when Redis is available)
+const ratelimit = (() => {
+  const redis = getRedis();
+  if (!redis) return null;
+  return new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(10, '1 m'),
+    analytics: true,
+    prefix: 'ratelimit:feedback',
+  });
+})();
 
 // GET /api/feedback - List feedback for organization (owner only)
 export async function GET(request: NextRequest) {
@@ -31,19 +45,38 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403, headers: { 'x-request-id': requestId } });
     }
 
-    const feedback = await db.feedback.findMany({
-      where: { organizationId },
-      include: {
-        user: {
-          select: { id: true, name: true, email: true, image: true },
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const skip = (page - 1) * limit;
+
+    const where = { organizationId };
+
+    const [feedback, total] = await Promise.all([
+      db.feedback.findMany({
+        where,
+        include: {
+          user: {
+            select: { id: true, name: true, email: true, image: true },
+          },
         },
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      db.feedback.count({ where }),
+    ]);
+
+    logger.info({ operation: 'listFeedback', requestId, count: feedback.length, total, duration_ms: Date.now() - start }, 'Feedback listed successfully');
+
+    return NextResponse.json({
+      feedback,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    logger.info({ operation: 'listFeedback', requestId, count: feedback.length, duration_ms: Date.now() - start }, 'Feedback listed successfully');
-
-    return NextResponse.json({ feedback }, { headers: { 'x-request-id': requestId } });
+    }, { headers: { 'x-request-id': requestId } });
   } catch (error) {
     logger.error({ err: error, operation: 'listFeedback', requestId, duration_ms: Date.now() - start }, 'Failed to list feedback');
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500, headers: { 'x-request-id': requestId } });
@@ -54,6 +87,17 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const start = Date.now();
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
+
+  // Rate limiting
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+           || request.headers.get('x-real-ip') || 'unknown';
+  if (ratelimit) {
+    const { success } = await ratelimit.limit(ip);
+    if (!success) {
+      logger.warn({ operation: 'createFeedback', requestId, ip }, 'Rate limited');
+      return NextResponse.json({ error: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' }, { status: 429 });
+    }
+  }
 
   try {
     logger.debug({ operation: 'createFeedback', requestId }, 'Creating feedback');

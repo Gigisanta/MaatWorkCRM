@@ -32,7 +32,7 @@ import {
 } from "lucide-react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
-import { useSidebar } from "@/lib/sidebar-context";
+import { useSidebar } from "@/contexts/sidebar-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -80,7 +80,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import {
   format,
   startOfMonth,
@@ -102,7 +102,7 @@ import {
   isTomorrow,
 } from "date-fns";
 import { es } from "date-fns/locale";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth } from "@/contexts/auth-context";
 
 // Types
 interface CalendarEventUser {
@@ -354,7 +354,7 @@ function EventDialog({
   const { user } = useAuth();
   const isEditing = !!event;
 
-  const getDefaultValues = (): EventFormData => {
+  const getDefaultValues = React.useCallback((): EventFormData => {
     if (event) {
       return {
         title: event.title,
@@ -390,7 +390,7 @@ function EventDialog({
       type: "meeting",
       teamId: null,
     };
-  };
+  }, [event, selectedDate]);
 
   const {
     register,
@@ -411,7 +411,7 @@ function EventDialog({
     if (open) {
       reset(getDefaultValues());
     }
-  }, [open, event, selectedDate, reset]);
+  }, [open, event, selectedDate, reset, getDefaultValues]);
 
   const mutation = useMutation({
     mutationFn: async (data: EventFormData) => {

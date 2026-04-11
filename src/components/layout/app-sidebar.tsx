@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import {
   LayoutDashboard,
   Users,
@@ -18,6 +18,9 @@ import {
   Menu,
   Building2,
   LogOut,
+  Briefcase,
+  UserPlus,
+  UserCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -29,7 +32,7 @@ import {
 } from "@/components/ui/tooltip";
 import { motion, AnimatePresence } from "framer-motion";
 import { MaatWorkLogo, MaatWorkIcon } from "@/components/brand";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth } from "@/contexts/auth-context";
 import { useQuery } from "@tanstack/react-query";
 
 interface AppSidebarProps {
@@ -57,14 +60,17 @@ export function AppSidebar({ collapsed, onCollapsedChange }: AppSidebarProps) {
       items: [
         { name: "Tareas", href: "/tasks", icon: CheckSquare },
         { name: "Calendario", href: "/calendar", icon: Calendar },
+        { name: "Metas", href: "/goals", icon: Target },
       ]
     },
     {
       label: "EQUIPO",
       items: [
         { name: "Equipos", href: "/teams", icon: Building2 },
+        { name: "Reclutamiento", href: "/reclutamiento", icon: UserPlus },
         { name: "Reportes", href: "/reports", icon: BarChart3 },
         { name: "Capacitación", href: "/training", icon: GraduationCap },
+        { name: "Producción", href: "/production", icon: Briefcase },
       ]
     },
     {
@@ -201,6 +207,11 @@ export function AppSidebar({ collapsed, onCollapsedChange }: AppSidebarProps) {
               )}
               <div className="space-y-0.5">
                 {group.items.map((item) => {
+                  // Hide Reclutamiento from users with role "asesor"
+                  if (item.name === "Reclutamiento" && (user?.role === "asesor" || user?.role === "advisor")) {
+                    return null;
+                  }
+
                   const isActive = pathname === item.href ||
                     (item.href !== "/" && pathname.startsWith(item.href));
 

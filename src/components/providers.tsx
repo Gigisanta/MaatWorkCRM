@@ -1,8 +1,8 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider } from '@/lib/auth-context';
-import { QuickActionsProvider } from '@/lib/quick-actions-context';
+import { AuthProvider } from '@/contexts/auth-context';
+import { QuickActionsProvider } from '@/contexts/quick-actions-context';
 import { useState } from 'react';
 
 export function Providers({ children }: { children: React.ReactNode }) {

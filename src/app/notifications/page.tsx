@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/app-header";
-import { useSidebar } from "@/lib/sidebar-context";
+import { useSidebar } from "@/contexts/sidebar-context";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,9 +31,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import { format, formatDistanceToNow, startOfDay, subDays } from "date-fns";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth } from "@/contexts/auth-context";
 import Link from "next/link";
 
 // Types
@@ -133,8 +133,10 @@ async function fetchNotifications(params: {
 
 // Mark notification as read
 async function markAsRead(notificationId: string): Promise<void> {
-  const response = await fetch(`/api/notifications/${notificationId}/read`, {
-    method: "POST",
+  const response = await fetch(`/api/notifications/${notificationId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ isRead: true }),
     credentials: 'include',
   });
   if (!response.ok) {
@@ -145,10 +147,10 @@ async function markAsRead(notificationId: string): Promise<void> {
 // Mark all notifications as read
 async function markAllAsRead(userId: string, organizationId: string): Promise<void> {
   const response = await fetch("/api/notifications/read-all", {
-    method: "POST",
+    method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    credentials: 'include',
     body: JSON.stringify({ userId, organizationId }),
+    credentials: 'include',
   });
   if (!response.ok) {
     throw new Error("Error al marcar notificaciones como leídas");
@@ -431,7 +433,7 @@ export default function NotificationsPage() {
   // Reset page when filters change
   React.useEffect(() => {
     setPage(1);
-  }, [filterRead, filterType]);
+  }, [filterRead, filterType, setPage]);
 
   // Handle error
   if (error) {
